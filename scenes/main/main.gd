@@ -3,6 +3,10 @@ extends Node
 ## view fitted to the window, and handles global input.
 
 const RESTART_DELAY := 3.0
+## Saves this often, as well as on loot, level-up, quitting and death.
+const AUTOSAVE_INTERVAL := 30.0
+## Shift+F12 deletes the save and starts a new character.
+const RESET_KEY := KEY_F12
 
 ## The game renders at whole-number pixel scales, showing at least this many
 ## rows. Raise it for smaller pixels: at 810p, 270 gives 3x, 405 gives 2x.
@@ -13,6 +17,8 @@ const RESTART_DELAY := 3.0
 @onready var _camera: Camera3D = $GameView/GameViewport/GameCamera
 @onready var _hud: CombatHud = $CombatHud
 
+var _save_queued := false
+
 
 func _ready() -> void:
 	_camera.target = _player
@@ -21,9 +27,56 @@ func _ready() -> void:
 		_camera.clicked.connect(_on_camera_clicked)
 	get_viewport().size_changed.connect(_fit_game_view)
 	_fit_game_view()
+	_restore_player()
+	_camera.snap_to_target()
 	_hud.setup(_player, _camera, _game_view)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
 	_player.combatant.died.connect(_on_player_died)
+	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
+	GameState.inventory_changed.connect(_queue_save)
+	var autosave := Timer.new()
+	autosave.wait_time = AUTOSAVE_INTERVAL
+	autosave.timeout.connect(save_game)
+	add_child(autosave)
+	autosave.start()
+
+
+func save_game() -> void:
+	var c := _player.combatant
+	if c.is_alive():
+		var p := _player.global_position
+		GameState.player_state = {
+			"position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
+		}
+	GameState.save_to_disk()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_game()
+
+
+## Puts the player back where the save left them.
+func _restore_player() -> void:
+	var state := GameState.player_state
+	if state.is_empty():
+		return
+	var at: Array = state.position
+	_player.global_position = Vector3(at[0], at[1], at[2])
+	_player.facing = float(state.facing)
+	var c := _player.combatant
+	c.health = clampi(int(state.health), 1, c.max_health)
+	c.mana = clampf(float(state.mana), 0.0, c.max_mana)
+
+
+## Several inventory changes in a row (looting everything) save once.
+func _queue_save() -> void:
+	if not _save_queued:
+		_save_queued = true
+		get_tree().create_timer(1.0).timeout.connect(func() -> void:
+			_save_queued = false
+			save_game()
+		)
 
 
 ## Picks the largest whole pixel scale that fits, then rounds the view up so it
@@ -39,13 +92,19 @@ func _on_camera_clicked(window_position: Vector2, button: MouseButton) -> void:
 	_player.targeting.on_camera_clicked(window_position / _game_view.stretch_shrink, button)
 
 
+## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
+	GameState.player_state = {}
+	GameState.save_to_disk()
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouse and _camera is OrbitCamera:
 		_camera.handle_mouse(event)
+	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed:
+		GameState.reset_character()
+		get_tree().reload_current_scene()
 	elif event.is_action_pressed("pause"):
 		# Esc closes the loot window, then clears the target, then quits until a
 		# real pause menu exists.
@@ -56,4 +115,5 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif _player.targeting.target:
 			_player.targeting.set_target(null)
 		else:
+			save_game()
 			get_tree().quit()

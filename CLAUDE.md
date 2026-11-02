@@ -27,5 +27,6 @@
 - Combat is WoW-style tab-targeting. Physics layers: 1 is world, 2 is units, 3 is corpses.
 - World units are yards. Movement follows classic: run 7, backpedal 4.5, walk 2.5, turn 180°/s, no acceleration or air control. Other keys: Space jump, Num Lock autorun, / walk, B bags, C character.
 - Items live in `GameState` (equipment, bags, containers); `scripts/items/inventory.gd` holds the classic bag and equip rules. Stats from gear flow into `CharacterStats` via `GameState.inventory_changed`.
+- Saving: `GameState` saves the character, items and `player_state` (position, facing, health, mana) to `user://character.json`, with a format `SAVE_VERSION`. `main.gd` saves every 30 s, after inventory changes, on level-up, death and quitting. Shift+F12 deletes the save. Tests must pass `-- --save=<scratch path>` so they never touch the real save.
 - Scratch test scripts run with `-s` load before autoloads, so they must load classes that touch `GameState` (Inventory, ItemDB, LootTable) with `load()` at runtime rather than by class name.
 - `main.tscn` uses the WoW-style `scenes/camera/orbit_camera.tscn`, which gives the player tank controls. The fixed `game_camera.tscn` is kept for comparison and gives camera-relative movement.
