@@ -53,6 +53,16 @@ func reset() -> void:
 	_apply_material()
 
 
+## Shows the unit as an already-fallen corpse, for corpses restored from a save.
+func show_dead() -> void:
+	_dead = true
+	if _tween:
+		_tween.kill()
+	_visual.position = Vector3.ZERO
+	_visual.rotation.x = -PI / 2.0
+	_apply_material()
+
+
 func _process(delta: float) -> void:
 	if _flash_left > 0.0:
 		_flash_left -= delta

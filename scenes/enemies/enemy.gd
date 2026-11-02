@@ -32,6 +32,9 @@ var elite := false
 ## What's left on the corpse: { "id", "count" } entries, and copper.
 var loot: Array[Dictionary] = []
 var loot_money := 0
+## Unix time (seconds) when a dead enemy comes back. Real time, so it keeps
+## counting while the game is closed, like a classic server's respawn timer.
+var respawn_at := 0.0
 
 var _home := Vector3.ZERO
 var _data: Dictionary
@@ -165,10 +168,41 @@ func _on_died() -> void:
 		loot = LootTable.roll_creature(int(_data.LootId))
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
 	_sparkle.visible = has_loot()
-	get_tree().create_timer(respawn_time).timeout.connect(_respawn)
+	respawn_at = Time.get_unix_time_from_system() + respawn_time
+
+
+## Saved state for a dead enemy, or {} while it's alive.
+func corpse_state() -> Dictionary:
+	if state != State.DEAD:
+		return {}
+	var p := global_position
+	return {
+		"respawn_at": respawn_at, "level": level, "position": [p.x, p.y, p.z],
+		"facing": _visual.rotation.y, "loot": loot, "money": loot_money,
+	}
+
+
+## Puts back a corpse from the save, unless its respawn time has passed.
+func restore_corpse(saved: Dictionary) -> void:
+	if float(saved.respawn_at) <= Time.get_unix_time_from_system():
+		return
+	level = int(saved.level)
+	combatant.level = level
+	combatant.health = 0
+	state = State.DEAD
+	collision_layer = CORPSE_LAYER
+	var at: Array = saved.position
+	global_position = Vector3(at[0], at[1], at[2])
+	_visual.rotation.y = float(saved.facing)
+	loot.assign(saved.loot.map(func(drop: Dictionary) -> Dictionary: return { "id": int(drop.id), "count": int(drop.count) }))
+	loot_money = int(saved.money)
+	respawn_at = float(saved.respawn_at)
+	_feedback.show_dead()
 
 
 func _process(delta: float) -> void:
+	if state == State.DEAD and Time.get_unix_time_from_system() >= respawn_at:
+		_respawn()
 	_sparkle.visible = has_loot()
 	if _sparkle.visible:
 		_sparkle.rotate_y(SPARKLE_SPIN * delta)

@@ -28,6 +28,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_game_view)
 	_fit_game_view()
 	_restore_player()
+	_restore_corpses()
 	_camera.snap_to_target()
 	_hud.setup(_player, _camera, _game_view)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
@@ -48,7 +49,26 @@ func save_game() -> void:
 		GameState.player_state = {
 			"position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
 		}
+	_store_corpses()
 	GameState.save_to_disk()
+
+
+## Dead enemies keep their corpse, loot and respawn time across restarts,
+## keyed by node name.
+func _store_corpses() -> void:
+	var corpses := {}
+	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+		var corpse := enemy.corpse_state()
+		if not corpse.is_empty():
+			corpses[String(enemy.name)] = corpse
+	GameState.world_state = { "corpses": corpses }
+
+
+func _restore_corpses() -> void:
+	var corpses: Dictionary = GameState.world_state.get("corpses", {})
+	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+		if corpses.has(String(enemy.name)):
+			enemy.restore_corpse(corpses[String(enemy.name)])
 
 
 func _notification(what: int) -> void:
@@ -95,6 +115,7 @@ func _on_camera_clicked(window_position: Vector2, button: MouseButton) -> void:
 ## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
 	GameState.player_state = {}
+	_store_corpses()
 	GameState.save_to_disk()
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)
 

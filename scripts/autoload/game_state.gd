@@ -33,6 +33,8 @@ var containers: Array = []
 ## { "position": [x, y, z], "facing": radians, "health": n, "mana": n }.
 ## Empty for a new character.
 var player_state: Dictionary = {}
+## The world around the player: { "corpses": { enemy name: corpse state } }.
+var world_state: Dictionary = {}
 
 var save_path := SAVE_PATH
 
@@ -79,6 +81,7 @@ func save_to_disk() -> bool:
 		"bags": bags,
 		"containers": containers,
 		"player": player_state,
+		"world": world_state,
 	}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
@@ -114,6 +117,7 @@ func reset_character() -> void:
 	xp = 0
 	money = 0
 	player_state = {}
+	world_state = {}
 	_reset_items()
 	Inventory.start_character(self)
 	if FileAccess.file_exists(save_path):
@@ -134,6 +138,7 @@ func _apply_save(data: Dictionary) -> void:
 	bags.assign(data.bags.map(_read_stack))
 	containers = data.containers.map(func(container: Array) -> Array: return container.map(_read_stack))
 	player_state = data.get("player", {})
+	world_state = data.get("world", {})
 
 
 func _read_stack(stack: Dictionary) -> Dictionary:
