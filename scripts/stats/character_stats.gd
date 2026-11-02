@@ -11,6 +11,8 @@ const MANA_REGEN_DELAY := 5.0
 
 ## Shield block chance when the character can block.
 const SHIELD_BLOCK_CHANCE := 5.0
+## The Parry passive, trained at level 8 by Paladins.
+const PARRY_SPELL := 3127
 
 var race: ClassicData.Race:
 	get:
@@ -36,10 +38,13 @@ func _ready() -> void:
 	refresh()
 	_combatant.reset()
 	GameState.inventory_changed.connect(refresh)
+	GameState.spells_changed.connect(refresh)
+	_combatant.auras_changed.connect(refresh)
 
 
-## Recomputes everything from level, class, race and equipped gear. Keeps
-## current health and mana, capped to the new maximums.
+## Recomputes everything from level, class, race, equipped gear, trained
+## passives and active auras. Keeps current health and mana, capped to the new
+## maximums.
 func refresh() -> void:
 	var level := GameState.level
 	var base := ClassicData.base_stats(race, char_class, level)
@@ -58,16 +63,22 @@ func refresh() -> void:
 	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina) + gear.health
 	var base_mana := ClassicData.base_mana(char_class, level)
 	c.max_mana = base_mana + mana_from_intellect(intellect) + gear.mana if base_mana > 0 else 0
-	c.armor = gear.armor + agility * 2
-	c.attack_power = maxi(melee_attack_power(char_class, level, strength, agility), 0)
-	c.min_damage = gear.weapon.min
-	c.max_damage = gear.weapon.max
-	c.swing_interval = gear.weapon.speed
+	# Devotion Aura adds armor (resistance aura on the physical school).
+	c.armor = gear.armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
+	# Blessing of Might and Seal of the Crusader add attack power.
+	c.attack_power = maxi(melee_attack_power(char_class, level, strength, agility), 0) + int(c.aura_total(SpellDB.AURA_MOD_ATTACK_POWER))
+	# Seal of the Crusader speeds up attacks but cuts weapon damage to match,
+	# as in the CMaNGOS SealOfTheCrusader script.
+	var haste := c.aura_total(SpellDB.AURA_MOD_ATTACK_SPEED)
+	var damage_scale := 1.0 + (-100.0 * haste / (haste + 100.0)) / 100.0
+	c.min_damage = gear.weapon.min * damage_scale
+	c.max_damage = gear.weapon.max * damage_scale
+	c.swing_interval = gear.weapon.speed / (1.0 + haste / 100.0)
 	c.melee_crit = agility / _agility_rate(char_class, level, true)
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false)
-	# Players need a melee weapon to parry.
+	# Parry has to be trained, and players need a melee weapon to parry.
 	var armed: bool = gear.weapon != Inventory.UNARMED_WEAPON
-	c.parry = 5.0 if armed and level >= ClassicData.PARRY_LEVEL.get(char_class, 99) else 0.0
+	c.parry = 5.0 if armed and PARRY_SPELL in GameState.known_spells else 0.0
 	# Blocking needs a shield. Block value: shield block + Strength / 20 - 1.
 	c.block = SHIELD_BLOCK_CHANCE if gear.has_shield else 0.0
 	c.block_value = maxi(gear.block + strength / 20 - 1, 0) if gear.has_shield else 0

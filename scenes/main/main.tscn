@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="4_camera"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="5_enemy"]
 [ext_resource type="PackedScene" path="res://ui/combat_hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/trainer_npc.tscn" id="7_trainer"]
 
 [node name="Main" type="Node" unique_id=2075888773]
 script = ExtResource("1_script")
@@ -42,5 +43,8 @@ creature_entry = 69
 [node name="Enemy3" parent="GameView/GameViewport" unique_id=1548770993 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -48)
 creature_entry = 257
+
+[node name="BrotherWilhelm" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 5, 0, 5)
 
 [node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

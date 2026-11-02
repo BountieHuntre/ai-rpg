@@ -54,6 +54,18 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	add_child(_buffs)
 	_player.combatant.auras_changed.connect(_draw_buffs)
 	_draw_buffs()
+	GameState.spells_changed.connect(_on_spells_changed)
+
+
+## New spells: the spellbook is rebuilt and bar slots redrawn (training can
+## swap a slot to a replacing rank).
+func _on_spells_changed() -> void:
+	var was_open := _book.visible
+	_book.queue_free()
+	_build_book()
+	_book.visible = was_open
+	for i in _bar_slots.size():
+		_draw_bar_slot(i)
 
 
 func is_book_open() -> bool:

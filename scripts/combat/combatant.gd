@@ -121,12 +121,49 @@ func distance_to(other: Combatant) -> float:
 	return body.global_position.distance_to(other.body.global_position)
 
 
-## Adds or refreshes an aura. The same spell replaces itself.
+## Adds or refreshes an aura. The same spell replaces itself. Effect amounts
+## are rolled once, at the caster's level, when the aura lands.
 func add_aura(spell: Dictionary, caster: Combatant) -> void:
 	remove_aura(int(spell.Id), false)
 	var length := SpellDB.duration(spell)
-	auras.append({ "spell": spell, "caster": caster, "remaining": length, "duration": length })
+	var amounts := []
+	for i in 3:
+		amounts.append(SpellDB.effect_value(spell, i, caster.level))
+	auras.append({ "spell": spell, "caster": caster, "remaining": length, "duration": length, "amounts": amounts })
 	auras_changed.emit()
+
+
+## Sum of an aura type's amounts, optionally only effects whose misc value
+## (a school mask for resistances, damage taken and immunities) overlaps mask.
+func aura_total(aura_type: int, misc_mask := -1) -> float:
+	var total := 0.0
+	for aura in auras:
+		for i in 3:
+			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) != aura_type:
+				continue
+			if misc_mask >= 0 and int(aura.spell["EffectMiscValue%d" % (i + 1)]) & misc_mask == 0:
+				continue
+			total += aura.amounts[i]
+	return total
+
+
+func has_aura_type(aura_type: int, misc_mask := -1) -> bool:
+	for aura in auras:
+		for i in 3:
+			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) == aura_type:
+				if misc_mask < 0 or int(aura.spell["EffectMiscValue%d" % (i + 1)]) & misc_mask != 0:
+					return true
+	return false
+
+
+## Divine Protection and Blessing of Protection: immune to a school.
+func is_immune(school: int) -> bool:
+	return has_aura_type(SpellDB.AURA_SCHOOL_IMMUNITY, 1 << school)
+
+
+## Pacified units can't melee (Divine Protection, Blessing of Protection).
+func is_pacified() -> bool:
+	return has_aura_type(SpellDB.AURA_MOD_PACIFY)
 
 
 func remove_aura(spell_id: int, notify := true) -> void:
@@ -182,9 +219,15 @@ func heal_with_spell(amount: float) -> void:
 	heal(roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
 
 
-func take_damage(amount: int, source: Combatant, crit := false) -> void:
+## School is a SpellDB.School. Flat "damage taken" auras for that school (such
+## as Judgement of the Crusader for Holy) add to the hit.
+func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> void:
 	if not is_alive() or invulnerable:
 		return
+	if is_immune(school):
+		avoid("Immune", source)
+		return
+	amount += int(aura_total(SpellDB.AURA_MOD_DAMAGE_TAKEN, 1 << school))
 	enter_combat()
 	health = maxi(health - amount, 0)
 	took_damage.emit(amount, source, crit)
@@ -225,7 +268,7 @@ func _physics_process(delta: float) -> void:
 
 	if attack_target and not attack_target.is_alive():
 		attack_target = null
-	if attack_target and not is_stunned() and _swing_left == 0.0:
+	if attack_target and not is_stunned() and not is_pacified() and _swing_left == 0.0:
 		if faces(attack_target) and distance_to(attack_target) <= melee_range:
 			swung.emit(attack_target)
 			var target := attack_target

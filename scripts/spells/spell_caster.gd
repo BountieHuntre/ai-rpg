@@ -17,6 +17,8 @@ const ERR_FACING := "Target needs to be in front of you."
 const ERR_LINE_OF_SIGHT := "Target not in line of sight"
 const ERR_MOVING := "Can't do that while moving"
 const ERR_DEAD_TARGET := "Invalid target"
+const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
+const ERR_PASSIVE := "That ability is passive."
 
 const WORLD_LAYER := 1
 const EYE_HEIGHT := 1.2
@@ -153,8 +155,12 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_NOT_READY
 		if SpellDB.cast_time(spell) > 0.0 and _player.is_moving():
 			return ERR_MOVING
+	if SpellDB.is_passive(spell):
+		return ERR_PASSIVE
 	if me.mana < mana_cost(spell):
 		return ERR_NO_MANA
+	if int(spell.Effect1) == SpellDB.EFFECT_DISPEL and not _has_dispellable(spell, target):
+		return ERR_NOTHING_TO_DISPEL
 	if SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
 		if target == null:
 			return ERR_NO_TARGET
@@ -169,6 +175,18 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 	return ""
 
 
+## Purify removes poisons and diseases (dispel types in the effects' misc values).
+func _has_dispellable(spell: Dictionary, target: Combatant) -> bool:
+	var types := []
+	for i in 3:
+		if int(spell["Effect%d" % (i + 1)]) == SpellDB.EFFECT_DISPEL:
+			types.append(int(spell["EffectMiscValue%d" % (i + 1)]))
+	for aura in target.auras:
+		if int(aura.spell.get("Dispel", 0)) in types:
+			return true
+	return false
+
+
 func _has_line_of_sight(target: Combatant) -> bool:
 	var eye := Vector3.UP * EYE_HEIGHT
 	var query := PhysicsRayQueryParameters3D.create(
@@ -179,17 +197,112 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 func _finish(spell: Dictionary, target: Combatant) -> void:
 	var me := _player.combatant
-	me.spend_mana(mana_cost(spell))
+	if int(spell.get("AttributesEx", 0)) & SpellDB.ATTR_EX_DRAIN_ALL_POWER:
+		me.spend_mana(int(me.mana))
+	else:
+		me.spend_mana(mana_cost(spell))
 	var cooldown := SpellDB.cooldown(spell)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
-	if spell.SpellName == "Holy Light":
-		_holy_light(spell, target)
-	elif SpellDB.is_seal(spell):
-		_apply_seal(spell)
+	match spell.SpellName:
+		"Holy Light":
+			_holy_light(spell, target)
+		"Judgement":
+			_judgement(target)
+		"Hammer of Justice":
+			_hammer_of_justice(spell, target)
+		"Lay on Hands":
+			target.heal(me.max_health)
+		_:
+			if SpellDB.is_seal(spell):
+				_apply_seal(spell)
+			elif SpellDB.is_paladin_aura(spell):
+				_replace_own(spell, me, SpellDB.is_paladin_aura)
+			elif SpellDB.is_blessing(spell):
+				_replace_own(spell, target, SpellDB.is_blessing)
+			elif int(spell.Effect1) == SpellDB.EFFECT_APPLY_AURA:
+				# Divine Protection and other self buffs.
+				target.add_aura(spell, me)
+				Sfx.play("buff")
+
+
+## Puts an aura on the target, replacing any of the same kind from this caster.
+func _replace_own(spell: Dictionary, target: Combatant, same_kind: Callable) -> void:
+	var me := _player.combatant
+	for aura in target.auras.duplicate():
+		if aura.caster == me and same_kind.call(aura.spell):
+			target.remove_aura(int(aura.spell.Id))
+	target.add_aura(spell, me)
+	Sfx.play("buff")
+
+
+## Unleashes the active seal's judgement on the target and removes the seal.
+## With no seal, the mana and cooldown are spent for nothing, as in CMaNGOS.
+## Judgements ignore the hit roll (TRIGGERED_IGNORE_HIT_CALCULATION).
+func _judgement(target: Combatant) -> void:
+	var me := _player.combatant
+	var seal := me.find_aura(func(spell: Dictionary) -> bool: return SpellDB.seal_judgement(spell) != 0)
+	if seal.is_empty():
+		return
+	me.remove_aura(int(seal.spell.Id))
+	var judgement := SpellDB.get_spell(SpellDB.seal_judgement(seal.spell))
+	if judgement.is_empty():
+		return
+	Sfx.play("bolt_hit")
+	if int(judgement.Effect1) == SpellDB.EFFECT_SCHOOL_DAMAGE:
+		# Judgement of Righteousness.
+		var amount := SpellDB.effect_value(judgement, 0, GameState.level)
+		amount += _spell_power() * SpellDB.direct_coefficient(int(judgement.Id))
+		var crit := CombatRules.roll_heal(me) == CombatRules.Outcome.CRIT
+		_holy_damage(target, roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
+	else:
+		# Judgement of the Crusader and other judgement debuffs: one per Paladin.
+		_replace_own(judgement, target, func(spell: Dictionary) -> bool: return str(spell.SpellName).begins_with("Judgement of"))
+
+
+## A magic stun: resisted on a failed spell hit roll.
+func _hammer_of_justice(spell: Dictionary, target: Combatant) -> void:
+	var me := _player.combatant
+	me.enter_combat()
+	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+		target.avoid("Resist", me)
+		return
+	target.add_aura(spell, me)
+	target.stun(SpellDB.duration(spell))
+
+
+func _holy_damage(target: Combatant, amount: int, crit: bool) -> void:
+	target.take_damage(amount, _player.combatant, crit, SpellDB.School.HOLY)
 
 
 ## Holy Light's script effect heals through spell 19968 (SpellEffects.cpp).
+## Learns spells from a trainer. A new spell with the same name and rank text
+## as the one it follows in its chain replaces it (Judgement teaches a second
+## Rank 1 Seal of Righteousness that can be judged), including on the action
+## bar. Other new ranks sit alongside the old ones, as in classic.
+static func learn(ids: Array) -> Array[String]:
+	var learned: Array[String] = []
+	for id: int in ids:
+		if id in GameState.known_spells:
+			continue
+		var spell := SpellDB.get_spell(id)
+		var previous := 0
+		for known: int in GameState.known_spells:
+			var other := SpellDB.get_spell(known)
+			if other.SpellName == spell.SpellName and other.Rank1 == spell.Rank1:
+				previous = known
+		if previous != 0:
+			GameState.known_spells[GameState.known_spells.find(previous)] = id
+			for i in GameState.action_bar.size():
+				if GameState.action_bar[i] == previous:
+					GameState.action_bar[i] = id
+		else:
+			GameState.known_spells.append(id)
+		learned.append(SpellDB.full_name(spell))
+	GameState.spells_changed.emit()
+	return learned
+
+
 func _holy_light(spell: Dictionary, target: Combatant) -> void:
 	var amount := SpellDB.effect_value(spell, 0, GameState.level)
 	amount += _spell_power() * SpellDB.direct_coefficient(SpellDB.HOLY_LIGHT_HEAL)
@@ -215,7 +328,7 @@ func _on_auto_attack_landed(target: Combatant) -> void:
 	)
 	if seal.is_empty() or not target.is_alive():
 		return
-	target.take_damage(seal_of_righteousness_damage(seal.spell), _player.combatant, false)
+	_holy_damage(target, seal_of_righteousness_damage(seal.spell), false)
 
 
 ## Holy damage per hit for the equipped weapon.

@@ -58,6 +58,9 @@ var _next_float_offset := 0
 var _enemy_bars: Array[Dictionary] = []
 var _inventory: InventoryUI
 var _spells: SpellUI
+var _trainer: TrainerWindow
+var _trainer_npc: Node3D
+var _npc_names: Array[Dictionary] = []
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
 var _tooltip: ItemTooltip
@@ -135,6 +138,7 @@ func _process(delta: float) -> void:
 	_banner.visible = _banner_left > 0.0
 	_update_floats(delta)
 	_update_enemy_bars()
+	_update_npc_names()
 	_update_loot_log(delta)
 
 
@@ -145,6 +149,7 @@ func _build() -> void:
 		child.free()
 	_floats.clear()
 	_enemy_bars.clear()
+	_npc_names.clear()
 
 	var window := get_viewport().get_visible_rect().size
 	_ui_scale = maxf(window.y / BASE_HEIGHT, 1.0)
@@ -152,6 +157,7 @@ func _build() -> void:
 	_height = window.y / _ui_scale
 
 	_build_enemy_bars()
+	_build_npc_names()
 	_build_player_frame()
 	_build_target_frame()
 	_build_cast_bar()
@@ -182,6 +188,15 @@ func _build() -> void:
 	_inventory.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, open_windows)
 	_inventory.message.connect(_on_loot_message)
 	_spells.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, book_open)
+	_trainer = TrainerWindow.new()
+	_trainer.position = Vector2(130, 50) * _ui_scale
+	_trainer.visible = false
+	add_child(_trainer)
+	move_child(_tooltip, -1)
+	_trainer.message.connect(_on_loot_message)
+	_trainer.hovered.connect(func(id: int) -> void: _tooltip.show_lines(_spells.spell_tooltip(id)))
+	if _trainer_npc and is_instance_valid(_trainer_npc):
+		_trainer.open(_trainer_npc, _player, _ui_scale)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
@@ -261,6 +276,27 @@ func _update_enemy_bars() -> void:
 			frame.position = on_window - Vector2(frame.size.x / 2.0, frame.size.y)
 
 
+## Friendly NPC names in green, with their title below, as in classic.
+func _build_npc_names() -> void:
+	for npc: Node in get_tree().get_nodes_in_group("npcs"):
+		var name_label := _label(self, Vector2.ZERO, "%s
+<%s>" % [npc.npc_name, npc.subname], Color(0.25, 1, 0.25))
+		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_npc_names.append({ "npc": npc, "label": name_label })
+
+
+func _update_npc_names() -> void:
+	for entry in _npc_names:
+		var npc: Node3D = entry.npc
+		var label: Label = entry.label
+		var world := npc.global_position + Vector3.UP * ENEMY_BAR_HEIGHT
+		label.visible = not _camera.is_position_behind(world) and _camera.global_position.distance_to(world) <= ENEMY_BAR_RANGE
+		if label.visible:
+			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
+			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
+
+
 func _build_enemy_bars() -> void:
 	for node in get_tree().get_nodes_in_group("combatants"):
 		if node != _player.combatant:
@@ -313,6 +349,23 @@ func open_loot(corpse: Enemy, take_all: bool) -> void:
 		return
 	_loot_corpse = corpse
 	_loot_window.open(corpse, _player, _ui_scale)
+
+
+func open_trainer(npc: Node3D) -> void:
+	if _player.global_position.distance_to(npc.global_position) > TrainerWindow.RANGE:
+		_show_message("You are too far away.")
+		Sfx.play("error")
+		return
+	_trainer_npc = npc
+	_trainer.open(npc, _player, _ui_scale)
+
+
+func close_trainer() -> bool:
+	if not _trainer.visible:
+		return false
+	_trainer.close()
+	_trainer_npc = null
+	return true
 
 
 func close_loot() -> void:

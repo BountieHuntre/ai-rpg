@@ -32,6 +32,7 @@ func _ready() -> void:
 	_camera.snap_to_target()
 	_hud.setup(_player, _camera, _game_view)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
+	_player.targeting.npc_clicked.connect(_hud.open_trainer)
 	_player.combatant.died.connect(_on_player_died)
 	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
 	GameState.inventory_changed.connect(_queue_save)
@@ -131,6 +132,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		# real pause menu exists.
 		if _hud.is_looting():
 			_hud.close_loot()
+		elif _hud.close_trainer():
+			pass
 		elif _hud.close_inventory_window():
 			pass
 		elif _player.targeting.target:

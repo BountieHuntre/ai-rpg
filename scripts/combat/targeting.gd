@@ -3,6 +3,8 @@ extends Node
 ## Tracks the player's current target and draws the ring under it.
 
 signal loot_requested(corpse: Enemy, take_all: bool)
+## Right-click on a friendly NPC.
+signal npc_clicked(npc: Node3D)
 
 const UNIT_LAYER := 2
 
@@ -52,7 +54,11 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	var to := from + camera.project_ray_normal(screen_position) * camera.far
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
 	query.exclude = [_player.get_rid()]
-	var enemy := _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider") as Enemy
+	var collider: Object = _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider")
+	if collider is TrainerNpc and button == MOUSE_BUTTON_RIGHT:
+		npc_clicked.emit(collider)
+		return
+	var enemy := collider as Enemy
 	if not enemy:
 		return
 	if not enemy.combatant.is_alive():

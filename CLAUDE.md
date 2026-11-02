@@ -13,7 +13,7 @@
 - `scripts/combat/`: shared combat logic (`Combatant`, `AbilityCaster`, `Targeting`, `Ability`)
 - `data/abilities/`: one `Ability` resource per ability
 - `scripts/stats/`, `scripts/items/`, `data/classic/`: classic WoW 1.12 stats, combat table, XP, creatures, items and loot, with exact tables and formulas from the CMaNGOS and vmangos server code (see `data/classic/SOURCE.md`). Keep new rules faithful to classic and note the source. `tools/classic_db/extract.py` regenerates the JSON from the CMaNGOS classic database.
-- Spells: `SpellDB` reads `data/classic/spells.json`; `SpellCaster` (on the Player) casts with classic checks, GCD, cooldowns and cast times, and holds each spell's effect code following CMaNGOS. Buffs are `Combatant.auras`. `GameState.known_spells` and `action_bar` are saved. UI: `ui/spell_ui.gd` (action bar 1-0,-,=; spellbook P; buff bar).
+- Spells: `SpellDB` reads `data/classic/spells.json`; `SpellCaster` (on the Player) casts with classic checks, GCD, cooldowns and cast times, and holds each spell's effect code following CMaNGOS. Buffs are `Combatant.auras`. `GameState.known_spells` and `action_bar` are saved. UI: `ui/spell_ui.gd` (action bar 1-0,-,=; spellbook P; buff bar). Spells are learned from `TrainerNpc` (Brother Wilhelm) via `ui/trainer_window.gd`; its `IN_GAME` list names the spells with effect code so far, and the rest show but can't be trained.
 - Enemies are set by `creature_entry` (a classic creature_template id); their stats, loot and money come from the data.
 - `scripts/autoload/`: global singletons. `Sfx.play(name)` plays a sound, with names mapped to files in `sfx.gd`
 - `assets/audio/rpg_sfx/`: CC0 sound pack, see its `LICENSE.txt`

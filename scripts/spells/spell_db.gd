@@ -22,9 +22,18 @@ const EFFECT_APPLY_AREA_AURA := 35
 const EFFECT_SCRIPT := 77
 ## Aura types (EffectApplyAuraName) used here.
 const AURA_DUMMY := 4
+const AURA_MOD_ATTACK_SPEED := 9
 const AURA_MOD_STUN := 12
+const AURA_MOD_DAMAGE_TAKEN := 14
 const AURA_MOD_RESISTANCE := 22
+const AURA_MOD_PACIFY := 25
+const AURA_SCHOOL_IMMUNITY := 39
 const AURA_MOD_ATTACK_POWER := 99
+const EFFECT_DISPEL := 38
+const EFFECT_HEAL_MAX_HEALTH := 67
+## Attributes / AttributesEx flags.
+const ATTR_PASSIVE := 0x40
+const ATTR_EX_DRAIN_ALL_POWER := 0x2
 ## Implicit targets.
 const TARGET_SELF := 1
 const TARGET_ENEMY := 6
@@ -115,6 +124,31 @@ static func target_type(spell: Dictionary) -> int:
 
 static func is_seal(spell: Dictionary) -> bool:
 	return str(spell.SpellName).begins_with("Seal of") and int(spell.Effect1) == EFFECT_APPLY_AURA
+
+
+## The judgement a seal unleashes: effect 3's base points plus one, or 0.
+static func seal_judgement(seal: Dictionary) -> int:
+	if int(seal.get("Effect3", 0)) == EFFECT_APPLY_AURA and int(seal.EffectApplyAuraName3) == AURA_DUMMY:
+		return int(seal.EffectBasePoints3) + 1
+	return 0
+
+
+## Paladin auras (one at a time) and blessings (one per Paladin per target).
+static func is_paladin_aura(spell: Dictionary) -> bool:
+	return str(spell.SpellName).ends_with(" Aura") and int(spell.Effect1) == EFFECT_APPLY_AREA_AURA
+
+
+static func is_blessing(spell: Dictionary) -> bool:
+	return str(spell.SpellName).begins_with("Blessing of")
+
+
+static func is_passive(spell: Dictionary) -> bool:
+	return int(spell.get("Attributes", 0)) & ATTR_PASSIVE != 0
+
+
+## The previous rank of a spell, or 0.
+static func previous_rank(id: int) -> int:
+	return int(_get_data().chains.get(str(id), {}).get("prev", 0))
 
 
 static func has_attribute_ex2(spell: Dictionary, flag: int) -> bool:

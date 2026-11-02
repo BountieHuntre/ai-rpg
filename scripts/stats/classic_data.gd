@@ -21,9 +21,6 @@ const RACE_NAMES := {
 }
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
 
-## Level each class learns Parry. Classes without an entry are not set up yet.
-const PARRY_LEVEL := { CharClass.PALADIN: 8, CharClass.HUNTER: 8 }
-
 static var _tables: Dictionary
 
 

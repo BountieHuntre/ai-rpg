@@ -7,6 +7,7 @@ extends Node
 ## command line to use another file, which keeps tests away from the real save.
 
 signal inventory_changed
+signal spells_changed
 
 ## The classic backpack has 16 slots, plus four bag slots.
 const BACKPACK_SLOTS := 16
