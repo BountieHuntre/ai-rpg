@@ -15,6 +15,9 @@ const STAR_RADIUS := 0.4
 const STAR_HEIGHT := 2.1
 const STAR_SPIN := 5.0
 
+@export var hurt_sound := "enemy_hurt"
+@export var death_sound := "enemy_die"
+
 var _flash_left := 0.0
 var _dead := false
 var _meshes: Array[MeshInstance3D] = []
@@ -35,6 +38,8 @@ func _ready() -> void:
 	_combatant.took_damage.connect(_on_took_damage)
 	_combatant.swung.connect(_on_swung)
 	_combatant.died.connect(_on_died)
+	_combatant.healed.connect(func(_amount: int) -> void: Sfx.play("heal"))
+	_combatant.stunned.connect(Sfx.play.bind("stun"))
 
 
 ## Restores the unit's normal look after it respawns.
@@ -61,9 +66,12 @@ func _process(delta: float) -> void:
 func _on_took_damage(_amount: int, _source: Combatant) -> void:
 	_flash_left = FLASH_TIME
 	_apply_material()
+	if _combatant.is_alive():
+		Sfx.play(hurt_sound)
 
 
 func _on_swung(target: Combatant) -> void:
+	Sfx.play("swing")
 	var offset := target.body.global_position - _combatant.body.global_position
 	offset.y = 0.0
 	if _tween:
@@ -74,6 +82,7 @@ func _on_swung(target: Combatant) -> void:
 
 
 func _on_died() -> void:
+	Sfx.play(death_sound)
 	_dead = true
 	_apply_material()
 	if _tween:

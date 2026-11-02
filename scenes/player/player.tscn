@@ -1,6 +1,7 @@
 [gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/unit_feedback.gd" id="10_feedback"]
+[ext_resource type="Script" path="res://scripts/combat/progression.gd" id="11_progression"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
@@ -68,12 +69,17 @@ max_mana = 100
 mana_regen = 3.0
 melee_damage = 6
 
+[node name="Progression" type="Node" parent="."]
+script = ExtResource("11_progression")
+
 [node name="AbilityCaster" type="Node" parent="."]
 script = ExtResource("4_caster")
 abilities = Array[ExtResource("5_ability")]([ExtResource("6_strike"), ExtResource("7_firebolt"), ExtResource("8_mend"), ExtResource("9_bash")])
 
 [node name="UnitFeedback" type="Node3D" parent="."]
 script = ExtResource("10_feedback")
+hurt_sound = "player_hurt"
+death_sound = "player_die"
 
 [node name="Targeting" type="Node" parent="."]
 script = ExtResource("3_targeting")

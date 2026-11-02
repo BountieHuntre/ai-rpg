@@ -44,6 +44,7 @@ func use(index: int) -> void:
 	if target:
 		_player.combatant.attack_target = target
 	if ability.cast_time > 0.0:
+		Sfx.play("cast")
 		casting = ability
 		_cast_left = ability.cast_time
 		_cast_target = target
@@ -129,19 +130,21 @@ func _finish(ability: Ability, target: Combatant) -> void:
 				_launch_projectile(ability, target)
 			else:
 				_player.combatant.swung.emit(target)
-				target.take_damage(ability.power, _player.combatant)
+				target.take_damage(_player.combatant.scaled(ability.power), _player.combatant)
 		Ability.Effect.HEAL:
-			_player.combatant.heal(ability.power)
+			_player.combatant.heal(_player.combatant.scaled(ability.power))
 		Ability.Effect.STUN:
 			_player.combatant.swung.emit(target)
-			target.take_damage(ability.power, _player.combatant)
+			target.take_damage(_player.combatant.scaled(ability.power), _player.combatant)
 			target.stun(ability.stun_duration)
 
 
 func _launch_projectile(ability: Ability, target: Combatant) -> void:
+	Sfx.play("bolt_launch")
 	var source := _player.combatant
 	var projectile: Projectile = PROJECTILE.instantiate()
 	_player.get_parent().add_child(projectile)
 	projectile.launch(_player.global_position + Vector3.UP * EYE_HEIGHT, target, ability.projectile_speed, func() -> void:
-		target.take_damage(ability.power, source)
+		Sfx.play("bolt_hit")
+		target.take_damage(source.scaled(ability.power), source)
 	)

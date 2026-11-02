@@ -10,12 +10,15 @@ signal stunned
 signal died
 
 @export var display_name := ""
+@export var level := 1
 @export var max_health := 100
 @export var max_mana := 0
 @export var mana_regen := 0.0
 @export var melee_damage := 5
 @export var melee_range := 2.5
 @export var swing_interval := 2.0
+## Scales all damage and healing this combatant deals.
+@export var power_multiplier := 1.0
 
 var health := 0
 var mana := 0.0
@@ -42,6 +45,10 @@ func reset() -> void:
 	attack_target = null
 	invulnerable = false
 	_stun_left = 0.0
+
+
+func scaled(amount: int) -> int:
+	return roundi(amount * power_multiplier)
 
 
 func is_alive() -> bool:
@@ -93,5 +100,5 @@ func _physics_process(delta: float) -> void:
 		var allowed: bool = not can_swing_at.is_valid() or can_swing_at.call(attack_target.body.global_position)
 		if allowed and distance_to(attack_target) <= melee_range:
 			swung.emit(attack_target)
-			attack_target.take_damage(melee_damage, self)
+			attack_target.take_damage(scaled(melee_damage), self)
 			_swing_left = swing_interval

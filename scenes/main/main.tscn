@@ -36,8 +36,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11)
 
 [node name="Enemy2" parent="GameView/GameViewport" unique_id=791896333 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -15)
+level = 2
 
 [node name="Enemy3" parent="GameView/GameViewport" unique_id=1548770993 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -15)
+level = 3
 
 [node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

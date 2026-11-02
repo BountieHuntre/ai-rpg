@@ -16,6 +16,9 @@ const FLOAT_HEIGHT := 2.5
 ## Numbers cycle through these so ones landing together don't stack.
 const FLOAT_OFFSETS: Array[Vector2] = [Vector2(0, 0), Vector2(-14, 4), Vector2(14, 4)]
 const BAR_FONT_SIZE := 7
+const XP_FONT_SIZE := 5
+const BANNER_FONT_SIZE := 18
+const BANNER_TIME := 2.5
 const ENEMY_BAR_SIZE := Vector2(28, 4)
 const ENEMY_BAR_HEIGHT := 2.2
 const ENEMY_BAR_RANGE := 40.0
@@ -31,8 +34,14 @@ var _player_health: Control
 var _player_health_text: Label
 var _player_mana: Control
 var _player_mana_text: Label
+var _player_level: Label
+var _player_xp: Control
+var _player_xp_text: Label
 var _target_frame: Control
 var _target_name: Label
+var _target_level: Label
+var _banner: Label
+var _banner_left := 0.0
 var _target_health: Control
 var _target_health_text: Label
 var _cast_frame: Control
@@ -54,7 +63,12 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	get_viewport().size_changed.connect(_build)
 
 	_player.caster.failed.connect(_show_message)
+	_player.caster.failed.connect(func(_message: String) -> void: Sfx.play("error"))
 	_player.combatant.died.connect(_show_message.bind("You died"))
+	_player.progression.xp_gained.connect(func(amount: int) -> void:
+		_add_float(_player.combatant, "+%d XP" % amount, Color(0.75, 0.55, 1))
+	)
+	_player.progression.leveled_up.connect(_on_leveled_up)
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var combatant := node as Combatant
 		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
@@ -77,11 +91,21 @@ func _process(delta: float) -> void:
 	_player_health_text.text = "%d/%d" % [me.health, me.max_health]
 	_set_bar(_player_mana, me.mana, me.max_mana)
 	_player_mana_text.text = "%d/%d" % [int(me.mana), me.max_mana]
+	_player_level.text = "Lv %d" % me.level
+	if me.level >= Progression.MAX_LEVEL:
+		_set_bar(_player_xp, 1.0, 1.0)
+		_player_xp_text.text = "Max level"
+	else:
+		var needed := Progression.xp_to_next(me.level)
+		_set_bar(_player_xp, GameState.xp, needed)
+		_player_xp_text.text = "%d/%d XP" % [GameState.xp, needed]
 
 	var target := _player.targeting.target_combatant()
 	_target_frame.visible = target != null
 	if target:
 		_target_name.text = target.display_name
+		_target_level.text = "Lv %d" % target.level
+		_target_level.add_theme_color_override("font_color", _level_color(target.level - me.level))
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
 
@@ -100,6 +124,8 @@ func _process(delta: float) -> void:
 
 	_message_left -= delta
 	_message.visible = _message_left > 0.0
+	_banner_left -= delta
+	_banner.visible = _banner_left > 0.0
 	_update_floats(delta)
 	_update_enemy_bars()
 
@@ -124,20 +150,30 @@ func _build() -> void:
 	_message = _label(self, Vector2(0, 34), "", Color(1, 0.35, 0.3))
 	_message.size.x = window.x
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner = _label(self, Vector2(0, 60), "", Color(1, 0.85, 0.3))
+	_banner.add_theme_font_size_override("font_size", roundi(BANNER_FONT_SIZE * _ui_scale))
+	_banner.size.x = window.x
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.visible = false
 
 
 func _build_player_frame() -> void:
-	var frame := _frame(Vector2(4, 4), Vector2(90, 34))
+	var frame := _frame(Vector2(4, 4), Vector2(90, 41))
 	_label(frame, Vector2(3, 0), _player.combatant.display_name)
+	_player_level = _right_label(frame, Vector2(3, 0), 84)
 	_player_health = _bar(frame, Vector2(3, 12), Vector2(84, 10), Color(0.25, 0.7, 0.25))
 	_player_health_text = _bar_text(frame, Vector2(3, 12), Vector2(84, 10))
 	_player_mana = _bar(frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
 	_player_mana_text = _bar_text(frame, Vector2(3, 23), Vector2(84, 9))
+	_rect(frame, Vector2(3, 33), Vector2(84, 6), Color(0.15, 0.1, 0.2))
+	_player_xp = _bar(frame, Vector2(3, 33), Vector2(84, 6), Color(0.55, 0.3, 0.85))
+	_player_xp_text = _bar_text(frame, Vector2(3, 33), Vector2(84, 6), XP_FONT_SIZE)
 
 
 func _build_target_frame() -> void:
 	_target_frame = _frame(Vector2(100, 4), Vector2(90, 24))
 	_target_name = _label(_target_frame, Vector2(3, 0), "")
+	_target_level = _right_label(_target_frame, Vector2(3, 0), 84)
 	_target_health = _bar(_target_frame, Vector2(3, 12), Vector2(84, 10), Color(0.75, 0.2, 0.2))
 	_target_health_text = _bar_text(_target_frame, Vector2(3, 12), Vector2(84, 10))
 
@@ -239,10 +275,37 @@ func _rect(parent: Node, rect_position: Vector2, rect_size: Vector2, color: Colo
 	return rect
 
 
+func _right_label(parent: Node, label_position: Vector2, width: float) -> Label:
+	var label := _label(parent, label_position, "")
+	label.size.x = width * _ui_scale
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	return label
+
+
+## WoW-style difficulty colors for a level difference (enemy minus player).
+## Gray enemies give no XP.
+func _level_color(difference: int) -> Color:
+	if difference >= 3:
+		return Color(1, 0.25, 0.2)
+	if difference >= 1:
+		return Color(1, 0.55, 0.15)
+	if difference == 0:
+		return Color(1, 0.9, 0.3)
+	if difference > -5:
+		return Color(0.35, 0.85, 0.35)
+	return Color(0.6, 0.6, 0.6)
+
+
+func _on_leveled_up(new_level: int) -> void:
+	_banner.text = "Level %d!" % new_level
+	_banner_left = BANNER_TIME
+	Sfx.play("level_up")
+
+
 ## A smaller label centered on a bar of the given position and size.
-func _bar_text(parent: Node, bar_position: Vector2, bar_size: Vector2) -> Label:
+func _bar_text(parent: Node, bar_position: Vector2, bar_size: Vector2, font_size := BAR_FONT_SIZE) -> Label:
 	var label := _label(parent, bar_position, "")
-	label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+	label.add_theme_font_size_override("font_size", roundi(font_size * _ui_scale))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.size.x = bar_size.x * _ui_scale
 	var center_y := (bar_position.y + bar_size.y / 2.0) * _ui_scale

@@ -12,6 +12,9 @@ enum State { IDLE, CHASE, RETURN, DEAD }
 @export var leash_radius := 20.0
 @export var stop_distance := 2.0
 @export var respawn_time := 15.0
+@export var level := 1
+## Each level above 1 adds this share of base health and damage.
+@export var growth_per_level := 0.25
 
 var state := State.IDLE
 
@@ -25,6 +28,11 @@ var _home := Vector3.ZERO
 
 func _ready() -> void:
 	_home = global_position
+	var growth := 1.0 + growth_per_level * (level - 1)
+	combatant.level = level
+	combatant.max_health = roundi(combatant.max_health * growth)
+	combatant.power_multiplier = growth
+	combatant.reset()
 	combatant.took_damage.connect(_on_took_damage)
 	combatant.died.connect(_on_died)
 
@@ -69,6 +77,7 @@ func _face(point: Vector3) -> void:
 
 
 func _start_chase() -> void:
+	Sfx.play("aggro")
 	state = State.CHASE
 
 
@@ -86,6 +95,9 @@ func _on_took_damage(_amount: int, _source: Combatant) -> void:
 func _on_died() -> void:
 	state = State.DEAD
 	_collision.set_deferred("disabled", true)
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player and player.combatant.is_alive():
+		player.progression.add_xp(player.progression.xp_for_kill(level))
 	get_tree().create_timer(respawn_time).timeout.connect(_respawn)
 
 

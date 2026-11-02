@@ -15,6 +15,7 @@ extends CharacterBody3D
 var facing := 0.0
 
 @onready var combatant: Combatant = $Combatant
+@onready var progression: Progression = $Progression
 @onready var targeting: Targeting = $Targeting
 @onready var caster: AbilityCaster = $AbilityCaster
 @onready var _visual: Node3D = $Visual

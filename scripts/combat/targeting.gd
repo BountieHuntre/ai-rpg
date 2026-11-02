@@ -17,6 +17,8 @@ func target_combatant() -> Combatant:
 
 
 func set_target(enemy: Enemy) -> void:
+	if enemy and enemy != target:
+		Sfx.play("target")
 	target = enemy
 	# Auto-attack follows target changes but never starts from selecting alone.
 	if _player.combatant.attack_target:
