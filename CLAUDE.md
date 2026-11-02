@@ -17,7 +17,7 @@
 
 ## Conventions
 - Typed GDScript, tabs, tunable values as `@export`.
-- The 3D game renders in `GameView/GameViewport` at a whole-number pixel scale, at least 270 rows tall. The look depends on this low resolution, so don't raise it.
+- The 3D game renders in `GameView/GameViewport` at a whole-number pixel scale, at least `min_game_height` rows tall (set on the `Main` node). The look depends on this low resolution.
 - The HUD draws at full window resolution, outside the game view. Its layout is in units of 1/270 of the window height.
 - Outlines come from `shaders/pixelart_stylizer.gdshader` (MIT, by Leo Peltola) on a plane attached to the game camera. It needs Forward+. Tune them in `shaders/outline_material.tres`.
 - Input actions are defined in `project.godot`: `move_*`, `strafe_*`, `target_next`, `ability_1` to `ability_4`, `interact`, `pause`.

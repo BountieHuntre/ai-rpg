@@ -2,9 +2,11 @@ extends Node
 ## Root scene: wires the camera, player and HUD together, keeps the low-res game
 ## view fitted to the window, and handles global input.
 
-## The game renders at whole-number pixel scales, showing at least this many rows.
-const BASE_HEIGHT := 270
 const RESTART_DELAY := 3.0
+
+## The game renders at whole-number pixel scales, showing at least this many
+## rows. Raise it for smaller pixels: at 810p, 270 gives 3x, 405 gives 2x.
+@export var min_game_height := 270
 
 @onready var _game_view: SubViewportContainer = $GameView
 @onready var _player: Player = $GameView/GameViewport/Player
@@ -27,7 +29,7 @@ func _ready() -> void:
 ## always covers the window instead of leaving a gap at the edges.
 func _fit_game_view() -> void:
 	var window := get_viewport().get_visible_rect().size
-	var pixel_scale := maxi(floori(window.y / BASE_HEIGHT), 1)
+	var pixel_scale := maxi(floori(window.y / min_game_height), 1)
 	_game_view.stretch_shrink = pixel_scale
 	_game_view.size = (window / pixel_scale).ceil() * pixel_scale
 

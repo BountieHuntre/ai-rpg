@@ -9,8 +9,9 @@
 
 [node name="Main" type="Node" unique_id=2075888773]
 script = ExtResource("1_script")
+min_game_height = 405
 
-[node name="GameView" type="SubViewportContainer" parent="."]
+[node name="GameView" type="SubViewportContainer" parent="." unique_id=672732248]
 texture_filter = 1
 offset_right = 1440.0
 offset_bottom = 810.0
@@ -18,7 +19,7 @@ mouse_filter = 2
 stretch = true
 stretch_shrink = 3
 
-[node name="GameViewport" type="SubViewport" parent="GameView"]
+[node name="GameViewport" type="SubViewport" parent="GameView" unique_id=778390956]
 handle_input_locally = false
 size = Vector2i(480, 270)
 render_target_update_mode = 4
@@ -30,13 +31,13 @@ render_target_update_mode = 4
 [node name="GameCamera" parent="GameView/GameViewport" unique_id=2145890281 instance=ExtResource("4_camera")]
 transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 4.23616, 7.51754)
 
-[node name="Enemy1" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+[node name="Enemy1" parent="GameView/GameViewport" unique_id=1510166047 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11)
 
-[node name="Enemy2" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+[node name="Enemy2" parent="GameView/GameViewport" unique_id=791896333 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -15)
 
-[node name="Enemy3" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+[node name="Enemy3" parent="GameView/GameViewport" unique_id=1548770993 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -15)
 
-[node name="CombatHud" parent="." instance=ExtResource("6_hud")]
+[node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

@@ -71,6 +71,9 @@ func handle_mouse(event: InputEventMouse) -> void:
 	elif event is InputEventMouseMotion and (_orbiting or _steering):
 		var motion := event as InputEventMouseMotion
 		_dragged += motion.relative.length()
+		if _dragged < CLICK_DRAG_LIMIT:
+			return
+		_update_mouse_mode()
 		yaw -= motion.relative.x * mouse_sensitivity
 		pitch = clampf(
 			pitch - motion.relative.y * mouse_sensitivity,
@@ -119,4 +122,9 @@ func _clear_distance(pivot: Vector3, back: Vector3) -> float:
 
 func _update_mouse_mode() -> void:
 	var held := _orbiting or _steering
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if held else Input.MOUSE_MODE_VISIBLE
+	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	if held and not captured and _dragged >= CLICK_DRAG_LIMIT:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif not held and captured:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		Input.warp_mouse(_press_position)

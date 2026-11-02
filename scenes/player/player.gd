@@ -24,9 +24,12 @@ func is_moving() -> bool:
 	return Vector2(velocity.x, velocity.z).length() > 0.1
 
 
-func face_toward(point: Vector3) -> void:
+## True if the point is anywhere in the half circle in front of the player.
+func is_facing(point: Vector3) -> bool:
+	var forward := Basis(Vector3.UP, facing) * Vector3.FORWARD
 	var offset := point - global_position
-	facing = atan2(-offset.x, -offset.z)
+	offset.y = 0.0
+	return forward.dot(offset) >= 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:

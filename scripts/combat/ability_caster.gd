@@ -41,7 +41,6 @@ func use(index: int) -> void:
 
 	_gcd_left = global_cooldown
 	if target:
-		_player.face_toward(target.body.global_position)
 		_player.combatant.attack_target = target
 	if ability.cast_time > 0.0:
 		casting = ability
@@ -104,6 +103,8 @@ func _find_problem(ability: Ability, target: Combatant) -> String:
 			return "No target"
 		if _player.combatant.distance_to(target) > ability.ability_range:
 			return "Out of range"
+		if not _player.is_facing(target.body.global_position):
+			return "You must face your target"
 		if not _has_line_of_sight(target):
 			return "Target not in line of sight"
 	return ""
