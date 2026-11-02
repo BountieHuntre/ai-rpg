@@ -19,6 +19,8 @@ const BAR_FONT_SIZE := 7
 const XP_FONT_SIZE := 5
 const CRIT_FONT_SIZE := 12
 const SHEET_FONT_SIZE := 6
+const LOG_TIME := 8.0
+const LOG_LINES := 6
 const BANNER_FONT_SIZE := 18
 const BANNER_TIME := 2.5
 const ENEMY_BAR_SIZE := Vector2(28, 4)
@@ -57,6 +59,12 @@ var _next_float_offset := 0
 var _enemy_bars: Array[Dictionary] = []
 var _character_window: Control
 var _character_text: Label
+var _loot_window: LootWindow
+var _loot_corpse: Enemy
+var _tooltip: ItemTooltip
+var _loot_log: Label
+## Recent loot messages as [text, seconds left].
+var _log_lines: Array[Array] = []
 
 
 func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) -> void:
@@ -139,6 +147,7 @@ func _process(delta: float) -> void:
 		_character_window.size.y = _character_text.position.y + _character_text.get_minimum_size().y + padding
 	_update_floats(delta)
 	_update_enemy_bars()
+	_update_loot_log(delta)
 
 
 func _build() -> void:
@@ -169,6 +178,20 @@ func _build() -> void:
 	_banner.visible = false
 	_build_character_window()
 	_character_window.visible = was_open
+	_loot_log = _label(self, Vector2(4, _height - 60), "", Color(0.4, 0.75, 1))
+	_loot_log.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_loot_window = LootWindow.new()
+	_loot_window.position = Vector2(130, 60) * _ui_scale
+	_loot_window.visible = false
+	add_child(_loot_window)
+	_loot_window.message.connect(_on_loot_message)
+	_loot_window.closed.connect(func() -> void: _loot_corpse = null)
+	_tooltip = ItemTooltip.new()
+	_tooltip.setup(_ui_scale)
+	add_child(_tooltip)
+	_loot_window.hovered.connect(_tooltip.show_item)
+	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
+		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
 
 func _build_player_frame() -> void:
@@ -300,6 +323,48 @@ func _right_label(parent: Node, label_position: Vector2, width: float) -> Label:
 
 ## WoW-style difficulty colors for a level difference (enemy minus player).
 ## Gray enemies give no XP.
+func open_loot(corpse: Enemy, take_all: bool) -> void:
+	if _player.global_position.distance_to(corpse.global_position) > LootWindow.LOOT_RANGE:
+		_show_message("You are too far away.")
+		Sfx.play("error")
+		return
+	if take_all:
+		for text in LootWindow.take_all(corpse):
+			_on_loot_message(text, text == "Inventory is full.")
+		return
+	_loot_corpse = corpse
+	_loot_window.open(corpse, _player, _ui_scale)
+
+
+func close_loot() -> void:
+	_loot_window.close()
+
+
+func is_looting() -> bool:
+	return _loot_window.visible
+
+
+func _on_loot_message(text: String, is_error: bool) -> void:
+	if is_error:
+		_show_message(text)
+		Sfx.play("error")
+		return
+	_log_lines.append([text, LOG_TIME])
+	if _log_lines.size() > LOG_LINES:
+		_log_lines.pop_front()
+
+
+func _update_loot_log(delta: float) -> void:
+	for line in _log_lines:
+		line[1] -= delta
+	_log_lines = _log_lines.filter(func(line: Array) -> bool: return line[1] > 0.0)
+	var texts := PackedStringArray()
+	for line in _log_lines:
+		texts.append(line[0])
+	_loot_log.text = "\n".join(texts)
+	_loot_log.position.y = _height * _ui_scale - _loot_log.get_minimum_size().y - 4 * _ui_scale
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _character_window and event.is_action_pressed("character_window"):
 		_character_window.visible = not _character_window.visible
@@ -336,6 +401,7 @@ func _character_sheet() -> String:
 	lines.append("Mana regen: %.1f per 2s" % s.current_mana_per_tick())
 	lines.append("Health regen: %.1f per 2s" % (0.0 if c.is_in_combat() else s.health_per_tick))
 	lines.append("In combat" if c.is_in_combat() else "Out of combat")
+	lines.append("Money: %s   Backpack: %d/%d" % [ItemDB.money_text(GameState.money), GameState.BACKPACK_SLOTS - GameState.free_slots(), GameState.BACKPACK_SLOTS])
 	return "\n".join(lines)
 
 

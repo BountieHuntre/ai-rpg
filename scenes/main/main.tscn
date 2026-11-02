@@ -33,32 +33,14 @@ transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0,
 
 [node name="Enemy1" parent="GameView/GameViewport" unique_id=1510166047 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11)
-creature_name = "Young Wolf"
-health = 42
-min_damage = 2.0
-max_damage = 2.0
-attack_power = 1
-armor = 15
+creature_entry = 299
 
 [node name="Enemy2" parent="GameView/GameViewport" unique_id=791896333 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -15)
-creature_name = "Timber Wolf"
-level = 2
-health = 55
-min_damage = 2.0
-max_damage = 2.0
-attack_power = 1
-armor = 16
+creature_entry = 69
 
 [node name="Enemy3" parent="GameView/GameViewport" unique_id=1548770993 instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -15)
-creature_name = "Kobold Worker"
-level = 3
-health = 70
-min_damage = 3.0
-max_damage = 4.0
-attack_power = 2
-armor = 41
-can_parry = true
+creature_entry = 257
 
 [node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

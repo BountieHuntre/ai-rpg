@@ -10,6 +10,17 @@ https://github.com/cmangos/classic-db):
   (`player_classlevelstats`)
 - `xp_to_next`: XP needed to leave each level 1 to 60 (`player_xp_for_level`)
 
+Also:
+
+- `creatures.json`: `creature_template` rows for the creatures in the game
+- `loot_tables.json`: their `creature_loot_template` rows and every
+  `reference_loot_template` they use
+- `items.json`: `item_template` rows for everything those tables can drop, plus
+  the starting gear
+
+Regenerate everything with `tools/classic_db/extract.py`. To add creatures, add
+their entries to `CREATURES` in that script and rerun it.
+
 Race ids: 1 Human, 2 Orc, 3 Dwarf, 4 Night Elf, 5 Undead, 6 Tauren, 7 Gnome, 8 Troll.
 Class ids: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman, 8 Mage,
 9 Warlock, 11 Druid.

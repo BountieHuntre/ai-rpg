@@ -12,7 +12,8 @@
 - `scenes/<area>/`: scenes with their scripts beside them (`main`, `player`, `enemies`, `levels`, `camera`)
 - `scripts/combat/`: shared combat logic (`Combatant`, `AbilityCaster`, `Targeting`, `Ability`)
 - `data/abilities/`: one `Ability` resource per ability
-- `scripts/stats/`, `data/classic/`: classic WoW 1.12 stats, combat table and XP, with exact tables and formulas from the CMaNGOS and vmangos server code (see `data/classic/SOURCE.md`). Keep new rules faithful to classic and note the source.
+- `scripts/stats/`, `scripts/items/`, `data/classic/`: classic WoW 1.12 stats, combat table, XP, creatures, items and loot, with exact tables and formulas from the CMaNGOS and vmangos server code (see `data/classic/SOURCE.md`). Keep new rules faithful to classic and note the source. `tools/classic_db/extract.py` regenerates the JSON from the CMaNGOS classic database.
+- Enemies are set by `creature_entry` (a classic creature_template id); their stats, loot and money come from the data.
 - `scripts/autoload/`: global singletons. `Sfx.play(name)` plays a sound, with names mapped to files in `sfx.gd`
 - `assets/audio/rpg_sfx/`: CC0 sound pack, see its `LICENSE.txt`
 - `shaders/`, `ui/`, `assets/{models,textures,audio,fonts}/`

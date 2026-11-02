@@ -2,6 +2,8 @@ class_name Targeting
 extends Node
 ## Tracks the player's current target and draws the ring under it.
 
+signal loot_requested(corpse: Enemy, take_all: bool)
+
 const UNIT_LAYER := 2
 
 @export var tab_range := 40.0
@@ -48,10 +50,15 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	var camera := _player.get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_position)
 	var to := from + camera.project_ray_normal(screen_position) * camera.far
-	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER)
+	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
 	query.exclude = [_player.get_rid()]
 	var enemy := _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider") as Enemy
-	if not enemy or not enemy.combatant.is_alive():
+	if not enemy:
+		return
+	if not enemy.combatant.is_alive():
+		# Right-clicking a corpse loots it. Shift loots everything at once.
+		if button == MOUSE_BUTTON_RIGHT and enemy.has_loot():
+			loot_requested.emit(enemy, Input.is_key_pressed(KEY_SHIFT))
 		return
 	set_target(enemy)
 	if button == MOUSE_BUTTON_RIGHT:

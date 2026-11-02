@@ -22,6 +22,8 @@ const SOUNDS: Dictionary[String, Array] = {
 	"target": ["acquire_target"],
 	"error": ["lock_01"],
 	"level_up": ["item_gem_04"],
+	"coins": ["item_coins_01", "item_coins_02"],
+	"loot": ["item_misc_02"],
 }
 
 ## Playback speed for sounds that need it. Raising speed also raises pitch.

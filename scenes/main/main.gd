@@ -22,6 +22,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_game_view)
 	_fit_game_view()
 	_hud.setup(_player, _camera, _game_view)
+	_player.targeting.loot_requested.connect(_hud.open_loot)
 	_player.combatant.died.connect(_on_player_died)
 
 
@@ -46,8 +47,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouse and _camera is OrbitCamera:
 		_camera.handle_mouse(event)
 	elif event.is_action_pressed("pause"):
-		# Esc clears the target first, then quits until a real pause menu exists.
-		if _player.targeting.target:
+		# Esc closes the loot window, then clears the target, then quits until a
+		# real pause menu exists.
+		if _hud.is_looting():
+			_hud.close_loot()
+		elif _player.targeting.target:
 			_player.targeting.set_target(null)
 		else:
 			get_tree().quit()

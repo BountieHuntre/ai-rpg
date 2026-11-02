@@ -1,10 +1,17 @@
 class_name Enemy
 extends CharacterBody3D
 ## Placeholder enemy. Chases the player once aggroed, auto-attacks in melee, and
-## runs home to reset if pulled too far. Respawns after dying.
-## Combat values match a classic WoW creature_template entry.
+## runs home to reset if pulled too far. When killed it leaves a lootable
+## corpse, then respawns. Stats, money and loot come from the classic
+## creature_template entry in data/classic/creatures.json.
 
 enum State { IDLE, CHASE, RETURN, DEAD }
+
+const CREATURES_PATH := "res://data/classic/creatures.json"
+const CREATURE_TYPE_HUMANOID := 7
+## Dead units move to this physics layer so their corpses can be clicked.
+const CORPSE_LAYER := 4
+const UNIT_LAYER := 2
 
 @export var move_speed := 3.5
 @export var acceleration := 30.0
@@ -12,47 +19,49 @@ enum State { IDLE, CHASE, RETURN, DEAD }
 @export var aggro_radius := 8.0
 @export var leash_radius := 20.0
 @export var stop_distance := 2.0
-@export var respawn_time := 15.0
+@export var respawn_time := 60.0
+## creature_template entry, such as 299 for Young Wolf.
+@export var creature_entry := 299
 
-@export_group("Creature")
-@export var creature_name := "Young Wolf"
-@export var level := 1
-@export var health := 42
-@export var min_damage := 2.0
-@export var max_damage := 2.0
-@export var attack_time := 2.0
-@export var attack_power := 1
-@export var armor := 15
-## Humanoids can parry. Beasts can't.
-@export var can_parry := false
-@export var elite := false
+static var _creatures: Dictionary
 
 var state := State.IDLE
+var level := 1
+var elite := false
+## What's left on the corpse: { "id", "count" } entries, and copper.
+var loot: Array[Dictionary] = []
+var loot_money := 0
 
 var _home := Vector3.ZERO
+var _data: Dictionary
 
 @onready var combatant: Combatant = $Combatant
 @onready var _visual: Node3D = $Visual
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 @onready var _feedback: UnitFeedback = $UnitFeedback
+@onready var _sparkle := _build_sparkle()
+
+const SPARKLE_SPIN := 2.0
 
 
 func _ready() -> void:
 	_home = global_position
+	if _creatures.is_empty():
+		_creatures = JSON.parse_string(FileAccess.get_file_as_string(CREATURES_PATH))
+	_data = _creatures[str(creature_entry)]
 	var c := combatant
-	c.display_name = creature_name
-	c.level = level
-	c.max_health = health
-	c.min_damage = min_damage
-	c.max_damage = max_damage
-	c.swing_interval = attack_time
-	c.attack_power = attack_power
-	c.armor = armor
+	c.display_name = _data.Name
+	c.min_damage = _data.MinMeleeDmg
+	c.max_damage = _data.MaxMeleeDmg
+	c.swing_interval = _data.MeleeBaseAttackTime / 1000.0
+	c.attack_power = int(_data.MeleeAttackPower)
+	c.armor = int(_data.Armor)
 	c.melee_crit = CombatRules.NPC_CRIT
 	c.dodge = CombatRules.NPC_AVOIDANCE
-	c.parry = CombatRules.NPC_AVOIDANCE if can_parry else 0.0
+	c.parry = CombatRules.NPC_AVOIDANCE if int(_data.CreatureType) == CREATURE_TYPE_HUMANOID else 0.0
+	elite = int(_data.Rank) > 0
 	c.faces_point = _is_facing
-	c.reset()
+	_roll_level()
 	c.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: _on_attacked())
 	c.avoided.connect(func(_text: String, _source: Combatant) -> void: _on_attacked())
 	c.died.connect(_on_died)
@@ -121,13 +130,38 @@ func _on_attacked() -> void:
 		_start_chase()
 
 
+func has_loot() -> bool:
+	return state == State.DEAD and (loot_money > 0 or not loot.is_empty())
+
+
+## Level is rolled between the template's min and max, with health scaled
+## linearly between the min-level and max-level values.
+func _roll_level() -> void:
+	var min_level := int(_data.MinLevel)
+	var max_level := int(_data.MaxLevel)
+	level = randi_range(min_level, max_level)
+	var t := 0.0 if max_level == min_level else float(level - min_level) / (max_level - min_level)
+	combatant.level = level
+	combatant.max_health = roundi(lerpf(_data.MinLevelHealth, _data.MaxLevelHealth, t))
+	combatant.reset()
+
+
 func _on_died() -> void:
 	state = State.DEAD
-	_collision.set_deferred("disabled", true)
+	collision_layer = CORPSE_LAYER
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player and player.combatant.is_alive():
 		player.progression.add_xp(player.progression.xp_for_kill(level, elite))
+		loot = LootTable.roll_creature(int(_data.LootId))
+		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
+	_sparkle.visible = has_loot()
 	get_tree().create_timer(respawn_time).timeout.connect(_respawn)
+
+
+func _process(delta: float) -> void:
+	_sparkle.visible = has_loot()
+	if _sparkle.visible:
+		_sparkle.rotate_y(SPARKLE_SPIN * delta)
 
 
 func _respawn() -> void:
@@ -135,6 +169,29 @@ func _respawn() -> void:
 	velocity = Vector3.ZERO
 	_visual.rotation = Vector3.ZERO
 	_feedback.reset()
-	_collision.set_deferred("disabled", false)
-	combatant.reset()
+	collision_layer = UNIT_LAYER
+	loot.clear()
+	loot_money = 0
+	_roll_level()
 	state = State.IDLE
+
+
+## Gold cubes over a corpse that still has loot, standing in for WoW's sparkles.
+func _build_sparkle() -> Node3D:
+	var sparkle := Node3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3.ONE * 0.12
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(1, 0.85, 0.3)
+	mesh.material = material
+	for i in 4:
+		var cube := MeshInstance3D.new()
+		cube.mesh = mesh
+		cube.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var angle := TAU * i / 4.0
+		cube.position = Vector3(cos(angle) * 0.6, 0.4 + 0.15 * (i % 2), sin(angle) * 0.6)
+		sparkle.add_child(cube)
+	sparkle.visible = false
+	add_child(sparkle)
+	return sparkle
