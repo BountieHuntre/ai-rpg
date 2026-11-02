@@ -16,5 +16,5 @@
 ## Conventions
 - Typed GDScript, tabs, tunable values as `@export`.
 - Internal resolution is 480x270, integer-scaled. The look depends on this low resolution, so don't raise it.
-- Outlines come from `shaders/pixelart_stylizer.gdshader` (MIT, by Leo Peltola) on a plane attached to the game camera. It needs Forward+.
+- Outlines come from `shaders/pixelart_stylizer.gdshader` (MIT, by Leo Peltola) on a plane attached to the game camera. It needs Forward+. Tune them in `shaders/outline_material.tres`.
 - Input actions are defined in `project.godot`: `move_*`, `attack`, `dodge`, `interact`, `pause`.

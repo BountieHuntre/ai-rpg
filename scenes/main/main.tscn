@@ -13,3 +13,4 @@ script = ExtResource("1_script")
 [node name="Player" parent="." instance=ExtResource("3_player")]
 
 [node name="GameCamera" parent="." instance=ExtResource("4_camera")]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 15, 21.2132, 15)
