@@ -12,12 +12,13 @@ const CREATURE_TYPE_HUMANOID := 7
 ## Dead units move to this physics layer so their corpses can be clicked.
 const CORPSE_LAYER := 4
 const UNIT_LAYER := 2
+## Creature run speed is its SpeedRun times the base run speed of 7 yards/s.
+const BASE_RUN_SPEED := 7.0
 
-@export var move_speed := 3.5
-@export var acceleration := 30.0
-@export var gravity := 25.0
-@export var aggro_radius := 8.0
-@export var leash_radius := 20.0
+@export var acceleration := 60.0
+@export var gravity := 19.29
+## Distance from home that makes it give up and evade.
+@export var leash_radius := 60.0
 @export var stop_distance := 2.0
 @export var respawn_time := 60.0
 ## creature_template entry, such as 299 for Young Wolf.
@@ -74,7 +75,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.IDLE:
 			if player and player.combatant.is_alive():
-				if global_position.distance_to(player.global_position) <= aggro_radius:
+				if global_position.distance_to(player.global_position) <= aggro_radius(player.combatant.level):
 					_start_chase()
 		State.CHASE:
 			if not player or not player.combatant.is_alive() or global_position.distance_to(_home) > leash_radius:
@@ -95,7 +96,8 @@ func _physics_process(delta: float) -> void:
 	var offset := destination - global_position
 	offset.y = 0.0
 	var direction := offset.normalized() if state != State.DEAD and not combatant.is_stunned() else Vector3.ZERO
-	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(direction * move_speed, acceleration * delta)
+	var run_speed: float = _data.SpeedRun * BASE_RUN_SPEED
+	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(direction * run_speed, acceleration * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
 	if not is_on_floor():
@@ -128,6 +130,14 @@ func _start_return() -> void:
 func _on_attacked() -> void:
 	if state == State.IDLE:
 		_start_chase()
+
+
+## Classic aggro radius: about 20 yards at equal level, one yard less per level
+## the player is above it and one more per level below (counted up to 25),
+## never under 5 yards. From Creature::GetAttackDistance in CMaNGOS.
+func aggro_radius(player_level: int) -> float:
+	var level_difference := maxi(player_level - level, -25)
+	return maxf(20.0 - level_difference, 5.0)
 
 
 func has_loot() -> bool:

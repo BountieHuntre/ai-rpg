@@ -51,6 +51,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		# real pause menu exists.
 		if _hud.is_looting():
 			_hud.close_loot()
+		elif _hud.close_inventory_window():
+			pass
 		elif _player.targeting.target:
 			_player.targeting.set_target(null)
 		else:

@@ -24,5 +24,8 @@
 - The HUD draws at full window resolution, outside the game view. Its layout is in units of 1/270 of the window height.
 - Outlines come from `shaders/pixelart_stylizer.gdshader` (MIT, by Leo Peltola) on a plane attached to the game camera. It needs Forward+. Tune them in `shaders/outline_material.tres`.
 - Input actions are defined in `project.godot`: `move_*`, `strafe_*`, `target_next`, `ability_1` to `ability_4`, `interact`, `pause`.
-- Combat is WoW-style tab-targeting. Physics layers: 1 is world, 2 is units.
+- Combat is WoW-style tab-targeting. Physics layers: 1 is world, 2 is units, 3 is corpses.
+- World units are yards. Movement follows classic: run 7, backpedal 4.5, walk 2.5, turn 180°/s, no acceleration or air control. Other keys: Space jump, Num Lock autorun, / walk, B bags, C character.
+- Items live in `GameState` (equipment, bags, containers); `scripts/items/inventory.gd` holds the classic bag and equip rules. Stats from gear flow into `CharacterStats` via `GameState.inventory_changed`.
+- Scratch test scripts run with `-s` load before autoloads, so they must load classes that touch `GameState` (Inventory, ItemDB, LootTable) with `load()` at runtime rather than by class name.
 - `main.tscn` uses the WoW-style `scenes/camera/orbit_camera.tscn`, which gives the player tank controls. The fixed `game_camera.tscn` is kept for comparison and gives camera-relative movement.

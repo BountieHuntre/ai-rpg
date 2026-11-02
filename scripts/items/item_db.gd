@@ -66,11 +66,14 @@ static func money_words(copper: int) -> String:
 	return ", ".join(parts)
 
 
-## The classic tooltip as rows of [left text, right text, color].
-static func tooltip(item: Dictionary) -> Array[Array]:
+## The classic tooltip as rows of [left text, right text, color]. Soulbound
+## replaces the binding line once the item has bound.
+static func tooltip(item: Dictionary, soulbound := false) -> Array[Array]:
 	var lines: Array[Array] = []
 	lines.append([item.name, "", quality_color(item)])
-	if BONDING.has(int(item.bonding)):
+	if soulbound:
+		lines.append(_line("Soulbound"))
+	elif BONDING.has(int(item.bonding)):
 		lines.append(_line(BONDING[int(item.bonding)]))
 	var item_class := int(item["class"])
 	var slot: String = SLOT_NAMES.get(int(item.InventoryType), "")
@@ -98,7 +101,9 @@ static func tooltip(item: Dictionary) -> Array[Array]:
 	if int(item.MaxDurability) > 0:
 		lines.append(_line("Durability %d / %d" % [item.MaxDurability, item.MaxDurability]))
 	if int(item.RequiredLevel) > 1:
-		lines.append(_line("Requires Level %d" % item.RequiredLevel))
+		# Classic shows unmet requirements in red.
+		var color := Color.WHITE if int(item.RequiredLevel) <= GameState.level else Color(1, 0.13, 0.13)
+		lines.append(["Requires Level %d" % item.RequiredLevel, "", color])
 	if not str(item.description).is_empty():
 		lines.append(["\"%s\"" % item.description, "", Color("ffd100")])
 	return lines

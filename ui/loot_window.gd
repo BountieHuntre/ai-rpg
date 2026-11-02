@@ -6,7 +6,7 @@ extends Control
 ## Sizes are in HUD units (1/270 of the window height), times ui_scale.
 
 signal message(text: String, is_error: bool)
-signal hovered(item: Dictionary)
+signal hovered(item: Dictionary, soulbound: bool)
 signal closed
 
 ## Classic INTERACTION_DISTANCE, in yards (one game unit).
@@ -38,7 +38,7 @@ func close() -> void:
 		return
 	corpse = null
 	visible = false
-	hovered.emit({})
+	hovered.emit({}, false)
 	closed.emit()
 
 
@@ -156,16 +156,16 @@ func _add_row(y: float, icon_color: Color, text: String, text_color: Color, coun
 	_add_label(row, Vector2(ICON_SIZE + 4, 2), text, text_color)
 	row.mouse_entered.connect(func() -> void:
 		row.color = ROW_HOVER
-		hovered.emit(item)
+		hovered.emit(item, false)
 	)
 	row.mouse_exited.connect(func() -> void:
 		row.color = Color.TRANSPARENT
-		hovered.emit({})
+		hovered.emit({}, false)
 	)
 	row.gui_input.connect(func(event: InputEvent) -> void:
 		if _is_click(event):
 			on_click.call()
-			hovered.emit({})
+			hovered.emit({}, false)
 			# The row can't be freed while it's handling its own input.
 			_refresh.call_deferred()
 	)

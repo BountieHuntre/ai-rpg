@@ -57,8 +57,7 @@ var _slots: Array[Dictionary] = []
 var _floats: Array[Dictionary] = []
 var _next_float_offset := 0
 var _enemy_bars: Array[Dictionary] = []
-var _character_window: Control
-var _character_text: Label
+var _inventory: InventoryUI
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
 var _tooltip: ItemTooltip
@@ -141,17 +140,13 @@ func _process(delta: float) -> void:
 	_message.visible = _message_left > 0.0
 	_banner_left -= delta
 	_banner.visible = _banner_left > 0.0
-	if _character_window.visible:
-		_character_text.text = _character_sheet()
-		var padding := 4.0 * _ui_scale
-		_character_window.size.y = _character_text.position.y + _character_text.get_minimum_size().y + padding
 	_update_floats(delta)
 	_update_enemy_bars()
 	_update_loot_log(delta)
 
 
 func _build() -> void:
-	var was_open := _character_window != null and _character_window.visible
+	var open_windows := _inventory.open_state() if _inventory else {}
 	for child in get_children():
 		child.free()
 	_slots.clear()
@@ -176,8 +171,6 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
-	_build_character_window()
-	_character_window.visible = was_open
 	_loot_log = _label(self, Vector2(4, _height - 60), "", Color(0.4, 0.75, 1))
 	_loot_log.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_loot_window = LootWindow.new()
@@ -186,10 +179,14 @@ func _build() -> void:
 	add_child(_loot_window)
 	_loot_window.message.connect(_on_loot_message)
 	_loot_window.closed.connect(func() -> void: _loot_corpse = null)
+	_inventory = InventoryUI.new()
+	add_child(_inventory)
 	_tooltip = ItemTooltip.new()
 	_tooltip.setup(_ui_scale)
 	add_child(_tooltip)
 	_loot_window.hovered.connect(_tooltip.show_item)
+	_inventory.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, open_windows)
+	_inventory.message.connect(_on_loot_message)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
@@ -365,44 +362,9 @@ func _update_loot_log(delta: float) -> void:
 	_loot_log.position.y = _height * _ui_scale - _loot_log.get_minimum_size().y - 4 * _ui_scale
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if _character_window and event.is_action_pressed("character_window"):
-		_character_window.visible = not _character_window.visible
-		get_viewport().set_input_as_handled()
-
-
-func _build_character_window() -> void:
-	_character_window = _frame(Vector2(4, 50), Vector2(118, 170))
-	_label(_character_window, Vector2(4, 1), "Character (C)", Color(1, 0.85, 0.4))
-	_character_text = _label(_character_window, Vector2(4, 12), "")
-	_character_text.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
-	_character_window.visible = false
-
-
-func _character_sheet() -> String:
-	var c := _player.combatant
-	var s := _player.stats
-	var lines := PackedStringArray()
-	lines.append("Level %d %s %s" % [c.level, ClassicData.RACE_NAMES[s.race], ClassicData.CLASS_NAMES[s.char_class]])
-	lines.append("")
-	for i in ClassicData.STAT_NAMES.size():
-		lines.append("%s: %d" % [ClassicData.STAT_NAMES[i], s.stats[i]])
-	lines.append("")
-	lines.append("Health: %d   Mana: %d" % [c.max_health, c.max_mana])
-	lines.append("Armor: %d (%.1f%% vs Lv %d)" % [c.armor, CombatRules.armor_reduction(c.armor, c.level) * 100.0, c.level])
-	lines.append("Attack Power: %d" % c.attack_power)
-	var bonus := c.attack_power / 14.0 * c.swing_interval
-	lines.append("Damage: %d-%d, speed %.1f" % [floori(c.min_damage + bonus), floori(c.max_damage + bonus), c.swing_interval])
-	lines.append("Melee crit: %.2f%%" % c.melee_crit)
-	lines.append("Spell crit: %.2f%%" % c.spell_crit)
-	lines.append("Dodge: %.2f%%   Parry: %.2f%%" % [c.dodge, c.parry])
-	lines.append("Block: %.2f%%" % c.block)
-	lines.append("")
-	lines.append("Mana regen: %.1f per 2s" % s.current_mana_per_tick())
-	lines.append("Health regen: %.1f per 2s" % (0.0 if c.is_in_combat() else s.health_per_tick))
-	lines.append("In combat" if c.is_in_combat() else "Out of combat")
-	lines.append("Money: %s   Backpack: %d/%d" % [ItemDB.money_text(GameState.money), GameState.BACKPACK_SLOTS - GameState.free_slots(), GameState.BACKPACK_SLOTS])
-	return "\n".join(lines)
+## Esc handling: drops a held item or closes the bag and character windows.
+func close_inventory_window() -> bool:
+	return _inventory.close_one()
 
 
 func _on_leveled_up(new_level: int) -> void:

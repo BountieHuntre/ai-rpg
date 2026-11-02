@@ -1,18 +1,26 @@
 class_name Player
 extends CharacterBody3D
-## The player's character. Uses WoW-style tank controls with an OrbitCamera and
-## camera-relative movement with any other camera.
+## The player's character, with classic WoW movement. World units are yards.
+## W and S run and backpedal, A and D turn, Q and E strafe, Space jumps,
+## Num Lock autoruns and / toggles walking. While right-dragging the camera,
+## the player faces where it looks and A and D strafe instead.
+## Movement is instant, with no acceleration, and there's no steering in the
+## air: a jump keeps the direction it started with.
 
-@export var move_speed := 5.0
-@export var backpedal_multiplier := 0.6
-@export var acceleration := 40.0
-@export var friction := 50.0
-@export var turn_speed := 14.0
-@export var keyboard_turn_speed := 3.0
-@export var gravity := 25.0
+## Classic base speeds in yards per second.
+const RUN_SPEED := 7.0
+const WALK_SPEED := 2.5
+const BACKPEDAL_SPEED := 4.5
+## Keyboard turning: 180 degrees per second.
+const TURN_RATE := PI
+## Jump launch speed and gravity, giving classic WoW's jump arc.
+const JUMP_SPEED := 7.96
+const GRAVITY := 19.29
 
 ## Yaw in radians. Zero faces -Z.
 var facing := 0.0
+var autorunning := false
+var walking := false
 
 @onready var combatant: Combatant = $Combatant
 @onready var progression: Progression = $Progression
@@ -26,8 +34,9 @@ func _ready() -> void:
 	combatant.faces_point = is_facing
 
 
+## Moving or in the air. Either interrupts casting.
 func is_moving() -> bool:
-	return Vector2(velocity.x, velocity.z).length() > 0.1
+	return not is_on_floor() or Vector2(velocity.x, velocity.z).length() > 0.1
 
 
 ## True if the point is anywhere in the half circle in front of the player.
@@ -38,47 +47,48 @@ func is_facing(point: Vector3) -> bool:
 	return forward.dot(offset) >= 0.0
 
 
+## Hides the character in first person.
+func set_model_visible(value: bool) -> void:
+	_visual.visible = value
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("target_next"):
 		targeting.cycle()
+	elif event.is_action_pressed("autorun"):
+		autorunning = not autorunning
+	elif event.is_action_pressed("toggle_walk"):
+		walking = not walking
+	elif event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
+		autorunning = false
 	for i in caster.abilities.size():
 		if event.is_action_pressed("ability_%d" % (i + 1)):
 			caster.use(i)
 
 
 func _physics_process(delta: float) -> void:
-	var camera := get_viewport().get_camera_3d()
+	var camera := get_viewport().get_camera_3d() as OrbitCamera
+	var alive := combatant.is_alive()
 	var direction := Vector3.ZERO
-	if not combatant.is_alive():
-		pass
-	elif camera is OrbitCamera:
-		direction = _tank_direction(camera, delta)
-		_visual.rotation.y = facing
+	if alive and camera:
+		direction = _move_direction(camera, delta)
+	_visual.rotation.y = facing
+
+	if is_on_floor():
+		velocity.x = direction.x
+		velocity.z = direction.z
+		if alive and Input.is_action_just_pressed("jump"):
+			velocity.y = JUMP_SPEED
 	else:
-		var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-		direction = _camera_relative(camera, input)
-		if direction:
-			facing = atan2(-direction.x, -direction.z)
-			_visual.rotation.y = lerp_angle(_visual.rotation.y, facing, 1.0 - exp(-turn_speed * delta))
-
-	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
-	var rate := acceleration if direction else friction
-	horizontal = horizontal.move_toward(direction * move_speed, rate * delta)
-	velocity.x = horizontal.x
-	velocity.z = horizontal.z
-
-	if not is_on_floor():
-		velocity.y -= gravity * delta
-
+		velocity.y -= GRAVITY * delta
 	move_and_slide()
 
 
-## W and S move, A and D turn, Q and E strafe. While right-dragging, the player
-## faces where the camera looks and A and D strafe instead.
-func _tank_direction(camera: OrbitCamera, delta: float) -> Vector3:
+## Velocity from the movement keys, already scaled to the right speed.
+func _move_direction(camera: OrbitCamera, delta: float) -> Vector3:
 	var forward := Input.get_axis("move_down", "move_up")
-	if camera.is_auto_running():
-		forward = 1.0
+	if autorunning or camera.is_auto_running():
+		forward = maxf(forward, 1.0) if forward >= 0.0 else forward
 	var turn := Input.get_axis("move_left", "move_right")
 	var strafe := Input.get_axis("strafe_left", "strafe_right")
 
@@ -86,17 +96,14 @@ func _tank_direction(camera: OrbitCamera, delta: float) -> Vector3:
 		facing = camera.yaw
 		strafe = clampf(strafe + turn, -1.0, 1.0)
 	else:
-		facing -= turn * keyboard_turn_speed * delta
+		facing = wrapf(facing - turn * TURN_RATE * delta, -PI, PI)
 
-	var local := Vector3(strafe, 0.0, -forward).limit_length()
-	if forward < 0.0:
-		local *= backpedal_multiplier
-	return Basis(Vector3.UP, facing) * local
-
-
-func _camera_relative(camera: Camera3D, input: Vector2) -> Vector3:
-	if not camera:
-		return Vector3(input.x, 0.0, input.y)
-	var right := Vector3(camera.global_basis.x.x, 0.0, camera.global_basis.x.z).normalized()
-	var back := Vector3(camera.global_basis.z.x, 0.0, camera.global_basis.z.z).normalized()
-	return right * input.x + back * input.y
+	var local := Vector3(strafe, 0.0, -forward)
+	if local == Vector3.ZERO:
+		return Vector3.ZERO
+	var speed := RUN_SPEED
+	if walking:
+		speed = WALK_SPEED
+	elif forward < 0.0:
+		speed = BACKPEDAL_SPEED
+	return Basis(Vector3.UP, facing) * local.normalized() * speed

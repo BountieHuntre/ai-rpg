@@ -9,11 +9,8 @@ const REGEN_TICK := 2.0
 ## The five-second rule: Spirit mana regen stops for this long after spending mana.
 const MANA_REGEN_DELAY := 5.0
 
-## The starting weapon until items exist: Battleworn Hammer, the Human
-## Paladin's two-handed mace.
-const STARTER_WEAPON := { "name": "Battleworn Hammer", "min": 3.0, "max": 5.0, "speed": 2.9 }
-## Armor from starting clothes (Squire's Pants).
-const STARTER_ARMOR := 2
+## Shield block chance when the character can block.
+const SHIELD_BLOCK_CHANCE := 5.0
 
 var race: ClassicData.Race:
 	get:
@@ -22,9 +19,10 @@ var char_class: ClassicData.CharClass:
 	get:
 		return GameState.char_class
 
-## Current Strength, Agility, Stamina, Intellect and Spirit.
+## Current Strength, Agility, Stamina, Intellect and Spirit, gear included.
 var stats: Array[int] = [0, 0, 0, 0, 0]
-var weapon := STARTER_WEAPON
+## The part of stats that comes from gear, shown as green bonuses.
+var gear_stats: Array = [0, 0, 0, 0, 0]
 var mana_per_tick := 0.0
 var health_per_tick := 0.0
 
@@ -37,15 +35,18 @@ func _ready() -> void:
 	_combatant.is_player = true
 	refresh()
 	_combatant.reset()
+	GameState.inventory_changed.connect(refresh)
 
 
-## Recomputes everything from level, class and race. Keeps current health and
-## mana, capped to the new maximums.
+## Recomputes everything from level, class, race and equipped gear. Keeps
+## current health and mana, capped to the new maximums.
 func refresh() -> void:
 	var level := GameState.level
 	var base := ClassicData.base_stats(race, char_class, level)
+	var gear := Inventory.gear_totals()
+	gear_stats = gear.stats
 	for i in stats.size():
-		stats[i] = int(base[i])
+		stats[i] = int(base[i]) + int(gear_stats[i])
 	var strength := stats[ClassicData.Stat.STRENGTH]
 	var agility := stats[ClassicData.Stat.AGILITY]
 	var stamina := stats[ClassicData.Stat.STAMINA]
@@ -54,18 +55,22 @@ func refresh() -> void:
 
 	var c := _combatant
 	c.level = level
-	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina)
+	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina) + gear.health
 	var base_mana := ClassicData.base_mana(char_class, level)
-	c.max_mana = base_mana + mana_from_intellect(intellect) if base_mana > 0 else 0
-	c.armor = STARTER_ARMOR + agility * 2
+	c.max_mana = base_mana + mana_from_intellect(intellect) + gear.mana if base_mana > 0 else 0
+	c.armor = gear.armor + agility * 2
 	c.attack_power = maxi(melee_attack_power(char_class, level, strength, agility), 0)
-	c.min_damage = weapon.min
-	c.max_damage = weapon.max
-	c.swing_interval = weapon.speed
+	c.min_damage = gear.weapon.min
+	c.max_damage = gear.weapon.max
+	c.swing_interval = gear.weapon.speed
 	c.melee_crit = agility / _agility_rate(char_class, level, true)
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false)
-	c.parry = 5.0 if level >= ClassicData.PARRY_LEVEL.get(char_class, 99) else 0.0
-	c.block = 0.0
+	# Players need a melee weapon to parry.
+	var armed: bool = gear.weapon != Inventory.UNARMED_WEAPON
+	c.parry = 5.0 if armed and level >= ClassicData.PARRY_LEVEL.get(char_class, 99) else 0.0
+	# Blocking needs a shield. Block value: shield block + Strength / 20 - 1.
+	c.block = SHIELD_BLOCK_CHANCE if gear.has_shield else 0.0
+	c.block_value = maxi(gear.block + strength / 20 - 1, 0) if gear.has_shield else 0
 	c.spell_crit = spell_crit_from_intellect(char_class, level, intellect)
 	mana_per_tick = mana_regen_per_tick(char_class, spirit)
 	health_per_tick = health_regen_per_tick(char_class, spirit)

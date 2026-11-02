@@ -26,13 +26,13 @@ func setup(ui_scale: float) -> void:
 	visible = false
 
 
-func show_item(item: Dictionary) -> void:
+func show_item(item: Dictionary, soulbound := false) -> void:
 	visible = not item.is_empty()
 	if not visible:
 		return
 	for child in _rows.get_children():
 		child.free()
-	for line: Array in ItemDB.tooltip(item):
+	for line: Array in ItemDB.tooltip(item, soulbound):
 		var row := HBoxContainer.new()
 		var left := _label(line[0], line[2])
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL

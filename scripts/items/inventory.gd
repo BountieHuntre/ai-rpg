@@ -1,0 +1,331 @@
+class_name Inventory
+extends RefCounted
+## Classic WoW bag and equipment rules, working on the data in GameState.
+## Places in the inventory are refs:
+##   { "kind": "bag", "bag": container index, "slot": i }  (0 is the backpack)
+##   { "kind": "equip", "slot": Inventory.Slot }
+##   { "kind": "bag_slot", "index": 0 to 3 }
+
+enum Slot {
+	HEAD, NECK, SHOULDER, BACK, CHEST, SHIRT, TABARD, WRIST, HANDS, WAIST, LEGS, FEET,
+	FINGER_1, FINGER_2, TRINKET_1, TRINKET_2, MAIN_HAND, OFF_HAND, RANGED,
+}
+const SLOT_LABELS := {
+	Slot.HEAD: "Head", Slot.NECK: "Neck", Slot.SHOULDER: "Shoulder", Slot.BACK: "Back",
+	Slot.CHEST: "Chest", Slot.SHIRT: "Shirt", Slot.TABARD: "Tabard", Slot.WRIST: "Wrist",
+	Slot.HANDS: "Hands", Slot.WAIST: "Waist", Slot.LEGS: "Legs", Slot.FEET: "Feet",
+	Slot.FINGER_1: "Finger", Slot.FINGER_2: "Finger", Slot.TRINKET_1: "Trinket",
+	Slot.TRINKET_2: "Trinket", Slot.MAIN_HAND: "Main Hand", Slot.OFF_HAND: "Off Hand",
+	Slot.RANGED: "Ranged",
+}
+
+const INVTYPE_BAG := 18
+const INVTYPE_TWO_HAND := 17
+const INVTYPE_ONE_HAND := 13
+const INVTYPE_SHIELD := 14
+const ARMOR_SUBCLASS_MISC := 0
+const ARMOR_SUBCLASS_PLATE := 4
+const ARMOR_SUBCLASS_SHIELD := 6
+
+## Equipment slots for each InventoryType. One-handers only go in the off hand
+## with Dual Wield, which no class set up here has yet.
+const SLOTS_FOR_TYPE := {
+	1: [Slot.HEAD], 2: [Slot.NECK], 3: [Slot.SHOULDER], 4: [Slot.SHIRT], 5: [Slot.CHEST],
+	6: [Slot.WAIST], 7: [Slot.LEGS], 8: [Slot.FEET], 9: [Slot.WRIST], 10: [Slot.HANDS],
+	11: [Slot.FINGER_1, Slot.FINGER_2], 12: [Slot.TRINKET_1, Slot.TRINKET_2],
+	13: [Slot.MAIN_HAND], 14: [Slot.OFF_HAND], 15: [Slot.RANGED], 16: [Slot.BACK],
+	17: [Slot.MAIN_HAND], 19: [Slot.TABARD], 20: [Slot.CHEST], 21: [Slot.MAIN_HAND],
+	22: [Slot.OFF_HAND], 23: [Slot.OFF_HAND], 25: [Slot.RANGED], 26: [Slot.RANGED],
+}
+
+## Classic starting proficiencies ("item class:subclass"). Paladins start with
+## one- and two-handed maces, cloth, leather, mail and shields. Other weapon
+## types are trained later, and plate at level 40.
+const STARTING_PROFICIENCIES := {
+	ClassicData.CharClass.PALADIN: ["2:4", "2:5", "4:1", "4:2", "4:3", "4:6"],
+}
+## Classic starting gear for a Human Paladin: Battleworn Hammer, Squire's
+## Shirt, Pants and Boots, with a Hearthstone in the backpack.
+const STARTING_EQUIPMENT := { Slot.MAIN_HAND: 2361, Slot.SHIRT: 45, Slot.LEGS: 44, Slot.FEET: 43 }
+const STARTING_BACKPACK := [6948]
+
+const ERR_FULL := "Inventory is full."
+const ERR_WRONG_SLOT := "That item doesn't go in that slot."
+const ERR_LEVEL := "You must reach level %d to use that item."
+const ERR_CLASS := "You can never use that item."
+const ERR_PROFICIENCY := "You do not have the required proficiency for that item."
+const ERR_TWO_HANDED := "Cannot equip that with a two-handed weapon."
+const ERR_BAG_NOT_EMPTY := "You can only do that with empty bags."
+const ERR_BAG_IN_BAG := "Can't put non-empty bags in other bags."
+const ERR_NOT_A_BAG := "That's not a bag."
+const ERR_BAG_INTO_ITSELF := "You can't put a bag into itself."
+
+const UNARMED_WEAPON := { "min": 1.0, "max": 2.0, "speed": 2.0 }
+
+
+static func start_character(state: Node) -> void:
+	state.proficiencies.assign(STARTING_PROFICIENCIES.get(state.char_class, []))
+	for slot: Slot in STARTING_EQUIPMENT:
+		state.equipment[slot] = _stack(STARTING_EQUIPMENT[slot], 1, false)
+	for id: int in STARTING_BACKPACK:
+		state.add_item(id, 1)
+
+
+# Reading.
+
+static func stack_at(ref: Dictionary) -> Dictionary:
+	match ref.kind:
+		"bag":
+			return GameState.containers[ref.bag][ref.slot]
+		"equip":
+			return GameState.equipment.get(ref.slot, {})
+		"bag_slot":
+			return GameState.bags[ref.index]
+	return {}
+
+
+static func bag_ref(bag: int, slot: int) -> Dictionary:
+	return { "kind": "bag", "bag": bag, "slot": slot }
+
+
+static func equip_ref(slot: Slot) -> Dictionary:
+	return { "kind": "equip", "slot": slot }
+
+
+static func bag_slot_ref(index: int) -> Dictionary:
+	return { "kind": "bag_slot", "index": index }
+
+
+static func free_slots() -> int:
+	var free := 0
+	for container: Array in GameState.containers:
+		for stack: Dictionary in container:
+			if stack.is_empty():
+				free += 1
+	return free
+
+
+static func is_two_hander(stack: Dictionary) -> bool:
+	return not stack.is_empty() and int(ItemDB.get_item(stack.id).InventoryType) == INVTYPE_TWO_HAND
+
+
+# Changing.
+
+## Adds items, filling existing stacks first, then empty slots in bag order.
+## Returns how many didn't fit.
+static func add_item(id: int, count: int, bound := false) -> int:
+	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
+	for container: Array in GameState.containers:
+		for stack: Dictionary in container:
+			if count > 0 and not stack.is_empty() and stack.id == id and stack.count < stack_size:
+				var moved := mini(stack_size - stack.count, count)
+				stack.count += moved
+				count -= moved
+	for container: Array in GameState.containers:
+		for i in container.size():
+			if count > 0 and container[i].is_empty():
+				var moved := mini(stack_size, count)
+				container[i] = _stack(id, moved, bound)
+				count -= moved
+	GameState.inventory_changed.emit()
+	return count
+
+
+## Right-click "use" on a bag slot: equips gear into its slot (a free one if
+## there's a choice) and puts bags into the first empty bag slot.
+static func use_from_bag(ref: Dictionary) -> String:
+	var stack := stack_at(ref)
+	if stack.is_empty():
+		return ""
+	var item := ItemDB.get_item(stack.id)
+	if int(item.InventoryType) == INVTYPE_BAG:
+		for i in GameState.BAG_SLOTS:
+			if GameState.bags[i].is_empty():
+				return move(ref, bag_slot_ref(i))
+		return move(ref, bag_slot_ref(0))
+	var slots: Array = SLOTS_FOR_TYPE.get(int(item.InventoryType), [])
+	if slots.is_empty():
+		return ""
+	for slot: Slot in slots:
+		if GameState.equipment.get(slot, {}).is_empty():
+			return move(ref, equip_ref(slot))
+	return move(ref, equip_ref(slots[0]))
+
+
+## Right-click on equipment: moves it to the first free bag slot.
+static func unequip(slot: Slot) -> String:
+	if GameState.equipment.get(slot, {}).is_empty():
+		return ""
+	var free := _first_free_slot()
+	if free.is_empty():
+		return ERR_FULL
+	return move(equip_ref(slot), free)
+
+
+## Moves or swaps the stacks at two places, merging same-item stacks.
+## Returns an error message, or "" on success.
+static func move(from: Dictionary, to: Dictionary) -> String:
+	if from == to:
+		return ""
+	var moving := stack_at(from)
+	var other := stack_at(to)
+	if moving.is_empty():
+		return ""
+	var problem := _check_place(moving, to, from)
+	if problem.is_empty() and not other.is_empty():
+		problem = _check_place(other, from, to)
+	if not problem.is_empty():
+		return problem
+
+	# Merge stacks of the same item between bag slots.
+	if from.kind == "bag" and to.kind == "bag" and not other.is_empty() and other.id == moving.id:
+		var stack_size := maxi(int(ItemDB.get_item(moving.id).stackable), 1)
+		if other.count < stack_size:
+			var moved := mini(stack_size - other.count, moving.count)
+			other.count += moved
+			moving.count -= moved
+			if moving.count == 0:
+				_set_stack(from, {})
+			GameState.inventory_changed.emit()
+			return ""
+
+	# A two-hander pushes the off-hand item into the bags.
+	var off_hand: Dictionary = GameState.equipment.get(Slot.OFF_HAND, {})
+	var pushes_off_hand: bool = to.kind == "equip" and to.slot == Slot.MAIN_HAND and is_two_hander(moving) and not off_hand.is_empty()
+	if pushes_off_hand:
+		var free := free_slots() + (1 if from.kind == "bag" and other.is_empty() else 0)
+		if free < 1:
+			return ERR_FULL
+
+	_set_stack(from, other)
+	_set_stack(to, moving)
+	if to.kind == "equip":
+		_bind_on_equip(moving)
+	if pushes_off_hand:
+		GameState.equipment.erase(Slot.OFF_HAND)
+		_set_stack(_first_free_slot(), off_hand)
+	GameState.inventory_changed.emit()
+	return ""
+
+
+## Whether the stack can go into a place, given where it's coming from.
+static func _check_place(stack: Dictionary, place: Dictionary, coming_from: Dictionary) -> String:
+	var item := ItemDB.get_item(stack.id)
+	match place.kind:
+		"equip":
+			if not (place.slot in SLOTS_FOR_TYPE.get(int(item.InventoryType), [])):
+				return ERR_WRONG_SLOT
+			var problem := can_use(item)
+			if not problem.is_empty():
+				return problem
+			if place.slot == Slot.OFF_HAND and is_two_hander(GameState.equipment.get(Slot.MAIN_HAND, {})):
+				if not (coming_from.kind == "equip" and coming_from.slot == Slot.MAIN_HAND):
+					return ERR_TWO_HANDED
+		"bag_slot":
+			if int(item.InventoryType) != INVTYPE_BAG:
+				return ERR_NOT_A_BAG
+			if coming_from.kind == "bag" and coming_from.bag == place.index + 1:
+				return ERR_BAG_INTO_ITSELF
+			if not _bag_is_empty(place.index):
+				return ERR_BAG_NOT_EMPTY
+		"bag":
+			if place.slot >= GameState.containers[place.bag].size():
+				return ERR_WRONG_SLOT
+			if coming_from.kind == "bag_slot":
+				if not _bag_is_empty(coming_from.index):
+					return ERR_BAG_NOT_EMPTY
+				if place.bag == coming_from.index + 1:
+					return ERR_BAG_INTO_ITSELF
+	return ""
+
+
+## Level, class and proficiency checks for equipping an item.
+static func can_use(item: Dictionary) -> String:
+	if int(item.RequiredLevel) > GameState.level:
+		return ERR_LEVEL % item.RequiredLevel
+	var class_mask := int(item.AllowableClass)
+	if class_mask > 0 and (class_mask & (1 << (GameState.char_class - 1))) == 0:
+		return ERR_CLASS
+	var item_class := int(item["class"])
+	var subclass := int(item.subclass)
+	if item_class == ItemDB.ITEM_CLASS_WEAPON or (item_class == ItemDB.ITEM_CLASS_ARMOR and subclass != ARMOR_SUBCLASS_MISC):
+		if not ("%d:%d" % [item_class, subclass] in GameState.proficiencies):
+			return ERR_PROFICIENCY
+	return ""
+
+
+## Totals from everything equipped, for CharacterStats.
+static func gear_totals() -> Dictionary:
+	var stats := [0, 0, 0, 0, 0]
+	var totals := { "stats": stats, "armor": 0, "health": 0, "mana": 0, "block": 0, "has_shield": false, "weapon": UNARMED_WEAPON }
+	# ITEM_MOD stat types: 3 Agility, 4 Strength, 5 Intellect, 6 Spirit, 7 Stamina.
+	var stat_index := { 4: ClassicData.Stat.STRENGTH, 3: ClassicData.Stat.AGILITY, 7: ClassicData.Stat.STAMINA, 5: ClassicData.Stat.INTELLECT, 6: ClassicData.Stat.SPIRIT }
+	for slot: Slot in GameState.equipment:
+		var stack: Dictionary = GameState.equipment[slot]
+		if stack.is_empty():
+			continue
+		var item := ItemDB.get_item(stack.id)
+		totals.armor += int(item.armor)
+		for stat: Array in item.stats:
+			var kind := int(stat[0])
+			if stat_index.has(kind):
+				stats[stat_index[kind]] += int(stat[1])
+			elif kind == 1:
+				totals.health += int(stat[1])
+			elif kind == 0:
+				totals.mana += int(stat[1])
+		if slot == Slot.MAIN_HAND and int(item.dmg_max1) > 0:
+			totals.weapon = { "min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0 }
+		if slot == Slot.OFF_HAND and int(item.subclass) == ARMOR_SUBCLASS_SHIELD and int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR:
+			totals.has_shield = true
+			totals.block += int(item.block)
+	return totals
+
+
+static func _stack(id: int, count: int, bound: bool) -> Dictionary:
+	# Bind on pickup items are soulbound as soon as they're taken.
+	var binds := bound or int(ItemDB.get_item(id).get("bonding", 0)) == 1
+	return { "id": id, "count": count, "bound": binds }
+
+
+static func _bind_on_equip(stack: Dictionary) -> void:
+	if int(ItemDB.get_item(stack.id).bonding) == 2:
+		stack.bound = true
+
+
+static func _set_stack(ref: Dictionary, stack: Dictionary) -> void:
+	match ref.kind:
+		"bag":
+			GameState.containers[ref.bag][ref.slot] = stack
+		"equip":
+			if stack.is_empty():
+				GameState.equipment.erase(ref.slot)
+			else:
+				GameState.equipment[ref.slot] = stack
+		"bag_slot":
+			GameState.bags[ref.index] = stack
+			_resize_container(ref.index + 1, 0 if stack.is_empty() else int(ItemDB.get_item(stack.id).ContainerSlots))
+
+
+static func _resize_container(index: int, size: int) -> void:
+	var container: Array = GameState.containers[index]
+	container.resize(size)
+	for i in size:
+		if container[i] == null:
+			container[i] = {}
+
+
+static func _bag_is_empty(index: int) -> bool:
+	for stack: Dictionary in GameState.containers[index + 1]:
+		if not stack.is_empty():
+			return false
+	return true
+
+
+static func _first_free_slot() -> Dictionary:
+	for bag in GameState.containers.size():
+		var container: Array = GameState.containers[bag]
+		for i in container.size():
+			if container[i].is_empty():
+				return bag_ref(bag, i)
+	return {}
