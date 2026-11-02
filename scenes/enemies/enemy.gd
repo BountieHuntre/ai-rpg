@@ -20,6 +20,7 @@ var _home := Vector3.ZERO
 @onready var combatant: Combatant = $Combatant
 @onready var _visual: Node3D = $Visual
 @onready var _collision: CollisionShape3D = $CollisionShape3D
+@onready var _feedback: UnitFeedback = $UnitFeedback
 
 
 func _ready() -> void:
@@ -85,7 +86,6 @@ func _on_took_damage(_amount: int, _source: Combatant) -> void:
 func _on_died() -> void:
 	state = State.DEAD
 	_collision.set_deferred("disabled", true)
-	_visual.rotation.x = -PI / 2.0
 	get_tree().create_timer(respawn_time).timeout.connect(_respawn)
 
 
@@ -93,6 +93,7 @@ func _respawn() -> void:
 	global_position = _home
 	velocity = Vector3.ZERO
 	_visual.rotation = Vector3.ZERO
+	_feedback.reset()
 	_collision.set_deferred("disabled", false)
 	combatant.reset()
 	state = State.IDLE

@@ -7,6 +7,7 @@ signal failed(message: String)
 
 const WORLD_LAYER := 1
 const EYE_HEIGHT := 1.2
+const PROJECTILE := preload("res://scenes/effects/projectile.tscn")
 
 @export var abilities: Array[Ability] = []
 @export var global_cooldown := 1.5
@@ -124,9 +125,23 @@ func _finish(ability: Ability, target: Combatant) -> void:
 		_cooldowns[ability] = ability.cooldown
 	match ability.effect:
 		Ability.Effect.DAMAGE:
-			target.take_damage(ability.power, _player.combatant)
+			if ability.projectile_speed > 0.0:
+				_launch_projectile(ability, target)
+			else:
+				_player.combatant.swung.emit(target)
+				target.take_damage(ability.power, _player.combatant)
 		Ability.Effect.HEAL:
 			_player.combatant.heal(ability.power)
 		Ability.Effect.STUN:
+			_player.combatant.swung.emit(target)
 			target.take_damage(ability.power, _player.combatant)
 			target.stun(ability.stun_duration)
+
+
+func _launch_projectile(ability: Ability, target: Combatant) -> void:
+	var source := _player.combatant
+	var projectile: Projectile = PROJECTILE.instantiate()
+	_player.get_parent().add_child(projectile)
+	projectile.launch(_player.global_position + Vector3.UP * EYE_HEIGHT, target, ability.projectile_speed, func() -> void:
+		target.take_damage(ability.power, source)
+	)

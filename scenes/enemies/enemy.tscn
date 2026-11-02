@@ -1,4 +1,6 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/unit_feedback.gd" id="3_feedback"]
 
 [ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
@@ -45,3 +47,6 @@ mesh = SubResource("BoxMesh_nose")
 script = ExtResource("2_combatant")
 display_name = "Training Foe"
 melee_damage = 8
+
+[node name="UnitFeedback" type="Node3D" parent="."]
+script = ExtResource("3_feedback")

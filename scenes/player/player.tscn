@@ -1,4 +1,6 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/unit_feedback.gd" id="10_feedback"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
@@ -69,6 +71,9 @@ melee_damage = 6
 [node name="AbilityCaster" type="Node" parent="."]
 script = ExtResource("4_caster")
 abilities = Array[ExtResource("5_ability")]([ExtResource("6_strike"), ExtResource("7_firebolt"), ExtResource("8_mend"), ExtResource("9_bash")])
+
+[node name="UnitFeedback" type="Node3D" parent="."]
+script = ExtResource("10_feedback")
 
 [node name="Targeting" type="Node" parent="."]
 script = ExtResource("3_targeting")

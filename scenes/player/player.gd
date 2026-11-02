@@ -20,6 +20,10 @@ var facing := 0.0
 @onready var _visual: Node3D = $Visual
 
 
+func _ready() -> void:
+	combatant.can_swing_at = is_facing
+
+
 func is_moving() -> bool:
 	return Vector2(velocity.x, velocity.z).length() > 0.1
 

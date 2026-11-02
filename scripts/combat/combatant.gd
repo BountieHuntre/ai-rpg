@@ -3,6 +3,7 @@ extends Node
 ## Health, mana, stuns and auto-attack, shared by the player and enemies.
 ## Must be a direct child of the unit's body.
 
+signal swung(target: Combatant)
 signal took_damage(amount: int, source: Combatant)
 signal healed(amount: int)
 signal stunned
@@ -21,6 +22,8 @@ var mana := 0.0
 var invulnerable := false
 ## While set, swings at this combatant whenever it is in melee range.
 var attack_target: Combatant
+## Optional extra check before a swing. Takes the target's position.
+var can_swing_at: Callable
 
 var _stun_left := 0.0
 var _swing_left := 0.0
@@ -87,6 +90,8 @@ func _physics_process(delta: float) -> void:
 	if attack_target and not attack_target.is_alive():
 		attack_target = null
 	if attack_target and not is_stunned() and _swing_left == 0.0:
-		if distance_to(attack_target) <= melee_range:
+		var allowed: bool = not can_swing_at.is_valid() or can_swing_at.call(attack_target.body.global_position)
+		if allowed and distance_to(attack_target) <= melee_range:
+			swung.emit(attack_target)
 			attack_target.take_damage(melee_damage, self)
 			_swing_left = swing_interval

@@ -11,3 +11,4 @@ power = 30
 mana_cost = 20
 cast_time = 1.5
 ability_range = 20.0
+projectile_speed = 18.0

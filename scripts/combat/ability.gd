@@ -15,6 +15,8 @@ enum Effect { DAMAGE, HEAL, STUN }
 @export var cooldown := 0.0
 @export var ability_range := 2.5
 @export var stun_duration := 0.0
+## Above zero, damage lands when a projectile arrives. At zero it's a melee hit.
+@export var projectile_speed := 0.0
 
 
 func needs_target() -> bool:
