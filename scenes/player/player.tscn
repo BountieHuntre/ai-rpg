@@ -1,6 +1,14 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
+[ext_resource type="Script" path="res://scripts/combat/targeting.gd" id="3_targeting"]
+[ext_resource type="Script" path="res://scripts/combat/ability_caster.gd" id="4_caster"]
+[ext_resource type="Script" path="res://scripts/combat/ability.gd" id="5_ability"]
+[ext_resource type="Resource" path="res://data/abilities/strike.tres" id="6_strike"]
+[ext_resource type="Resource" path="res://data/abilities/firebolt.tres" id="7_firebolt"]
+[ext_resource type="Resource" path="res://data/abilities/mend.tres" id="8_mend"]
+[ext_resource type="Resource" path="res://data/abilities/bash.tres" id="9_bash"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -21,7 +29,20 @@ albedo_color = Color(0.95, 0.75, 0.3, 1)
 material = SubResource("Material_nose")
 size = Vector3(0.3, 0.25, 0.4)
 
-[node name="Player" type="CharacterBody3D"]
+[sub_resource type="StandardMaterial3D" id="Material_ring"]
+shading_mode = 0
+albedo_color = Color(0.95, 0.2, 0.15, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = SubResource("Material_ring")
+inner_radius = 0.75
+outer_radius = 0.9
+rings = 24
+ring_segments = 4
+
+[node name="Player" type="CharacterBody3D" groups=["player"]]
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -37,3 +58,23 @@ mesh = SubResource("CapsuleMesh_body")
 [node name="Nose" type="MeshInstance3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -0.45)
 mesh = SubResource("BoxMesh_nose")
+
+[node name="Combatant" type="Node" parent="."]
+script = ExtResource("2_combatant")
+display_name = "Hero"
+max_mana = 100
+mana_regen = 3.0
+melee_damage = 6
+
+[node name="AbilityCaster" type="Node" parent="."]
+script = ExtResource("4_caster")
+abilities = Array[ExtResource("5_ability")]([ExtResource("6_strike"), ExtResource("7_firebolt"), ExtResource("8_mend"), ExtResource("9_bash")])
+
+[node name="Targeting" type="Node" parent="."]
+script = ExtResource("3_targeting")
+
+[node name="Ring" type="MeshInstance3D" parent="Targeting"]
+top_level = true
+visible = false
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")

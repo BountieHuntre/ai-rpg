@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Ability" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/ability.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Bash"
+short_name = "Bash"
+effect = 2
+power = 5
+mana_cost = 10
+cooldown = 15.0
+ability_range = 2.5
+stun_duration = 3.0

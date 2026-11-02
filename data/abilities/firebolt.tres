@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Ability" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/ability.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Firebolt"
+short_name = "Bolt"
+effect = 0
+power = 30
+mana_cost = 20
+cast_time = 1.5
+ability_range = 20.0

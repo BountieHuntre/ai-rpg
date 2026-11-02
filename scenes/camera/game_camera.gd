@@ -9,7 +9,11 @@ extends Camera3D
 
 func _ready() -> void:
 	if target:
-		global_position = _desired_position()
+		snap_to_target()
+
+
+func snap_to_target() -> void:
+	global_position = _desired_position()
 
 
 func _physics_process(delta: float) -> void:

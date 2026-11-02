@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Ability" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/ability.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Mend"
+short_name = "Mend"
+effect = 1
+power = 40
+mana_cost = 25
+cast_time = 2.0

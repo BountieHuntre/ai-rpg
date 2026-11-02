@@ -1,16 +1,42 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://dw2l6lbg86xdw"]
 
-[ext_resource type="Script" path="res://scenes/main/main.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dtk3mu0kfyiwp" path="res://scenes/main/main.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/levels/test_level.tscn" id="2_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/camera/game_camera.tscn" id="4_camera"]
+[ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="4_camera"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="5_enemy"]
+[ext_resource type="PackedScene" path="res://ui/combat_hud.tscn" id="6_hud"]
 
-[node name="Main" type="Node3D"]
+[node name="Main" type="Node" unique_id=2075888773]
 script = ExtResource("1_script")
 
-[node name="TestLevel" parent="." instance=ExtResource("2_level")]
+[node name="GameView" type="SubViewportContainer" parent="."]
+texture_filter = 1
+offset_right = 1440.0
+offset_bottom = 810.0
+mouse_filter = 2
+stretch = true
+stretch_shrink = 3
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="GameViewport" type="SubViewport" parent="GameView"]
+handle_input_locally = false
+size = Vector2i(480, 270)
+render_target_update_mode = 4
 
-[node name="GameCamera" parent="." instance=ExtResource("4_camera")]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 15, 21.2132, 15)
+[node name="TestLevel" parent="GameView/GameViewport" unique_id=1268305649 instance=ExtResource("2_level")]
+
+[node name="Player" parent="GameView/GameViewport" unique_id=886910622 instance=ExtResource("3_player")]
+
+[node name="GameCamera" parent="GameView/GameViewport" unique_id=2145890281 instance=ExtResource("4_camera")]
+transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 4.23616, 7.51754)
+
+[node name="Enemy1" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11)
+
+[node name="Enemy2" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -15)
+
+[node name="Enemy3" parent="GameView/GameViewport" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -15)
+
+[node name="CombatHud" parent="." instance=ExtResource("6_hud")]
