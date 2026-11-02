@@ -11,6 +11,7 @@ signal inventory_changed
 ## The classic backpack has 16 slots, plus four bag slots.
 const BACKPACK_SLOTS := 16
 const BAG_SLOTS := 4
+const ACTION_SLOTS := 12
 const SAVE_PATH := "user://character.json"
 ## Bump when the save format changes, and convert older saves in _apply_save.
 const SAVE_VERSION := 1
@@ -35,6 +36,10 @@ var containers: Array = []
 var player_state: Dictionary = {}
 ## The world around the player: { "corpses": { enemy name: corpse state } }.
 var world_state: Dictionary = {}
+## Spell ids the character knows, every rank included.
+var known_spells: Array[int] = []
+## Spell id in each of the 12 action bar slots, or 0 for empty.
+var action_bar: Array[int] = []
 
 var save_path := SAVE_PATH
 
@@ -49,6 +54,17 @@ func _init() -> void:
 func _ready() -> void:
 	if not load_from_disk():
 		Inventory.start_character(self)
+		_start_spells()
+
+
+## Classic starting spells, plus Attack, laid out on the action bar.
+func _start_spells() -> void:
+	known_spells.assign([SpellDB.ATTACK] + SpellDB.start_spells(race, char_class))
+	action_bar.clear()
+	action_bar.resize(ACTION_SLOTS)
+	action_bar.fill(0)
+	for i in known_spells.size():
+		action_bar[i] = known_spells[i]
 
 
 func add_item(id: int, count: int, bound := false) -> int:
@@ -82,6 +98,8 @@ func save_to_disk() -> bool:
 		"containers": containers,
 		"player": player_state,
 		"world": world_state,
+		"spells": known_spells,
+		"action_bar": action_bar,
 	}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
@@ -120,6 +138,7 @@ func reset_character() -> void:
 	world_state = {}
 	_reset_items()
 	Inventory.start_character(self)
+	_start_spells()
 	if FileAccess.file_exists(save_path):
 		DirAccess.remove_absolute(save_path)
 
@@ -139,6 +158,12 @@ func _apply_save(data: Dictionary) -> void:
 	containers = data.containers.map(func(container: Array) -> Array: return container.map(_read_stack))
 	player_state = data.get("player", {})
 	world_state = data.get("world", {})
+	# Saves from before spells existed start with the class's starting spells.
+	if data.has("spells"):
+		known_spells.assign(data.spells.map(func(id: float) -> int: return int(id)))
+		action_bar.assign(data.action_bar.map(func(id: float) -> int: return int(id)))
+	else:
+		_start_spells()
 
 
 func _read_stack(stack: Dictionary) -> Dictionary:

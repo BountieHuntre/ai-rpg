@@ -18,6 +18,15 @@ Also:
 - `items.json`: `item_template` rows for everything those tables can drop, plus
   the starting gear
 
+- `spells.json`: `spell_template` rows for the Paladin trainer list (Brother
+  Wilhelm, 927), the Human Paladin starting spells, and every spell those
+  trigger (seal procs, judgements, Holy Light's heal), plus `spell_chain`
+  ranks, `spell_bonus_data` coefficients and the trainer list itself.
+
+Spells refer to client DBC tables for cast time, duration, range and radius.
+Those aren't in the database, so `scripts/spells/spell_db.gd` holds the values
+for the indexes Paladin spells use, matched against classic spell tooltips.
+
 Regenerate everything with `tools/classic_db/extract.py`. To add creatures, add
 their entries to `CREATURES` in that script and rerun it.
 

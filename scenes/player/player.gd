@@ -26,7 +26,7 @@ var walking := false
 @onready var progression: Progression = $Progression
 @onready var stats: CharacterStats = $CharacterStats
 @onready var targeting: Targeting = $Targeting
-@onready var caster: AbilityCaster = $AbilityCaster
+@onready var spells: SpellCaster = $SpellCaster
 @onready var _visual: Node3D = $Visual
 
 
@@ -61,9 +61,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		walking = not walking
 	elif event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
 		autorunning = false
-	for i in caster.abilities.size():
-		if event.is_action_pressed("ability_%d" % (i + 1)):
-			caster.use(i)
+	for i in GameState.ACTION_SLOTS:
+		if event.is_action_pressed("ability_%d" % (i + 1)) and GameState.action_bar[i] != 0:
+			spells.cast(GameState.action_bar[i])
 
 
 func _physics_process(delta: float) -> void:

@@ -1,0 +1,157 @@
+class_name SpellDB
+extends RefCounted
+## Classic WoW (1.12) spell data from data/classic/spells.json: spell_template
+## rows, rank chains, spell power coefficients, class trainer lists and
+## starting spells, plus the small client lookup tables spells refer to.
+
+const SPELLS_PATH := "res://data/classic/spells.json"
+
+## Spell ids with special meaning.
+const ATTACK := 6603
+const HOLY_LIGHT_HEAL := 19968
+
+enum School { PHYSICAL, HOLY, FIRE, NATURE, FROST, SHADOW, ARCANE }
+const SCHOOL_NAMES := ["Physical", "Holy", "Fire", "Nature", "Frost", "Shadow", "Arcane"]
+
+## spell_template Effect values used here.
+const EFFECT_SCHOOL_DAMAGE := 2
+const EFFECT_DUMMY := 3
+const EFFECT_APPLY_AURA := 6
+const EFFECT_HEAL := 10
+const EFFECT_APPLY_AREA_AURA := 35
+const EFFECT_SCRIPT := 77
+## Aura types (EffectApplyAuraName) used here.
+const AURA_DUMMY := 4
+const AURA_MOD_STUN := 12
+const AURA_MOD_RESISTANCE := 22
+const AURA_MOD_ATTACK_POWER := 99
+## Implicit targets.
+const TARGET_SELF := 1
+const TARGET_ENEMY := 6
+const TARGET_FRIEND := 21
+## AttributesEx2 / AttributesEx3 flags.
+const ATTR_EX2_CANT_CRIT := 0x20000000
+const ATTR_EX3_ALWAYS_HIT := 0x40000
+
+## Client DBC lookup tables, for the indexes classic Paladin spells use.
+## Values match the classic spell tooltips (Holy Light 2.5 s, Flash of Light
+## 1.5 s, seals 30 s, Hammer of Justice rank 1 3 s, Judgement 10 yards).
+## Cast times and durations in seconds, ranges and radii in yards.
+const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 16: 1.5, 20: 2.5 }
+## -1 means until cancelled.
+const DURATIONS := {
+	0: 0.0, 1: 10.0, 5: 300.0, 8: 15.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
+	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 347: 900.0,
+}
+const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 13: 50000.0 }
+const RADII := { 0: 0.0, 9: 20.0, 10: 30.0, 12: 100.0, 14: 8.0 }
+
+static var _data: Dictionary
+
+
+static func get_spell(id: int) -> Dictionary:
+	if id == ATTACK:
+		return { "Id": ATTACK, "SpellName": "Attack", "Rank1": "", "School": 0 }
+	return _get_data().spells.get(str(id), {})
+
+
+static func full_name(spell: Dictionary) -> String:
+	return spell.SpellName if str(spell.Rank1).is_empty() else "%s (%s)" % [spell.SpellName, spell.Rank1]
+
+
+## An effect's value at the caster's level: base points plus a die roll, plus
+## RealPointsPerLevel for each level past the spell level (up to MaxLevel).
+## As in Unit::CalculateSpellEffectValue.
+static func effect_value(spell: Dictionary, effect: int, caster_level: int) -> float:
+	var range_ := effect_range(spell, effect, caster_level)
+	return range_.x if range_.y <= range_.x else float(randi_range(int(range_.x), int(range_.y)))
+
+
+## The lowest and highest value an effect can roll at a level.
+static func effect_range(spell: Dictionary, effect: int, caster_level: int) -> Vector2:
+	var i := effect + 1
+	var level := caster_level
+	if int(spell.MaxLevel) > 0:
+		level = mini(level, int(spell.MaxLevel))
+	var levels_over := maxi(level, int(spell.BaseLevel)) - int(spell.SpellLevel)
+	var base := float(spell["EffectBasePoints%d" % i]) + float(spell["EffectRealPointsPerLevel%d" % i]) * levels_over
+	var low := int(spell["EffectBaseDice%d" % i])
+	var high := maxi(int(spell["EffectDieSides%d" % i]), low)
+	return Vector2(floorf(base) + low, floorf(base) + high)
+
+
+static func cast_time(spell: Dictionary) -> float:
+	return CAST_TIMES.get(int(spell.get("CastingTimeIndex", 1)), 0.0)
+
+
+static func duration(spell: Dictionary) -> float:
+	return DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+
+
+static func spell_range(spell: Dictionary) -> float:
+	return RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+
+
+## Mana cost, either flat or a percentage of the caster's base mana.
+static func mana_cost(spell: Dictionary, base_mana: int) -> int:
+	var percent := int(spell.get("ManaCostPercentage", 0))
+	if percent > 0:
+		return base_mana * percent / 100
+	return int(spell.get("ManaCost", 0))
+
+
+## Cooldown in seconds, not counting the global cooldown.
+static func cooldown(spell: Dictionary) -> float:
+	return maxf(int(spell.get("RecoveryTime", 0)), int(spell.get("CategoryRecoveryTime", 0))) / 1000.0
+
+
+static func global_cooldown(spell: Dictionary) -> float:
+	return int(spell.get("StartRecoveryTime", 0)) / 1000.0
+
+
+static func target_type(spell: Dictionary) -> int:
+	return int(spell.get("EffectImplicitTargetA1", TARGET_SELF))
+
+
+static func is_seal(spell: Dictionary) -> bool:
+	return str(spell.SpellName).begins_with("Seal of") and int(spell.Effect1) == EFFECT_APPLY_AURA
+
+
+static func has_attribute_ex2(spell: Dictionary, flag: int) -> bool:
+	return int(spell.get("AttributesEx2", 0)) & flag != 0
+
+
+static func has_attribute_ex3(spell: Dictionary, flag: int) -> bool:
+	return int(spell.get("AttributesEx3", 0)) & flag != 0
+
+
+## Spell power coefficient for direct damage or healing, from spell_bonus_data.
+static func direct_coefficient(id: int) -> float:
+	return float(_get_data().bonus.get(str(id), {}).get("direct", 0.0))
+
+
+static func seal_of_righteousness_proc(seal_id: int) -> int:
+	return int(_get_data().seal_of_righteousness_procs.get(str(seal_id), 0))
+
+
+static func start_spells(race: int, char_class: int) -> Array:
+	return _get_data().start_spells.get("%d-%d" % [race, char_class], [])
+
+
+static func trainer_list(trainer: String) -> Array:
+	return _get_data().trainers.get(trainer, [])
+
+
+## Rank number within its chain, or 0 for spells without ranks.
+static func rank_of(id: int) -> int:
+	return int(_get_data().chains.get(str(id), {}).get("rank", 0))
+
+
+static func first_rank(id: int) -> int:
+	return int(_get_data().chains.get(str(id), {}).get("first", id))
+
+
+static func _get_data() -> Dictionary:
+	if _data.is_empty():
+		_data = JSON.parse_string(FileAccess.get_file_as_string(SPELLS_PATH))
+	return _data

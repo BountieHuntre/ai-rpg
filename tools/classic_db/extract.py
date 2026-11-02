@@ -21,11 +21,41 @@ CREATURES = [299, 69, 257]  # Young Wolf, Timber Wolf, Kobold Worker
 # Items the player starts with: Human Paladin starting gear.
 STARTER_ITEMS = [2361, 45, 44, 43, 6948]
 
+# Class trainer whose spell list is exported, and the race/class whose
+# starting spells are. 927 is Brother Wilhelm, Paladin Trainer.
+CLASS_TRAINERS = {"paladin": 927}
+START_SPELLS_FOR = (1, 2)  # Human Paladin
+# Starting spells worth keeping (the rest are passives and internals).
+START_SPELL_EFFECTS = {2, 6, 10, 35, 77}
+# Seal of Righteousness procs by rank, from UnitAuraProcHandler.cpp in CMaNGOS.
+SEAL_OF_RIGHTEOUSNESS_PROCS = {
+    20154: 25742, 21084: 25741, 20287: 25740, 20288: 25739, 20289: 25738,
+    20290: 25737, 20291: 25736, 20292: 25735, 20293: 25713,
+}
+# Holy Light's script effect heals through this spell (SpellEffects.cpp).
+HOLY_LIGHT_HEAL = 19968
+
 TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
     "creature_template", "creature_loot_template", "reference_loot_template",
-    "item_template",
+    "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell",
+    "spell_chain", "spell_bonus_data",
 }
+SPELL_FIELDS = [
+    "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
+    "AttributesEx", "AttributesEx2", "AttributesEx3", "Targets", "CastingTimeIndex", "RecoveryTime",
+    "CategoryRecoveryTime", "StartRecoveryCategory", "StartRecoveryTime", "InterruptFlags",
+    "AuraInterruptFlags", "ProcFlags", "ProcChance", "ProcCharges", "MaxLevel", "BaseLevel",
+    "SpellLevel", "DurationIndex", "PowerType", "ManaCost", "ManaCostPercentage", "RangeIndex",
+    "Speed", "StackAmount", "DmgClass", "SpellFamilyName", "SpellFamilyFlags", "SpellIconID",
+] + [f"{field}{i}" for i in (1, 2, 3) for field in (
+    "Effect", "EffectDieSides", "EffectBaseDice", "EffectDicePerLevel", "EffectRealPointsPerLevel",
+    "EffectBasePoints", "EffectMechanic", "EffectImplicitTargetA", "EffectImplicitTargetB",
+    "EffectRadiusIndex", "EffectApplyAuraName", "EffectAmplitude", "EffectMiscValue",
+    "EffectTriggerSpell",
+)]
+SPELL_EFFECT_LEARN = 36
+SPELL_AURA_DUMMY = 4
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic")
 BACKSLASH = chr(92)
 
@@ -170,6 +200,77 @@ def main(path):
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
     write("items.json", items)
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items")
+    export_spells(db)
+
+
+def export_spells(db):
+    """Class trainer lists, starting spells and every spell they reach."""
+    spells = {r["Id"]: r for r in db["spell_template"]}
+    wanted, trainers = set(), {}
+
+    def taught_by(teach_id):
+        teach = spells[str(teach_id)]
+        learned = [int(teach[f"EffectTriggerSpell{i}"]) for i in (1, 2, 3)
+                   if int(teach[f"Effect{i}"]) == SPELL_EFFECT_LEARN]
+        return learned or [int(teach_id)]
+
+    for name, trainer in CLASS_TRAINERS.items():
+        entries = []
+        for r in db["npc_trainer"]:
+            if int(r["entry"]) != trainer:
+                continue
+            learned = taught_by(r["spell"])
+            # Skip junk rows that point at unrelated, retired spells.
+            if any(spells[str(s)]["SpellName"].startswith("zzOLD") for s in learned):
+                continue
+            entries.append({"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]),
+                            "level": int(r["reqlevel"])})
+            wanted.update(learned)
+        trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
+
+    race, char_class = START_SPELLS_FOR
+    start = []
+    for r in db["playercreateinfo_spell"]:
+        if (int(r["race"]), int(r["class"])) == (race, char_class):
+            spell = spells.get(r["Spell"])
+            if spell and any(int(spell[f"Effect{i}"]) in START_SPELL_EFFECTS for i in (1, 2, 3)) \
+                    and int(spell["SpellFamilyName"]) != 0:
+                start.append(int(r["Spell"]))
+                wanted.add(int(r["Spell"]))
+
+    # Follow triggered spells, seal procs and seal judgements.
+    pending = list(wanted)
+    while pending:
+        spell = spells.get(str(pending.pop()))
+        if not spell:
+            continue
+        linked = [int(spell[f"EffectTriggerSpell{i}"]) for i in (1, 2, 3)]
+        spell_id = int(spell["Id"])
+        if spell_id in SEAL_OF_RIGHTEOUSNESS_PROCS:
+            linked.append(SEAL_OF_RIGHTEOUSNESS_PROCS[spell_id])
+        if spell_id == 635 or spell["SpellName"] == "Holy Light":
+            linked.append(HOLY_LIGHT_HEAL)
+        # Seals keep their judgement spell id (minus one) in effect 3's base points.
+        if int(spell["Effect3"]) == 6 and int(spell["EffectApplyAuraName3"]) == SPELL_AURA_DUMMY:
+            linked.append(int(spell["EffectBasePoints3"]) + 1)
+        for other in linked:
+            if other and other not in wanted and str(other) in spells:
+                wanted.add(other)
+                pending.append(other)
+
+    out = {}
+    for spell_id in sorted(wanted):
+        spell = pick(spells[str(spell_id)], SPELL_FIELDS)
+        spell["SpellFamilyFlags"] = int(spells[str(spell_id)]["SpellFamilyFlags"])
+        out[str(spell_id)] = spell
+    chains = {r["spell_id"]: {"prev": int(r["prev_spell"]), "first": int(r["first_spell"]), "rank": int(r["rank"])}
+              for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
+    bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}
+             for r in db["spell_bonus_data"] if int(r["entry"]) in wanted}
+    write("spells.json", {"spells": out, "chains": chains, "bonus": bonus, "trainers": trainers,
+                          "start_spells": {f"{race}-{char_class}": start},
+                          "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
+    print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
 
 
 def write(name, data):

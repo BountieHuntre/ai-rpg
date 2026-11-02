@@ -7,8 +7,8 @@ extends CanvasLayer
 const BASE_HEIGHT := 270.0
 const FONT_SIZE := 8
 const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
-const SLOT_SIZE := 30.0
-const SLOT_GAP := 3.0
+## The cast bar sits just above the action bar.
+const CAST_BAR_Y_FROM_BOTTOM := 40.0
 const MESSAGE_TIME := 2.0
 const FLOAT_TIME := 1.0
 const FLOAT_SPEED := 18.0
@@ -53,11 +53,11 @@ var _cast_fill: Control
 var _cast_name: Label
 var _message: Label
 var _message_left := 0.0
-var _slots: Array[Dictionary] = []
 var _floats: Array[Dictionary] = []
 var _next_float_offset := 0
 var _enemy_bars: Array[Dictionary] = []
 var _inventory: InventoryUI
+var _spells: SpellUI
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
 var _tooltip: ItemTooltip
@@ -73,8 +73,8 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	_build()
 	get_viewport().size_changed.connect(_build)
 
-	_player.caster.failed.connect(_show_message)
-	_player.caster.failed.connect(func(_message: String) -> void: Sfx.play("error"))
+	_player.spells.failed.connect(_show_message)
+	_player.spells.failed.connect(func(_message: String) -> void: Sfx.play("error"))
 	_player.combatant.died.connect(_show_message.bind("You died"))
 	_player.progression.xp_gained.connect(func(amount: int) -> void:
 		_add_float(_player.combatant, "+%d XP" % amount, Color(0.75, 0.55, 1))
@@ -123,18 +123,11 @@ func _process(delta: float) -> void:
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
 
-	var casting := _player.caster.casting
-	_cast_frame.visible = casting != null
-	if casting:
-		_cast_name.text = casting.display_name
-		_set_bar(_cast_fill, _player.caster.cast_fraction(), 1.0)
-
-	for i in _slots.size():
-		var overlay: Control = _slots[i].overlay
-		var height := SLOT_SIZE * _ui_scale * _player.caster.cooldown_fraction(i)
-		overlay.position.y = SLOT_SIZE * _ui_scale - height
-		overlay.size.y = height
-		_slots[i].no_mana.visible = me.mana < _player.caster.abilities[i].mana_cost
+	var casting: Dictionary = _player.spells.casting
+	_cast_frame.visible = not casting.is_empty()
+	if not casting.is_empty():
+		_cast_name.text = casting.SpellName
+		_set_bar(_cast_fill, _player.spells.cast_fraction(), 1.0)
 
 	_message_left -= delta
 	_message.visible = _message_left > 0.0
@@ -147,9 +140,9 @@ func _process(delta: float) -> void:
 
 func _build() -> void:
 	var open_windows := _inventory.open_state() if _inventory else {}
+	var book_open := _spells.is_book_open() if _spells else false
 	for child in get_children():
 		child.free()
-	_slots.clear()
 	_floats.clear()
 	_enemy_bars.clear()
 
@@ -161,7 +154,6 @@ func _build() -> void:
 	_build_enemy_bars()
 	_build_player_frame()
 	_build_target_frame()
-	_build_action_bar()
 	_build_cast_bar()
 	_message = _label(self, Vector2(0, 34), "", Color(1, 0.35, 0.3))
 	_message.size.x = window.x
@@ -181,12 +173,15 @@ func _build() -> void:
 	_loot_window.closed.connect(func() -> void: _loot_corpse = null)
 	_inventory = InventoryUI.new()
 	add_child(_inventory)
+	_spells = SpellUI.new()
+	add_child(_spells)
 	_tooltip = ItemTooltip.new()
 	_tooltip.setup(_ui_scale)
 	add_child(_tooltip)
 	_loot_window.hovered.connect(_tooltip.show_item)
 	_inventory.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, open_windows)
 	_inventory.message.connect(_on_loot_message)
+	_spells.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, book_open)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
@@ -212,21 +207,8 @@ func _build_target_frame() -> void:
 	_target_health_text = _bar_text(_target_frame, Vector2(3, 12), Vector2(84, 10))
 
 
-func _build_action_bar() -> void:
-	var abilities := _player.caster.abilities
-	var width := abilities.size() * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP
-	var left := (_width - width) / 2.0
-	for i in abilities.size():
-		var slot := _frame(Vector2(left + i * (SLOT_SIZE + SLOT_GAP), _height - SLOT_SIZE - 4), Vector2.ONE * SLOT_SIZE)
-		_label(slot, Vector2(2, -1), str(i + 1), Color(1, 0.85, 0.4))
-		_label(slot, Vector2(2, 17), abilities[i].short_name)
-		var no_mana := _rect(slot, Vector2.ZERO, Vector2.ONE * SLOT_SIZE, Color(0.1, 0.1, 0.5, 0.55))
-		var overlay := _rect(slot, Vector2.ZERO, Vector2(SLOT_SIZE, 0), Color(0, 0, 0, 0.65))
-		_slots.append({ "overlay": overlay, "no_mana": no_mana })
-
-
 func _build_cast_bar() -> void:
-	_cast_frame = _frame(Vector2((_width - 120) / 2.0, _height - SLOT_SIZE - 20), Vector2(120, 12))
+	_cast_frame = _frame(Vector2((_width - 120) / 2.0, _height - CAST_BAR_Y_FROM_BOTTOM), Vector2(120, 12))
 	_cast_fill = _bar(_cast_frame, Vector2(1, 1), Vector2(118, 10), Color(0.9, 0.65, 0.2))
 	_cast_name = _bar_text(_cast_frame, Vector2(1, 1), Vector2(118, 10))
 	_cast_frame.visible = false
@@ -362,9 +344,10 @@ func _update_loot_log(delta: float) -> void:
 	_loot_log.position.y = _height * _ui_scale - _loot_log.get_minimum_size().y - 4 * _ui_scale
 
 
-## Esc handling: drops a held item or closes the bag and character windows.
+## Esc handling: drops a held item or spell, or closes the bag, character and
+## spellbook windows.
 func close_inventory_window() -> bool:
-	return _inventory.close_one()
+	return _spells.close_one() or _inventory.close_one()
 
 
 func _on_leveled_up(new_level: int) -> void:

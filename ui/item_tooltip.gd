@@ -27,15 +27,24 @@ func setup(ui_scale: float) -> void:
 
 
 func show_item(item: Dictionary, soulbound := false) -> void:
-	visible = not item.is_empty()
+	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound))
+
+
+## Shows rows of [left text, right text, color], or hides for an empty list.
+func show_lines(lines: Array) -> void:
+	visible = not lines.is_empty()
 	if not visible:
 		return
 	for child in _rows.get_children():
 		child.free()
-	for line: Array in ItemDB.tooltip(item, soulbound):
+	for line: Array in lines:
 		var row := HBoxContainer.new()
 		var left := _label(line[0], line[2])
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if str(line[1]).is_empty():
+			# Long single-column lines, like spell descriptions, wrap.
+			left.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			left.custom_minimum_size.x = WIDTH * _ui_scale
 		row.add_child(left)
 		if not str(line[1]).is_empty():
 			var right := _label(line[1], line[2])

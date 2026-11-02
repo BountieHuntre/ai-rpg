@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/unit_feedback.gd" id="10_feedback"]
 [ext_resource type="Script" path="res://scripts/combat/progression.gd" id="11_progression"]
@@ -7,12 +7,7 @@
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
 [ext_resource type="Script" path="res://scripts/combat/targeting.gd" id="3_targeting"]
-[ext_resource type="Script" path="res://scripts/combat/ability_caster.gd" id="4_caster"]
-[ext_resource type="Script" path="res://scripts/combat/ability.gd" id="5_ability"]
-[ext_resource type="Resource" path="res://data/abilities/strike.tres" id="6_strike"]
-[ext_resource type="Resource" path="res://data/abilities/firebolt.tres" id="7_firebolt"]
-[ext_resource type="Resource" path="res://data/abilities/mend.tres" id="8_mend"]
-[ext_resource type="Resource" path="res://data/abilities/bash.tres" id="9_bash"]
+[ext_resource type="Script" path="res://scripts/spells/spell_caster.gd" id="4_caster"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -73,9 +68,8 @@ script = ExtResource("12_stats")
 [node name="Progression" type="Node" parent="."]
 script = ExtResource("11_progression")
 
-[node name="AbilityCaster" type="Node" parent="."]
+[node name="SpellCaster" type="Node" parent="."]
 script = ExtResource("4_caster")
-abilities = Array[ExtResource("5_ability")]([ExtResource("6_strike"), ExtResource("7_firebolt"), ExtResource("8_mend"), ExtResource("9_bash")])
 
 [node name="UnitFeedback" type="Node3D" parent="."]
 script = ExtResource("10_feedback")

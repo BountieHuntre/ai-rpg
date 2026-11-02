@@ -11,6 +11,9 @@ signal avoided(text: String, source: Combatant)
 signal healed(amount: int, crit: bool)
 signal stunned
 signal died
+## A white melee swing hit (including glancing, crushing, blocked and crits).
+signal auto_attack_landed(target: Combatant)
+signal auras_changed
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -45,6 +48,10 @@ var attack_target: Combatant
 ## Optional check of whether this unit is facing a world position.
 var faces_point: Callable
 
+## Buffs and debuffs: { "spell": spell_template row, "caster": Combatant,
+## "remaining": seconds (-1 until cancelled), "duration": seconds }.
+var auras: Array[Dictionary] = []
+
 var _stun_left := 0.0
 var _swing_left := 0.0
 var _combat_left := 0.0
@@ -65,6 +72,7 @@ func reset() -> void:
 	invulnerable = false
 	_stun_left = 0.0
 	_combat_left = 0.0
+	clear_auras()
 
 
 func is_alive() -> bool:
@@ -113,6 +121,34 @@ func distance_to(other: Combatant) -> float:
 	return body.global_position.distance_to(other.body.global_position)
 
 
+## Adds or refreshes an aura. The same spell replaces itself.
+func add_aura(spell: Dictionary, caster: Combatant) -> void:
+	remove_aura(int(spell.Id), false)
+	var length := SpellDB.duration(spell)
+	auras.append({ "spell": spell, "caster": caster, "remaining": length, "duration": length })
+	auras_changed.emit()
+
+
+func remove_aura(spell_id: int, notify := true) -> void:
+	var before := auras.size()
+	auras = auras.filter(func(aura: Dictionary) -> bool: return int(aura.spell.Id) != spell_id)
+	if notify and auras.size() != before:
+		auras_changed.emit()
+
+
+func find_aura(test: Callable) -> Dictionary:
+	for aura in auras:
+		if test.call(aura.spell):
+			return aura
+	return {}
+
+
+func clear_auras() -> void:
+	if not auras.is_empty():
+		auras.clear()
+		auras_changed.emit()
+
+
 func spend_mana(amount: int) -> void:
 	if amount > 0:
 		mana -= amount
@@ -154,6 +190,7 @@ func take_damage(amount: int, source: Combatant, crit := false) -> void:
 	took_damage.emit(amount, source, crit)
 	if health == 0:
 		attack_target = null
+		clear_auras()
 		died.emit()
 
 
@@ -184,14 +221,29 @@ func _physics_process(delta: float) -> void:
 	_swing_left = maxf(_swing_left - delta, 0.0)
 	_combat_left = maxf(_combat_left - delta, 0.0)
 	_since_mana_spent += delta
+	_tick_auras(delta)
 
 	if attack_target and not attack_target.is_alive():
 		attack_target = null
 	if attack_target and not is_stunned() and _swing_left == 0.0:
 		if faces(attack_target) and distance_to(attack_target) <= melee_range:
 			swung.emit(attack_target)
-			_resolve_melee(attack_target, roll_weapon_damage(), CombatRules.roll_auto_attack(self, attack_target))
+			var target := attack_target
+			if _resolve_melee(target, roll_weapon_damage(), CombatRules.roll_auto_attack(self, target)):
+				auto_attack_landed.emit(target)
 			_swing_left = swing_interval
+
+
+func _tick_auras(delta: float) -> void:
+	var expired := false
+	for aura in auras:
+		if aura.remaining > 0.0:
+			aura.remaining -= delta
+			expired = expired or aura.remaining <= 0.0
+	if expired:
+		# A negative duration means the aura lasts until cancelled.
+		auras = auras.filter(func(aura: Dictionary) -> bool: return aura.duration < 0.0 or aura.remaining > 0.0)
+		auras_changed.emit()
 
 
 func _engage(target: Combatant) -> void:
