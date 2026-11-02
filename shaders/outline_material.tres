@@ -1,10 +1,11 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://dph6poayvypmg"]
 
-[ext_resource type="Shader" path="res://shaders/pixelart_stylizer.gdshader" id="1_shader"]
+[ext_resource type="Shader" uid="uid://c1a3f22jpatko" path="res://shaders/pixelart_stylizer.gdshader" id="1_shader"]
 
 [resource]
 render_priority = 0
 shader = ExtResource("1_shader")
+shader_parameter/pixel_size = 1
 shader_parameter/shadows_enabled = true
 shader_parameter/highlights_enabled = true
 shader_parameter/shadow_strength = 0.4

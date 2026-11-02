@@ -4,10 +4,11 @@ render_mode unshaded;
 // MIT License. Made by Leo Peltola
 // Inspired by https://threejs.org/examples/webgl_postprocessing_pixel.html
 
-uniform sampler2D DEPTH_TEXTURE : hint_depth_texture, filter_linear_mipmap;
-uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+uniform sampler2D DEPTH_TEXTURE : hint_depth_texture, filter_nearest;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
 uniform sampler2D NORMAL_TEXTURE : hint_normal_roughness_texture, filter_nearest;
 
+uniform int pixel_size : hint_range(1, 16) = 1;
 uniform bool shadows_enabled = true;
 uniform bool highlights_enabled = true;
 uniform float shadow_strength : hint_range(0.0, 1.0, 0.01) = 0.4;
@@ -46,17 +47,19 @@ void vertex(){
 }
 
 void fragment() {
-	vec2 e = vec2(1./VIEWPORT_SIZE.xy);
+	vec2 block = float(pixel_size) / VIEWPORT_SIZE.xy;
+	vec2 uv = floor(SCREEN_UV / block) * block + 0.5 / VIEWPORT_SIZE.xy;
+	vec2 e = block;
 	
 //	Shadows
 	float depth_diff = 0.0;
 	float neg_depth_diff = .5;
 	if (shadows_enabled) {
-		float depth = getDepth(SCREEN_UV, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float du = getDepth(SCREEN_UV+vec2(0., -1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dr = getDepth(SCREEN_UV+vec2(1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dd = getDepth(SCREEN_UV+vec2(0., 1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dl = getDepth(SCREEN_UV+vec2(-1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+		float depth = getDepth(uv, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+		float du = getDepth(uv+vec2(0., -1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+		float dr = getDepth(uv+vec2(1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+		float dd = getDepth(uv+vec2(0., 1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+		float dl = getDepth(uv+vec2(-1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
 		depth_diff += clamp(du - depth, 0., 1.);
 		depth_diff += clamp(dd - depth, 0., 1.);
 		depth_diff += clamp(dr - depth, 0., 1.);
@@ -74,11 +77,11 @@ void fragment() {
 //	Highlights
 	float normal_diff = 0.;
 	if (highlights_enabled) {
-		vec3 normal = texture(NORMAL_TEXTURE, SCREEN_UV).rgb * 2.0 - 1.0;
-		vec3 nu = texture(NORMAL_TEXTURE, SCREEN_UV+vec2(0., -1.)*e).rgb * 2.0 - 1.0;
-		vec3 nr = texture(NORMAL_TEXTURE, SCREEN_UV+vec2(1., 0.)*e).rgb * 2.0 - 1.0;
-		vec3 nd = texture(NORMAL_TEXTURE, SCREEN_UV+vec2(0., 1.)*e).rgb * 2.0 - 1.0;
-		vec3 nl = texture(NORMAL_TEXTURE, SCREEN_UV+vec2(-1., 0.)*e).rgb * 2.0 - 1.0;
+		vec3 normal = texture(NORMAL_TEXTURE, uv).rgb * 2.0 - 1.0;
+		vec3 nu = texture(NORMAL_TEXTURE, uv+vec2(0., -1.)*e).rgb * 2.0 - 1.0;
+		vec3 nr = texture(NORMAL_TEXTURE, uv+vec2(1., 0.)*e).rgb * 2.0 - 1.0;
+		vec3 nd = texture(NORMAL_TEXTURE, uv+vec2(0., 1.)*e).rgb * 2.0 - 1.0;
+		vec3 nl = texture(NORMAL_TEXTURE, uv+vec2(-1., 0.)*e).rgb * 2.0 - 1.0;
 		vec3 normal_edge_bias = (vec3(1., 1., 1.));
 		normal_diff += normalIndicator(normal_edge_bias, normal, nu, depth_diff);
 		normal_diff += normalIndicator(normal_edge_bias, normal, nr, depth_diff);
@@ -90,7 +93,7 @@ void fragment() {
 	}
 	
 
-	vec3 original_color = texture(SCREEN_TEXTURE, SCREEN_UV).rgb;
+	vec3 original_color = texture(SCREEN_TEXTURE, uv).rgb;
 	vec3 final_highlight_color = mix(original_color, highlight_color, highlight_strength);
 	vec3 final_shadow_color = mix(original_color, shadow_color, shadow_strength);
 	vec3 final = original_color;
@@ -103,5 +106,6 @@ void fragment() {
 	ALBEDO = final;
 
 	float alpha_mask = depth_diff * float(shadows_enabled) + normal_diff * float(highlights_enabled);
-	ALPHA = clamp((alpha_mask) * 5., 0., 1.);
+	// Above 1, every pixel must be drawn so the scene itself gets pixelated.
+	ALPHA = pixel_size > 1 ? 1.0 : clamp((alpha_mask) * 5., 0., 1.);
 }
