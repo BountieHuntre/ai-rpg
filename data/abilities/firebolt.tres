@@ -7,6 +7,7 @@ script = ExtResource("1_script")
 display_name = "Firebolt"
 short_name = "Bolt"
 effect = 0
+school = 2
 power = 30
 mana_cost = 20
 cast_time = 1.5

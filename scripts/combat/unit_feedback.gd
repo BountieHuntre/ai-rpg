@@ -38,7 +38,7 @@ func _ready() -> void:
 	_combatant.took_damage.connect(_on_took_damage)
 	_combatant.swung.connect(_on_swung)
 	_combatant.died.connect(_on_died)
-	_combatant.healed.connect(func(_amount: int) -> void: Sfx.play("heal"))
+	_combatant.healed.connect(func(_amount: int, _crit: bool) -> void: Sfx.play("heal"))
 	_combatant.stunned.connect(Sfx.play.bind("stun"))
 
 
@@ -63,7 +63,7 @@ func _process(delta: float) -> void:
 		_stars.rotate_y(STAR_SPIN * delta)
 
 
-func _on_took_damage(_amount: int, _source: Combatant) -> void:
+func _on_took_damage(_amount: int, _source: Combatant, _crit: bool) -> void:
 	_flash_left = FLASH_TIME
 	_apply_material()
 	if _combatant.is_alive():

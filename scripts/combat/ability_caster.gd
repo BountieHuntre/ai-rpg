@@ -121,30 +121,36 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 
 func _finish(ability: Ability, target: Combatant) -> void:
-	_player.combatant.mana -= ability.mana_cost
+	var me := _player.combatant
+	me.spend_mana(ability.mana_cost)
 	if ability.cooldown > 0.0:
 		_cooldowns[ability] = ability.cooldown
-	match ability.effect:
-		Ability.Effect.DAMAGE:
-			if ability.projectile_speed > 0.0:
-				_launch_projectile(ability, target)
-			else:
-				_player.combatant.swung.emit(target)
-				target.take_damage(_player.combatant.scaled(ability.power), _player.combatant)
-		Ability.Effect.HEAL:
-			_player.combatant.heal(_player.combatant.scaled(ability.power))
-		Ability.Effect.STUN:
-			_player.combatant.swung.emit(target)
-			target.take_damage(_player.combatant.scaled(ability.power), _player.combatant)
-			target.stun(ability.stun_duration)
+	if ability.effect == Ability.Effect.HEAL:
+		me.heal_with_spell(ability.roll_amount(me))
+	elif ability.projectile_speed > 0.0:
+		_launch_projectile(ability, target)
+	else:
+		_land(ability, target)
+
+
+## Applies a harmful ability to its target. Stuns only land with the hit.
+func _land(ability: Ability, target: Combatant) -> void:
+	var me := _player.combatant
+	var landed: bool
+	if ability.is_spell():
+		landed = me.hit_with_spell(target, ability.roll_amount(me))
+	else:
+		me.swung.emit(target)
+		landed = me.strike_with_ability(target, ability.roll_amount(me))
+	if landed and ability.effect == Ability.Effect.STUN:
+		target.stun(ability.stun_duration)
 
 
 func _launch_projectile(ability: Ability, target: Combatant) -> void:
 	Sfx.play("bolt_launch")
-	var source := _player.combatant
 	var projectile: Projectile = PROJECTILE.instantiate()
 	_player.get_parent().add_child(projectile)
 	projectile.launch(_player.global_position + Vector3.UP * EYE_HEIGHT, target, ability.projectile_speed, func() -> void:
 		Sfx.play("bolt_hit")
-		target.take_damage(source.scaled(ability.power), source)
+		_land(ability, target)
 	)

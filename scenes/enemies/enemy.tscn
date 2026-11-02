@@ -45,8 +45,6 @@ mesh = SubResource("BoxMesh_nose")
 
 [node name="Combatant" type="Node" parent="."]
 script = ExtResource("2_combatant")
-display_name = "Training Foe"
-melee_damage = 8
 
 [node name="UnitFeedback" type="Node3D" parent="."]
 script = ExtResource("3_feedback")

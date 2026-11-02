@@ -17,6 +17,8 @@ const FLOAT_HEIGHT := 2.5
 const FLOAT_OFFSETS: Array[Vector2] = [Vector2(0, 0), Vector2(-14, 4), Vector2(14, 4)]
 const BAR_FONT_SIZE := 7
 const XP_FONT_SIZE := 5
+const CRIT_FONT_SIZE := 12
+const SHEET_FONT_SIZE := 6
 const BANNER_FONT_SIZE := 18
 const BANNER_TIME := 2.5
 const ENEMY_BAR_SIZE := Vector2(28, 4)
@@ -53,6 +55,8 @@ var _slots: Array[Dictionary] = []
 var _floats: Array[Dictionary] = []
 var _next_float_offset := 0
 var _enemy_bars: Array[Dictionary] = []
+var _character_window: Control
+var _character_text: Label
 
 
 func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) -> void:
@@ -72,11 +76,14 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var combatant := node as Combatant
 		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
-		combatant.took_damage.connect(func(amount: int, _source: Combatant) -> void:
-			_add_float(combatant, str(amount), hit_color)
+		combatant.took_damage.connect(func(amount: int, _source: Combatant, crit: bool) -> void:
+			_add_float(combatant, "%d!" % amount if crit else str(amount), hit_color, crit)
 		)
-		combatant.healed.connect(func(amount: int) -> void:
-			_add_float(combatant, "+%d" % amount, Color(0.4, 1, 0.4))
+		combatant.avoided.connect(func(text: String, _source: Combatant) -> void:
+			_add_float(combatant, text, Color(0.8, 0.8, 0.8))
+		)
+		combatant.healed.connect(func(amount: int, crit: bool) -> void:
+			_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
 		)
 		combatant.stunned.connect(func() -> void:
 			_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
@@ -92,11 +99,11 @@ func _process(delta: float) -> void:
 	_set_bar(_player_mana, me.mana, me.max_mana)
 	_player_mana_text.text = "%d/%d" % [int(me.mana), me.max_mana]
 	_player_level.text = "Lv %d" % me.level
-	if me.level >= Progression.MAX_LEVEL:
+	if me.level >= ClassicData.MAX_LEVEL:
 		_set_bar(_player_xp, 1.0, 1.0)
 		_player_xp_text.text = "Max level"
 	else:
-		var needed := Progression.xp_to_next(me.level)
+		var needed := ClassicData.xp_to_next(me.level)
 		_set_bar(_player_xp, GameState.xp, needed)
 		_player_xp_text.text = "%d/%d XP" % [GameState.xp, needed]
 
@@ -105,7 +112,7 @@ func _process(delta: float) -> void:
 	if target:
 		_target_name.text = target.display_name
 		_target_level.text = "Lv %d" % target.level
-		_target_level.add_theme_color_override("font_color", _level_color(target.level - me.level))
+		_target_level.add_theme_color_override("font_color", CombatRules.level_color(me.level, target.level))
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
 
@@ -126,11 +133,16 @@ func _process(delta: float) -> void:
 	_message.visible = _message_left > 0.0
 	_banner_left -= delta
 	_banner.visible = _banner_left > 0.0
+	if _character_window.visible:
+		_character_text.text = _character_sheet()
+		var padding := 4.0 * _ui_scale
+		_character_window.size.y = _character_text.position.y + _character_text.get_minimum_size().y + padding
 	_update_floats(delta)
 	_update_enemy_bars()
 
 
 func _build() -> void:
+	var was_open := _character_window != null and _character_window.visible
 	for child in get_children():
 		child.free()
 	_slots.clear()
@@ -155,6 +167,8 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
+	_build_character_window()
+	_character_window.visible = was_open
 
 
 func _build_player_frame() -> void:
@@ -203,8 +217,10 @@ func _show_message(text: String) -> void:
 	_message_left = MESSAGE_TIME
 
 
-func _add_float(combatant: Combatant, text: String, color: Color) -> void:
+func _add_float(combatant: Combatant, text: String, color: Color, big := false) -> void:
 	var label := _label(self, Vector2.ZERO, text, color)
+	if big:
+		label.add_theme_font_size_override("font_size", roundi(CRIT_FONT_SIZE * _ui_scale))
 	label.visible = false
 	var world_position := combatant.body.global_position + Vector3.UP * FLOAT_HEIGHT
 	_floats.append({ "label": label, "world": world_position, "age": 0.0, "offset": FLOAT_OFFSETS[_next_float_offset] })
@@ -284,16 +300,43 @@ func _right_label(parent: Node, label_position: Vector2, width: float) -> Label:
 
 ## WoW-style difficulty colors for a level difference (enemy minus player).
 ## Gray enemies give no XP.
-func _level_color(difference: int) -> Color:
-	if difference >= 3:
-		return Color(1, 0.25, 0.2)
-	if difference >= 1:
-		return Color(1, 0.55, 0.15)
-	if difference == 0:
-		return Color(1, 0.9, 0.3)
-	if difference > -5:
-		return Color(0.35, 0.85, 0.35)
-	return Color(0.6, 0.6, 0.6)
+func _unhandled_input(event: InputEvent) -> void:
+	if _character_window and event.is_action_pressed("character_window"):
+		_character_window.visible = not _character_window.visible
+		get_viewport().set_input_as_handled()
+
+
+func _build_character_window() -> void:
+	_character_window = _frame(Vector2(4, 50), Vector2(118, 170))
+	_label(_character_window, Vector2(4, 1), "Character (C)", Color(1, 0.85, 0.4))
+	_character_text = _label(_character_window, Vector2(4, 12), "")
+	_character_text.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_character_window.visible = false
+
+
+func _character_sheet() -> String:
+	var c := _player.combatant
+	var s := _player.stats
+	var lines := PackedStringArray()
+	lines.append("Level %d %s %s" % [c.level, ClassicData.RACE_NAMES[s.race], ClassicData.CLASS_NAMES[s.char_class]])
+	lines.append("")
+	for i in ClassicData.STAT_NAMES.size():
+		lines.append("%s: %d" % [ClassicData.STAT_NAMES[i], s.stats[i]])
+	lines.append("")
+	lines.append("Health: %d   Mana: %d" % [c.max_health, c.max_mana])
+	lines.append("Armor: %d (%.1f%% vs Lv %d)" % [c.armor, CombatRules.armor_reduction(c.armor, c.level) * 100.0, c.level])
+	lines.append("Attack Power: %d" % c.attack_power)
+	var bonus := c.attack_power / 14.0 * c.swing_interval
+	lines.append("Damage: %d-%d, speed %.1f" % [floori(c.min_damage + bonus), floori(c.max_damage + bonus), c.swing_interval])
+	lines.append("Melee crit: %.2f%%" % c.melee_crit)
+	lines.append("Spell crit: %.2f%%" % c.spell_crit)
+	lines.append("Dodge: %.2f%%   Parry: %.2f%%" % [c.dodge, c.parry])
+	lines.append("Block: %.2f%%" % c.block)
+	lines.append("")
+	lines.append("Mana regen: %.1f per 2s" % s.current_mana_per_tick())
+	lines.append("Health regen: %.1f per 2s" % (0.0 if c.is_in_combat() else s.health_per_tick))
+	lines.append("In combat" if c.is_in_combat() else "Out of combat")
+	return "\n".join(lines)
 
 
 func _on_leveled_up(new_level: int) -> void:

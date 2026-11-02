@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/combat/unit_feedback.gd" id="10_feedback"]
 [ext_resource type="Script" path="res://scripts/combat/progression.gd" id="11_progression"]
+[ext_resource type="Script" path="res://scripts/stats/character_stats.gd" id="12_stats"]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/combat/combatant.gd" id="2_combatant"]
@@ -65,9 +66,9 @@ mesh = SubResource("BoxMesh_nose")
 [node name="Combatant" type="Node" parent="."]
 script = ExtResource("2_combatant")
 display_name = "Hero"
-max_mana = 100
-mana_regen = 3.0
-melee_damage = 6
+
+[node name="CharacterStats" type="Node" parent="."]
+script = ExtResource("12_stats")
 
 [node name="Progression" type="Node" parent="."]
 script = ExtResource("11_progression")
