@@ -415,7 +415,7 @@ func _build_create() -> void:
 		classes.add_child(button)
 	var class_text := CLASS_TEXT[_class] as String
 	if not _class in CLASSES_WITH_SPELLS:
-		class_text += "\n(No spells yet: only Paladins have spells so far.)"
+		class_text += "\n(No spells yet: only Templars have spells so far.)"
 	var class_label := _label(class_text, Color.WHITE)
 	class_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	classes.add_child(class_label)

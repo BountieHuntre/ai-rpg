@@ -5,7 +5,7 @@ extends StaticBody3D
 ## by the NPC's node name (see data/quests.json).
 
 @export var npc_name := "Sir Aldric Fenn"
-@export var subname := "Paladin Trainer"
+@export var subname := "Templar Trainer"
 ## Trainer list in data/classic/spells.json, or "" for none.
 @export var trainer := ""
 ## creature_template entry of a vendor in data/classic/vendors.json, or 0.

@@ -251,9 +251,11 @@ func stance_spells() -> Array[int]:
 		var name: String = spell.SpellName
 		if not best.has(name) or int(spell.SpellLevel) > int(SpellDB.get_spell(best[name]).SpellLevel):
 			best[name] = id
+	# In the order each Presence was first learned (known_spells keeps learning
+	# order, and the dictionary keeps the order names were first seen), so a
+	# new rank never moves a button.
 	var ids: Array[int] = []
 	ids.assign(best.values())
-	ids.sort_custom(func(a: int, b: int) -> bool: return int(SpellDB.get_spell(a).SpellLevel) < int(SpellDB.get_spell(b).SpellLevel))
 	return ids
 
 
@@ -267,10 +269,12 @@ func _build_stance_bar() -> void:
 	add_child(_stance_bar)
 	_stance_bar.visible = not _stance_ids.is_empty()
 	var bar_left := (_screen.x - (GameState.ACTION_SLOTS * (SLOT + GAP) - GAP)) / 2.0
+	# Above the XP bar, or straight above the action bar at the level cap.
+	var xp_room := XP_BAR + GAP if GameState.level < ClassicData.MAX_LEVEL else 0.0
 	for i in _stance_ids.size():
 		var id := _stance_ids[i]
 		var box := ColorRect.new()
-		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - XP_BAR - GAP - STANCE_SLOT) * _ui_scale
+		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - xp_room - STANCE_SLOT) * _ui_scale
 		box.size = Vector2.ONE * STANCE_SLOT * _ui_scale
 		box.mouse_filter = Control.MOUSE_FILTER_STOP
 		_stance_bar.add_child(box)
@@ -406,6 +410,10 @@ func _update_buff_tooltip() -> void:
 	_buff_tooltip_text = remaining
 	var spell: Dictionary = _hovered_aura.spell
 	var lines: Array = [[SpellDB.full_name(spell), "", Color.WHITE]]
+	# What the buff does, as its spell describes it.
+	var description := SpellText.describe(spell, GameState.level, _player.spells)
+	if not description.is_empty():
+		lines.append([description, "", DESCRIPTION])
 	if not remaining.is_empty():
 		lines.append([remaining + " remaining", "", DESCRIPTION])
 	_tooltip.show_lines(lines)

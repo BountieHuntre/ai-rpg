@@ -175,10 +175,9 @@ func _process(delta: float) -> void:
 	_set_bar(_player_mana, me.mana, me.max_mana)
 	_player_mana_text.text = "%d/%d" % [int(me.mana), me.max_mana]
 	_player_level.text = "Lv %d" % me.level
-	if me.level >= ClassicData.MAX_LEVEL:
-		_set_bar(_player_xp, 1.0, 1.0)
-		_player_xp_text.text = "Max level"
-	else:
+	# No XP bar at the level cap, as in classic.
+	_player_xp.get_parent().visible = me.level < ClassicData.MAX_LEVEL
+	if me.level < ClassicData.MAX_LEVEL:
 		var needed := ClassicData.xp_to_next(me.level)
 		_set_bar(_player_xp, GameState.xp, needed)
 		_player_xp_text.text = "%d/%d XP" % [GameState.xp, needed]
@@ -692,6 +691,9 @@ func close_inventory_window() -> bool:
 
 
 func _on_leveled_up(new_level: int) -> void:
+	# At the cap the XP bar goes, and the stance bar moves down into its place.
+	if new_level >= ClassicData.MAX_LEVEL:
+		_build.call_deferred()
 	show_banner("Level %d!" % new_level)
 	Sfx.play("level_up")
 

@@ -21,7 +21,7 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 	if name.begins_with("Greater Boon of "):
 		var single := _boon(name.trim_prefix("Greater "), t)
 		if not single.is_empty():
-			return single.trim_suffix(" One Boon per Paladin on each target.") + " Blesses everyone of the target's class in your party and raid."
+			return single.trim_suffix(" One Boon per Templar on each target.") + " Blesses everyone of the target's class in your party and raid."
 	if name.begins_with("Boon of "):
 		return _boon(name, t)
 	if name.ends_with(" Presence"):
@@ -118,7 +118,7 @@ static func _boon(name: String, t: _Values) -> String:
 			text = "Increases a friendly target's attributes by %s%% for %s." % [t.amount(0), lasts]
 		_:
 			return ""
-	return text + " One Boon per Paladin on each target."
+	return text + " One Boon per Templar on each target."
 
 
 static func _presence(name: String, t: _Values) -> String:

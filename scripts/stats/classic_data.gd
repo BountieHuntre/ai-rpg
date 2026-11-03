@@ -11,10 +11,11 @@ const MAX_LEVEL := 60
 const TABLES_PATH := "res://data/classic/player_tables.json"
 const CHARACTERS_PATH := "res://data/classic/characters.json"
 
+## The game's own class names; the enum keeps classic's.
 const CLASS_NAMES := {
-	CharClass.WARRIOR: "Warrior", CharClass.PALADIN: "Paladin", CharClass.HUNTER: "Hunter",
-	CharClass.ROGUE: "Rogue", CharClass.PRIEST: "Priest", CharClass.SHAMAN: "Shaman",
-	CharClass.MAGE: "Mage", CharClass.WARLOCK: "Warlock", CharClass.DRUID: "Druid",
+	CharClass.WARRIOR: "Man-at-Arms", CharClass.PALADIN: "Templar", CharClass.HUNTER: "Ranger",
+	CharClass.ROGUE: "Cutpurse", CharClass.PRIEST: "Cleric", CharClass.SHAMAN: "Seer",
+	CharClass.MAGE: "Magus", CharClass.WARLOCK: "Hexer", CharClass.DRUID: "Wildwarden",
 }
 const RACE_NAMES := {
 	Race.HUMAN: "Human", Race.ORC: "Orc", Race.DWARF: "Dwarf", Race.NIGHT_ELF: "Wood Elf",
