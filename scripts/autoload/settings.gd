@@ -29,6 +29,8 @@ const DEFAULTS := {
 	"loading_tips": true,
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
+	# Developer
+	"dev_console": true,
 }
 
 ## Rebindable actions in the Key Bindings window: [action, label, section].

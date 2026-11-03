@@ -94,7 +94,9 @@ func toggle() -> void:
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key and key.pressed and not key.echo and key.physical_keycode == KEY_QUOTELEFT:
-		toggle()
+		# The Developer options can turn the console off; it can always close.
+		if visible or Settings.get_value("dev_console"):
+			toggle()
 		get_viewport().set_input_as_handled()
 	elif visible and key and key.pressed and key.physical_keycode == KEY_ESCAPE:
 		toggle()
@@ -128,19 +130,26 @@ func _on_submitted(text: String) -> void:
 	run(text)
 
 
-## Runs one command line. Public so tests can drive it.
-func run(text: String) -> void:
+## Runs one command line, prints its result here and returns it (errors start
+## with "!"). The Options window's Developer tab runs commands through this too.
+func run(text: String) -> String:
 	var words := text.split(" ", false)
 	if words.is_empty():
-		return
+		return ""
 	var command := words[0].to_lower()
 	var args := words.slice(1)
 	if not COMMANDS.has(command):
-		_print("Unknown command \"%s\". Type help for the list." % command, ERROR)
-		return
+		var unknown := "!Unknown command \"%s\". Type help for the list." % command
+		_print(unknown, ERROR, true)
+		return unknown
 	var result: String = call("_cmd_" + command, args)
 	if not result.is_empty():
 		_print(result, ERROR if result.begins_with("!") else Color.WHITE, result.begins_with("!"))
+	return result
+
+
+func player() -> Player:
+	return _player
 
 
 func _print(text: String, color: Color, strip_mark := false) -> void:

@@ -1,7 +1,8 @@
 class_name OptionsWindow
 extends PanelContainer
-## The Options window, with a tab for each category: Video, Sound, Interface
-## and Key Bindings. Changes show at once; Okay keeps them all, Cancel puts
+## The Options window, with a tab down the left for each category: Video,
+## Sound, Interface and Key Bindings. A new category is a TABS entry plus its
+## rows in CATEGORIES (or its own builder, as Key Bindings has). Changes show at once; Okay keeps them all, Cancel puts
 ## them all back, and Defaults resets the open tab. In Key Bindings, click a
 ## key to bind a new one (Esc stops), right-click to clear it.
 
@@ -37,16 +38,39 @@ const CATEGORIES := {
 		["mouse_speed", "Mouse Look Speed", "slider", [0.25, 2.5]],
 		["invert_mouse", "Invert Mouse", "check", null],
 	],
+	"Developer": [
+		["dev_console", "Developer Console (` key)", "check", null],
+	],
 }
 
 static var _check_icons: Dictionary
 
 const KEY_BINDINGS := "Key Bindings"
-const TABS := ["Video", "Sound", "Interface", KEY_BINDINGS]
+const DEVELOPER := "Developer"
+const TABS := ["Video", "Sound", "Interface", KEY_BINDINGS, DEVELOPER]
+## One-click developer commands: [button text, console command]. "level+" is
+## the next level, filled in when pressed.
+const DEV_BUTTONS := [
+	["Heal", "heal"], ["Kill Target", "kill"], ["Repair Gear", "repair"],
+	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
+	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
+]
+const RESULT := Color(0.6, 0.9, 0.6)
+const ERROR_COLOR := Color(1, 0.6, 0.4)
 const TAB_SELECTED := Color(1, 0.85, 0.3)
+const TAB_WIDTH := 58.0
 const TAB_OTHER := Color(0.6, 0.6, 0.65)
 const LIST_HEIGHT := 125.0
 const WAITING := Color(0.4, 1, 0.4)
+
+## The in-game developer console the Developer tab runs commands through, or
+## null on the login screens.
+var console: DevConsole
+
+## The Developer tab is showing its item list instead of its commands.
+var _item_list := false
+var _item_filter := ""
+var _item_tooltip: ItemTooltip
 
 var _category := "Video"
 var _before: Dictionary
@@ -70,6 +94,7 @@ func open(category := "Video") -> void:
 ## Switches tab. Changes on other tabs stay until Okay or Cancel.
 func show_tab(category: String) -> void:
 	_category = category
+	_item_list = false
 	_binding = []
 	_build()
 
@@ -142,6 +167,9 @@ func _refresh_keys() -> void:
 
 func _close() -> void:
 	_binding = []
+	_item_list = false
+	if _item_tooltip:
+		_item_tooltip.show_item({})
 	visible = false
 	closed.emit()
 
@@ -163,12 +191,16 @@ func _build() -> void:
 	var title := _label("Options", GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
-	var tabs := HBoxContainer.new()
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", roundi(6 * _ui_scale))
+	box.add_child(body)
+	var tabs := VBoxContainer.new()
 	tabs.add_theme_constant_override("separation", roundi(2 * _ui_scale))
-	box.add_child(tabs)
+	tabs.custom_minimum_size.x = TAB_WIDTH * _ui_scale
+	body.add_child(tabs)
 	for tab: String in TABS:
 		var button := _button(tab, show_tab.bind(tab))
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var selected := tab == _category
 		button.add_theme_color_override("font_color", TAB_SELECTED if selected else TAB_OTHER)
 		button.add_theme_color_override("font_hover_color", TAB_SELECTED)
@@ -179,13 +211,17 @@ func _build() -> void:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", roundi(4 * _ui_scale))
 	content.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT + 13) * _ui_scale
-	box.add_child(content)
+	body.add_child(content)
+	_note = _label("", ERROR_COLOR)
+	_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_note.custom_minimum_size.x = (TAB_WIDTH + WIDTH + 36) * _ui_scale
 	if _category == KEY_BINDINGS:
 		_build_keys(content)
 	else:
 		for row: Array in CATEGORIES[_category]:
 			content.add_child(_row(row))
-	_note = _label("", Color(1, 0.6, 0.4))
+	if _category == DEVELOPER:
+		_build_developer(content)
 	box.add_child(_note)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", roundi(4 * _ui_scale))
@@ -199,6 +235,200 @@ func _build() -> void:
 	reset_size()
 	var center := func() -> void: position = (get_viewport_rect().size - size) / 2
 	center.call_deferred()
+
+
+## Developer commands, run through the console as soon as they're used (Cancel
+## doesn't undo them): god mode, run speed, one-click commands, and a line for
+## any console command.
+func _build_developer(content: VBoxContainer) -> void:
+	if console == null or console.player() == null:
+		var away := _label("The commands work once you're in the world.", Color(0.7, 0.7, 0.7))
+		away.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		away.custom_minimum_size.x = (WIDTH + 30) * _ui_scale
+		content.add_child(away)
+		return
+	if _item_list:
+		_build_item_list(content)
+		return
+	var player := console.player()
+	var god := HBoxContainer.new()
+	var god_label := _label("God Mode (take no damage)", TEXT)
+	god_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	god.add_child(god_label)
+	var god_check := CheckBox.new()
+	style_check(god_check, _ui_scale)
+	god_check.button_pressed = player.combatant.invulnerable
+	god_check.toggled.connect(func(on: bool) -> void:
+		if on != player.combatant.invulnerable:
+			_show_result(console.run("god"))
+	)
+	god.add_child(god_check)
+	content.add_child(god)
+	var speed := HBoxContainer.new()
+	var speed_label := _label("Run Speed", TEXT)
+	speed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	speed.add_child(speed_label)
+	var slider := HSlider.new()
+	slider.custom_minimum_size = Vector2(60, 10) * _ui_scale
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.min_value = 1.0
+	slider.max_value = 5.0
+	slider.step = 0.5
+	slider.value = player.speed_scale
+	var shown := _label("x%.1f" % player.speed_scale, TEXT)
+	shown.custom_minimum_size.x = 22 * _ui_scale
+	shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	slider.value_changed.connect(func(value: float) -> void:
+		shown.text = "x%.1f" % value
+		_show_result(console.run("speed %.1f" % value))
+	)
+	speed.add_child(slider)
+	speed.add_child(shown)
+	content.add_child(speed)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", roundi(3 * _ui_scale))
+	grid.add_theme_constant_override("v_separation", roundi(3 * _ui_scale))
+	for entry: Array in DEV_BUTTONS:
+		var command: String = entry[1]
+		var button := _button(entry[0], func() -> void:
+			var line := command
+			if command == "level+":
+				line = "level %d" % (GameState.level + 1)
+			_show_result(console.run(line))
+		)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(button)
+	content.add_child(grid)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	var field := LineEdit.new()
+	field.placeholder_text = "Any command, e.g. additem 2589 5"
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	# No walking while typing here.
+	field.focus_entered.connect(func() -> void: player.typing = true)
+	field.focus_exited.connect(func() -> void: player.typing = false)
+	var run := func(_text := "") -> void:
+		if not field.text.strip_edges().is_empty():
+			_show_result(console.run(field.text.strip_edges()))
+			field.clear()
+	field.text_submitted.connect(run)
+	row.add_child(field)
+	row.add_child(_button("Run", run))
+	content.add_child(row)
+	content.add_child(_button("Add Items...", func() -> void:
+		_item_list = true
+		_note.text = ""
+		_build()
+	))
+
+
+## Every item in the game, searchable by name. Click one to put it in the bags;
+## Shift-click adds a full stack. Hover for its tooltip.
+func _build_item_list(content: VBoxContainer) -> void:
+	if _item_tooltip == null:
+		_item_tooltip = ItemTooltip.new()
+		_item_tooltip.setup(_ui_scale)
+		# Over the window, wherever the mouse is.
+		_item_tooltip.top_level = true
+		_item_tooltip.z_index = 10
+		add_sibling.call_deferred(_item_tooltip)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	top.add_child(_button("< Back", func() -> void:
+		_item_list = false
+		_item_tooltip.show_item({})
+		_build()
+	))
+	var search := LineEdit.new()
+	search.placeholder_text = "Search items"
+	search.text = _item_filter
+	search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	search.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	var player := console.player()
+	search.focus_entered.connect(func() -> void: player.typing = true)
+	search.focus_exited.connect(func() -> void: player.typing = false)
+	top.add_child(search)
+	content.add_child(top)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 14) * _ui_scale
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 0)
+	list.custom_minimum_size.x = (WIDTH + 22) * _ui_scale
+	scroll.add_child(list)
+	var fill := func() -> void:
+		for child in list.get_children():
+			child.queue_free()
+		for item: Dictionary in _items_matching(_item_filter):
+			list.add_child(_item_row(item))
+	search.text_changed.connect(func(text: String) -> void:
+		_item_filter = text
+		fill.call()
+	)
+	fill.call()
+	search.grab_focus.call_deferred()
+	search.caret_column = search.text.length()
+
+
+func _items_matching(filter: String) -> Array:
+	ItemDB.get_item(0)
+	var query := filter.strip_edges().to_lower()
+	var matching := ItemDB._items.values().filter(func(item: Dictionary) -> bool:
+		return query.is_empty() or str(item.name).to_lower().contains(query) or str(int(item.entry)) == query
+	)
+	matching.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name) < str(b.name))
+	return matching
+
+
+func _item_row(item: Dictionary) -> Control:
+	var row := ColorRect.new()
+	row.color = Color.TRANSPARENT
+	row.custom_minimum_size = Vector2(WIDTH + 22, 11) * _ui_scale
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	var quality := ItemDB.quality_color(item)
+	var icon := ColorRect.new()
+	icon.color = quality.darkened(0.6)
+	icon.position = Vector2(1, 1) * _ui_scale
+	icon.size = Vector2.ONE * 9 * _ui_scale
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	var title := _label(str(item.name), quality)
+	title.position = Vector2(13, -1) * _ui_scale
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(title)
+	var id := _label(str(int(item.entry)), Color(0.5, 0.5, 0.55))
+	id.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 2) * _ui_scale))
+	id.position = Vector2(WIDTH + 2, 1) * _ui_scale
+	id.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(id)
+	row.mouse_entered.connect(func() -> void:
+		row.color = Color(1, 1, 1, 0.08)
+		_item_tooltip.show_item(item, false, -1, false)
+	)
+	row.mouse_exited.connect(func() -> void:
+		row.color = Color.TRANSPARENT
+		_item_tooltip.show_item({})
+	)
+	row.gui_input.connect(func(event: InputEvent) -> void:
+		var click := event as InputEventMouseButton
+		if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+			var count := maxi(int(item.get("stackable", 1)), 1) if click.shift_pressed else 1
+			_show_result(console.run("additem %d %d" % [int(item.entry), count]))
+			Sfx.play("loot")
+	)
+	return row
+
+
+## Shows a command's result under the tab: green, or orange for an error.
+func _show_result(result: String) -> void:
+	if not is_instance_valid(_note):
+		return
+	var error := result.begins_with("!")
+	_note.text = result.substr(1) if error else result
+	_note.add_theme_color_override("font_color", ERROR_COLOR if error else RESULT)
 
 
 ## Every rebindable action by section, with its two keys.

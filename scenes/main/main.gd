@@ -68,6 +68,7 @@ func _ready() -> void:
 	add_child(console_layer)
 	console_layer.add_child(_console)
 	_console.setup(_player, _world, save_game)
+	_menu.set_console(_console)
 	_menu.log_out_requested.connect(_log_out)
 	_menu.exit_requested.connect(func() -> void:
 		save_game()
@@ -76,7 +77,7 @@ func _ready() -> void:
 	var shield_layer := CanvasLayer.new()
 	shield_layer.layer = 100
 	add_child(shield_layer)
-	_drag_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_drag_shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_drag_shield.mouse_filter = Control.MOUSE_FILTER_STOP
 	_drag_shield.visible = false
 	shield_layer.add_child(_drag_shield)
@@ -247,9 +248,11 @@ func _input(event: InputEvent) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouse and _camera is OrbitCamera:
-		# A scroll list at its end lets the wheel through: over a window it
-		# mustn't zoom the camera.
-		if _is_wheel(event) and _hud.is_over_ui(event.position):
+		# The wheel zooms only over the world itself: never while the mouse is
+		# over any interface (HUD windows, menus, the console, anything added
+		# later), even where a scroll list at its end lets the wheel through.
+		var hovered := get_viewport().gui_get_hovered_control()
+		if _is_wheel(event) and hovered != null and hovered != _drag_shield:
 			return
 		_camera.handle_mouse(event)
 		# Up from the moment a drag button goes down, before any hover can happen.

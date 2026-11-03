@@ -18,8 +18,11 @@ var _options := OptionsWindow.new()
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# In game only the menu and Options panels take the mouse: around them the
+	# world can still be clicked, turned and zoomed. On the login screens the
+	# whole screen is covered, so nothing behind the window can be clicked.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE if in_game else Control.MOUSE_FILTER_STOP
 	visible = false
 	add_child(_panel)
 	_options.visible = false
@@ -47,6 +50,11 @@ func toggle() -> void:
 		open_options()
 		return
 	visible = not visible
+
+
+## Lets the Options window's Developer tab run console commands (in game).
+func set_console(console: DevConsole) -> void:
+	_options.console = console
 
 
 func open_options() -> void:

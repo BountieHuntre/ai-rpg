@@ -378,6 +378,8 @@ func _build_xp_bar() -> void:
 	var width := GameState.ACTION_SLOTS * (SpellUI.SLOT + SpellUI.GAP) - SpellUI.GAP
 	var at := Vector2((_width - width) / 2.0, _height - SpellUI.SLOT - 4 - SpellUI.GAP - SpellUI.XP_BAR)
 	var frame := _frame(at, Vector2(width, SpellUI.XP_BAR))
+	# Part of the action bar area: the wheel over it doesn't zoom the camera.
+	frame.mouse_filter = Control.MOUSE_FILTER_STOP
 	_rect(frame, Vector2(1, 1), Vector2(width - 2, SpellUI.XP_BAR - 2), Color(0.15, 0.1, 0.2))
 	_player_xp = _bar(frame, Vector2(1, 1), Vector2(width - 2, SpellUI.XP_BAR - 2), Color(0.55, 0.3, 0.85))
 	_player_xp_text = _bar_text(frame, Vector2(0, 0), Vector2(width, SpellUI.XP_BAR), XP_FONT_SIZE)
