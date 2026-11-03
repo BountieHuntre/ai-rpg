@@ -146,6 +146,49 @@ static func add_item(id: int, count: int, bound := false) -> int:
 	return count
 
 
+## How many of an item are in the bags.
+static func count_item(id: int) -> int:
+	var total := 0
+	for container: Array in GameState.containers:
+		for stack: Dictionary in container:
+			if not stack.is_empty() and stack.id == id:
+				total += int(stack.count)
+	return total
+
+
+## Takes up to `count` of an item out of the bags, last stacks first.
+static func remove_items(id: int, count: int) -> void:
+	for b in range(GameState.containers.size() - 1, -1, -1):
+		var container: Array = GameState.containers[b]
+		for i in range(container.size() - 1, -1, -1):
+			var stack: Dictionary = container[i]
+			if count > 0 and not stack.is_empty() and stack.id == id:
+				var taken := mini(int(stack.count), count)
+				stack.count -= taken
+				count -= taken
+				if stack.count <= 0:
+					container[i] = {}
+	GameState.inventory_changed.emit()
+
+
+## Whether these [[id, count], ...] would all fit in the bags together.
+static func has_room_for_all(items: Array) -> bool:
+	var free := free_slots()
+	var needed := 0
+	for entry: Array in items:
+		var id := int(entry[0])
+		var count := int(entry[1])
+		var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
+		# Room on existing stacks first.
+		for container: Array in GameState.containers:
+			for stack: Dictionary in container:
+				if not stack.is_empty() and stack.id == id:
+					count -= maxi(stack_size - int(stack.count), 0)
+		if count > 0:
+			needed += ceili(float(count) / stack_size)
+	return needed <= free
+
+
 ## Right-click "use" on a bag slot: equips gear into its slot (a free one if
 ## there's a choice) and puts bags into the first empty bag slot.
 static func use_from_bag(ref: Dictionary) -> String:

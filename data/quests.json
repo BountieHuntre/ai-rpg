@@ -1,0 +1,83 @@
+{
+	"783": {
+		"title": "Trouble in the Vale",
+		"giver": "WardenHale",
+		"ender": "PriorAnselm",
+		"details": "Another one come to the priory, is it? Good. We need every pair of hands we can get.\n\nThe vale isn't what it was. Burrowlings have come up out of the old mine, masked men have made camp across the stream, and the wolves have grown bold enough to take sheep from the lower fields.\n\nPrior Anselm keeps the priory's business. You'll find him before the chapel. Tell him I sent you.",
+		"objectives": "Speak with Prior Anselm in front of the chapel.",
+		"progress": "",
+		"completion": "The warden sent you? Then you are welcome here, and you have come at a hard time.\n\nWe are a house of prayer, not a garrison, yet the vale looks to us for its safety. Rest a moment, and then let us talk about what must be done."
+	},
+	"7": {
+		"title": "Pests in the Lower Fields",
+		"giver": "PriorAnselm",
+		"ender": "PriorAnselm",
+		"details": "The burrowlings are small creatures, and on their own they are more nuisance than threat. But the runts have taken to the road west of the priory, the one that leads to the old mine, and our carters will not use it.\n\nThin their numbers. Ten of the runts should be enough to make the rest think twice.",
+		"objectives": "Kill 10 Burrowling Runts on the mine road, then return to Prior Anselm.",
+		"progress": "The carters still won't take the mine road. Have you dealt with the runts?",
+		"completion": "Good work. The road should be quieter now, for a little while at least.\n\nTake this for your trouble. The priory pays what it can."
+	},
+	"15": {
+		"title": "Diggers on the Ridge",
+		"giver": "PriorAnselm",
+		"ender": "PriorAnselm",
+		"details": "The runts were only the edge of it. Our woodcutters say there are burrowlings digging in the open around the mine entrance now, turning up the ground as if they are looking for something.\n\nI would know what draws them out of the dark. Go to the mine, and drive off the diggers. Ten of them.",
+		"objectives": "Kill 10 Burrowling Diggers at the mine, then return to Prior Anselm.",
+		"progress": "Have the diggers been driven off?",
+		"completion": "So many of them, and digging in daylight. They are not wandering. They are being sent.\n\nYou have done the priory a service. Here."
+	},
+	"21": {
+		"title": "The Mine Mouth",
+		"giver": "PriorAnselm",
+		"ender": "PriorAnselm",
+		"details": "Whatever drives the burrowlings out, it is the haulers who carry the work. They drag ore and spoil out of the mine and pile it in the open, and every day the piles grow.\n\nBreak their labor. Kill twelve of the haulers around the mine mouth, and perhaps the others will lose their nerve. Come back to me when it is done, and the priory's stores will see you properly outfitted.",
+		"objectives": "Kill 12 Burrowling Haulers around the mine, then return to Prior Anselm.",
+		"progress": "Are the haulers still working the mine mouth?",
+		"completion": "Then the mine is quiet, for now. You have done more for this vale in a few days than our prayers did in a season.\n\nTake your pick from the stores. You have earned it."
+	},
+	"5261": {
+		"title": "The Huntsman",
+		"giver": "WardenHale",
+		"ender": "WatCobbe",
+		"details": "Wat Cobbe keeps the priory in meat and hides. He's camped outside the south gate, by the road.\n\nHe was asking after anyone handy with a blade. Go and see what he wants.",
+		"objectives": "Speak with Wat Cobbe outside the south gate.",
+		"progress": "",
+		"completion": "The warden sent you? Good. I could use another hunter, and I can't be everywhere at once."
+	},
+	"33": {
+		"title": "Meat for the Larder",
+		"giver": "WatCobbe",
+		"ender": "WatCobbe",
+		"details": "The wolves in the meadows south of here have grown fat on the priory's sheep. Fair's fair: we'll eat them instead.\n\nBring me eight cuts of tough wolf meat. It isn't fine eating, but salted and stewed it will see the brothers through the winter. Not every wolf will have meat worth taking, so mind you look.",
+		"objectives": "Bring 8 Tough Wolf Meat to Wat Cobbe.",
+		"progress": "Got that meat for me? The salt barrels are waiting.",
+		"completion": "That will fill a barrel or two. Here, I've some hides I've worked. Take whichever suits you."
+	},
+	"18": {
+		"title": "The Masked Men",
+		"giver": "WardenHale",
+		"ender": "WardenHale",
+		"details": "There's a band of brigands camped across the stream, to the southeast, where the road bends. They wear red masks so no one will know their faces, and they've robbed every traveller on the road this month.\n\nI can't leave the gate, but you can. Bring me twelve of those masks. I want them to know someone is coming for them.",
+		"objectives": "Bring 12 Red Sackcloth Masks to Warden Hale.",
+		"progress": "No masks yet? Their camp is across the stream, southeast, where the road bends.",
+		"completion": "Twelve masks. They'll be talking about that around their fire tonight.\n\nThe priory armory can spare a weapon for someone who's earned it. Choose one."
+	},
+	"60": {
+		"title": "Wax for the Chapel",
+		"giver": "FriarOsric",
+		"ender": "FriarOsric",
+		"details": "Our chapel has burned the same candles since the burrowlings took the mine, and we have none left to make more. But the little thieves carry candles of their own down in the dark. Good wax, stolen from our stores more than likely.\n\nThe delvers by the mine entrance carry them. Bring me eight, and I'll see you rewarded.",
+		"objectives": "Bring 8 Large Candles to Friar Osric.",
+		"progress": "The chapel is dim without its candles. Any luck at the mine?",
+		"completion": "Bless you. The brothers will have light for vespers again.\n\nTake these tapers, and a few coins. A light in the dark is worth having."
+	},
+	"47": {
+		"title": "Dust in the Seams",
+		"giver": "HughStannard",
+		"ender": "HughStannard",
+		"details": "Something you might not know: that old mine never gave much iron, but there was gold in the seams, a little. The delvers have been scraping it out for months.\n\nGold dust is useful to a smith. Fluxes, gilding, and the like. Bring me ten pinches from the delvers and I'll pay you for your trouble.",
+		"objectives": "Bring 10 Gold Dust to Hugh Stannard.",
+		"progress": "Any gold dust? The delvers carry it about in little pouches.",
+		"completion": "That's fine dust, that is. Here, your coin, and a little something I took off a traveller who couldn't pay for his repairs."
+	}
+}

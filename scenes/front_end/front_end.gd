@@ -66,6 +66,8 @@ var _selected := 0
 var _race := ClassicData.Race.HUMAN
 var _class := ClassicData.CharClass.PALADIN
 var _new_name := ""
+## Set once Enter World starts loading, so it can't start twice.
+var _entering := false
 
 
 func _ready() -> void:
@@ -299,7 +301,7 @@ func _update_select_preview() -> void:
 
 
 func _enter_world() -> void:
-	if _selected >= _characters.size() or _modal:
+	if _selected >= _characters.size() or _modal or _entering:
 		return
 	var character := _characters[_selected]
 	if not GameState.select_character(character.path):
@@ -307,8 +309,8 @@ func _enter_world() -> void:
 		return
 	_settings.set_value("characters", "last", character.name)
 	_settings.save(_settings_path())
-	_show_modal("Entering world", [])
-	_enter_game.call_deferred()
+	_entering = true
+	LoadingScreen.enter(get_tree(), GAME_SCENE)
 
 
 func _enter_game() -> void:

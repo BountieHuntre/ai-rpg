@@ -26,6 +26,14 @@ CREATURES = [299, 6, 69, 257, 80, 38, 113, 475]
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
 VENDORS = [152, 1213]
 
+# Quests whose rules (objectives, level, XP, money, rewards, chain) the game's
+# own quests are built on. Titles, text and quest givers are the game's own,
+# in data/quests.json. From Northshire and Elwynn: A Threat Within, Eagan
+# Peltskinner, Wolves Across the Border, Brotherhood of Thieves, Kobold Camp
+# Cleanup, Investigate Echo Ridge, Skirmish at Echo Ridge, Kobold Candles and
+# Gold Dust Exchange.
+QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
+
 # Class trainer whose spell list is exported. 927 is Brother Wilhelm, Paladin Trainer.
 CLASS_TRAINERS = {"paladin": 927}
 # Classes whose starting spells are exported: the ones with spell code in the game.
@@ -44,7 +52,7 @@ TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
     "creature_template", "creature_loot_template", "reference_loot_template", "creature",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
-    "spell_chain", "spell_bonus_data", "playercreateinfo_item",
+    "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -225,6 +233,12 @@ def main(path):
                                "items": [int(r["item"]) for r in stock]}
         item_ids.update(int(r["item"]) for r in stock)
     write("loot_tables.json", {"creature": creature_loot, "reference": references})
+    quests = export_quests(db)
+    for quest in quests.values():
+        item_ids.update(item for item, _ in quest["reward_choices"] + quest["reward_items"] + quest["items"])
+        if quest["source_item"]:
+            item_ids.add(quest["source_item"])
+    write("quests.json", quests)
 
     items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"] if int(r["entry"]) in item_ids}
     for item in items.values():
@@ -239,6 +253,30 @@ def main(path):
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
     export_spells(db, item_spells)
+
+
+def export_quests(db):
+    """The rules of each quest in QUESTS, from quest_template."""
+    quests = {}
+    for r in db["quest_template"]:
+        if int(r["entry"]) not in QUESTS:
+            continue
+        def pairs(id_field, count_field, n):
+            return [[int(r[f"{id_field}{i}"]), int(r[f"{count_field}{i}"])] for i in range(1, n + 1) if int(r[f"{id_field}{i}"]) > 0]
+        quests[r["entry"]] = {
+            "level": int(r["QuestLevel"]), "min_level": int(r["MinLevel"]),
+            "prev": int(r["PrevQuestId"]), "flags": int(r["QuestFlags"]),
+            "kills": pairs("ReqCreatureOrGOId", "ReqCreatureOrGOCount", 4),
+            "items": pairs("ReqItemId", "ReqItemCount", 4),
+            "reward_choices": pairs("RewChoiceItemId", "RewChoiceItemCount", 6),
+            "reward_items": pairs("RewItemId", "RewItemCount", 4),
+            "money": int(r["RewOrReqMoney"]), "money_max_level": int(r["RewMoneyMaxLevel"]),
+            "source_item": int(r["SrcItemId"]),
+        }
+    missing = set(map(str, QUESTS)) - set(quests)
+    if missing:
+        raise KeyError(f"Quests not in quest_template: {sorted(missing)}")
+    return quests
 
 
 def starting_characters(db, outfits, items, level_stats):

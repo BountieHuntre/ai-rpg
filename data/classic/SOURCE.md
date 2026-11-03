@@ -40,6 +40,13 @@ Class ids: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman, 8 Mage,
 Formulas in `scripts/stats/` follow the CMaNGOS classic and vmangos server code
 (`StatSystem.cpp`, `Player.cpp`, `Unit.cpp`, `Formulas.h`).
 
+`quests.json` holds the rules of the classic quests the game's quests are
+built on (quest_template: level, minimum level, previous quest, kill and item
+objectives, reward items and choices, money, RewMoneyMaxLevel). The game's
+titles, text and quest givers are its own, in `data/quests.json`. Quest XP
+follows Quest::XPValue, and quest-only drops (negative loot chances) only roll
+while a quest needs the item, as in CMaNGOS.
+
 `factions.json` is the client's FactionTemplate table and each race's template
 (ChrRaces), from wago.tools' Classic Era exports via
 `tools/classic_db/fetch_client_tables.py`. `ClassicData` follows

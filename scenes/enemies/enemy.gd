@@ -74,11 +74,16 @@ var _wander_wait := 0.0
 const SPARKLE_SPIN := 2.0
 
 
-func _ready() -> void:
-	_home = global_position
+## A creature_template entry's data from data/classic/creatures.json.
+static func creature_data(entry: int) -> Dictionary:
 	if _creatures.is_empty():
 		_creatures = JSON.parse_string(FileAccess.get_file_as_string(CREATURES_PATH))
-	_data = _creatures[str(creature_entry)]
+	return _creatures.get(str(entry), {})
+
+
+func _ready() -> void:
+	_home = global_position
+	_data = creature_data(creature_entry)
 	var c := combatant
 	c.display_name = _data.Name
 	c.min_damage = _data.MinMeleeDmg
@@ -239,6 +244,7 @@ func _on_died() -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player and player.combatant.is_alive():
 		player.progression.add_xp(player.progression.xp_for_kill(level, elite))
+		QuestLog.on_kill(creature_entry)
 		loot = LootTable.roll_creature(int(_data.LootId))
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
 	_sparkle.visible = has_loot()

@@ -26,6 +26,8 @@ const BANNER_FONT_SIZE := 18
 const BANNER_TIME := 2.5
 ## Show the worn gear warning at or below this share of durability.
 const DURABILITY_WARNING := 0.2
+const QUEST_MARKER_SIZE := 14
+const QUEST_NOTE_TIME := 3.0
 const ENEMY_BAR_SIZE := Vector2(28, 4)
 const ENEMY_BAR_HEIGHT := 2.2
 const ENEMY_BAR_RANGE := 40.0
@@ -67,6 +69,14 @@ var _trainer_npc: Node3D
 var _vendor: VendorWindow
 var _vendor_npc: Node3D
 var _npc_names: Array[Dictionary] = []
+var _quest_window: QuestWindow
+var _quest_npc: Npc
+var _quest_log: QuestLogUI
+## Objectives of the quests underway, down the right side.
+var _tracker: RichTextLabel
+## Quest progress ("Burrowling Runt slain: 3/10"), in yellow under messages.
+var _quest_note: Label
+var _quest_note_left := 0.0
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
 var _tooltip: ItemTooltip
@@ -89,6 +99,10 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 		_add_float(_player.combatant, "+%d XP" % amount, Color(0.75, 0.55, 1))
 	)
 	_player.progression.leveled_up.connect(_on_leveled_up)
+	GameState.quest_message.connect(_on_quest_message)
+	GameState.inventory_changed.connect(QuestLog.on_inventory_changed)
+	GameState.quests_changed.connect(_update_tracker)
+	GameState.inventory_changed.connect(_update_tracker)
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var combatant := node as Combatant
 		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
@@ -175,6 +189,8 @@ func _process(delta: float) -> void:
 
 	_message_left -= delta
 	_message.visible = _message_left > 0.0
+	_quest_note_left -= delta
+	_quest_note.visible = _quest_note_left > 0.0
 	_banner_left -= delta
 	_banner.visible = _banner_left > 0.0
 	_update_durability_warning()
@@ -206,6 +222,23 @@ func _build() -> void:
 	_message = _label(self, Vector2(0, 34), "", Color(1, 0.35, 0.3))
 	_message.size.x = window.x
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quest_note = _label(self, Vector2(0, 44), "", QuestLog.YELLOW)
+	_quest_note.size.x = window.x
+	_quest_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quest_note.visible = false
+	_tracker = RichTextLabel.new()
+	_tracker.bbcode_enabled = true
+	_tracker.fit_content = true
+	_tracker.scroll_active = false
+	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tracker.position = Vector2(_width - 112, 40) * _ui_scale
+	_tracker.size = Vector2(108, 0) * _ui_scale
+	_tracker.add_theme_font_size_override("normal_font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_tracker.add_theme_color_override("font_shadow_color", Color.BLACK)
+	_tracker.add_theme_constant_override("shadow_offset_x", maxi(roundi(_ui_scale), 1))
+	_tracker.add_theme_constant_override("shadow_offset_y", maxi(roundi(_ui_scale), 1))
+	add_child(_tracker)
+	_update_tracker()
 	_banner = _label(self, Vector2(0, 60), "", Color(1, 0.85, 0.3))
 	_banner.add_theme_font_size_override("font_size", roundi(BANNER_FONT_SIZE * _ui_scale))
 	_banner.size.x = window.x
@@ -258,6 +291,28 @@ func _build() -> void:
 	if _vendor_npc and is_instance_valid(_vendor_npc):
 		_vendor.open(_vendor_npc, _player, _ui_scale)
 		_inventory.selling = true
+	var log_open := _quest_log.visible if _quest_log else false
+	_quest_log = QuestLogUI.new()
+	_quest_log.position = Vector2(4, 48) * _ui_scale
+	_quest_log.setup(_ui_scale)
+	add_child(_quest_log)
+	_quest_log.hovered.connect(_tooltip.show_item)
+	if log_open:
+		_quest_log.toggle()
+	_quest_window = QuestWindow.new()
+	_quest_window.position = Vector2(130, 40) * _ui_scale
+	_quest_window.visible = false
+	add_child(_quest_window)
+	_quest_window.message.connect(_on_loot_message)
+	_quest_window.hovered.connect(_tooltip.show_item)
+	_quest_window.service.connect(_open_service)
+	_quest_window.visibility_changed.connect(func() -> void:
+		if not _quest_window.visible:
+			_quest_npc = null
+	)
+	if _quest_npc and is_instance_valid(_quest_npc):
+		_quest_window.open(_quest_npc, _player, _ui_scale)
+	move_child(_tooltip, -1)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
@@ -354,7 +409,10 @@ func _build_npc_names() -> void:
 <%s>" % [npc.npc_name, npc.subname], Targeting.FRIENDLY_COLOR)
 		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_npc_names.append({ "npc": npc, "label": name_label })
+		var marker := _label(self, Vector2.ZERO, "", QuestLog.YELLOW)
+		marker.add_theme_font_size_override("font_size", roundi(QUEST_MARKER_SIZE * _ui_scale))
+		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_npc_names.append({ "npc": npc, "label": name_label, "marker": marker })
 
 
 func _update_npc_names() -> void:
@@ -366,6 +424,14 @@ func _update_npc_names() -> void:
 		if label.visible:
 			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
 			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
+		# "!" or "?" over quest givers, as in classic.
+		var marker: Label = entry.marker
+		var shown: Array = QuestLog.marker(npc.npc_id()) if label.visible else ["", Color.WHITE]
+		marker.visible = not str(shown[0]).is_empty()
+		if marker.visible:
+			marker.text = shown[0]
+			marker.add_theme_color_override("font_color", shown[1])
+			marker.position = label.position + Vector2((label.size.x - marker.size.x) / 2.0, -marker.size.y + 2 * _ui_scale)
 
 
 func _build_enemy_bars() -> void:
@@ -429,14 +495,56 @@ func open_npc(npc: Npc) -> void:
 		_show_message("You are too far away.")
 		Sfx.play("error")
 		return
-	if npc.vendor != 0:
+	if not QuestLog.for_npc(npc.npc_id()).is_empty():
+		close_vendor()
+		close_trainer()
+		_quest_npc = npc
+		_quest_window.open(npc, _player, _ui_scale)
+		return
+	_open_service(npc, "vendor" if npc.vendor != 0 else "trainer")
+
+
+## Opens an NPC's vendor or trainer window.
+func _open_service(npc: Npc, kind: String) -> void:
+	if kind == "vendor" and npc.vendor != 0:
 		_vendor_npc = npc
 		_vendor.open(npc, _player, _ui_scale)
 		_inventory.selling = true
 		_inventory.open_bags()
-	elif not npc.trainer.is_empty():
+	elif kind == "trainer" and not npc.trainer.is_empty():
 		_trainer_npc = npc
 		_trainer.open(npc, _player, _ui_scale)
+
+
+## Esc: closes the quest window, then the quest log.
+func close_quests() -> bool:
+	if _quest_window.visible:
+		_quest_window.close()
+		return true
+	return _quest_log.close()
+
+
+func _on_quest_message(text: String) -> void:
+	_quest_note.text = text
+	_quest_note_left = QUEST_NOTE_TIME
+
+
+## The tracker: each quest underway with its objectives, finished ones in
+## green, as the classic quest watch.
+func _update_tracker() -> void:
+	if not _tracker:
+		return
+	var lines := PackedStringArray()
+	for id: int in GameState.quests:
+		var quest := QuestDB.get_quest(id)
+		var objectives := QuestLog.objective_lines(id)
+		var complete := QuestLog.is_complete(id)
+		lines.append("[color=#ffd100]%s[/color]%s" % [quest.title, " [color=#73e673](Complete)[/color]" if complete else ""])
+		if objectives.is_empty() and complete:
+			continue
+		for objective: Array in objectives:
+			lines.append("[color=%s]  - %s[/color]" % ["#73e673" if objective[1] else "#e6e6e6", objective[0]])
+	_tracker.text = "\n".join(lines)
 
 
 func close_vendor() -> bool:

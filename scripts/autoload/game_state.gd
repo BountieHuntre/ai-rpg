@@ -12,6 +12,9 @@ extends Node
 signal inventory_changed
 signal spells_changed
 signal money_changed
+signal quests_changed
+## Quest progress lines ("Burrowling Runt slain: 3/10") for the HUD.
+signal quest_message(text: String)
 
 ## The classic backpack has 16 slots, plus four bag slots.
 const BACKPACK_SLOTS := 16
@@ -56,6 +59,11 @@ var player_state: Dictionary = {}
 var world_state: Dictionary = {}
 ## Spell ids the character knows, every rank included.
 var known_spells: Array[int] = []
+## Quests in the log by id: { "kills": [count per kill objective] }. QuestLog
+## holds the rules.
+var quests: Dictionary = {}
+## Ids of quests turned in.
+var quests_done: Array[int] = []
 ## Recently sold stacks (newest first), with "price" in copper. Not saved:
 ## classic clears buyback on logout.
 var buyback: Array[Dictionary] = []
@@ -234,6 +242,8 @@ func save_to_disk() -> bool:
 		"world": world_state,
 		"spells": known_spells,
 		"action_bar": action_bar,
+		"quests": quests,
+		"quests_done": quests_done,
 	}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
@@ -273,6 +283,8 @@ func _start_fresh() -> void:
 	money = 0
 	player_state = {}
 	world_state = {}
+	quests = {}
+	quests_done.clear()
 	buyback.clear()
 	_reset_items()
 	Inventory.start_character(self)
@@ -297,6 +309,11 @@ func _apply_save(data: Dictionary) -> void:
 	containers = data.containers.map(func(container: Array) -> Array: return container.map(_read_stack))
 	player_state = data.get("player", {})
 	world_state = data.get("world", {})
+	quests = {}
+	var saved_quests: Dictionary = data.get("quests", {})
+	for id: String in saved_quests:
+		quests[int(id)] = { "kills": saved_quests[id].kills.map(func(count: float) -> int: return int(count)) }
+	quests_done.assign(data.get("quests_done", []).map(func(id: float) -> int: return int(id)))
 	# Saves from before spells existed start with the class's starting spells.
 	if data.has("spells"):
 		known_spells.assign(data.spells.map(func(id: float) -> int: return int(id)))

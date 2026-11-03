@@ -53,3 +53,20 @@ rotation = Vector3(0, -1.5708, 0)
 npc_name = "Hugh Stannard"
 subname = "Armorer"
 vendor = 1213
+
+[node name="WardenHale" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2.5, 4.5, 17)
+npc_name = "Warden Tobin Hale"
+subname = "Priory Warden"
+
+[node name="PriorAnselm" parent="." instance=ExtResource("2_npc")]
+position = Vector3(4, 4.5, -6.6)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Prior Anselm"
+subname = "Prior of Ashford"
+
+[node name="WatCobbe" parent="." instance=ExtResource("2_npc")]
+position = Vector3(7, 4.5, 30)
+rotation = Vector3(0, 1.5708, 0)
+npc_name = "Wat Cobbe"
+subname = "Huntsman"

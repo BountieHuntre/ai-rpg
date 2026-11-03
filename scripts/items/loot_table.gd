@@ -8,7 +8,8 @@ extends RefCounted
 ##   entries is picked evenly.
 ## - A reference (negative min count) rolls its chance, then processes the
 ##   referenced table max-count times.
-## - Negative chances are quest drops, which need an active quest.
+## - Negative chances are quest drops: they roll at that chance only while an
+##   active quest still needs the item (QuestLog.needs_item).
 
 const LOOT_PATH := "res://data/classic/loot_tables.json"
 
@@ -36,6 +37,11 @@ static func _process(entries: Array, drops: Array[Dictionary]) -> void:
 	var groups := {}
 	for entry: Dictionary in entries:
 		if entry.chance < 0.0:
+			if QuestLog.needs_item(int(entry.item)):
+				var quest_entry := entry.duplicate()
+				quest_entry.chance = -entry.chance
+				if _roll_entry(quest_entry):
+					_add(quest_entry, drops)
 			continue
 		if int(entry.group) == 0:
 			if _roll_entry(entry):

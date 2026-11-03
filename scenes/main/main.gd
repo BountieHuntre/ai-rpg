@@ -230,7 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_menu.toggle()
 		elif _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_vendor() or _hud.close_trainer():
+		elif _hud.close_quests() or _hud.close_vendor() or _hud.close_trainer():
 			pass
 		elif _hud.close_inventory_window():
 			pass

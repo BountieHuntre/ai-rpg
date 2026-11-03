@@ -117,6 +117,19 @@ ITEMS = {
     "Dry Salt Lick": "Dry Salt Block",
     "Rust-covered Blunderbuss": "Rust-Eaten Handgonne",
     "Mechanical Squirrel": "Clockwork Squirrel",
+    # Quest rewards.
+    "Soft Fur-lined Shoes": "Fleece-lined Slippers",
+    "Wolfskin Bracers": "Wolfhide Cuffs",
+    "Militia Dagger": "Watchman's Knife",
+    "Militia Hammer": "Watchman's Mallet",
+    "Militia Shortsword": "Watchman's Short Blade",
+    "Militia Warhammer": "Watchman's Maul",
+    "Militia Quarterstaff": "Watchman's Staff",
+    "Outfitter Belt": "Trailwarden's Belt",
+    "Outfitter Boots": "Trailwarden's Boots",
+    "Outfitter Gloves": "Trailwarden's Gloves",
+    "Glowing Wax Stick": "Tallow Taper",
+    "Bag of Marbles": "Pouch of Glass Beads",
 }
 
 # Gear sets: the first word(s) of the name are replaced. Longest prefixes win.
@@ -164,6 +177,9 @@ VENDORS = {
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
 # "Verdict" judgements, "Boon of" blessings and "... Presence" auras.
 SPELLS = {
+    # Item spells from quest rewards: Tallow Taper and Pouch of Glass Beads.
+    "Faerie Fire": "Glimmer Mark",
+    "Fumble": "Slipping Beads",
     "Seal of Righteousness": "Oath of Valor",
     "Seal of the Crusader": "Oath of the Vanguard",
     "Seal of Justice": "Oath of Binding",
