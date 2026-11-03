@@ -129,7 +129,7 @@ static func target_type(spell: Dictionary) -> int:
 
 
 static func is_seal(spell: Dictionary) -> bool:
-	return str(spell.SpellName).begins_with("Seal of") and int(spell.Effect1) == EFFECT_APPLY_AURA
+	return str(spell.SpellName).begins_with("Oath of") and int(spell.Effect1) == EFFECT_APPLY_AURA
 
 
 ## The judgement a seal unleashes: effect 3's base points plus one, or 0.
@@ -141,11 +141,11 @@ static func seal_judgement(seal: Dictionary) -> int:
 
 ## Paladin auras (one at a time) and blessings (one per Paladin per target).
 static func is_paladin_aura(spell: Dictionary) -> bool:
-	return str(spell.SpellName).ends_with(" Aura") and int(spell.Effect1) == EFFECT_APPLY_AREA_AURA
+	return str(spell.SpellName).ends_with(" Presence") and int(spell.Effect1) == EFFECT_APPLY_AREA_AURA
 
 
 static func is_blessing(spell: Dictionary) -> bool:
-	return str(spell.SpellName).begins_with("Blessing of")
+	return str(spell.SpellName).begins_with("Boon of")
 
 
 static func is_passive(spell: Dictionary) -> bool:

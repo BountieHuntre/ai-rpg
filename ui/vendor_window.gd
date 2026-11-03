@@ -76,7 +76,7 @@ func _build() -> void:
 		child.queue_free()
 	var vendor := vendor_data(npc.vendor)
 	var rows: Array = GameState.buyback if _showing_buyback else vendor.get("items", [])
-	size = Vector2(WIDTH, 26 + maxi(rows.size(), 1) * ROW + 12) * _ui_scale
+	size = Vector2(WIDTH, 26 + maxi(rows.size(), 1) * ROW + 14) * _ui_scale
 	var back := ColorRect.new()
 	back.color = BACK
 	back.size = size
@@ -102,7 +102,30 @@ func _build() -> void:
 		else:
 			var item := ItemDB.get_item(int(rows[i]))
 			_add_row(y, int(rows[i]), maxi(int(item.BuyCount), 1), int(item.BuyPrice), i)
-	_text(self, Vector2(4, 26 + maxi(rows.size(), 1) * ROW), "Money: %s" % ItemDB.money_text(GameState.money), PRICE, FONT_SIZE)
+	var bottom := 26 + maxi(rows.size(), 1) * ROW
+	_text(self, Vector2(4, bottom), "Money: %s" % ItemDB.money_text(GameState.money), PRICE, FONT_SIZE)
+	if vendor.get("repair", false):
+		_add_repair_button(bottom)
+
+
+## Armorers repair everything at once, for the classic cost.
+func _add_repair_button(bottom: float) -> void:
+	var cost := Inventory.repair_all_cost()
+	var button := Button.new()
+	button.text = "Repair All (%s)" % ItemDB.money_text(cost) if cost > 0 else "Repair All"
+	button.disabled = cost <= 0
+	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	button.position = Vector2(WIDTH - 66, bottom - 2) * _ui_scale
+	button.size = Vector2(62, 12) * _ui_scale
+	button.pressed.connect(func() -> void:
+		var error := Inventory.repair_all()
+		if error.is_empty():
+			Sfx.play("coins")
+		else:
+			message.emit(error, true)
+		_queue_rebuild()
+	)
+	add_child(button)
 
 
 func _tab(at: Vector2, label: String, active: bool, buyback: bool) -> void:

@@ -3,7 +3,7 @@ extends StaticBody3D
 ## A friendly NPC: a class trainer, a vendor, or both. Right-click within
 ## interaction range to use them.
 
-@export var npc_name := "Brother Wilhelm"
+@export var npc_name := "Sir Aldric Fenn"
 @export var subname := "Paladin Trainer"
 ## Trainer list in data/classic/spells.json, or "" for none.
 @export var trainer := ""

@@ -16,6 +16,8 @@ import os
 import re
 import sys
 
+import renames
+
 # creature_template entries used in the game.
 CREATURES = [299, 69, 257]  # Young Wolf, Timber Wolf, Kobold Worker
 # Items the player starts with: Human Paladin starting gear.
@@ -199,17 +201,21 @@ def main(path):
     for entry in VENDORS:
         template = next(r for r in db["creature_template"] if int(r["Entry"]) == entry)
         stock = sorted((r for r in db["npc_vendor"] if int(r["entry"]) == entry), key=lambda r: int(r["slot"]))
+        # NpcFlags 0x4000 is UNIT_NPC_FLAG_REPAIR: armorers who repair gear.
         vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"],
+                               "repair": int(template["NpcFlags"]) & 0x4000 != 0,
                                "items": [int(r["item"]) for r in stock]}
         item_ids.update(int(r["item"]) for r in stock)
-    write("vendors.json", vendors)
-    write("creatures.json", creatures)
     write("loot_tables.json", {"creature": creature_loot, "reference": references})
 
     items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"] if int(r["entry"]) in item_ids}
     for item in items.values():
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
+    # The game uses its own names, not the classic ones.
+    renames.apply(items, creatures, vendors, {})
+    write("vendors.json", vendors)
+    write("creatures.json", creatures)
     write("items.json", items)
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
@@ -276,6 +282,7 @@ def export_spells(db, item_spells):
         spell = pick(spells[str(spell_id)], SPELL_FIELDS)
         spell["SpellFamilyFlags"] = int(spells[str(spell_id)]["SpellFamilyFlags"])
         out[str(spell_id)] = spell
+    renames.apply({}, {}, {}, out)
     chains = {r["spell_id"]: {"prev": int(r["prev_spell"]), "first": int(r["first_spell"]), "rank": int(r["rank"])}
               for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
     bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}

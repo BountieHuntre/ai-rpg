@@ -226,7 +226,7 @@ func _slot(parent: Control, at: Vector2, ref: Dictionary) -> void:
 	_draw_view(view)
 	box.mouse_entered.connect(func() -> void:
 		var current := Inventory.stack_at(ref)
-		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false))
+		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)))
 	)
 	box.mouse_exited.connect(func() -> void: _tooltip.show_item({}))
 	box.gui_input.connect(func(event: InputEvent) -> void: _on_slot_input(event, ref))

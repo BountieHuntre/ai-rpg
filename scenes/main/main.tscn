@@ -44,20 +44,20 @@ creature_entry = 69
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -48)
 creature_entry = 257
 
-[node name="BrotherWilhelm" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+[node name="AldricFenn" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
 transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 5, 0, 5)
 trainer = "paladin"
 
-[node name="BrotherDanil" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+[node name="FriarOsric" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -5, 0, 5)
-npc_name = "Brother Danil"
-subname = "General Supplies"
+npc_name = "Friar Osric"
+subname = "Provisioner"
 vendor = 152
 
-[node name="GodricRothgar" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+[node name="HughStannard" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
-npc_name = "Godric Rothgar"
-subname = "Armorer & Shieldcrafter"
+npc_name = "Hugh Stannard"
+subname = "Armorer"
 vendor = 1213
 
 [node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

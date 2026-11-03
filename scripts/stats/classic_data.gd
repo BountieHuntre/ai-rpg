@@ -16,8 +16,8 @@ const CLASS_NAMES := {
 	CharClass.MAGE: "Mage", CharClass.WARLOCK: "Warlock", CharClass.DRUID: "Druid",
 }
 const RACE_NAMES := {
-	Race.HUMAN: "Human", Race.ORC: "Orc", Race.DWARF: "Dwarf", Race.NIGHT_ELF: "Night Elf",
-	Race.UNDEAD: "Undead", Race.TAUREN: "Tauren", Race.GNOME: "Gnome", Race.TROLL: "Troll",
+	Race.HUMAN: "Human", Race.ORC: "Orc", Race.DWARF: "Dwarf", Race.NIGHT_ELF: "Wood Elf",
+	Race.UNDEAD: "Undead", Race.TAUREN: "Hornkin", Race.GNOME: "Gnome", Race.TROLL: "Troll",
 }
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
 

@@ -23,9 +23,9 @@ const NOT_IN_GAME := Color(0.35, 0.35, 0.4)
 const SELECTED := Color(1, 1, 1, 0.12)
 ## Spells whose effects the game has so far. The rest show but can't be trained.
 const IN_GAME := [
-	"Holy Light", "Seal of Righteousness", "Devotion Aura", "Blessing of Might", "Judgement",
-	"Seal of the Crusader", "Divine Protection", "Hammer of Justice", "Purify", "Parry",
-	"Lay on Hands", "Blessing of Protection",
+	"Mending Radiance", "Oath of Valor", "Bulwark Presence", "Boon of Strength", "Verdict",
+	"Oath of the Vanguard", "Hallowed Guard", "Stunning Gavel", "Cleansing Touch", "Parry",
+	"Last Rite", "Boon of Shelter",
 ]
 
 var npc: Node3D

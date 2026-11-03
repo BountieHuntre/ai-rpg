@@ -27,6 +27,9 @@ Spells refer to client DBC tables for cast time, duration, range and radius.
 Those aren't in the database, so `scripts/spells/spell_db.gd` holds the values
 for the indexes Paladin spells use, matched against classic spell tooltips.
 
+Names are replaced with the game's own by `tools/classic_db/renames.py`;
+the numbers stay classic.
+
 Regenerate everything with `tools/classic_db/extract.py`. To add creatures, add
 their entries to `CREATURES` in that script and rerun it.
 

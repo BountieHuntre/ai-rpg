@@ -44,8 +44,8 @@ const SLOTS_FOR_TYPE := {
 const STARTING_PROFICIENCIES := {
 	ClassicData.CharClass.PALADIN: ["2:4", "2:5", "4:1", "4:2", "4:3", "4:6"],
 }
-## Classic starting gear for a Human Paladin: Battleworn Hammer, Squire's
-## Shirt, Pants and Boots, with a Hearthstone in the backpack.
+## Classic starting gear for a Human Paladin: Scuffed Militia Mace, Recruit's
+## Undershirt, Trousers and Boots, with a Homing Token in the backpack.
 const STARTING_EQUIPMENT := { Slot.MAIN_HAND: 2361, Slot.SHIRT: 45, Slot.LEGS: 44, Slot.FEET: 43 }
 const STARTING_BACKPACK := [6948]
 
@@ -262,7 +262,8 @@ static func gear_totals() -> Dictionary:
 	var stat_index := { 4: ClassicData.Stat.STRENGTH, 3: ClassicData.Stat.AGILITY, 7: ClassicData.Stat.STAMINA, 5: ClassicData.Stat.INTELLECT, 6: ClassicData.Stat.SPIRIT }
 	for slot: Slot in GameState.equipment:
 		var stack: Dictionary = GameState.equipment[slot]
-		if stack.is_empty():
+		# Broken gear (0 durability) gives no stats, armor or weapon damage.
+		if stack.is_empty() or is_broken(stack):
 			continue
 		var item := ItemDB.get_item(stack.id)
 		totals.armor += int(item.armor)
@@ -284,8 +285,12 @@ static func gear_totals() -> Dictionary:
 
 static func _stack(id: int, count: int, bound: bool) -> Dictionary:
 	# Bind on pickup items are soulbound as soon as they're taken.
-	var binds := bound or int(ItemDB.get_item(id).get("bonding", 0)) == 1
-	return { "id": id, "count": count, "bound": binds }
+	var item := ItemDB.get_item(id)
+	var binds := bound or int(item.get("bonding", 0)) == 1
+	var stack := { "id": id, "count": count, "bound": binds }
+	if int(item.get("MaxDurability", 0)) > 0:
+		stack.durability = int(item.MaxDurability)
+	return stack
 
 
 static func _bind_on_equip(stack: Dictionary) -> void:
@@ -406,3 +411,129 @@ static func _has_room_for(id: int, count: int) -> bool:
 			elif stack.id == id:
 				room += maxi(stack_size - int(stack.count), 0)
 	return room >= count
+
+
+# Durability, following Player::DurabilityLoss and DurabilityRepair in CMaNGOS.
+
+const DURABILITY_PATH := "res://data/classic/durability.json"
+## DurabilityLossChance.Damage in the CMaNGOS config: per hit dealt or taken,
+## one durability point off a random equipment slot.
+const DURABILITY_LOSS_HIT_CHANCE := 0.5
+## DurabilityLossChance.Parry and .Block: weapon or shield on a parry or block.
+const DURABILITY_LOSS_PARRY_CHANCE := 0.05
+## Equipped gear loses 10% of its maximum durability on death.
+const DURABILITY_LOSS_DEATH := 0.10
+const ERR_NOTHING_TO_REPAIR := "You don't need to repair anything."
+
+static var _durability_tables: Dictionary
+
+
+static func max_durability(stack: Dictionary) -> int:
+	return 0 if stack.is_empty() else int(ItemDB.get_item(stack.id).get("MaxDurability", 0))
+
+
+static func durability(stack: Dictionary) -> int:
+	return int(stack.get("durability", max_durability(stack)))
+
+
+static func is_broken(stack: Dictionary) -> bool:
+	return max_durability(stack) > 0 and durability(stack) <= 0
+
+
+## The lowest durability fraction among equipped items that have durability,
+## or 1.0 when nothing is worn down.
+static func lowest_durability() -> float:
+	var lowest := 1.0
+	for stack: Dictionary in GameState.equipment.values():
+		var full := max_durability(stack)
+		if full > 0:
+			lowest = minf(lowest, float(durability(stack)) / full)
+	return lowest
+
+
+static func lose_durability_points(stack: Dictionary, points: int) -> void:
+	var full := max_durability(stack)
+	if full <= 0:
+		return
+	var before := durability(stack)
+	stack.durability = clampi(before - points, 0, full)
+	if stack.durability != before:
+		GameState.inventory_changed.emit()
+
+
+## Death: every equipped item loses 10% of its maximum (at least 1 point).
+static func lose_durability_on_death() -> void:
+	for stack: Dictionary in GameState.equipment.values():
+		var full := max_durability(stack)
+		if full > 0:
+			lose_durability_points(stack, maxi(int(full * DURABILITY_LOSS_DEATH), 1))
+
+
+## A hit dealt or taken: a small chance to wear one point off a random slot.
+## The slot is picked from all of them, so empty slots mean no wear.
+static func roll_hit_wear() -> void:
+	if randf() * 100.0 < DURABILITY_LOSS_HIT_CHANCE:
+		var slot: Slot = Slot.values().pick_random()
+		var stack: Dictionary = GameState.equipment.get(slot, {})
+		if not stack.is_empty():
+			lose_durability_points(stack, 1)
+
+
+## A parry wears the weapon, a block the shield.
+static func roll_avoidance_wear(slot: Slot) -> void:
+	if randf() * 100.0 < DURABILITY_LOSS_PARRY_CHANCE:
+		var stack: Dictionary = GameState.equipment.get(slot, {})
+		if not stack.is_empty():
+			lose_durability_points(stack, 1)
+
+
+## Copper to fully repair one stack:
+## lost durability * cost[item level][column] * quality modifier.
+static func repair_cost(stack: Dictionary) -> int:
+	var lost := max_durability(stack) - durability(stack)
+	if lost <= 0:
+		return 0
+	if _durability_tables.is_empty():
+		_durability_tables = JSON.parse_string(FileAccess.get_file_as_string(DURABILITY_PATH))
+	var item := ItemDB.get_item(stack.id)
+	var costs: Array = _durability_tables.costs.get(str(int(item.ItemLevel)), [])
+	if costs.is_empty():
+		return 0
+	var column := int(item.subclass)
+	if int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR:
+		column += 21
+	var quality: float = _durability_tables.quality.get(str((int(item.Quality) + 1) * 2), 1.0)
+	return maxi(int(lost * int(costs[column]) * quality), 1)
+
+
+## Everything a vendor repair covers: equipped gear and everything in bags.
+static func repair_all_cost() -> int:
+	var total := 0
+	for stack in _repairable_stacks():
+		total += repair_cost(stack)
+	return total
+
+
+static func repair_all() -> String:
+	var cost := repair_all_cost()
+	if cost <= 0:
+		return ERR_NOTHING_TO_REPAIR
+	if GameState.money < cost:
+		return ERR_NO_MONEY
+	GameState.money -= cost
+	for stack in _repairable_stacks():
+		stack.durability = max_durability(stack)
+	GameState.inventory_changed.emit()
+	return ""
+
+
+static func _repairable_stacks() -> Array:
+	var stacks := []
+	for stack: Dictionary in GameState.equipment.values():
+		if max_durability(stack) > 0:
+			stacks.append(stack)
+	for container: Array in GameState.containers:
+		for stack: Dictionary in container:
+			if max_durability(stack) > 0:
+				stacks.append(stack)
+	return stacks

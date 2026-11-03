@@ -23,6 +23,8 @@ const LOG_TIME := 8.0
 const LOG_LINES := 6
 const BANNER_FONT_SIZE := 18
 const BANNER_TIME := 2.5
+## Show the worn gear warning at or below this share of durability.
+const DURABILITY_WARNING := 0.2
 const ENEMY_BAR_SIZE := Vector2(28, 4)
 const ENEMY_BAR_HEIGHT := 2.2
 const ENEMY_BAR_RANGE := 40.0
@@ -45,6 +47,7 @@ var _target_frame: Control
 var _target_name: Label
 var _target_level: Label
 var _banner: Label
+var _durability_warning: Label
 var _banner_left := 0.0
 var _target_health: Control
 var _target_health_text: Label
@@ -138,6 +141,7 @@ func _process(delta: float) -> void:
 	_message.visible = _message_left > 0.0
 	_banner_left -= delta
 	_banner.visible = _banner_left > 0.0
+	_update_durability_warning()
 	_update_floats(delta)
 	_update_enemy_bars()
 	_update_npc_names()
@@ -171,6 +175,9 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
+	_durability_warning = _label(self, Vector2(_width - 60, 24), "", Color.WHITE)
+	_durability_warning.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_durability_warning.visible = false
 	_loot_log = _label(self, Vector2(4, _height - 60), "", Color(0.4, 0.75, 1))
 	_loot_log.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_loot_window = LootWindow.new()
@@ -216,6 +223,16 @@ func _build() -> void:
 		_inventory.selling = true
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
+
+
+## Yellow when any equipped item is low on durability, red when one is broken.
+func _update_durability_warning() -> void:
+	var lowest := Inventory.lowest_durability()
+	_durability_warning.visible = lowest <= DURABILITY_WARNING
+	if _durability_warning.visible:
+		var broken := lowest <= 0.0
+		_durability_warning.text = "Gear broken" if broken else "Gear damaged"
+		_durability_warning.add_theme_color_override("font_color", Color(1, 0.2, 0.2) if broken else Color(1, 0.85, 0.2))
 
 
 func _build_player_frame() -> void:

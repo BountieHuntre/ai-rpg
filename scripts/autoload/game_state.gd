@@ -177,7 +177,10 @@ func _apply_save(data: Dictionary) -> void:
 func _read_stack(stack: Dictionary) -> Dictionary:
 	if stack.is_empty():
 		return {}
-	return { "id": int(stack.id), "count": int(stack.count), "bound": bool(stack.get("bound", false)) }
+	var read := { "id": int(stack.id), "count": int(stack.count), "bound": bool(stack.get("bound", false)) }
+	if stack.has("durability"):
+		read.durability = int(stack.durability)
+	return read
 
 
 func _reset_items() -> void:

@@ -431,11 +431,11 @@ func spell_tooltip(id: int) -> Array:
 
 func _describe(spell: Dictionary) -> String:
 	var level := GameState.level
-	if spell.SpellName == "Holy Light":
+	if spell.SpellName == "Mending Radiance":
 		var heal := SpellDB.effect_range(spell, 0, level)
-		return "Heals a friendly target for %d to %d." % [heal.x, heal.y]
+		return "Restores %d to %d health to a friendly target." % [heal.x, heal.y]
 	if SpellDB.seal_of_righteousness_proc(int(spell.Id)) != 0:
-		return "Fills the Paladin with holy spirit for 30 sec, granting each melee attack %d additional Holy damage. Only one Seal can be active on the Paladin at any one time." % _player.spells.seal_of_righteousness_damage(spell)
+		return "Swear an oath of valor for 30 sec. Each melee hit deals %d extra Holy damage. You can keep only one Oath at a time." % _player.spells.seal_of_righteousness_damage(spell)
 	return ""
 
 

@@ -26,8 +26,8 @@ func setup(ui_scale: float) -> void:
 	visible = false
 
 
-func show_item(item: Dictionary, soulbound := false) -> void:
-	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound))
+func show_item(item: Dictionary, soulbound := false, current_durability := -1) -> void:
+	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability))
 
 
 ## Shows rows of [left text, right text, color], or hides for an empty list.

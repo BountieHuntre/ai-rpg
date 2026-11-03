@@ -47,7 +47,18 @@ var walking := false
 
 func _ready() -> void:
 	combatant.faces_point = is_facing
-	combatant.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: sitting = false)
+	combatant.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void:
+		sitting = false
+		Inventory.roll_hit_wear()
+	)
+	combatant.dealt_damage.connect(func(_target: Combatant) -> void: Inventory.roll_hit_wear())
+	combatant.avoided.connect(func(text: String, _source: Combatant) -> void:
+		if text == "Parry":
+			Inventory.roll_avoidance_wear(Inventory.Slot.MAIN_HAND)
+		elif text == "Block":
+			Inventory.roll_avoidance_wear(Inventory.Slot.OFF_HAND)
+	)
+	combatant.died.connect(Inventory.lose_durability_on_death)
 
 
 ## Moving or in the air. Either interrupts casting.

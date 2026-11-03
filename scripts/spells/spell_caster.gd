@@ -19,6 +19,8 @@ const ERR_MOVING := "Can't do that while moving"
 const ERR_DEAD_TARGET := "Invalid target"
 const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
 const ERR_PASSIVE := "That ability is passive."
+## InterruptFlags: taking damage delays the cast.
+const INTERRUPT_DAMAGE_PUSHBACK := 0x02
 const ERR_IN_COMBAT := "You are in combat"
 const ERR_ITEM_NOT_READY := "Item is not ready yet."
 ## item_template spelltrigger: 0 is "Use:".
@@ -33,6 +35,7 @@ var casting: Dictionary = {}
 var _cast_left := 0.0
 var _cast_total := 0.0
 var _cast_target: Combatant
+var _pushbacks := 0
 var _gcd_left := 0.0
 var _gcd_total := 1.5
 ## Spell id -> seconds of cooldown left.
@@ -47,6 +50,10 @@ func _ready() -> void:
 	# The Player's own @onready references aren't set yet while children are readied.
 	var combatant: Combatant = $"../Combatant"
 	combatant.auto_attack_landed.connect(_on_auto_attack_landed)
+	combatant.took_damage.connect(func(amount: int, _source: Combatant, _crit: bool) -> void:
+		if amount > 0:
+			_push_back()
+	)
 
 
 ## Starts casting a known spell, or reports why it can't.
@@ -74,6 +81,7 @@ func cast(id: int) -> void:
 		Sfx.play("cast")
 		casting = spell
 		_player.combatant.is_casting = true
+		_pushbacks = 0
 		_cast_left = time
 		_cast_total = time
 		_cast_target = target
@@ -132,6 +140,17 @@ func _physics_process(delta: float) -> void:
 			_finish(spell, _cast_target)
 		else:
 			failed.emit(problem)
+
+
+## Spell::Delayed in CMaNGOS: each hit taken while casting a spell with the
+## DAMAGE_PUSHBACK interrupt flag sets the cast back 1.0 s, then 0.8, 0.6, 0.4
+## and 0.2 s for every later hit, never past the start of the cast.
+func _push_back() -> void:
+	if casting.is_empty() or int(casting.get("InterruptFlags", 0)) & INTERRUPT_DAMAGE_PUSHBACK == 0:
+		return
+	var delay := 1.0 - 0.2 * _pushbacks if _pushbacks < 5 else 0.2
+	_pushbacks += 1
+	_cast_left = minf(_cast_left + delay, _cast_total)
 
 
 func _toggle_attack() -> void:
@@ -219,7 +238,7 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	match spell.SpellName:
 		"Holy Light":
 			_holy_light(spell, target)
-		"Judgement":
+		"Verdict":
 			_judgement(target)
 		"Hammer of Justice":
 			_hammer_of_justice(spell, target)
@@ -269,7 +288,7 @@ func _judgement(target: Combatant) -> void:
 		_holy_damage(target, roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
 	else:
 		# Judgement of the Crusader and other judgement debuffs: one per Paladin.
-		_replace_own(judgement, target, func(spell: Dictionary) -> bool: return str(spell.SpellName).begins_with("Judgement of"))
+		_replace_own(judgement, target, func(spell: Dictionary) -> bool: return str(spell.SpellName).begins_with("Verdict of"))
 
 
 ## A magic stun: resisted on a failed spell hit roll.

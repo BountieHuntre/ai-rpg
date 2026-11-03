@@ -68,7 +68,7 @@ static func money_words(copper: int) -> String:
 
 ## The classic tooltip as rows of [left text, right text, color]. Soulbound
 ## replaces the binding line once the item has bound.
-static func tooltip(item: Dictionary, soulbound := false) -> Array[Array]:
+static func tooltip(item: Dictionary, soulbound := false, current_durability := -1) -> Array[Array]:
 	var lines: Array[Array] = []
 	lines.append([item.name, "", quality_color(item)])
 	if soulbound:
@@ -99,7 +99,9 @@ static func tooltip(item: Dictionary, soulbound := false) -> Array[Array]:
 	if int(item.ContainerSlots) > 0:
 		lines.append(_line("%d Slot Bag" % item.ContainerSlots))
 	if int(item.MaxDurability) > 0:
-		lines.append(_line("Durability %d / %d" % [item.MaxDurability, item.MaxDurability]))
+		var current := int(item.MaxDurability) if current_durability < 0 else current_durability
+		var color := Color(1, 0.13, 0.13) if current == 0 else Color.WHITE
+		lines.append(["Durability %d / %d" % [current, item.MaxDurability], "", color])
 	if int(item.RequiredLevel) > 1:
 		# Classic shows unmet requirements in red.
 		var color := Color.WHITE if int(item.RequiredLevel) <= GameState.level else Color(1, 0.13, 0.13)

@@ -14,6 +14,8 @@ signal died
 ## A white melee swing hit (including glancing, crushing, blocked and crits).
 signal auto_attack_landed(target: Combatant)
 signal auras_changed
+## This combatant's hit landed on a target (damage greater than zero).
+signal dealt_damage(target: Combatant)
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -244,6 +246,8 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	enter_combat()
 	health = maxi(health - amount, 0)
 	took_damage.emit(amount, source, crit)
+	if source and amount > 0:
+		source.dealt_damage.emit(self)
 	if health == 0:
 		attack_target = null
 		clear_auras()
