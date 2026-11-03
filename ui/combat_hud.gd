@@ -9,7 +9,7 @@ const FONT_SIZE := 8
 const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
 const TARGET_HEALTH := Color(0.75, 0.2, 0.2)
 ## The cast bar sits above the action bar and the stance bar.
-const CAST_BAR_Y_FROM_BOTTOM := 60.0
+const CAST_BAR_Y_FROM_BOTTOM := 68.0
 const MESSAGE_TIME := 2.0
 const FLOAT_TIME := 1.0
 const FLOAT_SPEED := 18.0
@@ -27,10 +27,17 @@ const BANNER_TIME := 2.5
 ## Show the worn gear warning at or below this share of durability.
 const DURABILITY_WARNING := 0.2
 const QUEST_MARKER_SIZE := 14
+const TRACKER_WIDTH := 108.0
+const GREY := Color(0.6, 0.6, 0.6)
+const QUEST_DONE := Color(0.45, 0.9, 0.45)
+## creature_template CreatureType names.
+const CREATURE_TYPES := {
+	1: "Beast", 2: "Dragonkin", 3: "Demon", 4: "Elemental", 5: "Giant", 6: "Undead",
+	7: "Humanoid", 8: "Critter", 9: "Mechanical",
+}
 const QUEST_NOTE_TIME := 3.0
-const ENEMY_BAR_SIZE := Vector2(28, 4)
-const ENEMY_BAR_HEIGHT := 2.2
-const ENEMY_BAR_RANGE := 40.0
+const NAMEPLATE_HEIGHT := 2.2
+const NAMEPLATE_RANGE := 40.0
 
 var _player: Player
 var _camera: Camera3D
@@ -61,7 +68,8 @@ var _message: Label
 var _message_left := 0.0
 var _floats: Array[Dictionary] = []
 var _next_float_offset := 0
-var _enemy_bars: Array[Dictionary] = []
+## Names over creatures, colored by how they'll react: [{ combatant, label }].
+var _enemy_names: Array[Dictionary] = []
 var _inventory: InventoryUI
 var _spells: SpellUI
 var _trainer: TrainerWindow
@@ -74,12 +82,16 @@ var _quest_npc: Npc
 var _quest_log: QuestLogUI
 ## Objectives of the quests underway, down the right side.
 var _tracker: RichTextLabel
+var _minimap: Minimap
 ## Quest progress ("Burrowling Runt slain: 3/10"), in yellow under messages.
 var _quest_note: Label
 var _quest_note_left := 0.0
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
 var _tooltip: ItemTooltip
+## The creature or NPC under the mouse, described in the bottom right corner.
+var _unit_tooltip: ItemTooltip
+var _unit_lines: Array = []
 var _loot_log: Label
 ## Recent loot messages as [text, seconds left].
 var _log_lines: Array[Array] = []
@@ -91,6 +103,10 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	_game_view = game_view
 	_build()
 	get_viewport().size_changed.connect(_build)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "ui_scale":
+			_build()
+	)
 
 	_player.spells.failed.connect(_show_message)
 	_player.spells.failed.connect(func(_message: String) -> void: Sfx.play("error"))
@@ -100,8 +116,14 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	)
 	_player.progression.leveled_up.connect(_on_leveled_up)
 	GameState.quest_message.connect(_on_quest_message)
-	GameState.inventory_changed.connect(QuestLog.on_inventory_changed)
+	# A static function stays connected across scene reloads (death, log out).
+	if not GameState.inventory_changed.is_connected(QuestLog.on_inventory_changed):
+		GameState.inventory_changed.connect(QuestLog.on_inventory_changed)
 	GameState.quests_changed.connect(_update_tracker)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "quest_tracker":
+			_update_tracker()
+	)
 	GameState.inventory_changed.connect(_update_tracker)
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var combatant := node as Combatant
@@ -175,7 +197,7 @@ func _process(delta: float) -> void:
 	elif target:
 		_target_health.color = TARGET_HEALTH
 		_target_name.text = target.display_name
-		_target_name.add_theme_color_override("font_color", Targeting.reaction_color(target.body))
+		_target_name.add_theme_color_override("font_color", Targeting.name_color(target.body))
 		_target_level.text = "Lv %d" % target.level
 		_target_level.add_theme_color_override("font_color", CombatRules.level_color(me.level, target.level))
 		_set_bar(_target_health, target.health, target.max_health)
@@ -195,7 +217,8 @@ func _process(delta: float) -> void:
 	_banner.visible = _banner_left > 0.0
 	_update_durability_warning()
 	_update_floats(delta)
-	_update_enemy_bars()
+	_update_enemy_names()
+	_update_unit_tooltip()
 	_update_npc_names()
 	_update_loot_log(delta)
 
@@ -203,18 +226,19 @@ func _process(delta: float) -> void:
 func _build() -> void:
 	var open_windows := _inventory.open_state() if _inventory else {}
 	var book_open := _spells.is_book_open() if _spells else false
+	var log_open := _quest_log.visible if _quest_log else false
 	for child in get_children():
 		child.free()
 	_floats.clear()
-	_enemy_bars.clear()
+	_enemy_names.clear()
 	_npc_names.clear()
 
 	var window := get_viewport().get_visible_rect().size
-	_ui_scale = maxf(window.y / BASE_HEIGHT, 1.0)
+	_ui_scale = Settings.hud_scale(window.y)
 	_width = window.x / _ui_scale
 	_height = window.y / _ui_scale
 
-	_build_enemy_bars()
+	_build_enemy_names()
 	_build_npc_names()
 	_build_player_frame()
 	_build_target_frame()
@@ -231,8 +255,10 @@ func _build() -> void:
 	_tracker.fit_content = true
 	_tracker.scroll_active = false
 	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tracker.position = Vector2(_width - 112, 40) * _ui_scale
-	_tracker.size = Vector2(108, 0) * _ui_scale
+	# Under the minimap, its right edge in line with the minimap's.
+	var map_corner := Minimap.corner(_width)
+	_tracker.position = Vector2(_width - Minimap.MARGIN - TRACKER_WIDTH, map_corner.y + Minimap.SIZE + 4) * _ui_scale
+	_tracker.size = Vector2(TRACKER_WIDTH, 0) * _ui_scale
 	_tracker.add_theme_font_size_override("normal_font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_tracker.add_theme_color_override("font_shadow_color", Color.BLACK)
 	_tracker.add_theme_constant_override("shadow_offset_x", maxi(roundi(_ui_scale), 1))
@@ -244,7 +270,11 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
-	_durability_warning = _label(self, Vector2(_width - 60, 24), "", Color.WHITE)
+	_minimap = Minimap.new()
+	add_child(_minimap)
+	_minimap.setup(_player, _game_view.get_node("GameViewport/World"), _ui_scale, _width)
+	# Left of the minimap, under the buffs.
+	_durability_warning = _label(self, Vector2(map_corner.x - 50, map_corner.y + 20), "", Color.WHITE)
 	_durability_warning.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_durability_warning.visible = false
 	_loot_log = _label(self, Vector2(4, _height - 60), "", Color(0.4, 0.75, 1))
@@ -263,6 +293,12 @@ func _build() -> void:
 	_tooltip = ItemTooltip.new()
 	_tooltip.setup(_ui_scale)
 	add_child(_tooltip)
+	_minimap.tooltip = _tooltip
+	_unit_tooltip = ItemTooltip.new()
+	_unit_tooltip.anchored = true
+	_unit_tooltip.setup(_ui_scale)
+	add_child(_unit_tooltip)
+	_unit_lines = []
 	_loot_window.hovered.connect(_tooltip.show_item)
 	_inventory.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, open_windows)
 	_inventory.message.connect(_on_loot_message)
@@ -291,7 +327,6 @@ func _build() -> void:
 	if _vendor_npc and is_instance_valid(_vendor_npc):
 		_vendor.open(_vendor_npc, _player, _ui_scale)
 		_inventory.selling = true
-	var log_open := _quest_log.visible if _quest_log else false
 	_quest_log = QuestLogUI.new()
 	_quest_log.position = Vector2(4, 48) * _ui_scale
 	_quest_log.setup(_ui_scale)
@@ -328,16 +363,24 @@ func _update_durability_warning() -> void:
 
 
 func _build_player_frame() -> void:
-	var frame := _frame(Vector2(4, 4), Vector2(90, 41))
+	var frame := _frame(Vector2(4, 4), Vector2(90, 35))
 	_label(frame, Vector2(3, 0), _player.combatant.display_name)
 	_player_level = _right_label(frame, Vector2(3, 0), 84)
 	_player_health = _bar(frame, Vector2(3, 12), Vector2(84, 10), Color(0.25, 0.7, 0.25))
 	_player_health_text = _bar_text(frame, Vector2(3, 12), Vector2(84, 10))
 	_player_mana = _bar(frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
 	_player_mana_text = _bar_text(frame, Vector2(3, 23), Vector2(84, 9))
-	_rect(frame, Vector2(3, 33), Vector2(84, 6), Color(0.15, 0.1, 0.2))
-	_player_xp = _bar(frame, Vector2(3, 33), Vector2(84, 6), Color(0.55, 0.3, 0.85))
-	_player_xp_text = _bar_text(frame, Vector2(3, 33), Vector2(84, 6), XP_FONT_SIZE)
+	_build_xp_bar()
+
+
+## The XP bar spans the action bar, just above it, below the stance bar.
+func _build_xp_bar() -> void:
+	var width := GameState.ACTION_SLOTS * (SpellUI.SLOT + SpellUI.GAP) - SpellUI.GAP
+	var at := Vector2((_width - width) / 2.0, _height - SpellUI.SLOT - 4 - SpellUI.GAP - SpellUI.XP_BAR)
+	var frame := _frame(at, Vector2(width, SpellUI.XP_BAR))
+	_rect(frame, Vector2(1, 1), Vector2(width - 2, SpellUI.XP_BAR - 2), Color(0.15, 0.1, 0.2))
+	_player_xp = _bar(frame, Vector2(1, 1), Vector2(width - 2, SpellUI.XP_BAR - 2), Color(0.55, 0.3, 0.85))
+	_player_xp_text = _bar_text(frame, Vector2(0, 0), Vector2(width, SpellUI.XP_BAR), XP_FONT_SIZE)
 
 
 func _build_target_frame() -> void:
@@ -386,20 +429,21 @@ func _update_floats(delta: float) -> void:
 		label.position = on_window + drift * _ui_scale - Vector2(label.size.x / 2.0, 0)
 
 
-func _update_enemy_bars() -> void:
-	for entry in _enemy_bars:
+func _update_enemy_names() -> void:
+	var shown: bool = Settings.get_value("enemy_names")
+	for entry in _enemy_names:
 		var combatant: Combatant = entry.combatant
-		var frame: Control = entry.frame
-		var world: Vector3 = combatant.body.global_position + Vector3.UP * ENEMY_BAR_HEIGHT
-		frame.visible = (
-			combatant.is_alive()
+		var label: Label = entry.label
+		var world: Vector3 = combatant.body.global_position + Vector3.UP * NAMEPLATE_HEIGHT
+		label.visible = (
+			shown
+			and combatant.is_alive()
 			and not _camera.is_position_behind(world)
-			and _camera.global_position.distance_to(world) <= ENEMY_BAR_RANGE
+			and _camera.global_position.distance_to(world) <= NAMEPLATE_RANGE
 		)
-		if frame.visible:
-			_set_bar(entry.fill, combatant.health, combatant.max_health)
+		if label.visible:
 			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
-			frame.position = on_window - Vector2(frame.size.x / 2.0, frame.size.y)
+			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
 
 
 ## Friendly NPC names in green, with their title below, as in classic.
@@ -419,8 +463,11 @@ func _update_npc_names() -> void:
 	for entry in _npc_names:
 		var npc: Node3D = entry.npc
 		var label: Label = entry.label
-		var world := npc.global_position + Vector3.UP * ENEMY_BAR_HEIGHT
-		label.visible = not _camera.is_position_behind(world) and _camera.global_position.distance_to(world) <= ENEMY_BAR_RANGE
+		var world := npc.global_position + Vector3.UP * NAMEPLATE_HEIGHT
+		var on_screen := not _camera.is_position_behind(world) and _camera.global_position.distance_to(world) <= NAMEPLATE_RANGE
+		# With names hidden, quest markers still show, as in classic.
+		label.visible = on_screen
+		label.modulate.a = 1.0 if Settings.get_value("npc_names") else 0.0
 		if label.visible:
 			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
 			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
@@ -434,12 +481,14 @@ func _update_npc_names() -> void:
 			marker.position = label.position + Vector2((label.size.x - marker.size.x) / 2.0, -marker.size.y + 2 * _ui_scale)
 
 
-func _build_enemy_bars() -> void:
+func _build_enemy_names() -> void:
 	for node in get_tree().get_nodes_in_group("combatants"):
 		if node != _player.combatant:
-			var frame := _frame(Vector2.ZERO, ENEMY_BAR_SIZE)
-			var fill := _bar(frame, Vector2(1, 1), ENEMY_BAR_SIZE - Vector2(2, 2), Targeting.reaction_color(node.body))
-			_enemy_bars.append({ "combatant": node, "frame": frame, "fill": fill })
+			var combatant := node as Combatant
+			var label := _label(self, Vector2.ZERO, combatant.display_name, Targeting.name_color(combatant.body))
+			label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			_enemy_names.append({ "combatant": combatant, "label": label })
 
 
 func _set_bar(fill: Control, value: float, maximum: float) -> void:
@@ -516,6 +565,48 @@ func _open_service(npc: Npc, kind: String) -> void:
 		_trainer.open(npc, _player, _ui_scale)
 
 
+## Describes the unit under the mouse, unless the mouse is over the HUD or
+## dragging the camera. Redrawn only when its text changes.
+func _update_unit_tooltip() -> void:
+	var lines := []
+	var mouse := get_viewport().get_mouse_position()
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not is_over_ui(mouse):
+		var unit := _player.targeting.unit_at(mouse / _game_view.stretch_shrink)
+		if unit:
+			lines = unit_tooltip(unit)
+	if lines != _unit_lines:
+		_unit_lines = lines
+		_unit_tooltip.show_lines(lines)
+	# Sits above the bags when they're open in the same corner, as in classic.
+	var bags := _inventory.bags_rect()
+	_unit_tooltip.anchor_lift = 0.0 if bags.size == Vector2.ZERO else get_viewport().get_visible_rect().size.y - bags.position.y
+
+
+## Classic unit tooltip rows: the name in its reaction color, level and kind
+## for creatures (or the title for NPCs), then any quests underway that the
+## creature counts toward, with their progress.
+func unit_tooltip(unit: Node3D) -> Array:
+	if unit is Npc:
+		var npc := unit as Npc
+		return [[npc.npc_name, "", Targeting.FRIENDLY_COLOR], ["<%s>" % npc.subname, "", Color.WHITE]]
+	var enemy := unit as Enemy
+	if enemy == null:
+		return []
+	var data := Enemy.creature_data(enemy.creature_entry)
+	var alive := enemy.combatant.is_alive()
+	var lines := [[enemy.combatant.display_name, "", Targeting.name_color(enemy) if alive else GREY]]
+	var kind: String = CREATURE_TYPES.get(int(data.get("CreatureType", 0)), "")
+	var level := "Level %d%s %s" % [enemy.level, " (Elite)" if enemy.elite else "", kind]
+	lines.append([level.strip_edges(), "", CombatRules.level_color(_player.combatant.level, enemy.level) if alive else GREY])
+	if not alive:
+		lines.append(["Corpse", "", GREY])
+	for quest: Array in QuestLog.objectives_for_creature(enemy.creature_entry, int(data.get("LootId", 0))):
+		lines.append([quest[0], "", Color.WHITE])
+		for objective: Array in quest[1]:
+			lines.append([" - " + objective[0], "", QUEST_DONE if objective[1] else GREY])
+	return lines
+
+
 ## Esc: closes the quest window, then the quest log.
 func close_quests() -> bool:
 	if _quest_window.visible:
@@ -534,6 +625,7 @@ func _on_quest_message(text: String) -> void:
 func _update_tracker() -> void:
 	if not _tracker:
 		return
+	_tracker.visible = Settings.get_value("quest_tracker")
 	var lines := PackedStringArray()
 	for id: int in GameState.quests:
 		var quest := QuestDB.get_quest(id)

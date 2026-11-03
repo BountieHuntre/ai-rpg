@@ -40,6 +40,8 @@ const LOOKS := {
 ## spawn's values from the data.
 @export var respawn_override := -1.0
 @export var wander_override := -1.0
+## Never attacks on sight, whatever its classic faction: it only fights back.
+@export var passive := false
 ## Distance from home that makes it give up and evade.
 @export var leash_radius := 60.0
 @export var stop_distance := 2.0
@@ -68,10 +70,15 @@ var _wander_wait := 0.0
 @onready var combatant: Combatant = $Combatant
 @onready var _visual: Node3D = $Visual
 @onready var _collision: CollisionShape3D = $CollisionShape3D
+## The standing shape, put back on respawn.
+@onready var _standing_shape: Shape3D = _collision.shape
+@onready var _standing_transform: Transform3D = _collision.transform
 @onready var _feedback: UnitFeedback = $UnitFeedback
 @onready var _sparkle := _build_sparkle()
 
 const SPARKLE_SPIN := 2.0
+## Extra yards around a corpse's body that still count as clicking it.
+const CORPSE_CLICK_MARGIN := 0.2
 
 
 ## A creature_template entry's data from data/classic/creatures.json.
@@ -108,6 +115,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Corpses stay where they fell: no gravity or sliding with the corpse shape.
+	if state == State.DEAD:
+		velocity = Vector3.ZERO
+		return
 	var player := get_tree().get_first_node_in_group("player") as Player
 	var destination := global_position
 
@@ -178,6 +189,8 @@ func _apply_look() -> void:
 		body.rotation.x = PI / 2
 		body.position = Vector3(0, 0.5, 0)
 		$Visual/Nose.position = Vector3(0, 0.6, -1.0)
+		# Dead beasts roll onto their side rather than tipping up on end.
+		_feedback.fall_axis = "z"
 	_visual.scale = look[0]
 
 
@@ -203,10 +216,10 @@ func _start_return() -> void:
 	combatant.invulnerable = true
 
 
-## Whether this creature attacks the player on sight. Neutral creatures, and
-## hostile ones flagged to wait, only fight back when attacked.
+## Whether this creature attacks the player on sight. Neutral creatures,
+## hostile ones flagged to wait, and ones set `passive` only fight back.
 func is_aggressive() -> bool:
-	return ClassicData.aggressive(_data, GameState.race)
+	return not passive and ClassicData.aggressive(_data, GameState.race)
 
 
 func _on_attacked() -> void:
@@ -241,6 +254,7 @@ func _roll_level() -> void:
 func _on_died() -> void:
 	state = State.DEAD
 	collision_layer = CORPSE_LAYER
+	_fit_corpse_shape()
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player and player.combatant.is_alive():
 		player.progression.add_xp(player.progression.xp_for_kill(level, elite))
@@ -278,6 +292,31 @@ func restore_corpse(saved: Dictionary) -> void:
 	loot_money = int(saved.money)
 	respawn_at = float(saved.respawn_at)
 	_feedback.show_dead()
+	_fit_corpse_shape()
+
+
+## Corpses lie down, so clicks (and loot) need a shape around the fallen body,
+## not the standing capsule: a box around its meshes in their final pose.
+func _fit_corpse_shape() -> void:
+	var fall := Vector3(0.0, _visual.rotation.y, -PI / 2.0) if _feedback.fall_axis == "z" else Vector3(-PI / 2.0, _visual.rotation.y, 0.0)
+	var fallen := Transform3D(Basis.from_euler(fall) * Basis.from_scale(_visual.scale), Vector3.ZERO)
+	var bounds := AABB()
+	var first := true
+	for mesh: MeshInstance3D in _visual.find_children("*", "MeshInstance3D", true, false):
+		if mesh == _sparkle or _sparkle.is_ancestor_of(mesh):
+			continue
+		# The mesh's place in the visual, in the visual's fallen pose.
+		var box := fallen * (_visual.global_transform.affine_inverse() * mesh.global_transform) * mesh.get_aabb()
+		bounds = box if first else bounds.merge(box)
+		first = false
+	# Half the fallen body is below the feet; the box stays above the ground.
+	var bottom := maxf(bounds.position.y, 0.0)
+	bounds.size.y = maxf(bounds.end.y - bottom, 0.3)
+	bounds.position.y = bottom
+	var shape := BoxShape3D.new()
+	shape.size = bounds.size + Vector3.ONE * CORPSE_CLICK_MARGIN
+	_collision.shape = shape
+	_collision.transform = Transform3D(Basis.IDENTITY, bounds.get_center())
 
 
 func _process(delta: float) -> void:
@@ -295,6 +334,8 @@ func _respawn() -> void:
 	_visual.rotation = Vector3.ZERO
 	_feedback.reset()
 	collision_layer = UNIT_LAYER
+	_collision.shape = _standing_shape
+	_collision.transform = _standing_transform
 	loot.clear()
 	loot_money = 0
 	_roll_level()

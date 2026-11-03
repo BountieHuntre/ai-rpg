@@ -41,7 +41,9 @@ static func enter(tree: SceneTree, scene_path: String) -> void:
 
 func _build() -> void:
 	var window := get_viewport().get_visible_rect().size
-	_ui_scale = maxf(window.y / 270.0, 1.0)
+	_ui_scale = Settings.hud_scale(window.y)
+	# The tip and bar keep their place at the bottom whatever the UI Scale.
+	var bottom := window.y / _ui_scale - 270.0
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_root)
@@ -60,15 +62,15 @@ func _build() -> void:
 	_root.add_child(sky)
 	_draw_hills(window)
 
-	var tip := _label(TIPS[randi() % TIPS.size()], Color(0.9, 0.88, 0.8), FONT_SIZE)
+	var tip := _label(TIPS[randi() % TIPS.size()] if Settings.get_value("loading_tips") else "", Color(0.9, 0.88, 0.8), FONT_SIZE)
 	tip.size.x = window.x
-	tip.position = Vector2(0, 205 * _ui_scale)
+	tip.position = Vector2(0, (205 + bottom) * _ui_scale)
 
 	var bar_size := BAR_SIZE * _ui_scale
 	var frame := ColorRect.new()
 	frame.color = Color(0.55, 0.5, 0.35)
 	frame.size = bar_size + Vector2.ONE * 2 * maxf(_ui_scale, 1.0)
-	frame.position = Vector2((window.x - frame.size.x) / 2, 222 * _ui_scale)
+	frame.position = Vector2((window.x - frame.size.x) / 2, (222 + bottom) * _ui_scale)
 	_root.add_child(frame)
 	var back := ColorRect.new()
 	back.color = Color(0.05, 0.04, 0.03)
@@ -80,7 +82,7 @@ func _build() -> void:
 	back.add_child(_fill)
 	_status = _label("Loading", Color(0.75, 0.75, 0.7), FONT_SIZE - 2)
 	_status.size.x = window.x
-	_status.position = Vector2(0, 234 * _ui_scale)
+	_status.position = Vector2(0, (234 + bottom) * _ui_scale)
 
 
 ## Rolling hills and a few pines in silhouette, standing in for zone art.

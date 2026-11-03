@@ -46,6 +46,9 @@ func _ready() -> void:
 		_camera.clicked.connect(_on_camera_clicked)
 	get_viewport().size_changed.connect(_fit_game_view)
 	_fit_game_view()
+	Settings.changed.connect(_apply_setting)
+	for key in ["shadows", "brightness"]:
+		_apply_setting(key)
 	_restore_player()
 	_restore_corpses()
 	_camera.snap_to_target()
@@ -127,8 +130,6 @@ func _restore_player() -> void:
 		_player.global_position = AshfordVale.SPAWN
 		_player.facing = AshfordVale.SPAWN_FACING
 		_hud.show_banner.call_deferred(AshfordVale.ZONE_NAME)
-		if state.is_empty():
-			return
 	else:
 		var at: Array = state.position
 		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2])), at[2])
@@ -139,8 +140,10 @@ func _restore_player() -> void:
 		var spell := SpellDB.get_spell(int(saved.id))
 		if not spell.is_empty():
 			c.restore_aura(spell, c, float(saved.remaining), float(saved.duration), saved.amounts)
-	c.health = clampi(int(state.health), 1, c.max_health)
-	c.mana = clampf(float(state.mana), 0.0, c.max_mana)
+	# New characters and the freshly resurrected start full.
+	if state.has("health"):
+		c.health = clampi(int(state.health), 1, c.max_health)
+		c.mana = clampf(float(state.mana), 0.0, c.max_mana)
 
 
 ## The player's own buffs, by spell id. Debuffs from enemies aren't kept.
@@ -162,6 +165,18 @@ func _queue_save() -> void:
 			_save_queued = false
 			save_game()
 		)
+
+
+## Video options that live in the world: shadows and brightness.
+func _apply_setting(key: String) -> void:
+	match key:
+		"shadows":
+			for light in _world.find_children("*", "DirectionalLight3D", true, false):
+				(light as DirectionalLight3D).shadow_enabled = Settings.get_value("shadows")
+		"brightness":
+			var environment := (_world.find_child("WorldEnvironment", true, false) as WorldEnvironment).environment
+			environment.adjustment_enabled = true
+			environment.adjustment_brightness = Settings.get_value("brightness")
 
 
 ## Picks the largest whole pixel scale that fits, then rounds the view up so it
@@ -188,7 +203,8 @@ func _log_out() -> void:
 
 ## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
-	GameState.player_state = {}
+	# Only the auras that outlast death come back with you.
+	GameState.player_state = { "auras": _saved_auras(_player.combatant) }
 	_store_corpses()
 	GameState.save_to_disk()
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)
@@ -202,11 +218,25 @@ func _process(_delta: float) -> void:
 	_update_drag_shield()
 
 
+static func _is_wheel(event: InputEvent) -> bool:
+	var button := event as InputEventMouseButton
+	return button != null and button.button_index in [
+		MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT, MOUSE_BUTTON_WHEEL_RIGHT,
+	]
+
+
 func _update_drag_shield() -> void:
 	_drag_shield.visible = _camera is OrbitCamera and _camera.is_dragging()
 
 
 func _input(event: InputEvent) -> void:
+	# The game view ignores the mouse, so mouse buttons bound to actions
+	# (autorun on mouse button 5, say) go to the player from here, before any
+	# window under the pointer can take them. The Options window waiting for a
+	# binding takes them first.
+	var mouse := event as InputEventMouseButton
+	if mouse and mouse.button_index in Settings.BINDABLE_MOUSE and not _menu.visible:
+		_player.handle_action(event)
 	if _camera is OrbitCamera and _camera.is_dragging():
 		var ends_drag: bool = event is InputEventMouseButton and not event.pressed
 		if event is InputEventMouseMotion or ends_drag:
@@ -217,9 +247,14 @@ func _input(event: InputEvent) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouse and _camera is OrbitCamera:
+		# A scroll list at its end lets the wheel through: over a window it
+		# mustn't zoom the camera.
+		if _is_wheel(event) and _hud.is_over_ui(event.position):
+			return
 		_camera.handle_mouse(event)
 		# Up from the moment a drag button goes down, before any hover can happen.
 		_update_drag_shield()
+
 	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed:
 		GameState.reset_character()
 		get_tree().reload_current_scene()

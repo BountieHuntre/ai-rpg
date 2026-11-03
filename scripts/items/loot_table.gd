@@ -24,6 +24,24 @@ static func roll_creature(loot_id: int) -> Array[Dictionary]:
 	return drops
 
 
+## Quest-only drops (negative chances) a creature's loot can hold, including
+## through references.
+static func quest_items(loot_id: int) -> Array[int]:
+	var items: Array[int] = []
+	var pending: Array = _get_tables().creature.get(str(loot_id), []).duplicate()
+	var seen := {}
+	while not pending.is_empty():
+		var entry: Dictionary = pending.pop_back()
+		var ref := -int(entry.min_or_ref)
+		if ref > 0:
+			if not seen.has(ref):
+				seen[ref] = true
+				pending.append_array(_get_tables().reference.get(str(ref), []))
+		elif float(entry.chance) < 0.0 and not int(entry.item) in items:
+			items.append(int(entry.item))
+	return items
+
+
 ## Copper dropped, as in Loot::GenerateMoneyLoot.
 static func roll_money(min_copper: int, max_copper: int) -> int:
 	if max_copper <= 0:

@@ -29,9 +29,10 @@ func _ready() -> void:
 	viewport.transparent_bg = true
 	add_child(viewport)
 	var camera := Camera3D.new()
+	# Framed so the character fills the height, feet near the bottom edge.
 	camera.fov = 30.0
-	camera.position = Vector3(0, 1.3, 6.5)
-	camera.rotation.x = deg_to_rad(-6.0)
+	camera.position = Vector3(0, 1.5, 5.75)
+	camera.rotation.x = deg_to_rad(-4.0)
 	viewport.add_child(camera)
 	var light := DirectionalLight3D.new()
 	light.rotation = Vector3(deg_to_rad(-40.0), deg_to_rad(30.0), 0)
@@ -43,8 +44,8 @@ func _ready() -> void:
 	viewport.add_child(environment)
 	var ground := MeshInstance3D.new()
 	var disc := CylinderMesh.new()
-	disc.top_radius = 1.1
-	disc.bottom_radius = 1.1
+	disc.top_radius = 0.75
+	disc.bottom_radius = 0.75
 	disc.height = 0.05
 	ground.mesh = disc
 	var stone := StandardMaterial3D.new()

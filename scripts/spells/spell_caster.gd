@@ -19,6 +19,7 @@ const ERR_MOVING := "Can't do that while moving"
 const ERR_DEAD_TARGET := "Invalid target"
 const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
 const ERR_PASSIVE := "That ability is passive."
+const ERR_NO_OATH := "You have no Oath to pass Verdict on."
 ## InterruptFlags: taking damage delays the cast.
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
 const ERR_IN_COMBAT := "You are in combat"
@@ -186,6 +187,10 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_NOT_READY
 		if SpellDB.cast_time(spell) > 0.0 and _player.is_moving():
 			return ERR_MOVING
+	# Unlike classic, Verdict without an Oath it can unleash fails before costing
+	# mana, the global cooldown or its own cooldown.
+	if spell.SpellName == "Verdict" and _judgeable_seal().is_empty():
+		return ERR_NO_OATH
 	if SpellDB.is_passive(spell):
 		return ERR_PASSIVE
 	if me.mana < mana_cost(spell):
@@ -236,13 +241,13 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
 	match spell.SpellName:
-		"Holy Light":
+		"Mending Radiance":
 			_holy_light(spell, target)
 		"Verdict":
 			_judgement(target)
-		"Hammer of Justice":
+		"Stunning Gavel":
 			_hammer_of_justice(spell, target)
-		"Lay on Hands":
+		"Last Rite":
 			target.heal(me.max_health)
 		_:
 			if SpellDB.is_seal(spell):
@@ -267,15 +272,20 @@ func _replace_own(spell: Dictionary, target: Combatant, same_kind: Callable) -> 
 	Sfx.play("buff")
 
 
-## Unleashes the active seal's judgement on the target and removes the seal.
-## With no seal, the mana and cooldown are spent for nothing, as in CMaNGOS.
+## The active seal that has a judgement, or {}. (The first rank of Oath of
+## Valor that Paladins start with has none, as in classic.)
+func _judgeable_seal() -> Dictionary:
+	return _player.combatant.find_aura(func(spell: Dictionary) -> bool: return SpellDB.seal_judgement(spell) != 0)
+
+
+## Unleashes the active seal's judgement on the target. Unlike classic, the
+## seal stays up afterwards, and Verdict can't be cast without one.
 ## Judgements ignore the hit roll (TRIGGERED_IGNORE_HIT_CALCULATION).
 func _judgement(target: Combatant) -> void:
 	var me := _player.combatant
-	var seal := me.find_aura(func(spell: Dictionary) -> bool: return SpellDB.seal_judgement(spell) != 0)
+	var seal := _judgeable_seal()
 	if seal.is_empty():
 		return
-	me.remove_aura(int(seal.spell.Id))
 	var judgement := SpellDB.get_spell(SpellDB.seal_judgement(seal.spell))
 	if judgement.is_empty():
 		return

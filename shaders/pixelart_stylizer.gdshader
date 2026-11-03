@@ -34,12 +34,15 @@ vec3 getPos(float depth, mat4 mvm, mat4 ipm, vec2 suv, mat4 wm, mat4 icm){
   return (pos*icm).xyz+wm[3].xyz;
 }
 
-float normalIndicator(vec3 normalEdgeBias, vec3 baseNormal, vec3 newNormal, float depth_diff){
+// Changed for this game: a highlight only counts neighbours at about the same
+// depth, so it marks creases within a surface. Before, the background along a
+// silhouette's edge (ground behind a tree's canopy) picked up a light line.
+float normalIndicator(vec3 normalEdgeBias, vec3 baseNormal, vec3 newNormal, float depth, float new_depth){
 	// Credit: https://threejs.org/examples/webgl_postprocessing_pixel.html
 	float normalDiff = dot(baseNormal - newNormal, normalEdgeBias);
 	float normalIndicator = clamp(smoothstep(-.01, .01, normalDiff), 0.0, 1.0);
-	float depthIndicator = clamp(sign(depth_diff * .25 + .0025), 0.0, 1.0);
-	return (1.0 - dot(baseNormal, newNormal)) * depthIndicator * normalIndicator;
+	float sameSurface = 1.0 - step(depth * 0.02 + 0.05, abs(new_depth - depth));
+	return (1.0 - dot(baseNormal, newNormal)) * sameSurface * normalIndicator;
 }
 
 void vertex(){
@@ -54,23 +57,31 @@ void fragment() {
 //	Shadows
 	float depth_diff = 0.0;
 	float neg_depth_diff = .5;
+	float depth = getDepth(uv, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+	float du = getDepth(uv+vec2(0., -1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+	float dr = getDepth(uv+vec2(1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+	float dd = getDepth(uv+vec2(0., 1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
+	float dl = getDepth(uv+vec2(-1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
 	if (shadows_enabled) {
-		float depth = getDepth(uv, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float du = getDepth(uv+vec2(0., -1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dr = getDepth(uv+vec2(1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dd = getDepth(uv+vec2(0., 1.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		float dl = getDepth(uv+vec2(-1., 0.)*e, DEPTH_TEXTURE, INV_PROJECTION_MATRIX);
-		depth_diff += clamp(du - depth, 0., 1.);
-		depth_diff += clamp(dd - depth, 0., 1.);
-		depth_diff += clamp(dr - depth, 0., 1.);
-		depth_diff += clamp(dl - depth, 0., 1.);
+		// Changed for this game: each side's step is measured against the
+		// opposite side's, so a smooth slope (distant ground, where every pixel
+		// is a little farther than the one below) isn't outlined. Only real
+		// silhouettes are. Before, distant ground was darkened all over except
+		// the row just behind a nearer object, which read as a light outline.
+		// Steps are relative to the distance, so the small bends where terrain
+		// triangles meet far away don't count either.
+		float scale = 1.0 / max(depth, 0.001);
+		depth_diff += clamp(((du - depth) - max(depth - dd, 0.)) * scale, 0., 1.);
+		depth_diff += clamp(((dd - depth) - max(depth - du, 0.)) * scale, 0., 1.);
+		depth_diff += clamp(((dr - depth) - max(depth - dl, 0.)) * scale, 0., 1.);
+		depth_diff += clamp(((dl - depth) - max(depth - dr, 0.)) * scale, 0., 1.);
 		neg_depth_diff += depth - du;
 		neg_depth_diff += depth - dd;
 		neg_depth_diff += depth - dr;
 		neg_depth_diff += depth - dl;
 		neg_depth_diff = clamp(neg_depth_diff, 0., 1.);
 		neg_depth_diff = clamp(smoothstep(0.5, 0.5, neg_depth_diff)*10., 0., 1.);
-		depth_diff = smoothstep(0.2, 0.3, depth_diff);
+		depth_diff = smoothstep(0.02, 0.04, depth_diff);
 //		ALBEDO = vec3(neg_depth_diff);
 	}
 	
@@ -83,10 +94,10 @@ void fragment() {
 		vec3 nd = texture(NORMAL_TEXTURE, uv+vec2(0., 1.)*e).rgb * 2.0 - 1.0;
 		vec3 nl = texture(NORMAL_TEXTURE, uv+vec2(-1., 0.)*e).rgb * 2.0 - 1.0;
 		vec3 normal_edge_bias = (vec3(1., 1., 1.));
-		normal_diff += normalIndicator(normal_edge_bias, normal, nu, depth_diff);
-		normal_diff += normalIndicator(normal_edge_bias, normal, nr, depth_diff);
-		normal_diff += normalIndicator(normal_edge_bias, normal, nd, depth_diff);
-		normal_diff += normalIndicator(normal_edge_bias, normal, nl, depth_diff);
+		normal_diff += normalIndicator(normal_edge_bias, normal, nu, depth, du);
+		normal_diff += normalIndicator(normal_edge_bias, normal, nr, depth, dr);
+		normal_diff += normalIndicator(normal_edge_bias, normal, nd, depth, dd);
+		normal_diff += normalIndicator(normal_edge_bias, normal, nl, depth, dl);
 		normal_diff = smoothstep(0.2, 0.8, normal_diff);
 		normal_diff = clamp(normal_diff-neg_depth_diff, 0., 1.);
 //		ALBEDO = vec3(normal_diff);

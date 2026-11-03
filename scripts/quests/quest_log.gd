@@ -201,6 +201,26 @@ static func marker(npc_id: String) -> Array:
 	return ["?", GREY]
 
 
+## Objectives of quests underway that a creature counts toward, by killing it
+## or by what it drops: [[quest title, [[objective text, done], ...]], ...].
+static func objectives_for_creature(creature_entry: int, loot_id: int) -> Array:
+	var drops := LootTable.quest_items(loot_id)
+	var result := []
+	for id: int in GameState.quests:
+		var quest := QuestDB.get_quest(id)
+		var lines := []
+		var all_lines := objective_lines(id)
+		for i in quest.kills.size():
+			if int(quest.kills[i][0]) == creature_entry:
+				lines.append(all_lines[i])
+		for i in quest.items.size():
+			if int(quest.items[i][0]) in drops:
+				lines.append(all_lines[quest.kills.size() + i])
+		if not lines.is_empty():
+			result.append([quest.title, lines])
+	return result
+
+
 static func creature_name(entry: int) -> String:
 	return str(Enemy.creature_data(entry).get("Name", "Creature"))
 

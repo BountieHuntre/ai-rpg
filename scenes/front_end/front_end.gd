@@ -51,6 +51,8 @@ static var start_at_select := false
 
 var _screen := Screen.LOGIN
 var _ui_scale := 1.0
+
+enum Anchor { TOP, BOTTOM, CENTER, STRETCH }
 var _layer := Control.new()
 var _modal: Control
 var _settings := ConfigFile.new()
@@ -68,6 +70,8 @@ var _class := ClassicData.CharClass.PALADIN
 var _new_name := ""
 ## Set once Enter World starts loading, so it can't start twice.
 var _entering := false
+## The Options menu, over every screen.
+var _options_menu := GameMenu.new()
 
 
 func _ready() -> void:
@@ -84,7 +88,13 @@ func _ready() -> void:
 	_build_background()
 	_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_layer)
+	_options_menu.in_game = false
+	add_child(_options_menu)
 	get_viewport().size_changed.connect(_rebuild)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "ui_scale":
+			_rebuild()
+	)
 	_screen = Screen.SELECT if start_at_select else Screen.LOGIN
 	start_at_select = false
 	if _screen == Screen.SELECT:
@@ -130,7 +140,7 @@ func _build_background() -> void:
 
 
 func _rebuild() -> void:
-	_ui_scale = get_viewport_rect().size.y / 270.0
+	_ui_scale = Settings.hud_scale(get_viewport_rect().size.y)
 	theme = _make_theme()
 	for child in _layer.get_children():
 		# Renamed so the new screen's nodes get their names while these wait to be freed.
@@ -156,10 +166,10 @@ func _show_screen(screen: Screen) -> void:
 func _build_login() -> void:
 	var title := _label(ProjectSettings.get_setting("application/config/name", ""), GOLD, TITLE_SIZE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_place(title, Vector2(0, 50), Vector2(_width(), 40))
+	_place(title, Vector2(0, 50), Vector2(_width(), 40), Anchor.CENTER)
 	var form := VBoxContainer.new()
 	form.add_theme_constant_override("separation", roundi(3 * _ui_scale))
-	_place(form, Vector2(_width() / 2 - 60, 140), Vector2(120, 0))
+	_place(form, Vector2(_width() / 2 - 60, 140), Vector2(120, 0), Anchor.CENTER)
 	form.add_child(_label("Account Name", GOLD))
 	var account := LineEdit.new()
 	account.text = _account
@@ -174,11 +184,13 @@ func _build_login() -> void:
 	login.text = "Login"
 	form.add_child(login)
 	var remember := CheckBox.new()
+	OptionsWindow.style_check(remember, _ui_scale)
 	remember.text = "Remember Account Name"
 	remember.button_pressed = _remember
 	remember.toggled.connect(func(on: bool) -> void: _remember = on)
 	form.add_child(remember)
 	var remember_password := CheckBox.new()
+	OptionsWindow.style_check(remember_password, _ui_scale)
 	remember_password.text = "Remember Password"
 	remember_password.button_pressed = _remember_password
 	remember_password.toggled.connect(func(on: bool) -> void: _remember_password = on)
@@ -189,11 +201,12 @@ func _build_login() -> void:
 	password.text_submitted.connect(submit)
 	var version_number: String = ProjectSettings.get_setting("application/config/version", "")
 	var version := _label("Version %s" % (version_number if not version_number.is_empty() else "0.1"), Color(0.7, 0.7, 0.75))
-	_place(version, Vector2(4, 258), Vector2(100, 10))
+	_place(version, Vector2(4, 258), Vector2(100, 10), Anchor.BOTTOM)
 	var quit := Button.new()
 	quit.text = "Quit"
 	quit.pressed.connect(get_tree().quit)
-	_place(quit, Vector2(_width() - 54, 252), Vector2(50, 14))
+	_place(quit, Vector2(_width() - 54, 252), Vector2(50, 14), Anchor.BOTTOM)
+	_add_options_button(Vector2(_width() - 54, 234))
 	var focus: Control = account if _account.is_empty() else login if not password.text.is_empty() else password
 	focus.grab_focus.call_deferred()
 
@@ -237,7 +250,7 @@ func _build_select() -> void:
 	realm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(realm, Vector2(0, 8), Vector2(_width(), 16))
 	var list_panel := _panel()
-	_place(list_panel, Vector2(_width() - 130, 30), Vector2(124, 200))
+	_place(list_panel, Vector2(_width() - 130, 30), Vector2(124, 200), Anchor.STRETCH)
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", roundi(2 * _ui_scale))
 	list_panel.add_child(list)
@@ -264,8 +277,9 @@ func _build_select() -> void:
 	create.text = "Create New Character"
 	create.disabled = _characters.size() >= MAX_CHARACTERS
 	create.pressed.connect(_start_create)
-	_place(create, Vector2(_width() - 130, 234), Vector2(124, 14))
-	_add_preview()
+	_place(create, Vector2(_width() - 130, 234), Vector2(124, 14), Anchor.BOTTOM)
+	# Down to just above Enter World.
+	_add_preview(233)
 	var name_label := _label("", GOLD, 12)
 	name_label.name = "SelectedName"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -275,16 +289,17 @@ func _build_select() -> void:
 	enter.name = "EnterWorld"
 	enter.add_theme_font_size_override("font_size", roundi(11 * _ui_scale))
 	enter.pressed.connect(_enter_world)
-	_place(enter, Vector2(_width() / 2 - 45, 236), Vector2(90, 20))
+	_place(enter, Vector2(_width() / 2 - 45, 236), Vector2(90, 20), Anchor.BOTTOM)
 	var delete := Button.new()
 	delete.text = "Delete Character"
 	delete.name = "Delete"
 	delete.pressed.connect(_confirm_delete)
-	_place(delete, Vector2(_width() - 130, 252), Vector2(74, 14))
+	_place(delete, Vector2(_width() - 130, 252), Vector2(74, 14), Anchor.BOTTOM)
 	var back := Button.new()
 	back.text = "Back"
 	back.pressed.connect(func() -> void: _show_screen(Screen.LOGIN))
-	_place(back, Vector2(_width() - 52, 252), Vector2(46, 14))
+	_place(back, Vector2(_width() - 52, 252), Vector2(46, 14), Anchor.BOTTOM)
+	_add_options_button(Vector2(6, 252))
 	_update_select_preview()
 
 
@@ -397,13 +412,14 @@ func _build_create() -> void:
 	var class_label := _label(class_text, Color.WHITE)
 	class_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	classes.add_child(class_label)
-	_add_preview()
+	# Down to just above the name box.
+	_add_preview(211)
 	_layer.get_node("Preview").show_race(_race)
 	var title := _label("%s %s" % [ClassicData.RACE_NAMES[_race], ClassicData.CLASS_NAMES[_class]], GOLD, 12)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(title, Vector2(_width() / 2 - 80, 20), Vector2(160, 16))
 	var name_row := HBoxContainer.new()
-	_place(name_row, Vector2(_width() / 2 - 70, 214), Vector2(140, 14))
+	_place(name_row, Vector2(_width() / 2 - 70, 214), Vector2(140, 14), Anchor.BOTTOM)
 	var name_edit := LineEdit.new()
 	name_edit.placeholder_text = "Name"
 	name_edit.max_length = GameState.NAME_MAX
@@ -423,14 +439,14 @@ func _build_create() -> void:
 	accept.text = "Accept"
 	accept.add_theme_font_size_override("font_size", roundi(11 * _ui_scale))
 	accept.pressed.connect(_accept_create)
-	_place(accept, Vector2(_width() / 2 - 45, 236), Vector2(90, 20))
+	_place(accept, Vector2(_width() / 2 - 45, 236), Vector2(90, 20), Anchor.BOTTOM)
 	var back := Button.new()
 	back.text = "Back"
 	back.pressed.connect(func() -> void:
 		_load_characters()
 		_show_screen(Screen.SELECT if not _characters.is_empty() else Screen.LOGIN)
 	)
-	_place(back, Vector2(6, 252), Vector2(46, 14))
+	_place(back, Vector2(6, 252), Vector2(46, 14), Anchor.BOTTOM)
 	name_edit.grab_focus.call_deferred()
 
 
@@ -470,18 +486,40 @@ func _width() -> float:
 	return get_viewport_rect().size.x / _ui_scale
 
 
-## Places a control at a position and size in layout units.
-func _place(control: Control, at: Vector2, size_units: Vector2) -> void:
+## Screens are laid out 270 units tall. At a smaller UI Scale there's more
+## height than that: this much more.
+func _extra_height() -> float:
+	return maxf(get_viewport_rect().size.y / _ui_scale - 270.0, 0.0)
+
+
+## Places a control at a position and size in layout units. `anchor` says
+## where it goes when the screen is taller than 270 units: TOP stays put,
+## BOTTOM keeps its distance from the bottom, CENTER moves halfway, and
+## STRETCH stays at the top and grows to take the extra height.
+func _place(control: Control, at: Vector2, size_units: Vector2, anchor := Anchor.TOP) -> void:
+	var extra := _extra_height()
+	match anchor:
+		Anchor.BOTTOM:
+			at.y += extra
+		Anchor.CENTER:
+			at.y += extra / 2.0
+		Anchor.STRETCH:
+			size_units.y += extra
 	control.position = at * _ui_scale
 	control.size = size_units * _ui_scale
 	_layer.add_child(control)
 
 
-func _add_preview() -> void:
+## The character model, from under the name at the top down to `bottom` (in
+## layout units, kept at that distance from the bottom of the screen), so the
+## feet stand just above the buttons there.
+func _add_preview(bottom: float) -> void:
 	var preview := CharacterPreview.new()
 	preview.name = "Preview"
 	preview.pixel_scale = maxi(roundi(_ui_scale), 1)
-	_place(preview, Vector2(_width() / 2 - 70, 46), Vector2(140, 164))
+	var top := 48.0
+	var height := bottom + _extra_height() - top
+	_place(preview, Vector2(_width() / 2 - height * 0.45, top), Vector2(height * 0.9, height))
 
 
 func _label(text: String, color: Color, font_size := FONT_SIZE) -> Label:
@@ -577,8 +615,25 @@ func _close_modal() -> void:
 		_modal = null
 
 
+func _add_options_button(at: Vector2) -> void:
+	var options := Button.new()
+	options.text = "Options"
+	options.pressed.connect(func() -> void:
+		# Out of the login fields, so typing doesn't go into them behind the menu.
+		get_viewport().gui_release_focus()
+		_options_menu.toggle()
+	)
+	_place(options, at, Vector2(50, 14), Anchor.BOTTOM)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
+		return
+	if _options_menu.visible:
+		# Esc backs out of the options; other keys wait until it's closed.
+		if event.keycode == KEY_ESCAPE:
+			_options_menu.toggle()
+		get_viewport().set_input_as_handled()
 		return
 	if _modal:
 		if event.keycode == KEY_ESCAPE:

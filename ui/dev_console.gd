@@ -66,7 +66,7 @@ func setup(player: Player, world: AshfordVale, save: Callable) -> void:
 
 func _layout() -> void:
 	var window := get_viewport_rect().size
-	_ui_scale = maxf(window.y / 270.0, 1.0)
+	_ui_scale = Settings.hud_scale(window.y)
 	var panel: ColorRect = get_node("Panel")
 	panel.size = Vector2(window.x, HEIGHT * _ui_scale)
 	var line := roundi((FONT_SIZE + 5) * _ui_scale)

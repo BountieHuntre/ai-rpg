@@ -47,6 +47,9 @@ const TARGET_FRIEND := 21
 ## AttributesEx2 / AttributesEx3 flags.
 const ATTR_EX2_CANT_CRIT := 0x20000000
 const ATTR_EX3_ALWAYS_HIT := 0x40000
+const ATTR_EX3_DEATH_PERSISTENT := 0x100000
+## SPELL_AURA_MOD_SHAPESHIFT: stances and forms.
+const AURA_MOD_SHAPESHIFT := 36
 
 ## Client DBC lookup tables, for the indexes classic Paladin spells use.
 ## Values match the classic spell tooltips (Holy Light 2.5 s, Flash of Light
@@ -159,6 +162,17 @@ static func previous_rank(id: int) -> int:
 
 static func has_attribute_ex2(spell: Dictionary, flag: int) -> bool:
 	return int(spell.get("AttributesEx2", 0)) & flag != 0
+
+
+## Auras kept through death. Classic keeps only SPELL_ATTR_EX3_DEATH_PERSISTENT
+## ones (Unit::RemoveAllAurasOnDeath); here paladin auras and stances stay up
+## too, so they needn't be recast after every death.
+static func persists_through_death(spell: Dictionary) -> bool:
+	return (
+		is_paladin_aura(spell)
+		or has_attribute_ex3(spell, ATTR_EX3_DEATH_PERSISTENT)
+		or int(spell.get("EffectApplyAuraName1", 0)) == AURA_MOD_SHAPESHIFT
+	)
 
 
 static func has_attribute_ex3(spell: Dictionary, flag: int) -> bool:

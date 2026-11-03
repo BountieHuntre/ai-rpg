@@ -72,6 +72,11 @@ func open_bags() -> void:
 	_bags_window.visible = true
 
 
+## Where the bags window is on screen, or an empty rect when it's closed.
+func bags_rect() -> Rect2:
+	return _bags_window.get_global_rect() if _bags_window and _bags_window.visible else Rect2()
+
+
 func open_state() -> Dictionary:
 	return { "bags": _bags_window.visible, "character": _character_window.visible }
 
@@ -236,7 +241,7 @@ func _slot(parent: Control, at: Vector2, ref: Dictionary) -> void:
 	_draw_view(view)
 	box.mouse_entered.connect(func() -> void:
 		var current := Inventory.stack_at(ref)
-		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)), ref.kind == "bag")
+		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)), ref.kind == "bag", int(current.get("count", 1)))
 	)
 	box.mouse_exited.connect(func() -> void: _tooltip.show_item({}))
 	box.gui_input.connect(func(event: InputEvent) -> void: _on_slot_input(event, ref))

@@ -109,6 +109,12 @@ func set_model_visible(value: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	handle_action(event)
+
+
+## Bound actions: keys arrive here directly, mouse buttons through the root
+## scene (the game view doesn't take mouse input).
+func handle_action(event: InputEvent) -> void:
 	if event.is_action_pressed("target_next"):
 		targeting.cycle()
 	elif event.is_action_pressed("autorun"):

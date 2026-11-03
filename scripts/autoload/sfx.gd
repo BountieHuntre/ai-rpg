@@ -52,5 +52,7 @@ func play(sound_name: String) -> void:
 			player.stream = load("%s%s.ogg" % [SOUND_DIR, files.pick_random()])
 			var speed: float = SPEEDS.get(sound_name, 1.0)
 			player.pitch_scale = speed * randf_range(1.0 - PITCH_VARIATION, 1.0 + PITCH_VARIATION)
+			var effects: float = Settings.get_value("effects_volume")
+			player.volume_db = VOLUME_DB + linear_to_db(maxf(effects, 0.0001))
 			player.play()
 			return

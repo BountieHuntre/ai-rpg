@@ -8,7 +8,15 @@ extends PanelContainer
 const WIDTH := 120.0
 const FONT_SIZE := 7
 const OFFSET := Vector2(10, 10)
+## Gap from the screen's bottom right corner when anchored.
+const ANCHOR_MARGIN := Vector2(4, 4)
 const COMPARE_HEADER := Color(0.5, 0.5, 0.5)
+
+## Pinned to the bottom right of the screen instead of following the mouse,
+## as classic's tooltip for units in the world.
+var anchored := false
+## Screen pixels to keep clear below the anchored tooltip (open bags).
+var anchor_lift := 0.0
 
 var _rows := VBoxContainer.new()
 var _ui_scale := 1.0
@@ -54,8 +62,8 @@ func _setup_rows(rows: VBoxContainer) -> void:
 
 ## Shows an item. With `compare`, gear also shows the items equipped in the
 ## slots it would go in; equipment slots themselves pass false.
-func show_item(item: Dictionary, soulbound := false, current_durability := -1, compare := true) -> void:
-	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability))
+func show_item(item: Dictionary, soulbound := false, current_durability := -1, compare := true, count := 1) -> void:
+	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability, count))
 	if visible and compare:
 		_show_compare(item)
 
@@ -143,6 +151,9 @@ func _process(_delta: float) -> void:
 ## when there is no room.
 func _place() -> void:
 	var window := get_viewport().get_visible_rect().size
+	if anchored:
+		position = window - size - ANCHOR_MARGIN * _ui_scale - Vector2(0, anchor_lift)
+		return
 	var at := get_viewport().get_mouse_position() + OFFSET * _ui_scale
 	var shown := _compare.filter(func(panel: PanelContainer) -> bool: return panel.visible)
 	var extra := 0.0

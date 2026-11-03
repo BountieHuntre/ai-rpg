@@ -41,6 +41,17 @@ static func reaction_color(unit: Node) -> Color:
 	return HOSTILE_COLOR
 
 
+## The same reactions as text colors, brighter so names read well: red for
+## aggressive creatures, yellow for passive ones, green for friendly NPCs.
+static func name_color(unit: Node) -> Color:
+	if unit is Npc:
+		return FRIENDLY_COLOR
+	var enemy := unit as Enemy
+	if enemy and not enemy.is_aggressive():
+		return Color(1, 0.85, 0.15)
+	return Color(1, 0.25, 0.2)
+
+
 func set_target(node: Node3D) -> void:
 	if node and node != target:
 		Sfx.play("target")
@@ -70,16 +81,21 @@ func cycle() -> void:
 	set_target(candidates[next % candidates.size()])
 
 
-## As in classic: left click selects the creature or NPC under the cursor.
-## Right click also acts on it: attacks a creature, talks to an NPC, loots a
-## corpse.
-func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
+## The creature, corpse or NPC under a point of the game view, or null.
+func unit_at(screen_position: Vector2) -> Node3D:
 	var camera := _player.get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_position)
 	var to := from + camera.project_ray_normal(screen_position) * camera.far
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
 	query.exclude = [_player.get_rid()]
-	var collider: Object = _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider")
+	return _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider") as Node3D
+
+
+## As in classic: left click selects the creature or NPC under the cursor.
+## Right click also acts on it: attacks a creature, talks to an NPC, loots a
+## corpse.
+func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
+	var collider := unit_at(screen_position)
 	if collider is Npc:
 		set_target(collider)
 		if button == MOUSE_BUTTON_RIGHT:
@@ -91,7 +107,8 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	if not enemy.combatant.is_alive():
 		# Right-clicking a corpse loots it. Shift loots everything at once.
 		if button == MOUSE_BUTTON_RIGHT and enemy.has_loot():
-			loot_requested.emit(enemy, Input.is_key_pressed(KEY_SHIFT))
+			# Shift does the opposite of the Auto Loot option, as in classic.
+			loot_requested.emit(enemy, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot"))
 		return
 	set_target(enemy)
 	if button == MOUSE_BUTTON_RIGHT:

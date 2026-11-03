@@ -201,6 +201,14 @@ func clear_auras() -> void:
 		auras_changed.emit()
 
 
+## Death removes every aura but stances, paladin auras and death-persistent ones.
+func _clear_auras_on_death() -> void:
+	var before := auras.size()
+	auras = auras.filter(func(aura: Dictionary) -> bool: return SpellDB.persists_through_death(aura.spell))
+	if auras.size() != before:
+		auras_changed.emit()
+
+
 func spend_mana(amount: int) -> void:
 	if amount > 0:
 		mana -= amount
@@ -250,7 +258,7 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 		source.dealt_damage.emit(self)
 	if health == 0:
 		attack_target = null
-		clear_auras()
+		_clear_auras_on_death()
 		died.emit()
 
 

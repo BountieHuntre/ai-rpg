@@ -88,9 +88,11 @@ func handle_mouse(event: InputEventMouse) -> void:
 		if _dragged < CLICK_DRAG_LIMIT:
 			return
 		_update_mouse_mode()
-		yaw -= motion.relative.x * mouse_sensitivity
+		var sensitivity: float = mouse_sensitivity * Settings.get_value("mouse_speed")
+		var invert := -1.0 if Settings.get_value("invert_mouse") else 1.0
+		yaw -= motion.relative.x * sensitivity
 		pitch = clampf(
-			pitch - motion.relative.y * mouse_sensitivity,
+			pitch - motion.relative.y * sensitivity * invert,
 			deg_to_rad(min_pitch_degrees),
 			deg_to_rad(max_pitch_degrees)
 		)

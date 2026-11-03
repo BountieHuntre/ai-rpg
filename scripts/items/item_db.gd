@@ -76,7 +76,7 @@ static func money_words(copper: int) -> String:
 ## replaces the binding line once the item has bound. Whatever stops the
 ## character equipping it is red: the weapon or armor type without the
 ## proficiency, the classes line, the level.
-static func tooltip(item: Dictionary, soulbound := false, current_durability := -1) -> Array[Array]:
+static func tooltip(item: Dictionary, soulbound := false, current_durability := -1, count := 1) -> Array[Array]:
 	var lines: Array[Array] = []
 	lines.append([item.name, "", quality_color(item)])
 	if soulbound:
@@ -123,6 +123,11 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 		lines.append(["Requires Level %d" % item.RequiredLevel, "", color])
 	if not str(item.description).is_empty():
 		lines.append(["\"%s\"" % item.description, "", Color("ffd100")])
+	# What a vendor pays: for the whole stack, and each when there are several.
+	var sell := int(item.SellPrice)
+	if sell > 0:
+		var each := " (%s each)" % money_text(sell) if count > 1 else ""
+		lines.append(["Sell Price: %s%s" % [money_text(sell * count), each], "", Color.WHITE])
 	return lines
 
 

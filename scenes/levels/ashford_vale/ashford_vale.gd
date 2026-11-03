@@ -56,6 +56,10 @@ const WOODS := [
 	[Vector2(-60, -60), 40.0],
 	[Vector2(150, 90), 35.0],
 ]
+## Creatures that never attack on sight here, whatever their classic faction:
+## every burrowling (Runt, Digger, Hauler, Delver), so the mine is safe to
+## learn on.
+const PASSIVE_CREATURES := [6, 257, 80, 475]
 ## Creature spawns: [creature entry, center, radius, count].
 const SPAWNS := [
 	[299, Vector2(35, 50), 22.0, 7],    # Young Wolf, meadow
@@ -476,6 +480,7 @@ func _spawn_creatures() -> void:
 			var enemy: Enemy = ENEMY_SCENE.instantiate()
 			enemy.name = "Creature%02d_%02d" % [group, i]
 			enemy.creature_entry = spawn[0]
+			enemy.passive = spawn[0] in PASSIVE_CREATURES
 			enemy.position = at + Vector3(0, 0.1, 0)
 			creatures.add_child(enemy)
 

@@ -1,0 +1,356 @@
+class_name OptionsWindow
+extends PanelContainer
+## The Options window, with a tab for each category: Video, Sound, Interface
+## and Key Bindings. Changes show at once; Okay keeps them all, Cancel puts
+## them all back, and Defaults resets the open tab. In Key Bindings, click a
+## key to bind a new one (Esc stops), right-click to clear it.
+
+signal closed
+
+const WIDTH := 190.0
+const FONT_SIZE := 7
+const GOLD := Color("ffd100")
+const TEXT := Color(0.92, 0.9, 0.84)
+
+## Each category's rows: [setting key, label, kind, choices or range].
+const CATEGORIES := {
+	"Video": [
+		["display_mode", "Display Mode", "choice", ["Windowed", "Fullscreen", "Exclusive Fullscreen"]],
+		["vsync", "Vertical Sync", "check", null],
+		["max_fps", "Max Frame Rate", "fps", [0, 30, 60, 120, 144, 240]],
+		["shadows", "Shadows", "check", null],
+		["brightness", "Brightness", "slider", [0.6, 1.4]],
+	],
+	"Sound": [
+		["sound_enabled", "Enable Sound", "check", null],
+		["master_volume", "Master Volume", "slider", [0.0, 1.0]],
+		["effects_volume", "Sound Effects", "slider", [0.0, 1.0]],
+	],
+	"Interface": [
+		# Classic's range: 100% already fills the window's height.
+		["ui_scale", "UI Scale", "slider", [0.65, 1.0]],
+		["auto_loot", "Auto Loot (Shift to choose)", "check", null],
+		["npc_names", "Show NPC Names", "check", null],
+		["enemy_names", "Show Enemy Names", "check", null],
+		["quest_tracker", "Show Quest Tracker", "check", null],
+		["loading_tips", "Show Loading Screen Tips", "check", null],
+		["mouse_speed", "Mouse Look Speed", "slider", [0.25, 2.5]],
+		["invert_mouse", "Invert Mouse", "check", null],
+	],
+}
+
+static var _check_icons: Dictionary
+
+const KEY_BINDINGS := "Key Bindings"
+const TABS := ["Video", "Sound", "Interface", KEY_BINDINGS]
+const TAB_SELECTED := Color(1, 0.85, 0.3)
+const TAB_OTHER := Color(0.6, 0.6, 0.65)
+const LIST_HEIGHT := 125.0
+const WAITING := Color(0.4, 1, 0.4)
+
+var _category := "Video"
+var _before: Dictionary
+var _ui_scale := 1.0
+## The key being rebound: [action, slot], or [] when not waiting for a key.
+var _binding := []
+var _note: Label
+## The Key Bindings tab's buttons by action, [first key, second key], updated
+## in place so the list keeps its scroll position.
+var _key_buttons: Dictionary
+
+
+func open(category := "Video") -> void:
+	_category = category
+	_before = Settings.snapshot()
+	_binding = []
+	visible = true
+	_build()
+
+
+## Switches tab. Changes on other tabs stay until Okay or Cancel.
+func show_tab(category: String) -> void:
+	_category = category
+	_binding = []
+	_build()
+
+
+func okay() -> void:
+	Settings.save()
+	_close()
+
+
+func cancel() -> void:
+	Settings.restore(_before)
+	_close()
+
+
+func defaults() -> void:
+	if _category == KEY_BINDINGS:
+		Settings.reset_keys()
+	else:
+		for row: Array in CATEGORIES[_category]:
+			Settings.set_value(row[0], Settings.DEFAULTS[row[0]])
+	_binding = []
+	_build()
+
+
+## While waiting for a key, the next key or bindable mouse button pressed is
+## the binding. Left and right clicks still work the window.
+func _input(event: InputEvent) -> void:
+	if not visible or _binding.is_empty():
+		return
+	var code := 0
+	var key := event as InputEventKey
+	var mouse := event as InputEventMouseButton
+	if key and key.pressed and not key.echo:
+		code = int(key.physical_keycode)
+	elif mouse and mouse.pressed and mouse.button_index in Settings.BINDABLE_MOUSE:
+		code = -int(mouse.button_index)
+	if code == 0:
+		return
+	get_viewport().set_input_as_handled()
+	var action: String = _binding[0]
+	var slot: int = _binding[1]
+	_binding = []
+	var note := ""
+	if code == KEY_ESCAPE:
+		note = ""
+	elif code in Settings.RESERVED_KEYS:
+		note = "%s can't be bound." % Settings.key_name(code)
+	else:
+		var taken_from := Settings.bind_key(action, slot, code)
+		if not taken_from.is_empty():
+			note = "%s unbound from %s." % [Settings.key_name(code), taken_from]
+	_refresh_keys()
+	_note.text = note
+
+
+func _refresh_keys() -> void:
+	for action: String in _key_buttons:
+		var keys := Settings.keys_for(action)
+		for slot in 2:
+			var button: Button = _key_buttons[action][slot]
+			if not is_instance_valid(button):
+				continue
+			var waiting := _binding == [action, slot]
+			button.text = "Press a key" if waiting else Settings.key_name(int(keys[slot]))
+			if waiting:
+				button.add_theme_color_override("font_color", WAITING)
+			else:
+				button.remove_theme_color_override("font_color")
+
+
+func _close() -> void:
+	_binding = []
+	visible = false
+	closed.emit()
+
+
+func _build() -> void:
+	# Scaled when opened, not while the UI Scale slider is dragged.
+	_ui_scale = Settings.hud_scale(get_viewport_rect().size.y)
+	for child in get_children():
+		child.queue_free()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.12, 0.96)
+	style.border_color = Color(0.55, 0.55, 0.6)
+	style.set_border_width_all(maxi(roundi(_ui_scale / 2), 1))
+	style.set_content_margin_all(6 * _ui_scale)
+	add_theme_stylebox_override("panel", style)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", roundi(4 * _ui_scale))
+	add_child(box)
+	var title := _label("Options", GOLD)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+	box.add_child(tabs)
+	for tab: String in TABS:
+		var button := _button(tab, show_tab.bind(tab))
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var selected := tab == _category
+		button.add_theme_color_override("font_color", TAB_SELECTED if selected else TAB_OTHER)
+		button.add_theme_color_override("font_hover_color", TAB_SELECTED)
+		if selected:
+			button.add_theme_stylebox_override("normal", button.get_theme_stylebox("pressed"))
+		tabs.add_child(button)
+	# Every tab gets the same space, so the window doesn't jump between tabs.
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", roundi(4 * _ui_scale))
+	content.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT + 13) * _ui_scale
+	box.add_child(content)
+	if _category == KEY_BINDINGS:
+		_build_keys(content)
+	else:
+		for row: Array in CATEGORIES[_category]:
+			content.add_child(_row(row))
+	_note = _label("", Color(1, 0.6, 0.4))
+	box.add_child(_note)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", roundi(4 * _ui_scale))
+	box.add_child(buttons)
+	buttons.add_child(_button("Defaults", defaults))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	buttons.add_child(gap)
+	buttons.add_child(_button("Okay", okay))
+	buttons.add_child(_button("Cancel", cancel))
+	reset_size()
+	var center := func() -> void: position = (get_viewport_rect().size - size) / 2
+	center.call_deferred()
+
+
+## Every rebindable action by section, with its two keys.
+func _build_keys(box: VBoxContainer) -> void:
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT) * _ui_scale
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+	list.custom_minimum_size.x = (WIDTH + 22) * _ui_scale
+	scroll.add_child(list)
+	_key_buttons = {}
+	var section := ""
+	for entry: Array in Settings.ACTIONS:
+		if entry[2] != section:
+			section = entry[2]
+			list.add_child(_label(section, GOLD))
+		var line := HBoxContainer.new()
+		var label := _label("  " + entry[1], TEXT)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(label)
+		var buttons := []
+		for slot in 2:
+			buttons.append(_key_button(entry[0], slot))
+			line.add_child(buttons[slot])
+		_key_buttons[entry[0]] = buttons
+		list.add_child(line)
+	_refresh_keys()
+	var hint := _label("Click a slot, then press a key or mouse button 3-5. Right-click clears it.", Color(0.7, 0.7, 0.7))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size.x = (WIDTH + 30) * _ui_scale
+	hint.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	box.add_child(hint)
+
+
+func _key_button(action: String, slot: int) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(52, 12) * _ui_scale
+	button.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	button.clip_text = true
+	button.gui_input.connect(func(event: InputEvent) -> void:
+		var click := event as InputEventMouseButton
+		if click and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
+			_binding = []
+			Settings.bind_key(action, slot, 0)
+			_note.text = ""
+			_refresh_keys()
+	)
+	button.pressed.connect(func() -> void:
+		_binding = [action, slot]
+		_note.text = ""
+		_refresh_keys()
+	)
+	return button
+
+
+func _row(row: Array) -> Control:
+	var key: String = row[0]
+	var line := HBoxContainer.new()
+	line.custom_minimum_size.x = WIDTH * _ui_scale
+	var label := _label(row[1], TEXT)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_child(label)
+	var value = Settings.get_value(key)
+	match row[2]:
+		"check":
+			var check := CheckBox.new()
+			check.button_pressed = value
+			style_check(check, _ui_scale)
+			check.toggled.connect(func(on: bool) -> void: Settings.set_value(key, on))
+			line.add_child(check)
+		"choice", "fps":
+			var options := OptionButton.new()
+			options.custom_minimum_size.x = 80 * _ui_scale
+			options.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+			options.get_popup().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+			var choices: Array = row[3]
+			for choice in choices:
+				var text := str(choice)
+				if row[2] == "fps":
+					text = "Unlimited" if int(choice) == 0 else "%d" % choice
+				options.add_item(text)
+			options.select(maxi(choices.find(value), 0))
+			options.item_selected.connect(func(index: int) -> void: Settings.set_value(key, choices[index]))
+			line.add_child(options)
+		"slider":
+			var limits: Array = row[3]
+			var slider := HSlider.new()
+			slider.custom_minimum_size = Vector2(60, 10) * _ui_scale
+			slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			slider.min_value = limits[0]
+			slider.max_value = limits[1]
+			slider.step = 0.05
+			slider.value = value
+			var shown := _label(_percent(value), TEXT)
+			shown.custom_minimum_size.x = 22 * _ui_scale
+			shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			slider.value_changed.connect(func(new_value: float) -> void:
+				shown.text = _percent(new_value)
+				Settings.set_value(key, new_value)
+			)
+			line.add_child(slider)
+			line.add_child(shown)
+	return line
+
+
+## Gives a checkbox clearly drawn boxes: Godot's default unticked box is
+## nearly invisible on dark panels.
+static func style_check(check: CheckBox, ui_scale: float) -> void:
+	var size := maxi(roundi(8 * ui_scale), 8)
+	if not _check_icons.has(size):
+		_check_icons[size] = [_check_icon(size, false), _check_icon(size, true)]
+	var icons: Array = _check_icons[size]
+	check.add_theme_icon_override("unchecked", icons[0])
+	check.add_theme_icon_override("checked", icons[1])
+
+
+static func _check_icon(size: int, ticked: bool) -> ImageTexture:
+	var image := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.05, 0.05, 0.08))
+	var border := maxi(size / 9, 1)
+	var edge := Color(0.75, 0.7, 0.55)
+	for i in size:
+		for b in border:
+			image.set_pixel(i, b, edge)
+			image.set_pixel(i, size - 1 - b, edge)
+			image.set_pixel(b, i, edge)
+			image.set_pixel(size - 1 - b, i, edge)
+	if ticked:
+		var inset := border + maxi(size / 5, 1)
+		image.fill_rect(Rect2i(inset, inset, size - inset * 2, size - inset * 2), GOLD)
+	return ImageTexture.create_from_image(image)
+
+
+func _percent(value: float) -> String:
+	return "%d%%" % roundi(value * 100.0)
+
+
+func _label(text: String, color: Color) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	label.add_theme_color_override("font_color", color)
+	return label
+
+
+func _button(text: String, pressed: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(40, 13) * _ui_scale
+	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	# Deferred: closing or rebuilding frees this button mid-press otherwise.
+	button.pressed.connect(func() -> void: pressed.call_deferred())
+	return button

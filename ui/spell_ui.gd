@@ -14,8 +14,9 @@ const GAP := 2.0
 const BOOK_ROW := 16.0
 const BUFF := 14.0
 const STANCE_SLOT := 16.0
+## The XP bar sits between the action bar and the stance bar (drawn by the HUD).
+const XP_BAR := 7.0
 const DRAG_THRESHOLD := 6.0
-const KEY_LABELS := ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="]
 const BACK := Color(0.08, 0.08, 0.1, 0.92)
 const EMPTY := Color(0.16, 0.16, 0.2, 0.9)
 const TITLE := Color(1, 0.85, 0.4)
@@ -149,7 +150,9 @@ func _draw_bar_slot(i: int) -> void:
 	no_mana.name = "NoMana"
 	var cooldown := _rect(box, Vector2.ZERO, Vector2(SLOT, 0), Color(0, 0, 0, 0.65))
 	cooldown.name = "Cooldown"
-	var key := _text(box, Vector2(SLOT - 6, -1), KEY_LABELS[i], Color(0.9, 0.9, 0.9), 6)
+	var key := _text(box, Vector2(0, -1), Settings.key_label("ability_%d" % (i + 1)), Color(0.9, 0.9, 0.9), 6)
+	key.size.x = (SLOT - 1) * _ui_scale
+	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	key.name = "Key"
 
 
@@ -167,7 +170,8 @@ func _update_slot_state(i: int) -> void:
 	var fraction := caster.cooldown_fraction(id) if id != 0 else 0.0
 	cooldown.size.y = SLOT * _ui_scale * fraction
 	cooldown.position.y = SLOT * _ui_scale - cooldown.size.y
-	# Classic shows the key in red when the target is out of range.
+	# Follows the key bindings. Classic shows it red when the target is out of range.
+	key.text = Settings.key_label("ability_%d" % (i + 1))
 	key.add_theme_color_override("font_color", Color(1, 0.2, 0.2) if id != 0 and caster.out_of_range(id) else Color(0.9, 0.9, 0.9))
 	# Attack glows while auto-attacking.
 	box.modulate = Color(1.4, 1.2, 0.7) if id == SpellDB.ATTACK and _player.combatant.attack_target else Color.WHITE
@@ -266,7 +270,7 @@ func _build_stance_bar() -> void:
 	for i in _stance_ids.size():
 		var id := _stance_ids[i]
 		var box := ColorRect.new()
-		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - STANCE_SLOT) * _ui_scale
+		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - XP_BAR - GAP - STANCE_SLOT) * _ui_scale
 		box.size = Vector2.ONE * STANCE_SLOT * _ui_scale
 		box.mouse_filter = Control.MOUSE_FILTER_STOP
 		_stance_bar.add_child(box)
@@ -353,12 +357,14 @@ func _on_book_input(event: InputEvent, id: int) -> void:
 func _draw_buffs() -> void:
 	for child in _buffs.get_children():
 		child.queue_free()
-	var right := _screen.x - 4
+	# Right to left from the minimap's left edge, level with its top.
+	var corner := Minimap.corner(_screen.x)
+	var right := corner.x - 4
 	var i := 0
 	for aura in _player.combatant.auras:
 		var spell: Dictionary = aura.spell
 		var icon := ColorRect.new()
-		icon.position = Vector2(right - (i + 1) * (BUFF + 3), 4) * _ui_scale
+		icon.position = Vector2(right - (i + 1) * (BUFF + 3), corner.y) * _ui_scale
 		icon.size = Vector2.ONE * BUFF * _ui_scale
 		icon.mouse_filter = Control.MOUSE_FILTER_STOP
 		_buffs.add_child(icon)

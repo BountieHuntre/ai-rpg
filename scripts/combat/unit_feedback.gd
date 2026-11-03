@@ -17,6 +17,9 @@ const STAR_SPIN := 5.0
 
 @export var hurt_sound := "enemy_hurt"
 @export var death_sound := "enemy_die"
+## Rotation axis of the death fall, in the visual's own space: X falls over
+## backwards; Z rolls onto the side, for beasts already lying along the ground.
+@export var fall_axis := "x"
 
 var _flash_left := 0.0
 var _dead := false
@@ -50,6 +53,7 @@ func reset() -> void:
 		_tween.kill()
 	_visual.position = Vector3.ZERO
 	_visual.rotation.x = 0.0
+	_visual.rotation.z = 0.0
 	_apply_material()
 
 
@@ -59,7 +63,7 @@ func show_dead() -> void:
 	if _tween:
 		_tween.kill()
 	_visual.position = Vector3.ZERO
-	_visual.rotation.x = -PI / 2.0
+	_visual.set_indexed("rotation:" + fall_axis, -PI / 2.0)
 	_apply_material()
 
 
@@ -99,7 +103,7 @@ func _on_died() -> void:
 		_tween.kill()
 	_visual.position = Vector3.ZERO
 	_tween = create_tween()
-	_tween.tween_property(_visual, "rotation:x", -PI / 2.0, FALL_TIME).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_visual, "rotation:" + fall_axis, -PI / 2.0, FALL_TIME).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 
 
 func _apply_material() -> void:
