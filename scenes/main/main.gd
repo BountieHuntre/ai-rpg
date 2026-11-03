@@ -95,6 +95,7 @@ func save_game() -> void:
 		GameState.player_state = {
 			"zone": AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
 			"auras": _saved_auras(c),
+			"item_cooldowns": _player.spells.saved_item_cooldowns(),
 		}
 	_store_corpses()
 	GameState.save_to_disk()
@@ -136,6 +137,7 @@ func _restore_player() -> void:
 		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2])), at[2])
 		_player.facing = float(state.facing)
 	var c := _player.combatant
+	_player.spells.restore_item_cooldowns(state.get("item_cooldowns", {}))
 	# Buffs come back with the time they had left, as WoW saves auras on logout.
 	for saved: Dictionary in state.get("auras", []):
 		var spell := SpellDB.get_spell(int(saved.id))
@@ -204,8 +206,8 @@ func _log_out() -> void:
 
 ## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
-	# Only the auras that outlast death come back with you.
-	GameState.player_state = { "auras": _saved_auras(_player.combatant) }
+	# Only the auras that outlast death come back with you, and cooldowns keep running.
+	GameState.player_state = { "auras": _saved_auras(_player.combatant), "item_cooldowns": _player.spells.saved_item_cooldowns() }
 	_store_corpses()
 	GameState.save_to_disk()
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)

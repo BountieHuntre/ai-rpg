@@ -32,6 +32,12 @@ const STAT_MODS := { 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "In
 const ALL_CLASSES_MASK := 1503
 ## Unmet requirements show in this red, as in the classic tooltip.
 const UNMET := Color(1, 0.13, 0.13)
+## Stat changes when comparing items.
+## Item spell lines, by spelltrigger_1: use, equip, chance on hit, learn.
+const USE_COLOR := Color(0.12, 1, 0)
+const SPELL_TRIGGERS := { 0: "Use", 1: "Equip", 2: "Chance on hit", 6: "Use" }
+const GAIN := Color(0.15, 1, 0.15)
+const LOSS := Color(1, 0.2, 0.2)
 const BONDING := { 1: "Binds when picked up", 2: "Binds when equipped", 3: "Binds when used", 4: "Quest Item" }
 
 static var _items: Dictionary
@@ -121,6 +127,15 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 	if int(item.RequiredLevel) > 1:
 		var color := Color.WHITE if int(item.RequiredLevel) <= GameState.level else UNMET
 		lines.append(["Requires Level %d" % item.RequiredLevel, "", color])
+	# The item's spell in green, as in classic: "Use:" for ones you use (and
+	# recipes you learn), "Equip:" for ones it gives while worn, "Chance on
+	# hit:" for weapon procs.
+	var item_spell := int(item.get("spellid_1", 0))
+	var trigger: String = SPELL_TRIGGERS.get(int(item.get("spelltrigger_1", 0)), "")
+	if item_spell > 0 and not trigger.is_empty():
+		var text := SpellText.describe(SpellDB.get_spell(item_spell), GameState.level)
+		if not text.is_empty():
+			lines.append(["%s: %s" % [trigger, text], "", USE_COLOR])
 	if not str(item.description).is_empty():
 		lines.append(["\"%s\"" % item.description, "", Color("ffd100")])
 	# What a vendor pays: for the whole stack, and each when there are several.
@@ -128,6 +143,42 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 	if sell > 0:
 		var each := " (%s each)" % money_text(sell) if count > 1 else ""
 		lines.append(["Sell Price: %s%s" % [money_text(sell * count), each], "", Color.WHITE])
+	return lines
+
+
+## The stats an item gives, for comparing: { stat name: amount }, in tooltip
+## order. Weapons count by damage per second.
+static func stat_values(item: Dictionary) -> Dictionary:
+	var values := {}
+	if int(item.get("dmg_max1", 0)) > 0 and int(item.get("delay", 0)) > 0:
+		values["Damage Per Second"] = (float(item.dmg_min1) + float(item.dmg_max1)) / 2.0 / (int(item.delay) / 1000.0)
+	if int(item.get("armor", 0)) > 0:
+		values["Armor"] = float(item.armor)
+	if int(item.get("block", 0)) > 0:
+		values["Block"] = float(item.block)
+	for stat: Array in item.get("stats", []):
+		var name: String = STAT_MODS.get(int(stat[0]), "")
+		if not name.is_empty():
+			values[name] = values.get(name, 0.0) + float(stat[1])
+	return values
+
+
+## Tooltip rows for swapping `current` out for `item`: each stat that changes,
+## green for a gain and red for a loss. Empty when nothing changes.
+static func stat_change_lines(item: Dictionary, current: Dictionary) -> Array:
+	var new_values := stat_values(item)
+	var old_values := stat_values(current)
+	var names: Array = new_values.keys()
+	for name: String in old_values:
+		if not name in names:
+			names.append(name)
+	var lines := []
+	for name: String in names:
+		var change: float = new_values.get(name, 0.0) - old_values.get(name, 0.0)
+		if is_zero_approx(snappedf(change, 0.1)):
+			continue
+		var amount := ("%+.1f" % change) if name == "Damage Per Second" else ("%+d" % roundi(change))
+		lines.append(["%s %s" % [amount, name], "", GAIN if change > 0.0 else LOSS])
 	return lines
 
 

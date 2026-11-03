@@ -28,6 +28,7 @@ const COMMANDS := {
 	"respawn": ["", "Bring back every dead creature."],
 	"save": ["", "Save the game now."],
 	"clear": ["", "Clear the console."],
+	"reload": ["", "Save, restart the game and come back in, picking up any changes."],
 }
 
 var _player: Player
@@ -340,6 +341,53 @@ func _cmd_respawn(_args: PackedStringArray) -> String:
 func _cmd_save(_args: PackedStringArray) -> String:
 	_save.call()
 	return "Saved."
+
+
+## Saves, starts a fresh copy of the game with the same arguments plus
+## `--resume` for this character, and quits, so every change on disk (scripts,
+## scenes, data, settings) is picked up. Runs started from the editor lose
+## their debugger connection.
+func _cmd_reload(_args: PackedStringArray) -> String:
+	_save.call()
+	var pid := OS.create_process(OS.get_executable_path(), restart_args())
+	if pid <= 0:
+		return "!Couldn't start a new copy of the game."
+	get_tree().quit.call_deferred()
+	return "Reloading..."
+
+
+## The command line for the restarted game: this one's, without the editor's
+## debugger, plus `--resume` for the current character.
+static func restart_args() -> PackedStringArray:
+	var engine_args := PackedStringArray()
+	var skip := false
+	for arg in OS.get_cmdline_args():
+		if skip:
+			skip = false
+			continue
+		# The editor's debugger session doesn't carry over to the new process.
+		if arg in ["--remote-debug", "--editor-pid"]:
+			skip = true
+			continue
+		engine_args.append(arg)
+	var user_args := PackedStringArray()
+	for arg in OS.get_cmdline_user_args():
+		if not arg.begins_with("--resume="):
+			user_args.append(arg)
+	# One-save runs go straight into the world anyway.
+	if not GameState.single_save:
+		user_args.append("--resume=" + GameState.char_name)
+	var args := engine_args
+	# Godot takes --path out of the arguments it reports. Running from the
+	# project folder (not an exported build), point the new copy at it.
+	var project := ProjectSettings.globalize_path("res://")
+	if not "--path" in args and not project.is_empty() and FileAccess.file_exists("res://project.godot"):
+		args.insert(0, project)
+		args.insert(0, "--path")
+	if not user_args.is_empty():
+		args.append("--")
+		args.append_array(user_args)
+	return args
 
 
 func _cmd_clear(_args: PackedStringArray) -> String:

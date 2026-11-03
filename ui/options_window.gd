@@ -54,6 +54,7 @@ const DEV_BUTTONS := [
 	["Heal", "heal"], ["Kill Target", "kill"], ["Repair Gear", "repair"],
 	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
 	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
+	["Reload Game", "reload"],
 ]
 const RESULT := Color(0.6, 0.9, 0.6)
 const ERROR_COLOR := Color(1, 0.6, 0.4)
@@ -406,7 +407,7 @@ func _item_row(item: Dictionary) -> Control:
 	row.add_child(id)
 	row.mouse_entered.connect(func() -> void:
 		row.color = Color(1, 1, 1, 0.08)
-		_item_tooltip.show_item(item, false, -1, false)
+		_item_tooltip.show_item(item)
 	)
 	row.mouse_exited.connect(func() -> void:
 		row.color = Color.TRANSPARENT

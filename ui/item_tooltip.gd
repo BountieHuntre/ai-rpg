@@ -63,7 +63,14 @@ func _setup_rows(rows: VBoxContainer) -> void:
 ## Shows an item. With `compare`, gear also shows the items equipped in the
 ## slots it would go in; equipment slots themselves pass false.
 func show_item(item: Dictionary, soulbound := false, current_durability := -1, compare := true, count := 1) -> void:
-	show_lines([] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability, count))
+	var lines: Array = [] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability, count)
+	# Nothing equipped in its slot: everything it gives is a gain.
+	if compare and not item.is_empty() and Inventory.SLOTS_FOR_TYPE.has(int(item.get("InventoryType", 0))) and equipped_for(item).is_empty():
+		var gains := ItemDB.stat_change_lines(item, {})
+		if not gains.is_empty():
+			lines.append(["Equipping this item will give:", "", COMPARE_HEADER])
+			lines.append_array(gains)
+	show_lines(lines)
 	if visible and compare:
 		_show_compare(item)
 
@@ -87,8 +94,15 @@ func _show_compare(item: Dictionary) -> void:
 	var stacks := equipped_for(item)
 	for i in mini(stacks.size(), _compare.size()):
 		var stack: Dictionary = stacks[i]
+		var equipped := ItemDB.get_item(stack.id)
 		var lines: Array = [["Currently Equipped", "", COMPARE_HEADER]]
-		lines.append_array(ItemDB.tooltip(ItemDB.get_item(stack.id), stack.get("bound", false), int(stack.get("durability", -1))))
+		lines.append_array(ItemDB.tooltip(equipped, stack.get("bound", false), int(stack.get("durability", -1))))
+		# What swapping this one for the hovered item would change, green for
+		# gains and red for losses.
+		var changes := ItemDB.stat_change_lines(item, equipped)
+		if not changes.is_empty():
+			lines.append(["If you replace this item, the following stat changes will occur:", "", COMPARE_HEADER])
+			lines.append_array(changes)
 		_fill(_compare[i].get_child(0), lines)
 		_compare[i].visible = true
 		_compare[i].reset_size()

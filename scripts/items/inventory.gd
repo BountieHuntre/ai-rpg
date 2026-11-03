@@ -419,10 +419,19 @@ static func remove_one(ref: Dictionary) -> void:
 	GameState.inventory_changed.emit()
 
 
+## Items that can't be destroyed: the Homing Token every character carries.
+const UNDESTROYABLE := [6948]
+const ERR_CANT_DESTROY := "You can't destroy that item."
+
+
+static func can_destroy(id: int) -> bool:
+	return not id in UNDESTROYABLE
+
+
 ## Destroys a whole stack in the bags or equipment, as dropping an item off
 ## the windows does in classic. Bags themselves can't be destroyed this way.
 static func destroy(ref: Dictionary) -> void:
-	if ref.kind == "bag_slot" or stack_at(ref).is_empty():
+	if ref.kind == "bag_slot" or stack_at(ref).is_empty() or not can_destroy(int(stack_at(ref).id)):
 		return
 	_set_stack(ref, {})
 	GameState.inventory_changed.emit()
@@ -440,6 +449,21 @@ static func buy(id: int) -> String:
 	GameState.money -= price
 	add_item(id, count)
 	return ""
+
+
+## Bag places holding poor quality (grey) items a vendor will buy.
+static func junk_refs() -> Array[Dictionary]:
+	var refs: Array[Dictionary] = []
+	for b in GameState.containers.size():
+		var container: Array = GameState.containers[b]
+		for i in container.size():
+			var stack: Dictionary = container[i]
+			if stack.is_empty():
+				continue
+			var item := ItemDB.get_item(stack.id)
+			if int(item.get("Quality", 1)) == ItemDB.Quality.POOR and int(item.get("SellPrice", 0)) > 0:
+				refs.append(bag_ref(b, i))
+	return refs
 
 
 ## Sells a whole bag stack for SellPrice per item. It goes to buyback.

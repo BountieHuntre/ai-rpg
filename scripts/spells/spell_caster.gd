@@ -19,6 +19,9 @@ const ERR_MOVING := "Can't do that while moving"
 const ERR_DEAD_TARGET := "Invalid target"
 const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
 const ERR_PASSIVE := "That ability is passive."
+## Seconds before the Homing Token can be used again. Classic's is an hour
+## (the spell's CategoryRecoveryTime); here it's 15 minutes.
+const HOMING_TOKEN_COOLDOWN := 900.0
 const ERR_NO_OATH := "You have no Oath to pass Verdict on."
 ## InterruptFlags: taking damage delays the cast.
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
@@ -233,7 +236,8 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 func _finish(spell: Dictionary, target: Combatant) -> void:
 	var me := _player.combatant
-	if int(spell.get("AttributesEx", 0)) & SpellDB.ATTR_EX_DRAIN_ALL_POWER:
+	# Unlike classic, Last Rite leaves your mana alone.
+	if int(spell.get("AttributesEx", 0)) & SpellDB.ATTR_EX_DRAIN_ALL_POWER and spell.SpellName != "Last Rite":
 		me.spend_mana(int(me.mana))
 	else:
 		me.spend_mana(mana_cost(spell))
@@ -249,6 +253,8 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 			_hammer_of_justice(spell, target)
 		"Last Rite":
 			target.heal(me.max_health)
+		"Homing Token":
+			_go_home(spell)
 		_:
 			if SpellDB.is_seal(spell):
 				_apply_seal(spell)
@@ -342,6 +348,10 @@ func use_item(ref: Dictionary) -> String:
 		return ERR_ITEM_NOT_READY
 	if not casting.is_empty():
 		return ERR_IN_PROGRESS
+	# Items whose spell has a cast time and no aura (the Homing Token) cast
+	# like a spell; the spell's own category holds the cooldown.
+	if SpellDB.cast_time(spell) > 0.0 and int(spell.Effect1) != SpellDB.EFFECT_APPLY_AURA:
+		return _cast_item_spell(spell)
 	if int(item.spellcategorycooldown_1) > 0:
 		_item_cooldowns[category] = int(item.spellcategorycooldown_1) / 1000.0
 	if int(item.spellcharges_1) < 0:
@@ -352,6 +362,79 @@ func use_item(ref: Dictionary) -> String:
 		_player.sitting = true
 	Sfx.play("eat")
 	return ""
+
+
+## Starts an item's cast-time spell on yourself, checking the spell's category
+## cooldown (an hour for the Homing Token, from CategoryRecoveryTime) and the
+## global cooldown. Moving interrupts it, as for any cast.
+func _cast_item_spell(spell: Dictionary) -> String:
+	if _item_cooldowns.get(_spell_category(spell), 0.0) > 0.0:
+		return ERR_ITEM_NOT_READY
+	if _gcd_left > 0.0:
+		return ERR_NOT_READY
+	if _player.is_moving():
+		return ERR_MOVING
+	_player.sitting = false
+	var gcd := SpellDB.global_cooldown(spell)
+	if gcd > 0.0:
+		_gcd_left = gcd
+		_gcd_total = gcd
+	Sfx.play("cast")
+	casting = spell
+	_player.combatant.is_casting = true
+	_pushbacks = 0
+	_cast_left = SpellDB.cast_time(spell)
+	_cast_total = _cast_left
+	_cast_target = _player.combatant
+	return ""
+
+
+## Item spells share cooldowns by spell category (so every Homing Token
+## waits the same hour). Kept apart from item categories by sign.
+static func _spell_category(spell: Dictionary) -> int:
+	return -int(spell.get("Category", 0))
+
+
+## Seconds left before an item's spell can be used again, or 0.
+func item_cooldown_left(item: Dictionary) -> float:
+	var spell := SpellDB.get_spell(int(item.get("spellid_1", 0)))
+	var left: float = _item_cooldowns.get(int(item.get("spellcategory_1", 0)), 0.0)
+	if not spell.is_empty():
+		left = maxf(left, _item_cooldowns.get(_spell_category(spell), 0.0))
+	return left
+
+
+## Item cooldowns still running, as { category: unix time they end }, for the
+## save, so an hour's wait doesn't reset on logging out.
+func saved_item_cooldowns() -> Dictionary:
+	var now := Time.get_unix_time_from_system()
+	var saved := {}
+	for category: int in _item_cooldowns:
+		if _item_cooldowns[category] > 0.0:
+			saved[str(category)] = now + _item_cooldowns[category]
+	return saved
+
+
+func restore_item_cooldowns(saved: Dictionary) -> void:
+	var now := Time.get_unix_time_from_system()
+	for category: String in saved:
+		var left := float(saved[category]) - now
+		if left > 0.0:
+			_item_cooldowns[int(category)] = left
+
+
+## The Homing Token's teleport: back to the zone's start point, the camera
+## jumping along, and its cooldown starting once the cast lands.
+func _go_home(spell: Dictionary) -> void:
+	_item_cooldowns[_spell_category(spell)] = HOMING_TOKEN_COOLDOWN
+	_player.combatant.attack_target = null
+	_player.velocity = Vector3.ZERO
+	_player.global_position = AshfordVale.SPAWN
+	_player.facing = AshfordVale.SPAWN_FACING
+	var camera := _player.get_viewport().get_camera_3d() as OrbitCamera
+	if camera:
+		camera.snap_to_target()
+	Sfx.play("level_up")
 
 
 static func learn(ids: Array) -> Array[String]:

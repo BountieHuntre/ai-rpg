@@ -334,6 +334,11 @@ func drop_held_on_world() -> bool:
 		_set_held({})
 		return true
 	var stack := Inventory.stack_at(_held)
+	if not Inventory.can_destroy(int(stack.id)):
+		# Put back where it came from.
+		_set_held({})
+		message.emit(Inventory.ERR_CANT_DESTROY, true)
+		return true
 	var item := ItemDB.get_item(stack.id)
 	var what: String = item.name if int(stack.count) <= 1 else "%d %s" % [stack.count, item.name]
 	_tooltip.show_item({})

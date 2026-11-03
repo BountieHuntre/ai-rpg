@@ -76,7 +76,8 @@ func _build() -> void:
 		child.queue_free()
 	var vendor := vendor_data(npc.vendor)
 	var rows: Array = GameState.buyback if _showing_buyback else vendor.get("items", [])
-	size = Vector2(WIDTH, 26 + maxi(rows.size(), 1) * ROW + 14) * _ui_scale
+	# Room under the list for the money line and the Sell Junk button.
+	size = Vector2(WIDTH, 26 + maxi(rows.size(), 1) * ROW + 28) * _ui_scale
 	var back := ColorRect.new()
 	back.color = BACK
 	back.size = size
@@ -106,6 +107,35 @@ func _build() -> void:
 	_text(self, Vector2(4, bottom), "Money: %s" % ItemDB.money_text(GameState.money), PRICE, FONT_SIZE)
 	if vendor.get("repair", false):
 		_add_repair_button(bottom)
+	_add_sell_junk_button(bottom + 14)
+
+
+## Sells every poor (grey) item in the bags at once. Each stack goes to
+## buyback as if sold by hand.
+func _add_sell_junk_button(at_y: float) -> void:
+	var junk := Inventory.junk_refs()
+	var value := 0
+	for ref: Dictionary in junk:
+		var stack := Inventory.stack_at(ref)
+		value += int(ItemDB.get_item(stack.id).SellPrice) * int(stack.count)
+	var button := Button.new()
+	button.text = "Sell Junk (%s)" % ItemDB.money_text(value) if value > 0 else "Sell Junk"
+	button.disabled = junk.is_empty()
+	button.tooltip_text = "" if junk.is_empty() else "Sell all %d grey items in your bags" % junk.size()
+	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	button.position = Vector2(4, at_y - 2) * _ui_scale
+	button.size = Vector2(WIDTH - 8, 12) * _ui_scale
+	button.pressed.connect(func() -> void:
+		var sold := 0
+		for ref: Dictionary in Inventory.junk_refs():
+			if Inventory.sell(ref).is_empty():
+				sold += 1
+		if sold > 0:
+			Sfx.play("sell")
+			message.emit("Sold %d junk item%s for %s." % [sold, "" if sold == 1 else "s", ItemDB.money_text(value)], false)
+		_queue_rebuild()
+	)
+	add_child(button)
 
 
 ## Armorers repair everything at once, for the classic cost.

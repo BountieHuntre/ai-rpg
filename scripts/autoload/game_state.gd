@@ -74,6 +74,9 @@ var action_bar: Array[int] = []
 var save_path := ""
 ## Set by `--save=`: play that one file, with no character select.
 var single_save := false
+## `-- --resume=<name>` skips the login and enters the world as that character,
+## as the developer console's reload command does after restarting.
+var resume_name := ""
 ## Holds characters/ and settings.cfg. Set by `--profile=`.
 var profile_dir := "user://"
 var characters_dir := "user://characters"
@@ -89,6 +92,8 @@ func _init() -> void:
 		elif arg.begins_with("--profile="):
 			profile_dir = arg.trim_prefix("--profile=")
 			characters_dir = profile_dir.path_join("characters")
+		elif arg.begins_with("--resume="):
+			resume_name = arg.trim_prefix("--resume=")
 	_reset_items()
 
 

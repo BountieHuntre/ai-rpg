@@ -100,6 +100,13 @@ func _ready() -> void:
 	if _screen == Screen.SELECT:
 		_load_characters(_settings.get_value("characters", "last", ""))
 	_rebuild()
+	# Restarted by the reload command: straight back into the world.
+	if not GameState.resume_name.is_empty():
+		var resume := GameState.resume_name
+		GameState.resume_name = ""
+		_load_characters(resume)
+		if _selected < _characters.size() and _characters[_selected].name == resume:
+			_enter_world.call_deferred()
 
 
 func _build_background() -> void:

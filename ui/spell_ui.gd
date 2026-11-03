@@ -420,7 +420,7 @@ func spell_tooltip(id: int) -> Array:
 	var spell := SpellDB.get_spell(id)
 	var lines: Array = [[spell.SpellName, str(spell.Rank1), Color.WHITE]]
 	if id == SpellDB.ATTACK:
-		lines.append(["Toggles melee attack on your target.", "", DESCRIPTION])
+		lines.append([SpellText.describe(spell, GameState.level), "", DESCRIPTION])
 		return lines
 	var cost := _player.spells.mana_cost(spell)
 	var reach := SpellDB.spell_range(spell)
@@ -436,13 +436,7 @@ func spell_tooltip(id: int) -> Array:
 
 
 func _describe(spell: Dictionary) -> String:
-	var level := GameState.level
-	if spell.SpellName == "Mending Radiance":
-		var heal := SpellDB.effect_range(spell, 0, level)
-		return "Restores %d to %d health to a friendly target." % [heal.x, heal.y]
-	if SpellDB.seal_of_righteousness_proc(int(spell.Id)) != 0:
-		return "Swear an oath of valor for 30 sec. Each melee hit deals %d extra Holy damage. You can keep only one Oath at a time." % _player.spells.seal_of_righteousness_damage(spell)
-	return ""
+	return SpellText.describe(spell, GameState.level, _player.spells)
 
 
 # Drawing helpers.
