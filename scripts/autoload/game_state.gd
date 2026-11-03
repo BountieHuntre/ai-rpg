@@ -8,6 +8,7 @@ extends Node
 
 signal inventory_changed
 signal spells_changed
+signal money_changed
 
 ## The classic backpack has 16 slots, plus four bag slots.
 const BACKPACK_SLOTS := 16
@@ -21,8 +22,11 @@ var race := ClassicData.Race.HUMAN
 var char_class := ClassicData.CharClass.PALADIN
 var level := 1
 var xp := 0
-## Money in copper.
-var money := 0
+## Money in copper. Changing it emits money_changed.
+var money := 0:
+	set(value):
+		money = value
+		money_changed.emit()
 ## Weapon and armor types the character can use, as "class:subclass" keys.
 var proficiencies: Array[String] = []
 ## Inventory.Slot -> item stack.

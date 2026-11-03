@@ -36,6 +36,7 @@ func _ready() -> void:
 	_player.combatant.died.connect(_on_player_died)
 	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
 	GameState.inventory_changed.connect(_queue_save)
+	GameState.money_changed.connect(_queue_save)
 	var autosave := Timer.new()
 	autosave.wait_time = AUTOSAVE_INTERVAL
 	autosave.timeout.connect(save_game)

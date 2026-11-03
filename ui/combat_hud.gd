@@ -7,8 +7,8 @@ extends CanvasLayer
 const BASE_HEIGHT := 270.0
 const FONT_SIZE := 8
 const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
-## The cast bar sits just above the action bar.
-const CAST_BAR_Y_FROM_BOTTOM := 40.0
+## The cast bar sits above the action bar and the stance bar.
+const CAST_BAR_Y_FROM_BOTTOM := 60.0
 const MESSAGE_TIME := 2.0
 const FLOAT_TIME := 1.0
 const FLOAT_SPEED := 18.0

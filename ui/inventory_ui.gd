@@ -54,6 +54,7 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.inventory_changed.connect(_on_inventory_changed)
+	GameState.money_changed.connect(func() -> void: _money_text.text = ItemDB.money_text(GameState.money))
 	_rebuild()
 	_bags_window.visible = open.get("bags", false)
 	_character_window.visible = open.get("character", false)

@@ -279,9 +279,10 @@ func _holy_damage(target: Combatant, amount: int, crit: bool) -> void:
 
 ## Holy Light's script effect heals through spell 19968 (SpellEffects.cpp).
 ## Learns spells from a trainer. A new spell with the same name and rank text
-## as the one it follows in its chain replaces it (Judgement teaches a second
-## Rank 1 Seal of Righteousness that can be judged), including on the action
-## bar. Other new ranks sit alongside the old ones, as in classic.
+## as a known one replaces it (Judgement teaches a second Rank 1 Seal of
+## Righteousness that can be judged). Other new ranks sit alongside the old
+## ones in the spellbook, but take over their action bar slots. That's a
+## convenience over classic, which left the old rank on the bar.
 static func learn(ids: Array) -> Array[String]:
 	var learned: Array[String] = []
 	for id: int in ids:
@@ -295,11 +296,14 @@ static func learn(ids: Array) -> Array[String]:
 				previous = known
 		if previous != 0:
 			GameState.known_spells[GameState.known_spells.find(previous)] = id
-			for i in GameState.action_bar.size():
-				if GameState.action_bar[i] == previous:
-					GameState.action_bar[i] = id
 		else:
 			GameState.known_spells.append(id)
+		for i in GameState.action_bar.size():
+			var on_bar := SpellDB.get_spell(GameState.action_bar[i])
+			var replaces := previous != 0 and GameState.action_bar[i] == previous
+			var lower_rank: bool = on_bar.get("SpellName") == spell.SpellName and int(on_bar.get("SpellLevel", 0)) < int(spell.SpellLevel)
+			if replaces or lower_rank:
+				GameState.action_bar[i] = id
 		learned.append(SpellDB.full_name(spell))
 	GameState.spells_changed.emit()
 	return learned

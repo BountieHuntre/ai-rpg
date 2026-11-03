@@ -13,6 +13,7 @@ const SLOT := 20.0
 const GAP := 2.0
 const BOOK_ROW := 16.0
 const BUFF := 14.0
+const STANCE_SLOT := 16.0
 const DRAG_THRESHOLD := 6.0
 const KEY_LABELS := ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="]
 const BACK := Color(0.08, 0.08, 0.1, 0.92)
@@ -29,6 +30,10 @@ var _ui_scale := 1.0
 var _screen := Vector2.ZERO
 var _tooltip: ItemTooltip
 var _bar_slots: Array[ColorRect] = []
+## The stance bar: one fixed button per known aura or stance, highest rank.
+var _stance_bar: Control
+var _stance_slots: Array[ColorRect] = []
+var _stance_ids: Array[int] = []
 var _book: Control
 var _book_rows: Control
 var _buffs: Control
@@ -47,6 +52,7 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_bar()
+	_build_stance_bar()
 	_build_book()
 	_book.visible = book_open
 	_buffs = Control.new()
@@ -66,6 +72,8 @@ func _on_spells_changed() -> void:
 	_book.visible = was_open
 	for i in _bar_slots.size():
 		_draw_bar_slot(i)
+	_stance_bar.queue_free()
+	_build_stance_bar()
 
 
 func is_book_open() -> bool:
@@ -93,6 +101,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	for i in _bar_slots.size():
 		_update_slot_state(i)
+	for i in _stance_slots.size():
+		_update_stance_state(i)
 	if _held_icon:
 		_held_icon.position = get_viewport().get_mouse_position() + Vector2(4, 4) * _ui_scale
 	for icon in _buffs.get_children():
@@ -218,6 +228,68 @@ func _set_held(id: int) -> void:
 		_draw_icon(_held_icon, id)
 		add_child(_held_icon)
 		_held_icon.position = get_viewport().get_mouse_position() + Vector2(4, 4) * _ui_scale
+
+
+# Stance bar.
+
+## Spells that live on the stance bar instead of the action bar: Paladin auras
+## (and later, other classes' stances). Only the highest known rank of each.
+func stance_spells() -> Array[int]:
+	var best := {}
+	for id: int in GameState.known_spells:
+		var spell := SpellDB.get_spell(id)
+		if id == SpellDB.ATTACK or not SpellDB.is_paladin_aura(spell):
+			continue
+		var name: String = spell.SpellName
+		if not best.has(name) or int(spell.SpellLevel) > int(SpellDB.get_spell(best[name]).SpellLevel):
+			best[name] = id
+	var ids: Array[int] = []
+	ids.assign(best.values())
+	ids.sort_custom(func(a: int, b: int) -> bool: return int(SpellDB.get_spell(a).SpellLevel) < int(SpellDB.get_spell(b).SpellLevel))
+	return ids
+
+
+## Sits just above the left end of the action bar, and only shows when it has
+## something in it. Its buttons cast but can't be dragged.
+func _build_stance_bar() -> void:
+	_stance_slots.clear()
+	_stance_ids = stance_spells()
+	_stance_bar = Control.new()
+	_stance_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_stance_bar)
+	_stance_bar.visible = not _stance_ids.is_empty()
+	var bar_left := (_screen.x - (GameState.ACTION_SLOTS * (SLOT + GAP) - GAP)) / 2.0
+	for i in _stance_ids.size():
+		var id := _stance_ids[i]
+		var box := ColorRect.new()
+		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - STANCE_SLOT) * _ui_scale
+		box.size = Vector2.ONE * STANCE_SLOT * _ui_scale
+		box.mouse_filter = Control.MOUSE_FILTER_STOP
+		_stance_bar.add_child(box)
+		_stance_slots.append(box)
+		_draw_icon(box, id)
+		var cooldown := _rect(box, Vector2.ZERO, Vector2(STANCE_SLOT, 0), Color(0, 0, 0, 0.65))
+		cooldown.name = "Cooldown"
+		box.mouse_entered.connect(func() -> void: _tooltip.show_lines(spell_tooltip(id)))
+		box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+		box.gui_input.connect(func(event: InputEvent) -> void:
+			var button := event as InputEventMouseButton
+			if button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
+				_player.spells.cast(id)
+				get_viewport().set_input_as_handled()
+		)
+
+
+## The active aura's button is lit, the others dimmed, as on the classic bar.
+func _update_stance_state(i: int) -> void:
+	var box := _stance_slots[i]
+	var id := _stance_ids[i]
+	var name: String = SpellDB.get_spell(id).SpellName
+	var active := not _player.combatant.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == name).is_empty()
+	box.modulate = Color(1.3, 1.3, 1.1) if active else Color(0.6, 0.6, 0.6)
+	var cooldown: Control = box.get_node("Cooldown")
+	cooldown.size.y = STANCE_SLOT * _ui_scale * _player.spells.cooldown_fraction(id)
+	cooldown.position.y = STANCE_SLOT * _ui_scale - cooldown.size.y
 
 
 # Spellbook.
