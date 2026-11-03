@@ -1,0 +1,74 @@
+class_name CharacterPreview
+extends SubViewportContainer
+## A slowly turning model of a character for the login screens, rendered at low
+## resolution like the game. Shows the race's placeholder look from Player.
+
+## Screen pixels per rendered pixel.
+@export var pixel_scale := 3
+@export var turn_speed := 0.5
+
+var _model := Node3D.new()
+var _body := MeshInstance3D.new()
+var _material := StandardMaterial3D.new()
+
+
+func _ready() -> void:
+	stretch = true
+	stretch_shrink = pixel_scale
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var viewport := SubViewport.new()
+	viewport.own_world_3d = true
+	viewport.transparent_bg = true
+	add_child(viewport)
+	var camera := Camera3D.new()
+	camera.fov = 30.0
+	camera.position = Vector3(0, 1.3, 6.5)
+	camera.rotation.x = deg_to_rad(-6.0)
+	viewport.add_child(camera)
+	var light := DirectionalLight3D.new()
+	light.rotation = Vector3(deg_to_rad(-40.0), deg_to_rad(30.0), 0)
+	viewport.add_child(light)
+	var environment := WorldEnvironment.new()
+	environment.environment = Environment.new()
+	environment.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.environment.ambient_light_color = Color(0.45, 0.45, 0.6)
+	viewport.add_child(environment)
+	var ground := MeshInstance3D.new()
+	var disc := CylinderMesh.new()
+	disc.top_radius = 1.1
+	disc.bottom_radius = 1.1
+	disc.height = 0.05
+	ground.mesh = disc
+	var stone := StandardMaterial3D.new()
+	stone.albedo_color = Color(0.25, 0.24, 0.28)
+	ground.material_override = stone
+	viewport.add_child(ground)
+	# The same placeholder shapes as the player scene: a capsule and a nose.
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.4
+	capsule.height = 1.8
+	_body.mesh = capsule
+	_body.position.y = 0.9
+	_body.material_override = _material
+	_model.add_child(_body)
+	var nose := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.3, 0.25, 0.4)
+	nose.mesh = box
+	nose.position = Vector3(0, 1.3, -0.45)
+	var gold := StandardMaterial3D.new()
+	gold.albedo_color = Color(0.95, 0.75, 0.3)
+	nose.material_override = gold
+	_model.add_child(nose)
+	_model.rotation.y = PI
+	viewport.add_child(_model)
+
+
+func show_race(race: ClassicData.Race) -> void:
+	_model.scale = Player.race_scale(race)
+	_material.albedo_color = Player.race_color(race)
+
+
+func _process(delta: float) -> void:
+	_model.rotation.y += turn_speed * delta

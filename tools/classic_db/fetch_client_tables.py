@@ -1,13 +1,19 @@
-"""Fetches the client's repair cost tables into data/classic/durability.json.
+"""Fetches the client tables the game needs that aren't in the server database:
+repair costs into data/classic/durability.json and starting gear into
+data/classic/start_outfits.json. Run it before extract.py, which reads the
+starting gear.
 
 Usage (Python 3, no extra packages):
-    python tools/classic_db/fetch_durability.py
+    python tools/classic_db/fetch_client_tables.py
 
 Repair cost in CMaNGOS (Player::DurabilityRepair) is
     lost durability * DurabilityCosts[item level][column] * DurabilityQuality[(quality + 1) * 2]
 where column is the weapon subclass, or the armor subclass + 21. Those two
 tables are client DBC files, not part of the server database, so they come
 from wago.tools' Classic Era (1.15) client exports.
+
+Starting gear is CharStartOutfit, by race and class (Player::Create in CMaNGOS
+gives each new character these items).
 """
 
 import csv
@@ -17,7 +23,7 @@ import os
 import urllib.request
 
 URL = "https://wago.tools/db2/{table}/csv?product=wow_classic_era"
-OUT = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic", "durability.json")
+OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic")
 
 
 def fetch(table):
@@ -33,9 +39,19 @@ def main():
         armor = [int(row[f"ArmorSubClassCost_{i}"]) for i in range(8)]
         costs[row["ID"]] = weapon + armor
     quality = {row["ID"]: float(row["Data"]) for row in fetch("DurabilityQuality")}
-    with open(OUT, "w", encoding="utf8") as out:
+    with open(os.path.join(OUT_DIR, "durability.json"), "w", encoding="utf8") as out:
         json.dump({"costs": costs, "quality": quality, "source": URL.format(table="<table>")}, out, separators=(",", ":"))
     print(f"{len(costs)} item levels, {len(quality)} quality modifiers")
+
+    # Outfits are the same for both sexes; keep the male ones, by "race-class".
+    outfits = {}
+    for row in fetch("CharStartOutfit"):
+        if row["SexID"] == "0":
+            items = [int(row[f"ItemID_{i}"]) for i in range(24)]
+            outfits[f'{row["RaceID"]}-{row["ClassID"]}'] = [item for item in items if item > 0]
+    with open(os.path.join(OUT_DIR, "start_outfits.json"), "w", encoding="utf8") as out:
+        json.dump(dict(sorted(outfits.items())), out, separators=(",", ":"))
+    print(f"{len(outfits)} starting outfits")
 
 
 if __name__ == "__main__":

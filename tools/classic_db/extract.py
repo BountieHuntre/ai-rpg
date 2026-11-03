@@ -1,7 +1,7 @@
 """Extracts classic WoW (patch 1.12) data for the game from the CMaNGOS classic
 database dump into data/classic/*.json.
 
-Usage (Python 3, no extra packages):
+Usage (Python 3, no extra packages), after fetch_client_tables.py:
     python tools/classic_db/extract.py path/to/ClassicDB_1_12_1_z2815.sql.gz
 
 The dump is Full_DB/ClassicDB_1_12_1_z2815.sql.gz from
@@ -20,16 +20,14 @@ import renames
 
 # creature_template entries used in the game.
 CREATURES = [299, 69, 257]  # Young Wolf, Timber Wolf, Kobold Worker
-# Items the player starts with: Human Paladin starting gear.
-STARTER_ITEMS = [2361, 45, 44, 43, 6948]
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
 VENDORS = [152, 1213]
 
-# Class trainer whose spell list is exported, and the race/class whose
-# starting spells are. 927 is Brother Wilhelm, Paladin Trainer.
+# Class trainer whose spell list is exported. 927 is Brother Wilhelm, Paladin Trainer.
 CLASS_TRAINERS = {"paladin": 927}
-START_SPELLS_FOR = (1, 2)  # Human Paladin
+# Classes whose starting spells are exported: the ones with spell code in the game.
+SPELL_CLASSES = {2}  # Paladin
 # Starting spells worth keeping (the rest are passives and internals).
 START_SPELL_EFFECTS = {2, 6, 10, 35, 77}
 # Seal of Righteousness procs by rank, from UnitAuraProcHandler.cpp in CMaNGOS.
@@ -44,7 +42,7 @@ TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
     "creature_template", "creature_loot_template", "reference_loot_template",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
-    "spell_chain", "spell_bonus_data",
+    "spell_chain", "spell_bonus_data", "playercreateinfo_item",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -60,6 +58,9 @@ SPELL_FIELDS = [
     "EffectTriggerSpell",
 )]
 SPELL_EFFECT_LEARN = 36
+SPELL_EFFECT_PROFICIENCY = 60
+ITEM_CLASS_CONSUMABLE = 0
+ITEM_SUBCLASS_FOOD = 5
 SPELL_AURA_DUMMY = 4
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic")
 BACKSLASH = chr(92)
@@ -181,7 +182,11 @@ def main(path):
             "min_or_ref": int(r["mincountOrRef"]), "max": int(r["maxcount"]), "condition": int(r["condition_id"]),
         } for r in rows]
 
-    creature_loot, references, item_ids = {}, {}, set(STARTER_ITEMS)
+    with open(os.path.join(OUT_DIR, "start_outfits.json"), encoding="utf8") as f:
+        outfits = json.load(f)
+    creature_loot, references = {}, {}
+    item_ids = {item for outfit in outfits.values() for item in outfit}
+    item_ids.update(int(r["itemid"]) for r in db["playercreateinfo_item"])
     pending = []
     for creature in creatures.values():
         loot_id = str(creature["LootId"])
@@ -213,13 +218,48 @@ def main(path):
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
     # The game uses its own names, not the classic ones.
-    renames.apply(items, creatures, vendors, {})
+    renames.apply(items, creatures, vendors, {}, classic_names(db))
     write("vendors.json", vendors)
     write("creatures.json", creatures)
     write("items.json", items)
+    write("characters.json", starting_characters(db, outfits, items, level_stats))
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
     export_spells(db, item_spells)
+
+
+def starting_characters(db, outfits, items, level_stats):
+    """Starting items and weapon and armor proficiencies for each race and class."""
+    spells = {r["Id"]: r for r in db["spell_template"]}
+    characters = {}
+    for key in level_stats:
+        race, char_class = (int(part) for part in key.split("-"))
+        # Player::Create: each outfit item, BuyCount of them, except food (4)
+        # and drink (2); then playercreateinfo_item.
+        start_items = []
+        for item_id in outfits.get(key, []):
+            item = items.get(str(item_id))
+            if not item:
+                continue
+            count = int(item["BuyCount"])
+            if int(item["class"]) == ITEM_CLASS_CONSUMABLE and int(item["subclass"]) == ITEM_SUBCLASS_FOOD:
+                limit = {11: 4, 59: 2}.get(int(item["spellcategory_1"]))
+                if limit and int(item["stackable"]) > limit:
+                    count = limit
+            start_items.append([item_id, count])
+        start_items += [[int(r["itemid"]), int(r["amount"])] for r in db["playercreateinfo_item"]
+                        if (int(r["race"]), int(r["class"])) == (race, char_class)]
+        # Proficiency spells name an item class and a mask of its subclasses.
+        proficiencies = set()
+        for r in db["playercreateinfo_spell"]:
+            spell = spells.get(r["Spell"])
+            if (int(r["race"]), int(r["class"])) != (race, char_class) or not spell:
+                continue
+            if SPELL_EFFECT_PROFICIENCY in (int(spell[f"Effect{i}"]) for i in (1, 2, 3)):
+                item_class, mask = int(spell["EquippedItemClass"]), int(spell["EquippedItemSubClassMask"])
+                proficiencies.update(f"{item_class}:{bit}" for bit in range(32) if mask & (1 << bit))
+        characters[key] = {"items": start_items, "proficiencies": sorted(proficiencies)}
+    return characters
 
 
 def export_spells(db, item_spells):
@@ -247,14 +287,13 @@ def export_spells(db, item_spells):
             wanted.update(learned)
         trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
 
-    race, char_class = START_SPELLS_FOR
-    start = []
+    start = {}
     for r in db["playercreateinfo_spell"]:
-        if (int(r["race"]), int(r["class"])) == (race, char_class):
+        if int(r["class"]) in SPELL_CLASSES:
             spell = spells.get(r["Spell"])
             if spell and any(int(spell[f"Effect{i}"]) in START_SPELL_EFFECTS for i in (1, 2, 3)) \
                     and int(spell["SpellFamilyName"]) != 0:
-                start.append(int(r["Spell"]))
+                start.setdefault(f'{r["race"]}-{r["class"]}', []).append(int(r["Spell"]))
                 wanted.add(int(r["Spell"]))
 
     # Follow triggered spells, seal procs and seal judgements.
@@ -282,15 +321,21 @@ def export_spells(db, item_spells):
         spell = pick(spells[str(spell_id)], SPELL_FIELDS)
         spell["SpellFamilyFlags"] = int(spells[str(spell_id)]["SpellFamilyFlags"])
         out[str(spell_id)] = spell
-    renames.apply({}, {}, {}, out)
+    renames.apply({}, {}, {}, out, classic_names(db))
     chains = {r["spell_id"]: {"prev": int(r["prev_spell"]), "first": int(r["first_spell"]), "rank": int(r["rank"])}
               for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
     bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}
              for r in db["spell_bonus_data"] if int(r["entry"]) in wanted}
     write("spells.json", {"spells": out, "chains": chains, "bonus": bonus, "trainers": trainers,
-                          "start_spells": {f"{race}-{char_class}": start},
+                          "start_spells": start,
                           "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
     print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
+
+
+def classic_names(db):
+    """Every item, creature and spell name in the classic database."""
+    return ({r["name"] for r in db["item_template"]} | {r["Name"] for r in db["creature_template"]}
+            | {r["SpellName"] for r in db["spell_template"]})
 
 
 def write(name, data):

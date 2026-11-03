@@ -22,6 +22,19 @@ var _save_queued := false
 ## as the screen centre, and Godot updates hover from it every frame, so
 ## without this a window there would highlight rows and show tooltips.
 var _drag_shield := Control.new()
+var _menu := GameMenu.new()
+
+
+## Runs before the player and HUD are ready. Started straight from the editor,
+## with no character picked, it plays the first one (or makes one).
+func _enter_tree() -> void:
+	if GameState.has_character():
+		return
+	var characters := GameState.list_characters()
+	if characters.is_empty():
+		GameState.create_character("Hero", ClassicData.Race.HUMAN, ClassicData.CharClass.PALADIN)
+	else:
+		GameState.select_character(characters[0].path)
 
 
 func _ready() -> void:
@@ -41,6 +54,15 @@ func _ready() -> void:
 	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
 	GameState.inventory_changed.connect(_queue_save)
 	GameState.money_changed.connect(_queue_save)
+	var menu_layer := CanvasLayer.new()
+	menu_layer.layer = 50
+	add_child(menu_layer)
+	menu_layer.add_child(_menu)
+	_menu.log_out_requested.connect(_log_out)
+	_menu.exit_requested.connect(func() -> void:
+		save_game()
+		get_tree().quit()
+	)
 	var shield_layer := CanvasLayer.new()
 	shield_layer.layer = 100
 	add_child(shield_layer)
@@ -142,6 +164,13 @@ func _on_camera_clicked(window_position: Vector2, button: MouseButton) -> void:
 	_player.targeting.on_camera_clicked(window_position / _game_view.stretch_shrink, button)
 
 
+## Saves and goes back to character select.
+func _log_out() -> void:
+	save_game()
+	FrontEnd.start_at_select = true
+	get_tree().change_scene_to_file("res://scenes/front_end/front_end.tscn")
+
+
 ## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
 	GameState.player_state = {}
@@ -180,9 +209,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		GameState.reset_character()
 		get_tree().reload_current_scene()
 	elif event.is_action_pressed("pause"):
-		# Esc closes the loot window, then clears the target, then quits until a
-		# real pause menu exists.
-		if _hud.is_looting():
+		# Esc closes the menu, the loot window and other windows, then clears
+		# the target, and only then opens the game menu.
+		if _menu.visible:
+			_menu.toggle()
+		elif _hud.is_looting():
 			_hud.close_loot()
 		elif _hud.close_vendor() or _hud.close_trainer():
 			pass
@@ -191,5 +222,4 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif _player.targeting.target:
 			_player.targeting.set_target(null)
 		else:
-			save_game()
-			get_tree().quit()
+			_menu.toggle()

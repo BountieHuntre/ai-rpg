@@ -1,0 +1,584 @@
+class_name FrontEnd
+extends Control
+## The screens before the game: a pretend account login, character select and
+## character creation. There's no server: any account name and password log in,
+## and characters are the save files in user://characters/.
+## Layout is in units of 1/270 of the window height, like the HUD.
+
+const GAME_SCENE := "res://scenes/main/main.tscn"
+## Classic allows 10 characters per realm.
+const MAX_CHARACTERS := 10
+const REALM := "Greywater"
+const FONT_SIZE := 8
+const TITLE_SIZE := 28
+const GOLD := Color("ffd100")
+const PANEL_COLOR := Color(0.04, 0.04, 0.12, 0.88)
+const BORDER_COLOR := Color(0.55, 0.55, 0.6)
+## Pretend server steps after Login, with how long each shows.
+const LOGIN_STEPS := [["Connecting", 0.5], ["Authenticating", 0.6], ["Retrieving character list", 0.4]]
+
+const RACE_TEXT := {
+	ClassicData.Race.HUMAN: "Adaptable folk of the river kingdoms, at home in field and keep.",
+	ClassicData.Race.ORC: "Hardy fighters from the badlands, proud and fierce in battle.",
+	ClassicData.Race.DWARF: "Stout miners and smiths from the deep mountain halls.",
+	ClassicData.Race.NIGHT_ELF: "Long-lived forest dwellers, quick and quiet.",
+	ClassicData.Race.UNDEAD: "The risen dead who kept their wills, and walk on.",
+	ClassicData.Race.TAUREN: "Tall, horned folk of the plains, strong and patient.",
+	ClassicData.Race.GNOME: "Small tinkerers with sharp minds and quick hands.",
+	ClassicData.Race.TROLL: "Lanky jungle hunters who heal fast and strike faster.",
+}
+const CLASS_TEXT := {
+	ClassicData.CharClass.WARRIOR: "Fights up close in heavy armor, with weapon and shield.",
+	ClassicData.CharClass.PALADIN: "A holy knight who heals, protects and smites.",
+	ClassicData.CharClass.HUNTER: "Fights from range with bow or gun.",
+	ClassicData.CharClass.ROGUE: "Strikes from the shadows with quick blades.",
+	ClassicData.CharClass.PRIEST: "Heals allies with holy magic, or harms with shadow.",
+	ClassicData.CharClass.SHAMAN: "Calls on earth, fire, water and air to heal and harm.",
+	ClassicData.CharClass.MAGE: "Wields fire, frost and arcane power from afar.",
+	ClassicData.CharClass.WARLOCK: "Bargains with dark powers for curses and flame.",
+	ClassicData.CharClass.DRUID: "Changes shape and draws on nature to heal and fight.",
+}
+## Classes with spells in the game so far. The rest can be made, but only attack.
+const CLASSES_WITH_SPELLS := [ClassicData.CharClass.PALADIN]
+const NAME_STARTS := ["Al", "Bran", "Cor", "Dun", "El", "Fen", "Gar", "Hal", "Is", "Jor", "Kel", "Lor",
+	"Mar", "Nor", "Os", "Per", "Quen", "Ros", "Sel", "Tor", "Ul", "Vor", "Wen", "Yr"]
+const NAME_ENDS := ["ric", "wyn", "dor", "mar", "eth", "ia", "on", "ald", "ra", "ith", "us", "en", "a", "os", "ell"]
+
+enum Screen { LOGIN, SELECT, CREATE }
+
+## Set before changing to this scene to skip the login, as when logging out.
+static var start_at_select := false
+
+var _screen := Screen.LOGIN
+var _ui_scale := 1.0
+var _layer := Control.new()
+var _modal: Control
+var _settings := ConfigFile.new()
+var _account := ""
+var _remember := false
+var _characters: Array[Dictionary] = []
+var _selected := 0
+var _race := ClassicData.Race.HUMAN
+var _class := ClassicData.CharClass.PALADIN
+var _new_name := ""
+
+
+func _ready() -> void:
+	# Tests and `--save=` runs play one save file directly.
+	if GameState.single_save:
+		_enter_game.call_deferred()
+		return
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_settings.load(_settings_path())
+	_remember = _settings.get_value("login", "remember", false)
+	_account = _settings.get_value("login", "account", "") if _remember else ""
+	_build_background()
+	_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_layer)
+	get_viewport().size_changed.connect(_rebuild)
+	_screen = Screen.SELECT if start_at_select else Screen.LOGIN
+	start_at_select = false
+	if _screen == Screen.SELECT:
+		_load_characters(_settings.get_value("characters", "last", ""))
+	_rebuild()
+
+
+func _build_background() -> void:
+	var sky := TextureRect.new()
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(0.05, 0.06, 0.14))
+	gradient.set_color(1, Color(0.18, 0.1, 0.12))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill_from = Vector2(0, 0)
+	texture.fill_to = Vector2(0, 1)
+	sky.texture = texture
+	sky.stretch_mode = TextureRect.STRETCH_SCALE
+	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(sky)
+	# Embers drifting up from the bottom of the screen.
+	var embers := CPUParticles2D.new()
+	embers.amount = 60
+	embers.lifetime = 9.0
+	embers.preprocess = 9.0
+	embers.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	embers.direction = Vector2.UP
+	embers.spread = 15.0
+	embers.gravity = Vector2.ZERO
+	embers.color = Color(1.0, 0.55, 0.2, 0.7)
+	add_child(embers)
+	var place_embers := func() -> void:
+		var window := get_viewport_rect().size
+		embers.position = Vector2(window.x / 2, window.y + 10)
+		embers.emission_rect_extents = Vector2(window.x / 2, 4)
+		embers.initial_velocity_min = window.y / 18.0
+		embers.initial_velocity_max = window.y / 10.0
+		embers.scale_amount_min = maxf(window.y / 400.0, 1.0)
+		embers.scale_amount_max = maxf(window.y / 200.0, 2.0)
+	get_viewport().size_changed.connect(place_embers)
+	place_embers.call()
+
+
+func _rebuild() -> void:
+	_ui_scale = get_viewport_rect().size.y / 270.0
+	theme = _make_theme()
+	for child in _layer.get_children():
+		# Renamed so the new screen's nodes get their names while these wait to be freed.
+		child.name = "Old%d" % child.get_instance_id()
+		child.queue_free()
+	_modal = null
+	match _screen:
+		Screen.LOGIN:
+			_build_login()
+		Screen.SELECT:
+			_build_select()
+		Screen.CREATE:
+			_build_create()
+
+
+func _show_screen(screen: Screen) -> void:
+	_screen = screen
+	_rebuild()
+
+
+# Login.
+
+func _build_login() -> void:
+	var title := _label(ProjectSettings.get_setting("application/config/name", ""), GOLD, TITLE_SIZE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(title, Vector2(0, 50), Vector2(_width(), 40))
+	var form := VBoxContainer.new()
+	form.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	_place(form, Vector2(_width() / 2 - 60, 140), Vector2(120, 0))
+	form.add_child(_label("Account Name", GOLD))
+	var account := LineEdit.new()
+	account.text = _account
+	account.text_changed.connect(func(text: String) -> void: _account = text)
+	form.add_child(account)
+	form.add_child(_label("Account Password", GOLD))
+	var password := LineEdit.new()
+	password.secret = true
+	form.add_child(password)
+	var login := Button.new()
+	login.text = "Login"
+	form.add_child(login)
+	var remember := CheckBox.new()
+	remember.text = "Remember Account Name"
+	remember.button_pressed = _remember
+	remember.toggled.connect(func(on: bool) -> void: _remember = on)
+	form.add_child(remember)
+	var submit := func(_text := "") -> void: _login(password.text)
+	login.pressed.connect(submit)
+	account.text_submitted.connect(submit)
+	password.text_submitted.connect(submit)
+	var version_number: String = ProjectSettings.get_setting("application/config/version", "")
+	var version := _label("Version %s" % (version_number if not version_number.is_empty() else "0.1"), Color(0.7, 0.7, 0.75))
+	_place(version, Vector2(4, 258), Vector2(100, 10))
+	var quit := Button.new()
+	quit.text = "Quit"
+	quit.pressed.connect(get_tree().quit)
+	_place(quit, Vector2(_width() - 54, 252), Vector2(50, 14))
+	(password if not _account.is_empty() else account).grab_focus.call_deferred()
+
+
+## There's no server: any account and password get in, after the usual steps.
+func _login(password: String) -> void:
+	if _account.strip_edges().is_empty():
+		_show_modal("Please enter your account name.", ["OK"])
+		return
+	if password.is_empty():
+		_show_modal("Please enter your password.", ["OK"])
+		return
+	_settings.set_value("login", "remember", _remember)
+	_settings.set_value("login", "account", _account.strip_edges() if _remember else "")
+	_settings.save(_settings_path())
+	for step: Array in LOGIN_STEPS:
+		_show_modal(step[0], ["Cancel"])
+		var cancelled := [false]
+		_modal.get_meta("buttons")[0].pressed.connect(func() -> void: cancelled[0] = true)
+		await get_tree().create_timer(step[1]).timeout
+		if cancelled[0] or _screen != Screen.LOGIN:
+			return
+	_load_characters(_settings.get_value("characters", "last", ""))
+	_show_screen(Screen.SELECT if not _characters.is_empty() else Screen.CREATE)
+
+
+# Character select.
+
+func _load_characters(select_name := "") -> void:
+	_characters = GameState.list_characters()
+	_selected = 0
+	for i in _characters.size():
+		if _characters[i].name == select_name:
+			_selected = i
+
+
+func _build_select() -> void:
+	var realm := _label(REALM, GOLD, 12)
+	realm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(realm, Vector2(0, 8), Vector2(_width(), 16))
+	var list_panel := _panel()
+	_place(list_panel, Vector2(_width() - 130, 30), Vector2(124, 200))
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+	list_panel.add_child(list)
+	var group := ButtonGroup.new()
+	for i in _characters.size():
+		var character := _characters[i]
+		var entry := Button.new()
+		entry.toggle_mode = true
+		entry.button_group = group
+		entry.button_pressed = i == _selected
+		entry.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		entry.text = "%s\nLevel %d %s %s" % [character.name, character.level,
+			ClassicData.RACE_NAMES[character.race], ClassicData.CLASS_NAMES[character["class"]]]
+		entry.pressed.connect(func() -> void:
+			_selected = i
+			_update_select_preview()
+		)
+		entry.gui_input.connect(func(event: InputEvent) -> void:
+			if event is InputEventMouseButton and event.double_click:
+				_enter_world()
+		)
+		list.add_child(entry)
+	var create := Button.new()
+	create.text = "Create New Character"
+	create.disabled = _characters.size() >= MAX_CHARACTERS
+	create.pressed.connect(_start_create)
+	_place(create, Vector2(_width() - 130, 234), Vector2(124, 14))
+	_add_preview()
+	var name_label := _label("", GOLD, 12)
+	name_label.name = "SelectedName"
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(name_label, Vector2(_width() / 2 - 80, 30), Vector2(160, 16))
+	var enter := Button.new()
+	enter.text = "Enter World"
+	enter.name = "EnterWorld"
+	enter.add_theme_font_size_override("font_size", roundi(11 * _ui_scale))
+	enter.pressed.connect(_enter_world)
+	_place(enter, Vector2(_width() / 2 - 45, 236), Vector2(90, 20))
+	var delete := Button.new()
+	delete.text = "Delete Character"
+	delete.name = "Delete"
+	delete.pressed.connect(_confirm_delete)
+	_place(delete, Vector2(_width() - 130, 252), Vector2(74, 14))
+	var back := Button.new()
+	back.text = "Back"
+	back.pressed.connect(func() -> void: _show_screen(Screen.LOGIN))
+	_place(back, Vector2(_width() - 52, 252), Vector2(46, 14))
+	_update_select_preview()
+
+
+func _update_select_preview() -> void:
+	var has_character := _selected < _characters.size()
+	var name_label: Label = _layer.get_node("SelectedName")
+	name_label.text = _characters[_selected].name if has_character else ""
+	_layer.get_node("EnterWorld").disabled = not has_character
+	_layer.get_node("Delete").disabled = not has_character
+	var preview: CharacterPreview = _layer.get_node("Preview")
+	preview.visible = has_character
+	if has_character:
+		preview.show_race(_characters[_selected].race)
+
+
+func _enter_world() -> void:
+	if _selected >= _characters.size() or _modal:
+		return
+	var character := _characters[_selected]
+	if not GameState.select_character(character.path):
+		_show_modal("Couldn't load %s." % character.name, ["OK"])
+		return
+	_settings.set_value("characters", "last", character.name)
+	_settings.save(_settings_path())
+	_show_modal("Entering world", [])
+	_enter_game.call_deferred()
+
+
+func _enter_game() -> void:
+	get_tree().change_scene_to_file(GAME_SCENE)
+
+
+## Classic makes you type DELETE to delete a character.
+func _confirm_delete() -> void:
+	if _selected >= _characters.size():
+		return
+	var character := _characters[_selected]
+	_show_modal("Do you want to permanently delete %s, level %d %s %s?\nType \"DELETE\" to confirm." % [
+		character.name, character.level, ClassicData.RACE_NAMES[character.race],
+		ClassicData.CLASS_NAMES[character["class"]]], ["Accept", "Cancel"])
+	var confirm := LineEdit.new()
+	confirm.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_modal.get_meta("box").add_child(confirm)
+	_modal.get_meta("box").move_child(confirm, 1)
+	confirm.grab_focus.call_deferred()
+	var accept: Button = _modal.get_meta("buttons")[0]
+	accept.disabled = true
+	confirm.text_changed.connect(func(text: String) -> void: accept.disabled = text != "DELETE")
+	accept.pressed.connect(func() -> void:
+		GameState.delete_character(character.path)
+		_load_characters()
+		_rebuild()
+	)
+
+
+# Character creation.
+
+func _start_create() -> void:
+	_race = ClassicData.Race.HUMAN
+	_class = ClassicData.CharClass.PALADIN
+	_new_name = ""
+	_show_screen(Screen.CREATE)
+
+
+func _build_create() -> void:
+	var races_panel := _panel()
+	_place(races_panel, Vector2(6, 20), Vector2(110, 0))
+	var races := VBoxContainer.new()
+	races_panel.add_child(races)
+	races.add_child(_label("Race", GOLD, 10))
+	var race_group := ButtonGroup.new()
+	for race: ClassicData.Race in ClassicData.RACE_NAMES:
+		var button := Button.new()
+		button.text = ClassicData.RACE_NAMES[race]
+		button.toggle_mode = true
+		button.button_group = race_group
+		button.button_pressed = race == _race
+		button.pressed.connect(func() -> void:
+			_race = race
+			if not ClassicData.is_allowed(_race, _class):
+				_class = _first_allowed_class()
+			_rebuild()
+		)
+		races.add_child(button)
+	var race_text := _label(RACE_TEXT[_race], Color.WHITE)
+	race_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	races.add_child(race_text)
+	var classes_panel := _panel()
+	_place(classes_panel, Vector2(_width() - 116, 20), Vector2(110, 0))
+	var classes := VBoxContainer.new()
+	classes_panel.add_child(classes)
+	classes.add_child(_label("Class", GOLD, 10))
+	var class_group := ButtonGroup.new()
+	for char_class: ClassicData.CharClass in ClassicData.CLASS_NAMES:
+		var button := Button.new()
+		button.text = ClassicData.CLASS_NAMES[char_class]
+		button.toggle_mode = true
+		button.button_group = class_group
+		button.button_pressed = char_class == _class
+		button.disabled = not ClassicData.is_allowed(_race, char_class)
+		button.tooltip_text = "" if not button.disabled else "Not available to %s characters." % ClassicData.RACE_NAMES[_race]
+		button.pressed.connect(func() -> void:
+			_class = char_class
+			_rebuild()
+		)
+		classes.add_child(button)
+	var class_text := CLASS_TEXT[_class] as String
+	if not _class in CLASSES_WITH_SPELLS:
+		class_text += "\n(No spells yet: only Paladins have spells so far.)"
+	var class_label := _label(class_text, Color.WHITE)
+	class_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	classes.add_child(class_label)
+	_add_preview()
+	_layer.get_node("Preview").show_race(_race)
+	var title := _label("%s %s" % [ClassicData.RACE_NAMES[_race], ClassicData.CLASS_NAMES[_class]], GOLD, 12)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(title, Vector2(_width() / 2 - 80, 20), Vector2(160, 16))
+	var name_row := HBoxContainer.new()
+	_place(name_row, Vector2(_width() / 2 - 70, 214), Vector2(140, 14))
+	var name_edit := LineEdit.new()
+	name_edit.placeholder_text = "Name"
+	name_edit.max_length = GameState.NAME_MAX
+	name_edit.text = _new_name
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_edit.text_changed.connect(func(text: String) -> void: _new_name = text)
+	name_edit.text_submitted.connect(func(_text: String) -> void: _accept_create())
+	name_row.add_child(name_edit)
+	var random := Button.new()
+	random.text = "Random"
+	random.pressed.connect(func() -> void:
+		_new_name = _random_name()
+		name_edit.text = _new_name
+	)
+	name_row.add_child(random)
+	var accept := Button.new()
+	accept.text = "Accept"
+	accept.add_theme_font_size_override("font_size", roundi(11 * _ui_scale))
+	accept.pressed.connect(_accept_create)
+	_place(accept, Vector2(_width() / 2 - 45, 236), Vector2(90, 20))
+	var back := Button.new()
+	back.text = "Back"
+	back.pressed.connect(func() -> void:
+		_load_characters()
+		_show_screen(Screen.SELECT if not _characters.is_empty() else Screen.LOGIN)
+	)
+	_place(back, Vector2(6, 252), Vector2(46, 14))
+	name_edit.grab_focus.call_deferred()
+
+
+func _first_allowed_class() -> ClassicData.CharClass:
+	for char_class: ClassicData.CharClass in ClassicData.CLASS_NAMES:
+		if ClassicData.is_allowed(_race, char_class):
+			return char_class
+	return ClassicData.CharClass.WARRIOR
+
+
+func _random_name() -> String:
+	for attempt in 20:
+		var name: String = NAME_STARTS.pick_random() + NAME_ENDS.pick_random()
+		if GameState.check_name(name).is_empty():
+			return name
+	return ""
+
+
+func _accept_create() -> void:
+	if _modal:
+		return
+	var error := GameState.create_character(_new_name, _race, _class)
+	if not error.is_empty():
+		_show_modal(error, ["OK"])
+		return
+	_load_characters(GameState.char_name)
+	_show_screen(Screen.SELECT)
+
+
+# Building blocks.
+
+func _settings_path() -> String:
+	return GameState.profile_dir.path_join("settings.cfg")
+
+
+func _width() -> float:
+	return get_viewport_rect().size.x / _ui_scale
+
+
+## Places a control at a position and size in layout units.
+func _place(control: Control, at: Vector2, size_units: Vector2) -> void:
+	control.position = at * _ui_scale
+	control.size = size_units * _ui_scale
+	_layer.add_child(control)
+
+
+func _add_preview() -> void:
+	var preview := CharacterPreview.new()
+	preview.name = "Preview"
+	preview.pixel_scale = maxi(roundi(_ui_scale), 1)
+	_place(preview, Vector2(_width() / 2 - 70, 46), Vector2(140, 164))
+
+
+func _label(text: String, color: Color, font_size := FONT_SIZE) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", roundi(font_size * _ui_scale))
+	return label
+
+
+func _panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _box(PANEL_COLOR, BORDER_COLOR, 4))
+	return panel
+
+
+func _box(fill: Color, border: Color, margin: float) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(maxi(roundi(_ui_scale / 2), 1))
+	style.set_content_margin_all(margin * _ui_scale)
+	style.set_corner_radius_all(roundi(_ui_scale))
+	return style
+
+
+func _make_theme() -> Theme:
+	var made := Theme.new()
+	made.default_font_size = roundi(FONT_SIZE * _ui_scale)
+	made.set_stylebox("normal", "Button", _box(Color(0.35, 0.08, 0.06), Color(0.75, 0.6, 0.3), 2))
+	made.set_stylebox("hover", "Button", _box(Color(0.5, 0.12, 0.08), Color(1, 0.85, 0.4), 2))
+	made.set_stylebox("pressed", "Button", _box(Color(0.6, 0.45, 0.1), Color(1, 0.85, 0.4), 2))
+	made.set_stylebox("disabled", "Button", _box(Color(0.15, 0.13, 0.13), Color(0.35, 0.35, 0.35), 2))
+	made.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	made.set_color("font_color", "Button", GOLD)
+	made.set_color("font_hover_color", "Button", Color.WHITE)
+	made.set_color("font_pressed_color", "Button", Color.WHITE)
+	made.set_color("font_hover_pressed_color", "Button", Color.WHITE)
+	made.set_color("font_disabled_color", "Button", Color(0.45, 0.45, 0.45))
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		made.set_stylebox(state, "CheckBox", StyleBoxEmpty.new())
+	made.set_stylebox("normal", "LineEdit", _box(Color(0, 0, 0, 0.75), BORDER_COLOR, 3))
+	made.set_stylebox("focus", "LineEdit", _box(Color(0, 0, 0, 0.75), GOLD, 3))
+	return made
+
+
+## A centered message box with buttons; every button closes it.
+## Its "box" meta is the VBox to add to, "buttons" the buttons in order.
+func _show_modal(text: String, buttons: Array) -> void:
+	_close_modal()
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.5)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_layer.add_child(shade)
+	var panel := _panel()
+	panel.custom_minimum_size = Vector2(160, 0) * _ui_scale
+	shade.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", roundi(4 * _ui_scale))
+	panel.add_child(box)
+	var message := _label(text, Color.WHITE)
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message.custom_minimum_size.x = 150 * _ui_scale
+	box.add_child(message)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(row)
+	var made: Array[Button] = []
+	for text_on_button: String in buttons:
+		var button := Button.new()
+		button.text = text_on_button
+		button.custom_minimum_size.x = 50 * _ui_scale
+		button.pressed.connect(_close_modal)
+		row.add_child(button)
+		made.append(button)
+	if not made.is_empty():
+		made[0].grab_focus.call_deferred()
+	shade.set_meta("box", box)
+	shade.set_meta("buttons", made)
+	_modal = shade
+	# Center once the panel knows its size.
+	var center := func() -> void:
+		panel.position = (get_viewport_rect().size - panel.size) / 2
+	panel.resized.connect(center)
+	center.call_deferred()
+
+
+func _close_modal() -> void:
+	if _modal:
+		_modal.queue_free()
+		_modal = null
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed:
+		return
+	if _modal:
+		if event.keycode == KEY_ESCAPE:
+			_close_modal()
+		return
+	match _screen:
+		Screen.SELECT:
+			if event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+				_enter_world()
+			elif event.keycode in [KEY_UP, KEY_DOWN] and not _characters.is_empty():
+				_selected = wrapi(_selected + (1 if event.keycode == KEY_DOWN else -1), 0, _characters.size())
+				_rebuild()
+			elif event.keycode == KEY_ESCAPE:
+				_show_screen(Screen.LOGIN)
+		Screen.CREATE:
+			if event.keycode == KEY_ESCAPE:
+				_load_characters()
+				_show_screen(Screen.SELECT if not _characters.is_empty() else Screen.LOGIN)
+		Screen.LOGIN:
+			if event.keycode == KEY_ESCAPE:
+				get_tree().quit()

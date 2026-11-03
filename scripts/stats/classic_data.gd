@@ -9,6 +9,7 @@ enum Stat { STRENGTH, AGILITY, STAMINA, INTELLECT, SPIRIT }
 
 const MAX_LEVEL := 60
 const TABLES_PATH := "res://data/classic/player_tables.json"
+const CHARACTERS_PATH := "res://data/classic/characters.json"
 
 const CLASS_NAMES := {
 	CharClass.WARRIOR: "Warrior", CharClass.PALADIN: "Paladin", CharClass.HUNTER: "Hunter",
@@ -22,6 +23,7 @@ const RACE_NAMES := {
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
 
 static var _tables: Dictionary
+static var _characters: Dictionary
 
 
 static func base_stats(race: Race, char_class: CharClass, level: int) -> Array:
@@ -45,6 +47,20 @@ static func xp_to_next(level: int) -> int:
 
 static func _index(level: int) -> int:
 	return clampi(level, 1, MAX_LEVEL) - 1
+
+
+## Whether classic allows this race and class together (Human Paladin yes,
+## Orc Paladin no). Every allowed pair has base stats in player_levelstats.
+static func is_allowed(race: Race, char_class: CharClass) -> bool:
+	return _get_tables().level_stats.has("%d-%d" % [race, char_class])
+
+
+## A new character's items ([[id, count], ...]) and proficiencies
+## ("item class:subclass") for this race and class.
+static func starting_kit(race: Race, char_class: CharClass) -> Dictionary:
+	if _characters.is_empty():
+		_characters = JSON.parse_string(FileAccess.get_file_as_string(CHARACTERS_PATH))
+	return _characters.get("%d-%d" % [race, char_class], { "items": [], "proficiencies": [] })
 
 
 static func _get_tables() -> Dictionary:

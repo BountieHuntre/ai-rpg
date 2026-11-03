@@ -38,16 +38,6 @@ const SLOTS_FOR_TYPE := {
 	22: [Slot.OFF_HAND], 23: [Slot.OFF_HAND], 25: [Slot.RANGED], 26: [Slot.RANGED],
 }
 
-## Classic starting proficiencies ("item class:subclass"). Paladins start with
-## one- and two-handed maces, cloth, leather, mail and shields. Other weapon
-## types are trained later, and plate at level 40.
-const STARTING_PROFICIENCIES := {
-	ClassicData.CharClass.PALADIN: ["2:4", "2:5", "4:1", "4:2", "4:3", "4:6"],
-}
-## Classic starting gear for a Human Paladin: Scuffed Militia Mace, Recruit's
-## Undershirt, Trousers and Boots, with a Homing Token in the backpack.
-const STARTING_EQUIPMENT := { Slot.MAIN_HAND: 2361, Slot.SHIRT: 45, Slot.LEGS: 44, Slot.FEET: 43 }
-const STARTING_BACKPACK := [6948]
 
 const ERR_FULL := "Inventory is full."
 const ERR_WRONG_SLOT := "That item doesn't go in that slot."
@@ -63,12 +53,37 @@ const ERR_BAG_INTO_ITSELF := "You can't put a bag into itself."
 const UNARMED_WEAPON := { "min": 1.0, "max": 2.0, "speed": 2.0 }
 
 
+## A new character's proficiencies and starting items for their race and
+## class. As in Player::Create in CMaNGOS, each item is equipped if it can be
+## (bags into bag slots), and goes in the bags otherwise.
 static func start_character(state: Node) -> void:
-	state.proficiencies.assign(STARTING_PROFICIENCIES.get(state.char_class, []))
-	for slot: Slot in STARTING_EQUIPMENT:
-		state.equipment[slot] = _stack(STARTING_EQUIPMENT[slot], 1, false)
-	for id: int in STARTING_BACKPACK:
-		state.add_item(id, 1)
+	var kit := ClassicData.starting_kit(state.race, state.char_class)
+	state.proficiencies.assign(kit.proficiencies)
+	for entry: Array in kit.items:
+		var id := int(entry[0])
+		var count := int(entry[1])
+		if count == 1 and _equip_new(id):
+			continue
+		add_item(id, count)
+
+
+static func _equip_new(id: int) -> bool:
+	var item := ItemDB.get_item(id)
+	if int(item.InventoryType) == INVTYPE_BAG:
+		for i in GameState.bags.size():
+			if GameState.bags[i].is_empty():
+				_set_stack(bag_slot_ref(i), _stack(id, 1, false))
+				return true
+		return false
+	if not can_use(item).is_empty():
+		return false
+	for slot: Slot in SLOTS_FOR_TYPE.get(int(item.InventoryType), []):
+		if GameState.equipment.get(slot, {}).is_empty():
+			var stack := _stack(id, 1, false)
+			_bind_on_equip(stack)
+			GameState.equipment[slot] = stack
+			return true
+	return false
 
 
 # Reading.

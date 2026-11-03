@@ -9,6 +9,17 @@ extends CharacterBody3D
 
 ## How squashed the placeholder model looks while sitting.
 const SIT_HEIGHT := 0.55
+## Placeholder looks for each race until there are models: size and body color.
+const RACE_LOOKS := {
+	ClassicData.Race.HUMAN: [Vector3(1, 1, 1), Color(0.25, 0.55, 0.85)],
+	ClassicData.Race.ORC: [Vector3(1.15, 1.05, 1.15), Color(0.35, 0.6, 0.3)],
+	ClassicData.Race.DWARF: [Vector3(1.2, 0.8, 1.2), Color(0.7, 0.4, 0.3)],
+	ClassicData.Race.NIGHT_ELF: [Vector3(0.9, 1.15, 0.9), Color(0.5, 0.4, 0.75)],
+	ClassicData.Race.UNDEAD: [Vector3(0.9, 0.98, 0.9), Color(0.58, 0.62, 0.56)],
+	ClassicData.Race.TAUREN: [Vector3(1.35, 1.25, 1.35), Color(0.5, 0.35, 0.2)],
+	ClassicData.Race.GNOME: [Vector3(0.75, 0.6, 0.75), Color(0.85, 0.55, 0.75)],
+	ClassicData.Race.TROLL: [Vector3(0.95, 1.15, 0.95), Color(0.3, 0.6, 0.6)],
+}
 ## Classic base speeds in yards per second.
 const RUN_SPEED := 7.0
 const WALK_SPEED := 2.5
@@ -34,7 +45,7 @@ var sitting := false:
 					if int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
 						combatant.remove_aura(int(aura.spell.Id))
 		if _visual:
-			_visual.scale.y = SIT_HEIGHT if value else 1.0
+			_visual.scale = race_scale(GameState.race) * Vector3(1, SIT_HEIGHT if value else 1.0, 1)
 var walking := false
 
 @onready var combatant: Combatant = $Combatant
@@ -45,7 +56,21 @@ var walking := false
 @onready var _visual: Node3D = $Visual
 
 
+static func race_scale(race: ClassicData.Race) -> Vector3:
+	return RACE_LOOKS.get(race, RACE_LOOKS[ClassicData.Race.HUMAN])[0]
+
+
+static func race_color(race: ClassicData.Race) -> Color:
+	return RACE_LOOKS.get(race, RACE_LOOKS[ClassicData.Race.HUMAN])[1]
+
+
 func _ready() -> void:
+	combatant.display_name = GameState.char_name
+	_visual.scale = race_scale(GameState.race)
+	var body: MeshInstance3D = $Visual/Body
+	var skin := StandardMaterial3D.new()
+	skin.albedo_color = race_color(GameState.race)
+	body.material_override = skin
 	combatant.faces_point = is_facing
 	combatant.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void:
 		sitting = false

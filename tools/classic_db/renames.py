@@ -2,24 +2,17 @@
 
 The numbers and rules stay classic; the names are the game's own. Plain fantasy
 words (Wolf, Copper Ore, Paladin, Human) are kept, but every recognisable
-WoW name is replaced. extract.py applies this after exporting, and running this
-file on its own renames the JSON already in data/classic:
+WoW name is replaced. extract.py applies this after exporting.
 
-    python tools/classic_db/renames.py
-
-Every exported name must be either renamed here or listed in KEEP, so new
-exports can't slip classic names in unnoticed.
+Every exported name must be either renamed here or listed in KEEP, and no new
+name may be a classic item, creature or spell name, so new exports can't slip
+classic names in unnoticed.
 """
 
-import json
-import os
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic")
-
 ITEMS = {
-    "Squire's Boots": "Recruit's Boots",
-    "Squire's Pants": "Recruit's Trousers",
-    "Squire's Shirt": "Recruit's Undershirt",
+    "Squire's Boots": "Postulant's Boots",
+    "Squire's Pants": "Postulant's Breeches",
+    "Squire's Shirt": "Postulant's Undershirt",
     "Refreshing Spring Water": "Cool Well Water",
     "Silverleaf": "Pale Sageleaf",
     "Peacebloom": "Meadow Blossom",
@@ -29,7 +22,7 @@ ITEMS = {
     "Ragged Leather Gloves": "Worn Hide Gloves",
     "Ragged Leather Belt": "Worn Hide Belt",
     "Ragged Leather Bracers": "Worn Hide Bracers",
-    "Ragged Cloak": "Worn Hide Cloak",
+    "Ragged Cloak": "Worn Hide Cape",
     "Frayed Shoes": "Threadbare Shoes",
     "Frayed Cloak": "Threadbare Cloak",
     "Frayed Gloves": "Threadbare Gloves",
@@ -37,7 +30,7 @@ ITEMS = {
     "Frayed Robe": "Threadbare Robe",
     "Frayed Belt": "Threadbare Belt",
     "Frayed Bracers": "Threadbare Bracers",
-    "Battered Buckler": "Dented Buckler",
+    "Battered Buckler": "Scraped Roundel",
     "Bent Large Shield": "Warped Kite Shield",
     "Battleworn Hammer": "Scuffed Militia Mace",
     "Tarnished Chain Vest": "Dull Ringmail Vest",
@@ -59,7 +52,60 @@ ITEMS = {
     "Small Lustrous Pearl": "Small Pale Pearl",
     "Hearthstone": "Homing Token",
     "Rugged Leather Pants": "Sturdy Hide Pants",
+    # Starting gear for the other classes.
+    "Recruit's Shirt": "Levy's Shirt",
+    "Recruit's Pants": "Levy's Breeches",
+    "Recruit's Boots": "Levy's Boots",
+    "Acolyte's Robe": "Deacon's Robe",
+    "Acolyte's Pants": "Deacon's Pants",
+    "Acolyte's Shirt": "Deacon's Shirt",
+    "Acolyte's Shoes": "Deacon's Shoes",
+    "Apprentice's Robe": "Pupil's Robe",
+    "Apprentice's Pants": "Pupil's Pants",
+    "Apprentice's Shirt": "Pupil's Shirt",
+    "Apprentice's Boots": "Pupil's Boots",
+    "Neophyte's Robe": "Fledgling's Robe",
+    "Neophyte's Pants": "Fledgling's Pants",
+    "Neophyte's Shirt": "Fledgling's Shirt",
+    "Neophyte's Boots": "Fledgling's Boots",
+    "Novice's Robe": "Seedling's Robe",
+    "Novice's Pants": "Seedling's Pants",
+    "Brawler's Harness": "Scrapper's Harness",
+    "Brawler's Pants": "Scrapper's Pants",
+    "Brawler's Boots": "Scrapper's Boots",
+    "Footpad's Shirt": "Cutpurse's Shirt",
+    "Footpad's Pants": "Cutpurse's Pants",
+    "Footpad's Shoes": "Cutpurse's Shoes",
+    "Thug Shirt": "Ruffian's Shirt",
+    "Thug Pants": "Ruffian's Pants",
+    "Thug Boots": "Ruffian's Boots",
+    "Trapper's Shirt": "Snarer's Shirt",
+    "Trapper's Pants": "Snarer's Pants",
+    "Trapper's Boots": "Snarer's Boots",
+    "Rugged Trapper's Shirt": "Rough Snarer's Shirt",
+    "Rugged Trapper's Pants": "Rough Snarer's Pants",
+    "Rugged Trapper's Boots": "Rough Snarer's Boots",
+    "Primitive Kilt": "Hide-Wrap Kilt",
+    "Primitive Mantle": "Hide-Wrap Mantle",
+    "Bent Staff": "Knotted Oak Staff",
+    "Handcrafted Staff": "Whittled Staff",
+    "Darnassian Bleu": "Sharp Blue Cheese",
+    "Forest Mushroom Cap": "Brown Woodcap",
+    "Tough Jerky": "Dried Meat Strip",
+    "Light Quiver": "Simple Quiver",
+    "Small Ammo Pouch": "Small Bullet Sack",
+    "Old Blunderbuss": "Rusty Handgonne",
+    "Worn Axe": "Chipped Hatchet",
+    "Worn Battleaxe": "Chipped Greataxe",
+    "Worn Dagger": "Dull Knife",
+    "Worn Mace": "Dented Cudgel",
+    "Worn Shortbow": "Weathered Shortbow",
+    "Worn Shortsword": "Nicked Shortsword",
+    "Worn Wooden Shield": "Cracked Wooden Shield",
 }
+
+# Item flavor text, replaced whole.
+DESCRIPTIONS = {}
 
 CREATURES = {
     "Kobold Worker": "Burrowling Digger",
@@ -136,45 +182,37 @@ KEEP = {
     "Small Black Pouch", "Small Green Pouch", "Large Round Shield", "Small Shield", "Light Mail Bracers",
     "Light Chain Armor", "Copper Chain Vest", "Rough Arrow", "Light Shot", "Copper Ore", "Rough Stone",
     "Small Throwing Knife", "Crude Throwing Axe", "Shiny Red Apple", "Ruined Pelt", "Broken Fang",
-    "Chipped Claw", "Timber Wolf", "Young Wolf", "Food", "Drink", "Parry", "Stun", "Plate Mail",
+    "Chipped Claw", "Timber Wolf", "Young Wolf", "Food", "Drink", "Parry", "Stun", "Plate Mail", "Haste",
 }
 
 
-def _rename(name, table, kind):
+def _rename(name, table, kind, missing):
     if name in table:
         return table[name]
-    if name in KEEP or name in table.values():
-        return name
-    raise KeyError(f"{kind} {name!r} has no original name: add it to tools/classic_db/renames.py")
+    if name not in KEEP:
+        missing.append(f"{kind} {name!r}")
+    return name
 
 
-def apply(items, creatures, vendors, spells):
-    """Renames the exported data in place."""
+def apply(items, creatures, vendors, spells, classic_names):
+    """Renames the exported data in place. Fails listing every name with no
+    original name yet, and every new name that is itself a classic name."""
+    clashes = sorted(new for table in (ITEMS, CREATURES, SPELLS) for new in table.values() if new in classic_names)
+    clashes += sorted(name for name, _ in VENDORS.values() if name in classic_names)
+    if clashes:
+        raise KeyError("These new names are classic names too, change them in tools/classic_db/renames.py:\n"
+                       + "\n".join(clashes))
+    missing = []
     for item in items.values():
-        item["name"] = _rename(item["name"], ITEMS, "Item")
+        item["name"] = _rename(item["name"], ITEMS, "Item", missing)
         if item.get("description"):
-            raise KeyError(f"Item {item['name']!r} has a description: give it an original one here")
+            item["description"] = _rename(item["description"], DESCRIPTIONS, "Description", missing)
     for creature in creatures.values():
-        creature["Name"] = _rename(creature["Name"], CREATURES, "Creature")
+        creature["Name"] = _rename(creature["Name"], CREATURES, "Creature", missing)
     for entry, vendor in vendors.items():
         vendor["name"], vendor["subname"] = VENDORS[entry]
     for spell in spells.values():
-        spell["SpellName"] = _rename(spell["SpellName"], SPELLS, "Spell")
+        spell["SpellName"] = _rename(spell["SpellName"], SPELLS, "Spell", missing)
+    if missing:
+        raise KeyError("No original name yet, add these to tools/classic_db/renames.py:\n" + "\n".join(sorted(set(missing))))
 
-
-def _load(name):
-    with open(os.path.join(DATA_DIR, name), encoding="utf8") as f:
-        return json.load(f)
-
-
-def _save(name, data):
-    with open(os.path.join(DATA_DIR, name), "w", encoding="utf8") as out:
-        json.dump(data, out, separators=(",", ":"), ensure_ascii=False)
-
-
-if __name__ == "__main__":
-    items, creatures, vendors, spells = (_load(f) for f in ("items.json", "creatures.json", "vendors.json", "spells.json"))
-    apply(items, creatures, vendors, spells["spells"])
-    for name, data in (("items.json", items), ("creatures.json", creatures), ("vendors.json", vendors), ("spells.json", spells)):
-        _save(name, data)
-    print("renamed")
