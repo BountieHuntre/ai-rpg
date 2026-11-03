@@ -10,7 +10,7 @@ extends Node
 ## Glowing disc shown on hallowed ground.
 const GROUND_COLOR := Color(1, 0.85, 0.35, 0.35)
 
-var _player: Player
+var _unit: PlayerUnit
 var _combatant: Combatant
 ## Seal spell id -> time (s) its proc can fire again.
 var _proc_ready_at: Dictionary = {}
@@ -19,8 +19,8 @@ var _grounds: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	_player = get_parent().get_parent()
-	_combatant = _player.get_node("Combatant")
+	_unit = get_parent().get_parent()
+	_combatant = _unit.get_node("Combatant")
 	_combatant.auto_attack_landed.connect(_on_melee_hit)
 	_combatant.melee_hit_taken.connect(_on_hit_taken)
 	_combatant.blocked_attack.connect(_on_block)
@@ -79,10 +79,10 @@ func _proc_chance(spell: Dictionary, info: Dictionary) -> float:
 ## The effect of a proc spell: a heal or mana for you, a stun or Holy damage
 ## (a share of a weapon hit) for the target.
 func _apply(spell: Dictionary, target: Combatant) -> void:
-	var value := SpellDB.effect_value(spell, 0, GameState.level)
+	var value := SpellDB.effect_value(spell, 0, _unit.profile.level)
 	match int(spell.get("Effect1", 0)):
 		SpellDB.EFFECT_HEAL:
-			_combatant.heal(roundi(value))
+			_combatant.heal(roundi(value), false, _combatant)
 		SpellDB.EFFECT_ENERGIZE:
 			_combatant.mana = minf(_combatant.mana + value, _combatant.max_mana)
 		SpellDB.EFFECT_WEAPON_PERCENT_DAMAGE:
@@ -151,11 +151,11 @@ func hallow_ground(spell: Dictionary, center: Vector3) -> void:
 	material.albedo_color = GROUND_COLOR
 	mesh.material_override = material
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_player.get_parent().add_child(mesh)
+	_unit.get_parent().add_child(mesh)
 	mesh.global_position = center + Vector3.UP * 0.05
 	_grounds.append({
 		"spell": spell, "center": center, "radius": radius,
-		"amount": SpellDB.effect_value(spell, 0, GameState.level),
+		"amount": SpellDB.effect_value(spell, 0, _unit.profile.level),
 		"period": maxf(int(spell.get("EffectAmplitude1", 1000)) / 1000.0, 0.1),
 		"left": SpellDB.duration(spell), "tick": 0.0, "mesh": mesh,
 	})

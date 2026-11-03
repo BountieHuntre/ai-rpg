@@ -22,8 +22,8 @@ const USED := Color(0.55, 0.55, 0.55)
 const NOT_IN_GAME := Color(0.35, 0.35, 0.4)
 const SELECTED := Color(1, 1, 1, 0.12)
 ## Spells that need another player (a party member to protect or bring back).
-## There's no grouping yet, so they show but can't be trained.
-const NEEDS_PARTY := ["Hallowed Ransom", "Boon of the Martyr", "Revival"]
+## Revival (raising a party member) works; these two show but can't be trained yet.
+const NEEDS_PARTY := ["Hallowed Ransom", "Boon of the Martyr"]
 
 var npc: Node3D
 

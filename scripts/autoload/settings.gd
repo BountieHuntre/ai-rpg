@@ -29,6 +29,19 @@ const DEFAULTS := {
 	"loading_tips": true,
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
+	# Playerbots, after the playerbots module's options (AiPlayerbot.* in
+	# aiplayerbot.conf): how many random bots there are and at what levels,
+	# and how bots in your party behave.
+	"bots_enabled": true,
+	"bot_count": 8,
+	"bot_min_level": 1,
+	"bot_max_level": 6,
+	"bot_classes": "All Classes",
+	"bot_accept_invites": "Always",
+	"bot_assist": "Assist My Target",
+	"bot_follow_distance": 3,
+	"bot_heal_threshold": 0.7,
+	"bot_teleport": true,
 	# Developer
 	"dev_console": true,
 }
@@ -44,6 +57,7 @@ const ACTIONS := [
 	["target_next", "Target Nearest Enemy", "Targeting"],
 	["bags", "Open All Bags", "Interface"], ["character_window", "Character Info", "Interface"],
 	["spellbook", "Spellbook", "Interface"], ["quest_log", "Quest Log", "Interface"],
+	["social", "Social", "Interface"],
 	["ability_1", "Action Button 1", "Action Bar"], ["ability_2", "Action Button 2", "Action Bar"],
 	["ability_3", "Action Button 3", "Action Bar"], ["ability_4", "Action Button 4", "Action Bar"],
 	["ability_5", "Action Button 5", "Action Bar"], ["ability_6", "Action Button 6", "Action Bar"],
@@ -189,9 +203,14 @@ func save() -> void:
 
 
 func _path() -> String:
+	return folder().path_join(FILE_NAME)
+
+
+## The profile folder, or the `--save=` file's folder in tests.
+func folder() -> String:
 	if GameState.single_save:
-		return GameState.save_path.get_base_dir().path_join(FILE_NAME)
-	return GameState.profile_dir.path_join(FILE_NAME)
+		return GameState.save_path.get_base_dir()
+	return GameState.profile_dir
 
 
 func _apply_all() -> void:

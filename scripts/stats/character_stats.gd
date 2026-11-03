@@ -1,9 +1,10 @@
 class_name CharacterStats
 extends Node
-## The player's classic WoW stats: base Strength, Agility, Stamina, Intellect
+## A player character's classic WoW stats: base Strength, Agility, Stamina, Intellect
 ## and Spirit from the class and race tables, and everything derived from
 ## them. Also runs health and mana regeneration on the classic 2-second tick.
-## Must be a sibling of the player's Combatant.
+## Must be a child of a PlayerUnit (the player or a playerbot), beside its
+## Combatant; it reads the unit's profile.
 
 const REGEN_TICK := 2.0
 ## The five-second rule: Spirit mana regen stops for this long after spending mana.
@@ -20,10 +21,10 @@ const PARRY_SPELL := 3127
 
 var race: ClassicData.Race:
 	get:
-		return GameState.race
+		return _profile.race
 var char_class: ClassicData.CharClass:
 	get:
-		return GameState.char_class
+		return _profile.char_class
 
 ## Current Strength, Agility, Stamina, Intellect and Spirit, gear included.
 var stats: Array[int] = [0, 0, 0, 0, 0]
@@ -37,14 +38,16 @@ var _tick_left := REGEN_TICK
 var _health_carry := 0.0
 
 @onready var _combatant: Combatant = $"../Combatant"
+@onready var _profile: CharacterProfile = (get_parent() as PlayerUnit).profile
 
 
 func _ready() -> void:
 	_combatant.is_player = true
 	refresh()
 	_combatant.reset()
-	GameState.inventory_changed.connect(refresh)
-	GameState.spells_changed.connect(refresh)
+	if _profile == GameState:
+		GameState.inventory_changed.connect(refresh)
+		GameState.spells_changed.connect(refresh)
 	_combatant.auras_changed.connect(refresh)
 
 
@@ -52,9 +55,9 @@ func _ready() -> void:
 ## passives and active auras. Keeps current health and mana, capped to the new
 ## maximums.
 func refresh() -> void:
-	var level := GameState.level
+	var level := _profile.level
 	var base := ClassicData.base_stats(race, char_class, level)
-	var gear := Inventory.gear_totals()
+	var gear := Inventory.gear_totals(_profile.equipment)
 	gear_stats = gear.stats
 	# Boon of Sovereigns raises every attribute by a percentage.
 	var stat_scale := 1.0 + _combatant.aura_total(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE) / 100.0
@@ -89,7 +92,7 @@ func refresh() -> void:
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false)
 	# Parry has to be trained, and players need a melee weapon to parry.
 	var armed: bool = gear.weapon != Inventory.UNARMED_WEAPON
-	c.parry = 5.0 if armed and PARRY_SPELL in GameState.known_spells else 0.0
+	c.parry = 5.0 if armed and PARRY_SPELL in _profile.known_spells else 0.0
 	# Blocking needs a shield. Block value: shield block + Strength / 20 - 1.
 	c.block = SHIELD_BLOCK_CHANCE if gear.has_shield else 0.0
 	# Radiant Bulwark adds block chance (with a shield).

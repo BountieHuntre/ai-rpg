@@ -6,6 +6,8 @@ const SOUND_DIR := "res://assets/audio/rpg_sfx/"
 const POOL_SIZE := 12
 const PITCH_VARIATION := 0.06
 const VOLUME_DB := -6.0
+## World sounds further than this from the camera aren't played.
+const HEARING_RANGE := 40.0
 
 const SOUNDS: Dictionary[String, Array] = {
 	"swing": ["blade_01", "blade_02", "blade_03"],
@@ -43,6 +45,14 @@ func _ready() -> void:
 		player.volume_db = VOLUME_DB
 		add_child(player)
 		_players.append(player)
+
+
+## Plays a sound made somewhere in the world, if it's within earshot of the
+## camera, so far-off fights between creatures and playerbots stay quiet.
+func play_at(sound_name: String, at: Vector3) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null or camera.global_position.distance_to(at) <= HEARING_RANGE:
+		play(sound_name)
 
 
 func play(sound_name: String) -> void:

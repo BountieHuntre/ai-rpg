@@ -319,14 +319,15 @@ static func has_proficiency(item: Dictionary) -> bool:
 	return true
 
 
-## Totals from everything equipped, for CharacterStats.
-static func gear_totals() -> Dictionary:
+## Totals from everything equipped (the player's gear, or a bot's), for
+## CharacterStats.
+static func gear_totals(equipment: Dictionary) -> Dictionary:
 	var stats := [0, 0, 0, 0, 0]
 	var totals := { "stats": stats, "armor": 0, "health": 0, "mana": 0, "block": 0, "has_shield": false, "weapon": UNARMED_WEAPON }
 	# ITEM_MOD stat types: 3 Agility, 4 Strength, 5 Intellect, 6 Spirit, 7 Stamina.
 	var stat_index := { 4: ClassicData.Stat.STRENGTH, 3: ClassicData.Stat.AGILITY, 7: ClassicData.Stat.STAMINA, 5: ClassicData.Stat.INTELLECT, 6: ClassicData.Stat.SPIRIT }
-	for slot: Slot in GameState.equipment:
-		var stack: Dictionary = GameState.equipment[slot]
+	for slot: Slot in equipment:
+		var stack: Dictionary = equipment[slot]
 		# Broken gear (0 durability) gives no stats, armor or weapon damage.
 		if stack.is_empty() or is_broken(stack):
 			continue

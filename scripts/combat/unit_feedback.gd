@@ -41,8 +41,8 @@ func _ready() -> void:
 	_combatant.took_damage.connect(_on_took_damage)
 	_combatant.swung.connect(_on_swung)
 	_combatant.died.connect(_on_died)
-	_combatant.healed.connect(func(_amount: int, _crit: bool) -> void: Sfx.play("heal"))
-	_combatant.stunned.connect(Sfx.play.bind("stun"))
+	_combatant.healed.connect(func(_amount: int, _crit: bool) -> void: _play("heal"))
+	_combatant.stunned.connect(_play.bind("stun"))
 
 
 ## Restores the unit's normal look after it respawns.
@@ -81,11 +81,15 @@ func _on_took_damage(_amount: int, _source: Combatant, _crit: bool) -> void:
 	_flash_left = FLASH_TIME
 	_apply_material()
 	if _combatant.is_alive():
-		Sfx.play(hurt_sound)
+		_play(hurt_sound)
+
+
+func _play(sound: String) -> void:
+	Sfx.play_at(sound, _combatant.body.global_position)
 
 
 func _on_swung(target: Combatant) -> void:
-	Sfx.play("swing")
+	_play("swing")
 	var offset := target.body.global_position - _combatant.body.global_position
 	offset.y = 0.0
 	if _tween:
@@ -96,7 +100,7 @@ func _on_swung(target: Combatant) -> void:
 
 
 func _on_died() -> void:
-	Sfx.play(death_sound)
+	_play(death_sound)
 	_dead = true
 	_apply_material()
 	if _tween:

@@ -164,6 +164,8 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 	GameState.quest_message.emit("%s completed." % quest.title)
 	if progression and xp > 0:
 		progression.add_xp(xp)
+	# Unlike classic, the party's bots get the same XP.
+	Party.share_quest_xp(xp)
 	GameState.quests_changed.emit()
 	return ""
 

@@ -182,6 +182,15 @@ func _draw_overlay() -> void:
 		var font_size := roundi(9 * _ui_scale)
 		_overlay.draw_string_outline(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, maxi(roundi(2 * _ui_scale), 2), Color.BLACK)
 		_overlay.draw_string(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, marker[1])
+	# Party members: blue dots, on the rim when off the map.
+	for bot in Party.members:
+		if not is_instance_valid(bot):
+			continue
+		var offset := Vector2(bot.global_position.x, bot.global_position.z) - here
+		var at := center + offset * scale
+		if offset.length() * scale > center.x - 3 * _ui_scale:
+			at = center + offset.normalized() * (center.x - 3 * _ui_scale)
+		_overlay.draw_circle(at, 2.0 * _ui_scale, Targeting.PLAYER_COLOR)
 	# The player: an arrow pointing the way they face (facing 0 is north).
 	var forward := Vector2(-sin(_player.facing), -cos(_player.facing))
 	var side := Vector2(-forward.y, forward.x)

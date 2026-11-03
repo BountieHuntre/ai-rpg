@@ -1,8 +1,9 @@
 class_name Enemy
 extends CharacterBody3D
-## Placeholder enemy. Wanders near its spawn point, chases the player once
-## aggroed, auto-attacks in melee, and runs home to reset if pulled too far.
-## When killed it leaves a lootable corpse, then respawns. Stats, money, loot,
+## Placeholder enemy. Wanders near its spawn point, chases whoever it has the
+## most threat on (the player or a playerbot), auto-attacks in melee, and runs
+## home to reset if pulled too far. When killed it leaves a corpse, lootable
+## if the player's group tapped it, then respawns. Stats, money, loot,
 ## respawn time and wander distance come from the classic creature entry in
 ## data/classic/creatures.json.
 
@@ -21,6 +22,12 @@ const BASE_WALK_SPEED := 2.5
 const WANDER_PAUSE_MIN := 0.5
 const WANDER_PAUSE_MAX := 10.0
 const CREATURE_TYPE_BEAST := 1
+## ThreatManager in CMaNGOS: a creature changes victim only when another unit
+## has 110% of the current victim's threat in melee range, 130% beyond it.
+const THREAT_SWITCH_MELEE := 1.1
+const THREAT_SWITCH_RANGED := 1.3
+## Healing draws half its amount as threat (HostileRefManager::threatAssist).
+const HEAL_THREAT := 0.5
 ## Placeholder looks until there are models: [size, body color]. Beasts lie
 ## along their length.
 const LOOKS := {
@@ -60,6 +67,12 @@ var loot_money := 0
 ## Unix time (seconds) when a dead enemy comes back. Real time, so it keeps
 ## counting while the game is closed, like a classic server's respawn timer.
 var respawn_at := 0.0
+## Threat on each player unit fighting it: Combatant -> threat.
+var threat: Dictionary = {}
+## The first player unit to strike it. Its group gets the kill: XP, quest
+## credit and the loot. Others see the creature grey.
+var tapped_by: Combatant
+var _victim: Combatant
 
 var _home := Vector3.ZERO
 var _data: Dictionary
@@ -109,8 +122,8 @@ func _ready() -> void:
 	_apply_look()
 	c.faces_point = _is_facing
 	_roll_level()
-	c.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: _on_attacked())
-	c.avoided.connect(func(_text: String, _source: Combatant) -> void: _on_attacked())
+	c.took_damage.connect(func(amount: int, source: Combatant, _crit: bool) -> void: _on_attacked(source, amount))
+	c.avoided.connect(func(_text: String, source: Combatant) -> void: _on_attacked(source, 0))
 	c.died.connect(_on_died)
 
 
@@ -119,28 +132,33 @@ func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		velocity = Vector3.ZERO
 		return
-	var player := get_tree().get_first_node_in_group("player") as Player
 	var destination := global_position
 
 	var speed: float = _data.SpeedRun * BASE_RUN_SPEED
 	match state:
 		State.IDLE:
-			if player and player.combatant.is_alive() and is_aggressive():
-				if global_position.distance_to(player.global_position) <= aggro_radius(player.combatant.level):
-					_start_chase()
+			if is_aggressive():
+				for node in get_tree().get_nodes_in_group("player_units"):
+					var unit := node as PlayerUnit
+					if unit.combatant.is_alive() and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):
+						add_threat(unit.combatant, 0.0)
+						_start_chase()
+						break
 			if state == State.IDLE:
 				destination = _wander(delta)
 				speed = _data.SpeedWalk * BASE_WALK_SPEED
 		State.CHASE:
-			if not player or not player.combatant.is_alive() or global_position.distance_to(_home) > leash_radius:
+			_victim = _pick_victim()
+			if _victim == null or global_position.distance_to(_home) > leash_radius:
 				_start_return()
 			else:
-				combatant.attack_target = player.combatant
+				var at := _victim.body.global_position
+				combatant.attack_target = _victim
 				combatant.enter_combat()
-				player.combatant.enter_combat()
-				if global_position.distance_to(player.global_position) > stop_distance:
-					destination = player.global_position
-				_face(player.global_position)
+				_victim.enter_combat()
+				if global_position.distance_to(at) > stop_distance:
+					destination = at
+				_face(at)
 		State.RETURN:
 			destination = _home
 			if Vector2(global_position.x - _home.x, global_position.z - _home.z).length() < 0.5:
@@ -206,7 +224,7 @@ func _is_facing(point: Vector3) -> bool:
 
 
 func _start_chase() -> void:
-	Sfx.play("aggro")
+	Sfx.play_at("aggro", global_position)
 	state = State.CHASE
 
 
@@ -214,6 +232,65 @@ func _start_return() -> void:
 	state = State.RETURN
 	combatant.attack_target = null
 	combatant.invulnerable = true
+	threat.clear()
+	tapped_by = null
+	_victim = null
+
+
+## Adds threat on a player unit, putting it on the threat list.
+func add_threat(unit: Combatant, amount: float) -> void:
+	if unit == null or not unit.is_player or state == State.DEAD:
+		return
+	threat[unit] = threat.get(unit, 0.0) + amount
+
+
+## The living unit with the most threat, keeping the current victim until
+## another passes it by the classic margin.
+func _pick_victim() -> Combatant:
+	# Untyped: a playerbot that left the world is a freed key.
+	for unit in threat.keys():
+		if not is_instance_valid(unit) or not (unit as Combatant).is_alive():
+			threat.erase(unit)
+	if not is_instance_valid(_victim):
+		_victim = null
+	if threat.is_empty():
+		return null
+	var best: Combatant = null
+	for unit: Combatant in threat:
+		if best == null or threat[unit] > threat[best]:
+			best = unit
+	if _victim and threat.has(_victim) and best != _victim:
+		var margin := THREAT_SWITCH_MELEE if combatant.distance_to(best) <= combatant.melee_range else THREAT_SWITCH_RANGED
+		if threat[best] <= threat[_victim] * margin:
+			return _victim
+	return best
+
+
+## A player unit left the world (a playerbot removed): off the threat list.
+func forget(unit: Combatant) -> void:
+	threat.erase(unit)
+	if _victim == unit:
+		_victim = null
+		combatant.attack_target = null
+	if tapped_by == unit:
+		tapped_by = null
+
+
+## Healing a unit draws threat from every creature fighting it, half the
+## amount healed, split between them.
+static func add_heal_threat(healed: Combatant, healer: Combatant, amount: int) -> void:
+	var fighting: Array[Enemy] = []
+	for node in healed.get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		if enemy.state == State.CHASE and enemy.threat.has(healed):
+			fighting.append(enemy)
+	for enemy in fighting:
+		enemy.add_threat(healer, amount * HEAL_THREAT / fighting.size())
+
+
+## Whether someone outside the player's group tapped it: grey to the player.
+func is_tapped_by_others() -> bool:
+	return tapped_by != null and is_instance_valid(tapped_by) and not Party.has_unit(tapped_by)
 
 
 ## Whether this creature attacks the player on sight. Neutral creatures,
@@ -222,7 +299,12 @@ func is_aggressive() -> bool:
 	return not passive and ClassicData.aggressive(_data, GameState.race)
 
 
-func _on_attacked() -> void:
+func _on_attacked(source: Combatant, damage: int) -> void:
+	if source == null or not source.is_player or state == State.RETURN or state == State.DEAD:
+		return
+	if tapped_by == null or not is_instance_valid(tapped_by):
+		tapped_by = source
+	add_threat(source, float(damage))
 	if state == State.IDLE:
 		_start_chase()
 
@@ -248,6 +330,7 @@ func _roll_level() -> void:
 	var t := 0.0 if max_level == min_level else float(level - min_level) / (max_level - min_level)
 	combatant.level = level
 	combatant.max_health = roundi(lerpf(_data.MinLevelHealth, _data.MaxLevelHealth, t))
+	combatant.max_mana = roundi(lerpf(_data.get("MinLevelMana", 0), _data.get("MaxLevelMana", 0), t))
 	combatant.reset()
 
 
@@ -255,12 +338,13 @@ func _on_died() -> void:
 	state = State.DEAD
 	collision_layer = CORPSE_LAYER
 	_fit_corpse_shape()
-	var player := get_tree().get_first_node_in_group("player") as Player
-	if player and player.combatant.is_alive():
-		player.progression.add_xp(player.progression.xp_for_kill(level, elite))
-		QuestLog.on_kill(creature_entry)
+	# The tapping unit's group gets the kill. Loot is only kept for the
+	# player's group: bots don't loot.
+	if Party.reward_kill(self, tapped_by if tapped_by and is_instance_valid(tapped_by) else null):
 		loot = LootTable.roll_creature(int(_data.LootId))
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
+	threat.clear()
+	_victim = null
 	_sparkle.visible = has_loot()
 	respawn_at = Time.get_unix_time_from_system() + respawn_time
 
@@ -338,6 +422,8 @@ func _respawn() -> void:
 	_collision.transform = _standing_transform
 	loot.clear()
 	loot_money = 0
+	threat.clear()
+	tapped_by = null
 	_roll_level()
 	state = State.IDLE
 

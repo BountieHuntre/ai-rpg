@@ -245,9 +245,9 @@ func hit_with_spell(target: Combatant, damage: float) -> bool:
 	return true
 
 
-func heal_with_spell(amount: float) -> void:
-	var crit := CombatRules.roll_heal(self) == CombatRules.Outcome.CRIT
-	heal(roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
+func heal_with_spell(amount: float, healer: Combatant = null) -> void:
+	var crit := CombatRules.roll_heal(healer if healer else self) == CombatRules.Outcome.CRIT
+	heal(roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit, healer)
 
 
 ## School is a SpellDB.School. Flat "damage taken" auras for that school (such
@@ -276,11 +276,16 @@ func avoid(text: String, source: Combatant) -> void:
 		avoided.emit(text, source)
 
 
-func heal(amount: int, crit := false) -> void:
+## The healer, when there is one, draws threat from the creatures fighting
+## this unit.
+func heal(amount: int, crit := false, healer: Combatant = null) -> void:
 	if not is_alive():
 		return
+	var gained := mini(amount, max_health - health)
 	health = mini(health + amount, max_health)
 	healed.emit(amount, crit)
+	if healer and healer.is_player and is_player and gained > 0:
+		Enemy.add_heal_threat(self, healer, gained)
 
 
 func stun(duration: float) -> void:
@@ -299,7 +304,7 @@ func _physics_process(delta: float) -> void:
 	_since_mana_spent += delta
 	_tick_auras(delta)
 
-	if attack_target and not attack_target.is_alive():
+	if attack_target and (not is_instance_valid(attack_target) or not attack_target.is_alive()):
 		attack_target = null
 	if attack_target and not is_stunned() and not is_pacified() and not is_casting and _swing_left == 0.0:
 		if faces(attack_target) and distance_to(attack_target) <= melee_range:

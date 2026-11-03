@@ -38,6 +38,12 @@ const CREATURE_TYPES := {
 const QUEST_NOTE_TIME := 3.0
 const NAMEPLATE_HEIGHT := 2.2
 const NAMEPLATE_RANGE := 40.0
+## Party frames fade for members further away than this, as in classic.
+const PARTY_RANGE := 40.0
+const PARTY_FRAME_SIZE := Vector2(80, 25)
+const PARTY_XP := Color(0.55, 0.3, 0.85)
+## Unit menu entries.
+enum MenuItem { INVITE, REMOVE, FOLLOW, STAY, CANCEL }
 
 var _player: Player
 var _camera: Camera3D
@@ -61,12 +67,16 @@ var _durability_warning: Label
 var _banner_left := 0.0
 var _target_health: ColorRect
 var _target_health_text: Label
+var _target_mana: Control
+var _target_mana_back: ColorRect
+var _target_mana_text: Label
 var _cast_frame: Control
 var _cast_fill: Control
 var _cast_name: Label
 var _message: Label
 var _message_left := 0.0
 var _floats: Array[Dictionary] = []
+var _float_layer: Control
 var _next_float_offset := 0
 ## Names over creatures, colored by how they'll react: [{ combatant, label }].
 var _enemy_names: Array[Dictionary] = []
@@ -80,6 +90,7 @@ var _npc_names: Array[Dictionary] = []
 var _quest_window: QuestWindow
 var _quest_npc: Npc
 var _quest_log: QuestLogUI
+var _social: SocialWindow
 ## Objectives of the quests underway, down the right side.
 var _tracker: RichTextLabel
 var _minimap: Minimap
@@ -95,6 +106,12 @@ var _unit_lines: Array = []
 var _loot_log: Label
 ## Recent loot messages as [text, seconds left].
 var _log_lines: Array[Array] = []
+## Party frames: { "bot", "frame", "name", "level", "health", "mana" }.
+var _party_frames: Array[Dictionary] = []
+var _unit_menu: PopupMenu
+var _menu_bot: Bot
+## Combatants whose hits, heals and stuns show as floating text.
+var _watched: Dictionary = {}
 
 
 func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) -> void:
@@ -125,8 +142,19 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 			_update_tracker()
 	)
 	GameState.inventory_changed.connect(_update_tracker)
+	Party.message.connect(_on_party_message)
+	Party.changed.connect(_on_party_changed)
+	_watch_combatants()
+
+
+## Floating combat text for every combatant, the playerbots that come and go
+## included.
+func _watch_combatants() -> void:
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var combatant := node as Combatant
+		if _watched.has(combatant):
+			continue
+		_watched[combatant] = true
 		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
 		combatant.took_damage.connect(func(amount: int, _source: Combatant, crit: bool) -> void:
 			_add_float(combatant, "%d!" % amount if crit else str(amount), hit_color, crit)
@@ -140,6 +168,23 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 		combatant.stunned.connect(func() -> void:
 			_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
 		)
+
+
+## Playerbots came or went: watch the new ones and redraw names and frames.
+func refresh_units() -> void:
+	for key: Variant in _watched.keys():
+		if not is_instance_valid(key):
+			_watched.erase(key)
+	_watch_combatants()
+	_build.call_deferred()
+
+
+func _on_party_changed() -> void:
+	_build.call_deferred()
+
+
+func _on_party_message(text: String) -> void:
+	_on_loot_message(text, false)
 
 
 ## Whether a window point is over any visible HUD control that takes the
@@ -184,8 +229,20 @@ func _process(delta: float) -> void:
 
 	var target := _player.targeting.target_combatant()
 	var npc := _player.targeting.target as Npc
-	_target_frame.visible = target != null or npc != null
-	if npc:
+	var bot := _player.targeting.target as Bot
+	_target_frame.visible = target != null or npc != null or bot != null
+	if bot:
+		# Other players: blue name, green health bar.
+		var c := bot.combatant
+		_target_name.text = c.display_name
+		_target_name.add_theme_color_override("font_color", Targeting.PLAYER_COLOR)
+		_target_level.text = "Lv %d" % c.level
+		_target_level.add_theme_color_override("font_color", Color.WHITE)
+		_target_health.color = Color(0.25, 0.7, 0.25)
+		_set_bar(_target_health, c.health, c.max_health)
+		_target_health_text.text = "%d/%d" % [c.health, c.max_health] if c.is_alive() else "Dead"
+		_show_target_mana(c)
+	elif npc:
 		# Friendly NPCs: green name, full bar, no level or numbers.
 		_target_name.text = npc.npc_name
 		_target_name.add_theme_color_override("font_color", Targeting.FRIENDLY_COLOR)
@@ -193,14 +250,17 @@ func _process(delta: float) -> void:
 		_set_bar(_target_health, 1.0, 1.0)
 		_target_health.color = Targeting.FRIENDLY_COLOR.darkened(0.3)
 		_target_health_text.text = ""
+		_show_target_mana(null)
 	elif target:
-		_target_health.color = TARGET_HEALTH
+		# Creatures tapped by someone outside the party show a grey bar.
+		_target_health.color = Targeting.TAPPED_COLOR.darkened(0.3) if (target.body as Enemy).is_tapped_by_others() else TARGET_HEALTH
 		_target_name.text = target.display_name
 		_target_name.add_theme_color_override("font_color", Targeting.name_color(target.body))
 		_target_level.text = "Lv %d" % target.level
 		_target_level.add_theme_color_override("font_color", CombatRules.level_color(me.level, target.level))
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
+		_show_target_mana(target)
 
 	var casting: Dictionary = _player.spells.casting
 	_cast_frame.visible = not casting.is_empty()
@@ -216,6 +276,7 @@ func _process(delta: float) -> void:
 	_banner.visible = _banner_left > 0.0
 	_update_durability_warning()
 	_update_floats(delta)
+	_update_party_frames()
 	_update_enemy_names()
 	_update_unit_tooltip()
 	_update_npc_names()
@@ -226,6 +287,7 @@ func _build() -> void:
 	var open_windows := _inventory.open_state() if _inventory else {}
 	var book_open := _spells.is_book_open() if _spells else false
 	var log_open := _quest_log.visible if _quest_log else false
+	var social_open := _social.visible if _social else false
 	for child in get_children():
 		child.free()
 	_floats.clear()
@@ -237,9 +299,14 @@ func _build() -> void:
 	_width = window.x / _ui_scale
 	_height = window.y / _ui_scale
 
+	# Floating combat text sits under every frame and window.
+	_float_layer = Control.new()
+	_float_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_float_layer)
 	_build_enemy_names()
 	_build_npc_names()
 	_build_player_frame()
+	_build_party_frames()
 	_build_target_frame()
 	_build_cast_bar()
 	_message = _label(self, Vector2(0, 34), "", Color(1, 0.35, 0.3))
@@ -333,6 +400,13 @@ func _build() -> void:
 	_quest_log.hovered.connect(_tooltip.show_item)
 	if log_open:
 		_quest_log.toggle()
+	_social = SocialWindow.new()
+	_social.position = Vector2(4, 48) * _ui_scale
+	_social.setup(_ui_scale)
+	add_child(_social)
+	_social.message.connect(_on_loot_message)
+	if social_open:
+		_social.toggle()
 	_quest_window = QuestWindow.new()
 	_quest_window.position = Vector2(130, 40) * _ui_scale
 	_quest_window.visible = false
@@ -349,6 +423,10 @@ func _build() -> void:
 	move_child(_tooltip, -1)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
+	_unit_menu = PopupMenu.new()
+	_unit_menu.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+	_unit_menu.id_pressed.connect(_on_unit_menu)
+	add_child(_unit_menu)
 
 
 ## Yellow when any equipped item is low on durability, red when one is broken.
@@ -384,12 +462,38 @@ func _build_xp_bar() -> void:
 	_player_xp_text = _bar_text(frame, Vector2(0, 0), Vector2(width, SpellUI.XP_BAR), XP_FONT_SIZE)
 
 
+## The target frame, with a mana bar under the health bar for targets that
+## have mana. Right-click it on a playerbot for the bot's menu.
 func _build_target_frame() -> void:
-	_target_frame = _frame(Vector2(100, 4), Vector2(90, 24))
+	_target_frame = _frame(Vector2(100, 4), Vector2(90, 35))
+	_target_frame.mouse_filter = Control.MOUSE_FILTER_STOP
+	_target_frame.gui_input.connect(_on_target_frame_input)
 	_target_name = _label(_target_frame, Vector2(3, 0), "")
 	_target_level = _right_label(_target_frame, Vector2(3, 0), 84)
 	_target_health = _bar(_target_frame, Vector2(3, 12), Vector2(84, 10), TARGET_HEALTH) as ColorRect
 	_target_health_text = _bar_text(_target_frame, Vector2(3, 12), Vector2(84, 10))
+	_target_mana_back = _rect(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.08, 0.1, 0.2))
+	_target_mana = _bar(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
+	_target_mana_text = _bar_text(_target_frame, Vector2(3, 23), Vector2(84, 9))
+
+
+## Shows the target's mana, shrinking the frame when it has none.
+func _show_target_mana(c: Combatant) -> void:
+	var has_mana := c != null and c.max_mana > 0
+	_target_mana_back.visible = has_mana
+	_target_mana.visible = has_mana
+	_target_mana_text.visible = has_mana
+	_target_frame.size.y = (35 if has_mana else 24) * _ui_scale
+	if has_mana:
+		_set_bar(_target_mana, c.mana, c.max_mana)
+		_target_mana_text.text = "%d/%d" % [int(c.mana), c.max_mana]
+
+
+func _on_target_frame_input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	var bot := _player.targeting.target as Bot
+	if click and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT and bot:
+		open_unit_menu(bot)
 
 
 func _build_cast_bar() -> void:
@@ -405,7 +509,7 @@ func _show_message(text: String) -> void:
 
 
 func _add_float(combatant: Combatant, text: String, color: Color, big := false) -> void:
-	var label := _label(self, Vector2.ZERO, text, color)
+	var label := _label(_float_layer, Vector2.ZERO, text, color)
 	if big:
 		label.add_theme_font_size_override("font_size", roundi(CRIT_FONT_SIZE * _ui_scale))
 	label.visible = false
@@ -445,6 +549,93 @@ func _update_enemy_names() -> void:
 		if label.visible:
 			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
 			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
+			# Grey once someone outside the party taps it.
+			label.add_theme_color_override("font_color", Targeting.name_color(combatant.body))
+
+
+## The party under the player frame: each member's name, level, health,
+## mana and XP (no XP bar at the level cap). Click one to target it, right-click for its menu.
+func _build_party_frames() -> void:
+	_party_frames.clear()
+	for i in Party.members.size():
+		var bot := Party.members[i]
+		var frame := _frame(Vector2(4, 43 + i * (PARTY_FRAME_SIZE.y + 3)), PARTY_FRAME_SIZE)
+		frame.mouse_filter = Control.MOUSE_FILTER_STOP
+		frame.gui_input.connect(_on_party_frame_input.bind(bot))
+		var name_label := _label(frame, Vector2(3, -1), bot.profile.char_name)
+		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+		var level := _right_label(frame, Vector2(3, -1), PARTY_FRAME_SIZE.x - 6)
+		level.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+		_rect(frame, Vector2(3, 10), Vector2(PARTY_FRAME_SIZE.x - 6, 6), Color(0.1, 0.2, 0.1))
+		var health := _bar(frame, Vector2(3, 10), Vector2(PARTY_FRAME_SIZE.x - 6, 6), Color(0.25, 0.7, 0.25))
+		var mana := _bar(frame, Vector2(3, 17), Vector2(PARTY_FRAME_SIZE.x - 6, 3), Color(0.2, 0.4, 0.85))
+		var xp_back := _rect(frame, Vector2(3, 21), Vector2(PARTY_FRAME_SIZE.x - 6, 2), Color(0.15, 0.1, 0.2))
+		var xp := _bar(frame, Vector2(3, 21), Vector2(PARTY_FRAME_SIZE.x - 6, 2), PARTY_XP)
+		_party_frames.append({ "bot": bot, "frame": frame, "name": name_label, "level": level, "health": health, "mana": mana, "xp": xp, "xp_back": xp_back })
+
+
+func _update_party_frames() -> void:
+	for entry in _party_frames:
+		var bot: Bot = entry.bot
+		if not is_instance_valid(bot):
+			continue
+		var c := bot.combatant
+		var alive := c.is_alive()
+		entry.level.text = "Lv %d" % c.level if alive else "Dead"
+		entry.name.add_theme_color_override("font_color", Color.WHITE if alive else GREY)
+		_set_bar(entry.health, c.health, c.max_health)
+		_set_bar(entry.mana, c.mana, c.max_mana)
+		entry.mana.visible = c.max_mana > 0
+		var capped := bot.profile.level >= ClassicData.MAX_LEVEL
+		entry.xp.visible = not capped
+		entry.xp_back.visible = not capped
+		if not capped:
+			_set_bar(entry.xp, bot.profile.xp, ClassicData.xp_to_next(bot.profile.level))
+		var far := _player.global_position.distance_to(bot.global_position) > PARTY_RANGE
+		entry.frame.modulate.a = 0.5 if far else 1.0
+
+
+func _on_party_frame_input(event: InputEvent, bot: Bot) -> void:
+	var click := event as InputEventMouseButton
+	if click and click.pressed and is_instance_valid(bot):
+		if click.button_index == MOUSE_BUTTON_LEFT:
+			_player.targeting.set_target(bot)
+		elif click.button_index == MOUSE_BUTTON_RIGHT:
+			_player.targeting.set_target(bot)
+			open_unit_menu(bot)
+
+
+## The right-click menu for a playerbot, at the mouse: invite it, or tell a
+## party member to follow or stay, or remove it.
+func open_unit_menu(bot: Bot) -> void:
+	_menu_bot = bot
+	_unit_menu.clear()
+	if Party.is_member(bot):
+		_unit_menu.add_item("Follow", MenuItem.FOLLOW)
+		_unit_menu.add_item("Stay", MenuItem.STAY)
+		_unit_menu.add_item("Remove from Party", MenuItem.REMOVE)
+	else:
+		_unit_menu.add_item("Invite to Party", MenuItem.INVITE)
+	_unit_menu.add_item("Cancel", MenuItem.CANCEL)
+	_unit_menu.reset_size()
+	_unit_menu.popup(Rect2i(Vector2i(get_viewport().get_mouse_position()), Vector2i.ZERO))
+
+
+func _on_unit_menu(id: int) -> void:
+	var bot := _menu_bot
+	if bot == null or not is_instance_valid(bot):
+		return
+	match id:
+		MenuItem.INVITE:
+			Party.invite(bot)
+		MenuItem.REMOVE:
+			Party.remove(bot)
+		MenuItem.FOLLOW:
+			bot.follow()
+			_on_loot_message("%s is following you." % bot.profile.char_name, false)
+		MenuItem.STAY:
+			bot.stay()
+			_on_loot_message("%s stays here." % bot.profile.char_name, false)
 
 
 ## Friendly NPC names in green, with their title below, as in classic.
@@ -590,6 +781,20 @@ func unit_tooltip(unit: Node3D) -> Array:
 	if unit is Npc:
 		var npc := unit as Npc
 		return [[npc.npc_name, "", Targeting.FRIENDLY_COLOR], ["<%s>" % npc.subname, "", Color.WHITE]]
+	if unit is Bot:
+		var bot := unit as Bot
+		var p := bot.profile
+		var lines := [
+			[p.char_name, "", Targeting.PLAYER_COLOR],
+			["Level %d %s %s" % [p.level, ClassicData.RACE_NAMES[p.race], ClassicData.CLASS_NAMES[p.char_class]], "", Color.WHITE],
+		]
+		if Party.is_member(bot):
+			lines.append(["In your party", "", QUEST_DONE])
+		else:
+			lines.append(["Target, then right-click its frame to invite", "", GREY])
+		if not bot.combatant.is_alive():
+			lines.append(["Dead", "", GREY])
+		return lines
 	var enemy := unit as Enemy
 	if enemy == null:
 		return []
@@ -606,6 +811,10 @@ func unit_tooltip(unit: Node3D) -> Array:
 		for objective: Array in quest[1]:
 			lines.append([" - " + objective[0], "", QUEST_DONE if objective[1] else GREY])
 	return lines
+
+
+func close_social() -> bool:
+	return _social.close()
 
 
 ## Esc: closes the quest window, then the quest log.

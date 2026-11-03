@@ -25,6 +25,7 @@ var _save_queued := false
 var _drag_shield := Control.new()
 var _menu := GameMenu.new()
 var _console := DevConsole.new()
+var _bots := BotManager.new()
 
 
 ## Runs before the player and HUD are ready. Started straight from the editor,
@@ -52,13 +53,19 @@ func _ready() -> void:
 	_restore_player()
 	_restore_corpses()
 	_camera.snap_to_target()
+	# Bots first, so the HUD finds them.
+	_bots.name = "BotManager"
+	add_child(_bots)
+	_bots.setup(_player, _world)
 	_hud.setup(_player, _camera, _game_view)
+	_bots.bots_changed.connect(_hud.refresh_units)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
 	_player.targeting.npc_clicked.connect(_hud.open_npc)
 	_player.combatant.died.connect(_on_player_died)
 	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
 	GameState.inventory_changed.connect(_queue_save)
 	GameState.money_changed.connect(_queue_save)
+	GameState.friends_changed.connect(_queue_save)
 	var menu_layer := CanvasLayer.new()
 	menu_layer.layer = 50
 	add_child(menu_layer)
@@ -67,7 +74,7 @@ func _ready() -> void:
 	console_layer.layer = 40
 	add_child(console_layer)
 	console_layer.add_child(_console)
-	_console.setup(_player, _world, save_game)
+	_console.setup(_player, _world, save_game, _bots)
 	_menu.set_console(_console)
 	_menu.log_out_requested.connect(_log_out)
 	_menu.exit_requested.connect(func() -> void:
@@ -98,6 +105,7 @@ func save_game() -> void:
 			"item_cooldowns": _player.spells.saved_item_cooldowns(),
 		}
 	_store_corpses()
+	_bots.save_roster()
 	GameState.save_to_disk()
 
 
@@ -209,6 +217,7 @@ func _on_player_died() -> void:
 	# Only the auras that outlast death come back with you, and cooldowns keep running.
 	GameState.player_state = { "auras": _saved_auras(_player.combatant), "item_cooldowns": _player.spells.saved_item_cooldowns() }
 	_store_corpses()
+	_bots.save_roster()
 	GameState.save_to_disk()
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)
 
@@ -270,7 +279,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_menu.toggle()
 		elif _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_quests() or _hud.close_vendor() or _hud.close_trainer():
+		elif _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
 			pass
 		elif _hud.close_inventory_window():
 			pass

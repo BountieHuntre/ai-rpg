@@ -1,4 +1,4 @@
-extends Node
+extends CharacterProfile
 ## The player's character, progress and items, saved to disk. Lives outside
 ## the scene so it survives the restart after death.
 ## Item stacks are dictionaries: { "id": item id, "count": n, "bound": bool },
@@ -13,6 +13,7 @@ signal inventory_changed
 signal spells_changed
 signal money_changed
 signal quests_changed
+signal friends_changed
 ## Quest progress lines ("Burrowling Runt slain: 3/10") for the HUD.
 signal quest_message(text: String)
 
@@ -33,20 +34,13 @@ const ERR_NAME_TAKEN := "That name is unavailable."
 ## Bump when the save format changes, and convert older saves in _apply_save.
 const SAVE_VERSION := 1
 
-var char_name := ""
-var race := ClassicData.Race.HUMAN
-var char_class := ClassicData.CharClass.PALADIN
-var level := 1
-var xp := 0
+## Name, race, class, level, XP, proficiencies, equipment and known spells
+## are in CharacterProfile.
 ## Money in copper. Changing it emits money_changed.
 var money := 0:
 	set(value):
 		money = value
 		money_changed.emit()
-## Weapon and armor types the character can use, as "class:subclass" keys.
-var proficiencies: Array[String] = []
-## Inventory.Slot -> item stack.
-var equipment: Dictionary = {}
 ## The bags in the four bag slots.
 var bags: Array[Dictionary] = []
 ## Contents of the backpack (index 0) and each bag (1 to 4).
@@ -57,8 +51,6 @@ var containers: Array = []
 var player_state: Dictionary = {}
 ## The world around the player: { "corpses": { enemy name: corpse state } }.
 var world_state: Dictionary = {}
-## Spell ids the character knows, every rank included.
-var known_spells: Array[int] = []
 ## Quests in the log by id: { "kills": [count per kill objective] }. QuestLog
 ## holds the rules.
 var quests: Dictionary = {}
@@ -69,6 +61,10 @@ var quests_done: Array[int] = []
 var buyback: Array[Dictionary] = []
 ## Spell id in each of the 12 action bar slots, or 0 for empty.
 var action_bar: Array[int] = []
+## Names of the playerbots in the player's party, kept across logging out.
+var party: Array[String] = []
+## The friends list (the Social window): player names.
+var friends: Array[String] = []
 
 ## The current character's save file; empty until one is picked.
 var save_path := ""
@@ -249,6 +245,8 @@ func save_to_disk() -> bool:
 		"action_bar": action_bar,
 		"quests": quests,
 		"quests_done": quests_done,
+		"party": party,
+		"friends": friends,
 	}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
@@ -290,6 +288,8 @@ func _start_fresh() -> void:
 	world_state = {}
 	quests = {}
 	quests_done.clear()
+	party.clear()
+	friends.clear()
 	buyback.clear()
 	_reset_items()
 	Inventory.start_character(self)
@@ -319,6 +319,8 @@ func _apply_save(data: Dictionary) -> void:
 	for id: String in saved_quests:
 		quests[int(id)] = { "kills": saved_quests[id].kills.map(func(count: float) -> int: return int(count)) }
 	quests_done.assign(data.get("quests_done", []).map(func(id: float) -> int: return int(id)))
+	party.assign(data.get("party", []))
+	friends.assign(data.get("friends", []))
 	# Saves from before spells existed start with the class's starting spells.
 	if data.has("spells"):
 		known_spells.assign(data.spells.map(func(id: float) -> int: return int(id)))

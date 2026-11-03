@@ -1,6 +1,7 @@
 class_name Targeting
 extends Node
-## Tracks the player's current target and draws the ring under it.
+## Tracks the player's current target (a creature, an NPC or a playerbot) and
+## draws the ring under it.
 
 signal loot_requested(corpse: Enemy, take_all: bool)
 ## Right-click on a friendly NPC.
@@ -10,12 +11,16 @@ const UNIT_LAYER := 2
 const HOSTILE_COLOR := Color(0.8, 0.2, 0.2)
 const NEUTRAL_COLOR := Color(0.95, 0.8, 0.15)
 const FRIENDLY_COLOR := Color(0.25, 1, 0.25)
+## Other players' names, as classic shows friendly players.
+const PLAYER_COLOR := Color(0.35, 0.6, 1)
+## Creatures someone outside your group tapped.
+const TAPPED_COLOR := Color(0.6, 0.6, 0.6)
 ## In combat with the target, the ring flashes red this many times a second.
 const COMBAT_FLASH_RATE := 2.0
 
 @export var tab_range := 40.0
 
-## An Enemy or a friendly Npc.
+## An Enemy, a friendly Npc or a Bot.
 var target: Node3D
 
 @onready var _player: Player = get_parent()
@@ -24,16 +29,22 @@ var _ring_material := StandardMaterial3D.new()
 var _flash_time := 0.0
 
 
-## The target's Combatant, or null for none or a friendly NPC.
+## The target's Combatant if it's a creature, or null.
 func target_combatant() -> Combatant:
 	var enemy := target as Enemy
 	return enemy.combatant if enemy else null
 
 
+## The targeted playerbot's Combatant (alive or dead), or null.
+func friendly_combatant() -> Combatant:
+	var bot := target as Bot
+	return bot.combatant if bot else null
+
+
 ## Reaction colors: red for creatures that attack on sight, yellow for
 ## passive ones that only fight back, green for friendly NPCs.
 static func reaction_color(unit: Node) -> Color:
-	if unit is Npc:
+	if unit is Npc or unit is PlayerUnit:
 		return FRIENDLY_COLOR
 	var enemy := unit as Enemy
 	if enemy and not enemy.is_aggressive():
@@ -46,7 +57,11 @@ static func reaction_color(unit: Node) -> Color:
 static func name_color(unit: Node) -> Color:
 	if unit is Npc:
 		return FRIENDLY_COLOR
+	if unit is PlayerUnit:
+		return PLAYER_COLOR
 	var enemy := unit as Enemy
+	if enemy and enemy.is_tapped_by_others():
+		return TAPPED_COLOR
 	if enemy and not enemy.is_aggressive():
 		return Color(1, 0.85, 0.15)
 	return Color(1, 0.25, 0.2)
@@ -101,6 +116,11 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 		if button == MOUSE_BUTTON_RIGHT:
 			npc_clicked.emit(collider)
 		return
+	# Clicking a playerbot only targets it: its menu is on the target and
+	# party frames.
+	if collider is Bot:
+		set_target(collider)
+		return
 	var enemy := collider as Enemy
 	if not enemy:
 		return
@@ -125,7 +145,7 @@ func in_combat_with_target() -> bool:
 	var enemy := target as Enemy
 	if enemy == null or not enemy.combatant.is_alive():
 		return false
-	return _player.combatant.attack_target == enemy.combatant or enemy.state == Enemy.State.CHASE
+	return _player.combatant.attack_target == enemy.combatant or (enemy.state == Enemy.State.CHASE and enemy.threat.has(_player.combatant))
 
 
 func _process(delta: float) -> void:

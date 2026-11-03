@@ -29,11 +29,17 @@ const COMMANDS := {
 	"save": ["", "Save the game now."],
 	"clear": ["", "Clear the console."],
 	"reload": ["", "Save, restart the game and come back in, picking up any changes."],
+	"bots": ["", "List the playerbots in the world."],
+	"invite": ["[name]", "Invite a playerbot (or your target) to your party."],
+	"uninvite": ["<name>", "Remove a playerbot from your party."],
+	"disband": ["", "Remove every playerbot from your party."],
+	"summon": ["", "Bring your party's bots to you."],
 }
 
 var _player: Player
 var _world: AshfordVale
 var _save: Callable
+var _bots: BotManager
 var _ui_scale := 1.0
 var _log := RichTextLabel.new()
 var _entry := LineEdit.new()
@@ -41,10 +47,11 @@ var _history: Array[String] = []
 var _history_index := 0
 
 
-func setup(player: Player, world: AshfordVale, save: Callable) -> void:
+func setup(player: Player, world: AshfordVale, save: Callable, bots: BotManager = null) -> void:
 	_player = player
 	_world = world
 	_save = save
+	_bots = bots
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var panel := ColorRect.new()
@@ -336,6 +343,54 @@ func _cmd_respawn(_args: PackedStringArray) -> String:
 			enemy.respawn_at = 0.0
 			count += 1
 	return "Respawning %d creatures." % count
+
+
+func _cmd_bots(_args: PackedStringArray) -> String:
+	if _bots == null or _bots.bots().is_empty():
+		return "No playerbots in the world."
+	var lines := PackedStringArray()
+	for bot in _bots.bots():
+		var where := "party" if Party.is_member(bot) else "%d yd away" % _player.global_position.distance_to(bot.global_position)
+		lines.append("%s: level %d %s %s, %s%s" % [
+			bot.profile.char_name, bot.profile.level, ClassicData.RACE_NAMES[bot.profile.race],
+			ClassicData.CLASS_NAMES[bot.profile.char_class], where, "" if bot.combatant.is_alive() else ", dead",
+		])
+	return "\n".join(lines)
+
+
+## A bot named in the arguments, or the targeted one.
+func _bot_from(args: PackedStringArray) -> Bot:
+	if args.is_empty():
+		return _player.targeting.target as Bot
+	return _bots.find_bot(args[0]) if _bots else null
+
+
+func _cmd_invite(args: PackedStringArray) -> String:
+	var bot := _bot_from(args)
+	if bot == null:
+		return "!No such playerbot. Target one, or give a name (see bots)."
+	Party.invite(bot)
+	return "Invited %s." % bot.profile.char_name
+
+
+func _cmd_uninvite(args: PackedStringArray) -> String:
+	var bot := _bot_from(args)
+	if bot == null or not Party.is_member(bot):
+		return "!That playerbot isn't in your party."
+	Party.remove(bot)
+	return "Removed %s." % bot.profile.char_name
+
+
+func _cmd_disband(_args: PackedStringArray) -> String:
+	Party.disband()
+	return "Party disbanded."
+
+
+func _cmd_summon(_args: PackedStringArray) -> String:
+	for bot in Party.members:
+		bot.global_position = _player.global_position + Vector3(randf_range(-2, 2), 0.5, randf_range(-2, 2))
+		bot.velocity = Vector3.ZERO
+	return "Summoned %d bots." % Party.members.size()
 
 
 func _cmd_save(_args: PackedStringArray) -> String:

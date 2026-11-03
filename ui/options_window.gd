@@ -1,7 +1,7 @@
 class_name OptionsWindow
 extends PanelContainer
 ## The Options window, with a tab down the left for each category: Video,
-## Sound, Interface and Key Bindings. A new category is a TABS entry plus its
+## Sound, Interface, Playerbots, Key Bindings and Developer. A new category is a TABS entry plus its
 ## rows in CATEGORIES (or its own builder, as Key Bindings has). Changes show at once; Okay keeps them all, Cancel puts
 ## them all back, and Defaults resets the open tab. In Key Bindings, click a
 ## key to bind a new one (Esc stops), right-click to clear it.
@@ -38,6 +38,19 @@ const CATEGORIES := {
 		["mouse_speed", "Mouse Look Speed", "slider", [0.25, 2.5]],
 		["invert_mouse", "Invert Mouse", "check", null],
 	],
+	# Numbers are [lowest, highest, step, unit].
+	"Playerbots": [
+		["bots_enabled", "Enable Playerbots", "check", null],
+		["bot_count", "Random Bots in the World", "number", [0, 30, 1, ""]],
+		["bot_min_level", "Random Bot Lowest Level", "number", [1, 60, 1, ""]],
+		["bot_max_level", "Random Bot Highest Level", "number", [1, 60, 1, ""]],
+		["bot_classes", "Bot Classes", "choice", ["All Classes", "Templars Only"]],
+		["bot_accept_invites", "Accept Party Invitations", "choice", ["Always", "Near My Level", "Never"]],
+		["bot_assist", "Party Bots Attack", "choice", ["Assist My Target", "Defend Only", "Passive"]],
+		["bot_follow_distance", "Follow Distance", "number", [2, 10, 1, " yd"]],
+		["bot_heal_threshold", "Templar Bots Heal Below", "slider", [0.3, 0.9]],
+		["bot_teleport", "Teleport to Me When Left Behind", "check", null],
+	],
 	"Developer": [
 		["dev_console", "Developer Console (` key)", "check", null],
 	],
@@ -47,7 +60,7 @@ static var _check_icons: Dictionary
 
 const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
-const TABS := ["Video", "Sound", "Interface", KEY_BINDINGS, DEVELOPER]
+const TABS := ["Video", "Sound", "Interface", "Playerbots", KEY_BINDINGS, DEVELOPER]
 ## One-click developer commands: [button text, console command]. "level+" is
 ## the next level, filled in when pressed.
 const DEV_BUTTONS := [
@@ -531,6 +544,25 @@ func _row(row: Array) -> Control:
 			slider.value_changed.connect(func(new_value: float) -> void:
 				shown.text = _percent(new_value)
 				Settings.set_value(key, new_value)
+			)
+			line.add_child(slider)
+			line.add_child(shown)
+		"number":
+			var limits: Array = row[3]
+			var slider := HSlider.new()
+			slider.custom_minimum_size = Vector2(60, 10) * _ui_scale
+			slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			slider.min_value = limits[0]
+			slider.max_value = limits[1]
+			slider.step = limits[2]
+			slider.value = value
+			var unit: String = limits[3]
+			var shown := _label("%d%s" % [value, unit], TEXT)
+			shown.custom_minimum_size.x = 22 * _ui_scale
+			shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			slider.value_changed.connect(func(new_value: float) -> void:
+				shown.text = "%d%s" % [new_value, unit]
+				Settings.set_value(key, int(new_value))
 			)
 			line.add_child(slider)
 			line.add_child(shown)

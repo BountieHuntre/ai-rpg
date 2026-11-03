@@ -57,9 +57,14 @@ static func take_all(target: Enemy) -> Array[String]:
 
 static func _take_money(target: Enemy) -> String:
 	var amount := target.loot_money
-	GameState.money += amount
 	target.loot_money = 0
 	Sfx.play("coins")
+	# In a party the money is split between the members nearby.
+	if not Party.members.is_empty():
+		var share := Party.money_share(amount, target.global_position)
+		GameState.money += share
+		return "Your share of the loot is %s." % ItemDB.money_words(share)
+	GameState.money += amount
 	return "You loot %s" % ItemDB.money_words(amount)
 
 
