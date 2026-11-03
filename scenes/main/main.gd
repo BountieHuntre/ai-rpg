@@ -49,6 +49,7 @@ func save_game() -> void:
 		var p := _player.global_position
 		GameState.player_state = {
 			"position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
+			"auras": _saved_auras(c),
 		}
 	_store_corpses()
 	GameState.save_to_disk()
@@ -86,8 +87,22 @@ func _restore_player() -> void:
 	_player.global_position = Vector3(at[0], at[1], at[2])
 	_player.facing = float(state.facing)
 	var c := _player.combatant
+	# Buffs come back with the time they had left, as WoW saves auras on logout.
+	for saved: Dictionary in state.get("auras", []):
+		var spell := SpellDB.get_spell(int(saved.id))
+		if not spell.is_empty():
+			c.restore_aura(spell, c, float(saved.remaining), float(saved.duration), saved.amounts)
 	c.health = clampi(int(state.health), 1, c.max_health)
 	c.mana = clampf(float(state.mana), 0.0, c.max_mana)
+
+
+## The player's own buffs, by spell id. Debuffs from enemies aren't kept.
+func _saved_auras(c: Combatant) -> Array:
+	var saved := []
+	for aura in c.auras:
+		if aura.caster == c:
+			saved.append({ "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts })
+	return saved
 
 
 ## Several inventory changes in a row (looting everything) save once.

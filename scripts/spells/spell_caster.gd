@@ -65,6 +65,7 @@ func cast(id: int) -> void:
 	if time > 0.0:
 		Sfx.play("cast")
 		casting = spell
+		_player.combatant.is_casting = true
 		_cast_left = time
 		_cast_total = time
 		_cast_target = target
@@ -102,6 +103,7 @@ func out_of_range(id: int) -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	_player.combatant.is_casting = not casting.is_empty()
 	_gcd_left = maxf(_gcd_left - delta, 0.0)
 	for id: int in _cooldowns.keys():
 		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)

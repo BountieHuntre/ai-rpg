@@ -27,6 +27,10 @@ const CRUSH_MULTIPLIER := 1.5
 @export var melee_range := 2.5
 
 var is_player := false
+## True while casting a spell with a cast time. Melee swings wait until the
+## cast ends, but the swing timer keeps running (Player::Update in CMaNGOS
+## only swings when no non-melee spell is being cast).
+var is_casting := false
 var armor := 0
 var attack_power := 0
 var min_damage := 1.0
@@ -166,6 +170,13 @@ func is_pacified() -> bool:
 	return has_aura_type(SpellDB.AURA_MOD_PACIFY)
 
 
+## Puts back a saved aura with its remaining time and rolled amounts.
+func restore_aura(spell: Dictionary, caster: Combatant, remaining: float, length: float, amounts: Array) -> void:
+	remove_aura(int(spell.Id), false)
+	auras.append({ "spell": spell, "caster": caster, "remaining": remaining, "duration": length, "amounts": amounts })
+	auras_changed.emit()
+
+
 func remove_aura(spell_id: int, notify := true) -> void:
 	var before := auras.size()
 	auras = auras.filter(func(aura: Dictionary) -> bool: return int(aura.spell.Id) != spell_id)
@@ -268,7 +279,7 @@ func _physics_process(delta: float) -> void:
 
 	if attack_target and not attack_target.is_alive():
 		attack_target = null
-	if attack_target and not is_stunned() and not is_pacified() and _swing_left == 0.0:
+	if attack_target and not is_stunned() and not is_pacified() and not is_casting and _swing_left == 0.0:
 		if faces(attack_target) and distance_to(attack_target) <= melee_range:
 			swung.emit(attack_target)
 			var target := attack_target
