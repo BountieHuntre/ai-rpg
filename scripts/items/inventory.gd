@@ -329,3 +329,80 @@ static func _first_free_slot() -> Dictionary:
 			if container[i].is_empty():
 				return bag_ref(bag, i)
 	return {}
+
+
+# Vendors, following Player::BuyItemFromVendor and HandleSellItemOpcode in CMaNGOS.
+
+const ERR_NO_MONEY := "You don't have enough money."
+const ERR_CANT_SELL := "Can't sell that item."
+## Classic keeps the last 12 items sold, for buyback until logout.
+const BUYBACK_SLOTS := 12
+
+
+static func remove_one(ref: Dictionary) -> void:
+	var stack := stack_at(ref)
+	if stack.is_empty():
+		return
+	stack.count -= 1
+	if stack.count <= 0:
+		_set_stack(ref, {})
+	GameState.inventory_changed.emit()
+
+
+## Buys one lot of an item: BuyCount items for BuyPrice copper.
+static func buy(id: int) -> String:
+	var item := ItemDB.get_item(id)
+	var price := int(item.BuyPrice)
+	var count := maxi(int(item.BuyCount), 1)
+	if GameState.money < price:
+		return ERR_NO_MONEY
+	if not _has_room_for(id, count):
+		return ERR_FULL
+	GameState.money -= price
+	add_item(id, count)
+	return ""
+
+
+## Sells a whole bag stack for SellPrice per item. It goes to buyback.
+static func sell(ref: Dictionary) -> String:
+	var stack := stack_at(ref)
+	if stack.is_empty() or ref.kind != "bag":
+		return ""
+	var item := ItemDB.get_item(stack.id)
+	if int(item.SellPrice) <= 0:
+		return ERR_CANT_SELL
+	var money := int(item.SellPrice) * int(stack.count)
+	_set_stack(ref, {})
+	GameState.buyback.push_front({ "id": stack.id, "count": stack.count, "bound": stack.bound, "price": money })
+	if GameState.buyback.size() > BUYBACK_SLOTS:
+		GameState.buyback.pop_back()
+	GameState.money += money
+	GameState.inventory_changed.emit()
+	return ""
+
+
+## Buys back a sold stack for what it sold for.
+static func buy_back(index: int) -> String:
+	var entry: Dictionary = GameState.buyback[index]
+	if GameState.money < int(entry.price):
+		return ERR_NO_MONEY
+	var free := _first_free_slot()
+	if free.is_empty():
+		return ERR_FULL
+	GameState.money -= int(entry.price)
+	GameState.buyback.remove_at(index)
+	_set_stack(free, { "id": entry.id, "count": entry.count, "bound": entry.bound })
+	GameState.inventory_changed.emit()
+	return ""
+
+
+static func _has_room_for(id: int, count: int) -> bool:
+	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
+	var room := 0
+	for container: Array in GameState.containers:
+		for stack: Dictionary in container:
+			if stack.is_empty():
+				room += stack_size
+			elif stack.id == id:
+				room += maxi(stack_size - int(stack.count), 0)
+	return room >= count

@@ -43,6 +43,9 @@ var player_state: Dictionary = {}
 var world_state: Dictionary = {}
 ## Spell ids the character knows, every rank included.
 var known_spells: Array[int] = []
+## Recently sold stacks (newest first), with "price" in copper. Not saved:
+## classic clears buyback on logout.
+var buyback: Array[Dictionary] = []
 ## Spell id in each of the 12 action bar slots, or 0 for empty.
 var action_bar: Array[int] = []
 

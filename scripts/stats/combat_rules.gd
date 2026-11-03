@@ -31,6 +31,9 @@ static func reduce_by_armor(damage: float, victim: Combatant, attacker: Combatan
 ## White melee swing: one roll over miss, dodge, parry, block, glance, crit,
 ## crush and hit, in that order.
 static func roll_auto_attack(attacker: Combatant, victim: Combatant) -> Outcome:
+	# Melee swings at a sitting player always crit (RollMeleeOutcomeAgainst).
+	if victim.is_player and victim.sitting:
+		return Outcome.MISS if randf() * 100.0 < miss_chance(attacker, victim, false) else Outcome.CRIT
 	var sides := [
 		[Outcome.MISS, miss_chance(attacker, victim, false)],
 		[Outcome.DODGE, dodge_chance(attacker, victim)],

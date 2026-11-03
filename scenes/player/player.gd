@@ -7,6 +7,8 @@ extends CharacterBody3D
 ## Movement is instant, with no acceleration, and there's no steering in the
 ## air: a jump keeps the direction it started with.
 
+## How squashed the placeholder model looks while sitting.
+const SIT_HEIGHT := 0.55
 ## Classic base speeds in yards per second.
 const RUN_SPEED := 7.0
 const WALK_SPEED := 2.5
@@ -20,6 +22,19 @@ const GRAVITY := 19.29
 ## Yaw in radians. Zero faces -Z.
 var facing := 0.0
 var autorunning := false
+## Sitting: X toggles it; moving, jumping, casting or being hit stands up,
+## and standing ends food and drink.
+var sitting := false:
+	set(value):
+		sitting = value
+		if combatant:
+			combatant.sitting = value
+			if not value:
+				for aura in combatant.auras.duplicate():
+					if int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
+						combatant.remove_aura(int(aura.spell.Id))
+		if _visual:
+			_visual.scale.y = SIT_HEIGHT if value else 1.0
 var walking := false
 
 @onready var combatant: Combatant = $Combatant
@@ -32,6 +47,7 @@ var walking := false
 
 func _ready() -> void:
 	combatant.faces_point = is_facing
+	combatant.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: sitting = false)
 
 
 ## Moving or in the air. Either interrupts casting.
@@ -57,6 +73,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		targeting.cycle()
 	elif event.is_action_pressed("autorun"):
 		autorunning = not autorunning
+	elif event.is_action_pressed("sit"):
+		sitting = not sitting
 	elif event.is_action_pressed("toggle_walk"):
 		walking = not walking
 	elif event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
@@ -74,6 +92,8 @@ func _physics_process(delta: float) -> void:
 		direction = _move_direction(camera, delta)
 	_visual.rotation.y = facing
 
+	if sitting and (direction != Vector3.ZERO or Input.is_action_just_pressed("jump")):
+		sitting = false
 	if is_on_floor():
 		velocity.x = direction.x
 		velocity.z = direction.z

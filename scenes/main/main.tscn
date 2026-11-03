@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="4_camera"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="5_enemy"]
 [ext_resource type="PackedScene" path="res://ui/combat_hud.tscn" id="6_hud"]
-[ext_resource type="PackedScene" path="res://scenes/npcs/trainer_npc.tscn" id="7_trainer"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="7_trainer"]
 
 [node name="Main" type="Node" unique_id=2075888773]
 script = ExtResource("1_script")
@@ -46,5 +46,18 @@ creature_entry = 257
 
 [node name="BrotherWilhelm" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
 transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 5, 0, 5)
+trainer = "paladin"
+
+[node name="BrotherDanil" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -5, 0, 5)
+npc_name = "Brother Danil"
+subname = "General Supplies"
+vendor = 152
+
+[node name="GodricRothgar" parent="GameView/GameViewport" instance=ExtResource("7_trainer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
+npc_name = "Godric Rothgar"
+subname = "Armorer & Shieldcrafter"
+vendor = 1213
 
 [node name="CombatHud" parent="." unique_id=620252481 instance=ExtResource("6_hud")]

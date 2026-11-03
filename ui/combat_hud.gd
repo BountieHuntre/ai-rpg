@@ -60,6 +60,8 @@ var _inventory: InventoryUI
 var _spells: SpellUI
 var _trainer: TrainerWindow
 var _trainer_npc: Node3D
+var _vendor: VendorWindow
+var _vendor_npc: Node3D
 var _npc_names: Array[Dictionary] = []
 var _loot_window: LootWindow
 var _loot_corpse: Enemy
@@ -197,6 +199,21 @@ func _build() -> void:
 	_trainer.hovered.connect(func(id: int) -> void: _tooltip.show_lines(_spells.spell_tooltip(id)))
 	if _trainer_npc and is_instance_valid(_trainer_npc):
 		_trainer.open(_trainer_npc, _player, _ui_scale)
+	_vendor = VendorWindow.new()
+	_vendor.position = Vector2(130, 50) * _ui_scale
+	_vendor.visible = false
+	add_child(_vendor)
+	move_child(_tooltip, -1)
+	_vendor.message.connect(_on_loot_message)
+	_vendor.hovered.connect(_tooltip.show_item)
+	_vendor.visibility_changed.connect(func() -> void:
+		_inventory.selling = _vendor.visible
+		if not _vendor.visible:
+			_vendor_npc = null
+	)
+	if _vendor_npc and is_instance_valid(_vendor_npc):
+		_vendor.open(_vendor_npc, _player, _ui_scale)
+		_inventory.selling = true
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
 
@@ -351,13 +368,28 @@ func open_loot(corpse: Enemy, take_all: bool) -> void:
 	_loot_window.open(corpse, _player, _ui_scale)
 
 
-func open_trainer(npc: Node3D) -> void:
+## Right-clicked a friendly NPC: opens its vendor or trainer window. Opening a
+## vendor also opens the bags, as in classic.
+func open_npc(npc: Npc) -> void:
 	if _player.global_position.distance_to(npc.global_position) > TrainerWindow.RANGE:
 		_show_message("You are too far away.")
 		Sfx.play("error")
 		return
-	_trainer_npc = npc
-	_trainer.open(npc, _player, _ui_scale)
+	if npc.vendor != 0:
+		_vendor_npc = npc
+		_vendor.open(npc, _player, _ui_scale)
+		_inventory.selling = true
+		_inventory.open_bags()
+	elif not npc.trainer.is_empty():
+		_trainer_npc = npc
+		_trainer.open(npc, _player, _ui_scale)
+
+
+func close_vendor() -> bool:
+	if not _vendor.visible:
+		return false
+	_vendor.close()
+	return true
 
 
 func close_trainer() -> bool:

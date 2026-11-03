@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scenes/npcs/trainer_npc.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/npcs/npc.gd" id="1_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -21,7 +21,7 @@ albedo_color = Color(0.2, 0.35, 0.8, 1)
 material = SubResource("Material_tabard")
 size = Vector3(0.5, 0.7, 0.1)
 
-[node name="TrainerNpc" type="StaticBody3D" groups=["npcs"]]
+[node name="Npc" type="StaticBody3D" groups=["npcs"]]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")

@@ -20,6 +20,9 @@ import sys
 CREATURES = [299, 69, 257]  # Young Wolf, Timber Wolf, Kobold Worker
 # Items the player starts with: Human Paladin starting gear.
 STARTER_ITEMS = [2361, 45, 44, 43, 6948]
+# Vendors whose stock is exported: Brother Danil (General Supplies) and
+# Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
+VENDORS = [152, 1213]
 
 # Class trainer whose spell list is exported, and the race/class whose
 # starting spells are. 927 is Brother Wilhelm, Paladin Trainer.
@@ -38,7 +41,7 @@ HOLY_LIGHT_HEAL = 19968
 TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
     "creature_template", "creature_loot_template", "reference_loot_template",
-    "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell",
+    "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
     "spell_chain", "spell_bonus_data",
 }
 SPELL_FIELDS = [
@@ -69,7 +72,8 @@ ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",
     "RequiredLevel", "AllowableClass", "stackable", "BuyPrice", "SellPrice", "bonding", "armor",
     "block", "delay", "MaxDurability", "ContainerSlots", "dmg_min1", "dmg_max1", "dmg_type1",
-    "dmg_min2", "dmg_max2", "dmg_type2",
+    "dmg_min2", "dmg_max2", "dmg_type2", "BuyCount", "spellid_1", "spelltrigger_1", "spellcharges_1",
+    "spellcooldown_1", "spellcategory_1", "spellcategorycooldown_1",
 ] + [f"stat_{kind}{i}" for i in range(1, 11) for kind in ("type", "value")]
 
 
@@ -191,6 +195,14 @@ def main(path):
                 pending.extend(references[ref])
         else:
             item_ids.add(entry["item"])
+    vendors = {}
+    for entry in VENDORS:
+        template = next(r for r in db["creature_template"] if int(r["Entry"]) == entry)
+        stock = sorted((r for r in db["npc_vendor"] if int(r["entry"]) == entry), key=lambda r: int(r["slot"]))
+        vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"],
+                               "items": [int(r["item"]) for r in stock]}
+        item_ids.update(int(r["item"]) for r in stock)
+    write("vendors.json", vendors)
     write("creatures.json", creatures)
     write("loot_tables.json", {"creature": creature_loot, "reference": references})
 
@@ -199,14 +211,15 @@ def main(path):
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
     write("items.json", items)
-    print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items")
-    export_spells(db)
+    print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
+    item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
+    export_spells(db, item_spells)
 
 
-def export_spells(db):
-    """Class trainer lists, starting spells and every spell they reach."""
+def export_spells(db, item_spells):
+    """Class trainer lists, starting spells, item use spells and every spell they reach."""
     spells = {r["Id"]: r for r in db["spell_template"]}
-    wanted, trainers = set(), {}
+    wanted, trainers = set(item_spells), {}
 
     def taught_by(teach_id):
         teach = spells[str(teach_id)]

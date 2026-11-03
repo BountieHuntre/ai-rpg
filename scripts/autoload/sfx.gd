@@ -25,6 +25,8 @@ const SOUNDS: Dictionary[String, Array] = {
 	"coins": ["item_coins_01", "item_coins_02"],
 	"loot": ["item_misc_02"],
 	"buff": ["spell_01"],
+	"eat": ["item_misc_03"],
+	"sell": ["item_coins_03"],
 }
 
 ## Playback speed for sounds that need it. Raising speed also raises pitch.

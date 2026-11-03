@@ -32,6 +32,10 @@ func show_item(item: Dictionary, soulbound := false) -> void:
 
 ## Shows rows of [left text, right text, color], or hides for an empty list.
 func show_lines(lines: Array) -> void:
+	# While the camera drags, the captured mouse reads as the screen centre,
+	# which can sit over a window's rows. No tooltips until the drag ends.
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		lines = []
 	visible = not lines.is_empty()
 	if not visible:
 		return
@@ -63,6 +67,8 @@ func _label(text: String, color: Color) -> Label:
 
 
 func _process(_delta: float) -> void:
+	if visible and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		visible = false
 	if not visible:
 		return
 	var window := get_viewport().get_visible_rect().size

@@ -29,10 +29,16 @@ const AURA_MOD_RESISTANCE := 22
 const AURA_MOD_PACIFY := 25
 const AURA_SCHOOL_IMMUNITY := 39
 const AURA_MOD_ATTACK_POWER := 99
+## Food (health) and drink (mana per 5 seconds).
+const AURA_MOD_REGEN := 84
+const AURA_MOD_POWER_REGEN := 85
+## AuraInterruptFlags: the aura ends when the unit stands up.
+const AURA_INTERRUPT_NOT_SEATED := 0x80
 const EFFECT_DISPEL := 38
 const EFFECT_HEAL_MAX_HEALTH := 67
 ## Attributes / AttributesEx flags.
 const ATTR_PASSIVE := 0x40
+const ATTR_CANT_USE_IN_COMBAT := 0x10000000
 const ATTR_EX_DRAIN_ALL_POWER := 0x2
 ## Implicit targets.
 const TARGET_SELF := 1
@@ -50,7 +56,7 @@ const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 16: 1.5, 20: 2.5 }
 ## -1 means until cancelled.
 const DURATIONS := {
 	0: 0.0, 1: 10.0, 5: 300.0, 8: 15.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
-	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 347: 900.0,
+	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 85: 18.0, 86: 21.0, 347: 900.0,
 }
 const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 13: 50000.0 }
 const RADII := { 0: 0.0, 9: 20.0, 10: 30.0, 12: 100.0, 14: 8.0 }

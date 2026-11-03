@@ -55,7 +55,7 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
 	query.exclude = [_player.get_rid()]
 	var collider: Object = _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider")
-	if collider is TrainerNpc and button == MOUSE_BUTTON_RIGHT:
+	if collider is Npc and button == MOUSE_BUTTON_RIGHT:
 		npc_clicked.emit(collider)
 		return
 	var enemy := collider as Enemy

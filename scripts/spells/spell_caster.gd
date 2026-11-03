@@ -19,6 +19,10 @@ const ERR_MOVING := "Can't do that while moving"
 const ERR_DEAD_TARGET := "Invalid target"
 const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
 const ERR_PASSIVE := "That ability is passive."
+const ERR_IN_COMBAT := "You are in combat"
+const ERR_ITEM_NOT_READY := "Item is not ready yet."
+## item_template spelltrigger: 0 is "Use:".
+const ITEM_SPELL_ON_USE := 0
 
 const WORLD_LAYER := 1
 const EYE_HEIGHT := 1.2
@@ -33,6 +37,8 @@ var _gcd_left := 0.0
 var _gcd_total := 1.5
 ## Spell id -> seconds of cooldown left.
 var _cooldowns: Dictionary = {}
+## Item spell category -> seconds left.
+var _item_cooldowns: Dictionary = {}
 
 @onready var _player: Player = get_parent()
 
@@ -57,6 +63,8 @@ func cast(id: int) -> void:
 	if not problem.is_empty():
 		failed.emit(problem)
 		return
+	# Casting stands you up.
+	_player.sitting = false
 	var gcd := SpellDB.global_cooldown(spell)
 	if gcd > 0.0:
 		_gcd_left = gcd
@@ -107,6 +115,8 @@ func _physics_process(delta: float) -> void:
 	_gcd_left = maxf(_gcd_left - delta, 0.0)
 	for id: int in _cooldowns.keys():
 		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)
+	for category: int in _item_cooldowns.keys():
+		_item_cooldowns[category] = maxf(_item_cooldowns[category] - delta, 0.0)
 	if casting.is_empty():
 		return
 	if _player.is_moving() or not _player.combatant.is_alive():
@@ -283,6 +293,38 @@ func _holy_damage(target: Combatant, amount: int, crit: bool) -> void:
 ## Righteousness that can be judged). Other new ranks sit alongside the old
 ## ones in the spellbook, but take over their action bar slots. That's a
 ## convenience over classic, which left the old rank on the bar.
+## Uses an item's on-use spell (food and drink so far): checks it, takes one
+## from the stack and applies the spell. Returns an error or "".
+func use_item(ref: Dictionary) -> String:
+	var stack := Inventory.stack_at(ref)
+	if stack.is_empty():
+		return ""
+	var item := ItemDB.get_item(stack.id)
+	var spell := SpellDB.get_spell(int(item.get("spellid_1", 0)))
+	if spell.is_empty() or int(item.spelltrigger_1) != ITEM_SPELL_ON_USE:
+		return ""
+	var me := _player.combatant
+	if not me.is_alive():
+		return ""
+	if int(spell.Attributes) & SpellDB.ATTR_CANT_USE_IN_COMBAT and me.is_in_combat():
+		return ERR_IN_COMBAT
+	var category := int(item.spellcategory_1)
+	if _item_cooldowns.get(category, 0.0) > 0.0:
+		return ERR_ITEM_NOT_READY
+	if not casting.is_empty():
+		return ERR_IN_PROGRESS
+	if int(item.spellcategorycooldown_1) > 0:
+		_item_cooldowns[category] = int(item.spellcategorycooldown_1) / 1000.0
+	if int(item.spellcharges_1) < 0:
+		Inventory.remove_one(ref)
+	me.add_aura(spell, me)
+	# Food and drink are taken sitting down.
+	if int(spell.AuraInterruptFlags) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
+		_player.sitting = true
+	Sfx.play("eat")
+	return ""
+
+
 static func learn(ids: Array) -> Array[String]:
 	var learned: Array[String] = []
 	for id: int in ids:

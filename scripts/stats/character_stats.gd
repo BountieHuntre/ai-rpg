@@ -11,6 +11,10 @@ const MANA_REGEN_DELAY := 5.0
 
 ## Shield block chance when the character can block.
 const SHIELD_BLOCK_CHANCE := 5.0
+## Sitting raises Spirit health regen by half.
+const SITTING_REGEN := 1.5
+## Food and drink auras tick on a 5-second period.
+const FOOD_DRINK_PERIOD := 5.0
 ## The Parry passive, trained at level 8 by Paladins.
 const PARRY_SPELL := 3127
 
@@ -29,6 +33,8 @@ var mana_per_tick := 0.0
 var health_per_tick := 0.0
 
 var _tick_left := REGEN_TICK
+## Fractions of health carried to the next tick, as in CMaNGOS.
+var _health_carry := 0.0
 
 @onready var _combatant: Combatant = $"../Combatant"
 
@@ -103,8 +109,23 @@ func _physics_process(delta: float) -> void:
 	if not c.is_alive():
 		return
 	if not c.is_in_combat() and c.health < c.max_health:
-		c.health = mini(c.health + int(health_per_tick), c.max_health)
-	c.mana = minf(c.mana + current_mana_per_tick(), c.max_mana)
+		_health_carry += health_per_tick * (SITTING_REGEN if c.sitting else 1.0) + food_per_tick()
+		var gained := int(_health_carry)
+		_health_carry -= gained
+		c.health = mini(c.health + gained, c.max_health)
+	c.mana = minf(c.mana + current_mana_per_tick() + drink_per_tick(), c.max_mana)
+
+
+## Food heals its amount every 5 seconds, applied on the 2-second tick
+## (RegenerateHealth in CMaNGOS: amount * 2000 / 5000).
+func food_per_tick() -> float:
+	return _combatant.aura_total(SpellDB.AURA_MOD_REGEN) * REGEN_TICK / FOOD_DRINK_PERIOD
+
+
+## Drink restores its amount as mana per 5 seconds, even within the
+## five-second rule (UpdateManaRegen in CMaNGOS).
+func drink_per_tick() -> float:
+	return _combatant.aura_total(SpellDB.AURA_MOD_POWER_REGEN) / FOOD_DRINK_PERIOD * REGEN_TICK
 
 
 # Formulas from the CMaNGOS classic and vmangos StatSystem and Player code.

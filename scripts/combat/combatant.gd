@@ -31,6 +31,8 @@ var is_player := false
 ## cast ends, but the swing timer keeps running (Player::Update in CMaNGOS
 ## only swings when no non-melee spell is being cast).
 var is_casting := false
+## Sitting players take crits from every melee swing and stand when hit.
+var sitting := false
 var armor := 0
 var attack_power := 0
 var min_damage := 1.0

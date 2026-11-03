@@ -37,6 +37,9 @@ var _stance_ids: Array[int] = []
 var _book: Control
 var _book_rows: Control
 var _buffs: Control
+## The buff under the mouse, or {}, and the time its tooltip last showed.
+var _hovered_aura: Dictionary = {}
+var _buff_tooltip_text := ""
 ## The spell on the cursor, or 0.
 var _held := 0
 var _held_icon: Control
@@ -109,6 +112,7 @@ func _process(_delta: float) -> void:
 		var aura: Dictionary = icon.get_meta("aura")
 		var time: Label = icon.get_meta("time")
 		time.text = _short_time(aura.remaining)
+	_update_buff_tooltip()
 
 
 # Action bar.
@@ -364,16 +368,41 @@ func _draw_buffs() -> void:
 		icon.set_meta("time", time)
 		var id := int(spell.Id)
 		icon.mouse_entered.connect(func() -> void:
-			_tooltip.show_lines([[SpellDB.full_name(spell), "", Color.WHITE], [_long_time(aura.remaining), "", DESCRIPTION]])
+			_hovered_aura = aura
+			_buff_tooltip_text = ""
 		)
-		icon.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+		icon.mouse_exited.connect(func() -> void:
+			_hovered_aura = {}
+			_tooltip.show_lines([])
+		)
 		icon.gui_input.connect(func(event: InputEvent) -> void:
 			var button := event as InputEventMouseButton
 			if button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT:
+				_hovered_aura = {}
 				_tooltip.show_lines([])
 				_player.combatant.remove_aura(id)
 		)
 		i += 1
+
+
+## Keeps the hovered buff's tooltip counting down, redrawing only when the
+## shown time changes.
+func _update_buff_tooltip() -> void:
+	if _hovered_aura.is_empty():
+		return
+	if not _hovered_aura in _player.combatant.auras:
+		_hovered_aura = {}
+		_tooltip.show_lines([])
+		return
+	var remaining := _long_time(ceilf(_hovered_aura.remaining))
+	if remaining == _buff_tooltip_text and _tooltip.visible:
+		return
+	_buff_tooltip_text = remaining
+	var spell: Dictionary = _hovered_aura.spell
+	var lines: Array = [[SpellDB.full_name(spell), "", Color.WHITE]]
+	if not remaining.is_empty():
+		lines.append([remaining + " remaining", "", DESCRIPTION])
+	_tooltip.show_lines(lines)
 
 
 # Tooltips.

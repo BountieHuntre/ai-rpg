@@ -44,6 +44,11 @@ func is_steering() -> bool:
 	return _steering
 
 
+## A mouse button is held down for orbiting or steering.
+func is_dragging() -> bool:
+	return _orbiting or _steering
+
+
 ## Holding both mouse buttons runs forward, as in WoW.
 func is_auto_running() -> bool:
 	return _orbiting and _steering

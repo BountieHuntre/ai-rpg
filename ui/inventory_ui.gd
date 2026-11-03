@@ -43,6 +43,8 @@ var _layout := ""
 ## Where the item on the cursor came from, or {} when nothing is held.
 var _held: Dictionary = {}
 var _held_icon: Control
+## True while a vendor window is open: right-clicking bag items sells them.
+var selling := false
 var _rebuild_queued := false
 
 
@@ -58,6 +60,10 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	_rebuild()
 	_bags_window.visible = open.get("bags", false)
 	_character_window.visible = open.get("character", false)
+
+
+func open_bags() -> void:
+	_bags_window.visible = true
 
 
 func open_state() -> Dictionary:
@@ -276,7 +282,7 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 			return
 		match ref.kind:
 			"bag":
-				error = Inventory.use_from_bag(ref)
+				error = _right_click_bag_item(ref)
 			"equip":
 				error = Inventory.unequip(ref.slot)
 	else:
@@ -285,6 +291,19 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 	if not error.is_empty():
 		message.emit(error, true)
 	get_viewport().set_input_as_handled()
+
+
+## Sells to an open vendor, uses consumables, or equips gear and bags.
+func _right_click_bag_item(ref: Dictionary) -> String:
+	if selling:
+		var sold := Inventory.sell(ref)
+		if sold.is_empty():
+			Sfx.play("sell")
+		return sold
+	var stack := Inventory.stack_at(ref)
+	if not stack.is_empty() and int(ItemDB.get_item(stack.id).get("spellid_1", 0)) > 0:
+		return _player.spells.use_item(ref)
+	return Inventory.use_from_bag(ref)
 
 
 func _view_at(point: Vector2) -> Dictionary:

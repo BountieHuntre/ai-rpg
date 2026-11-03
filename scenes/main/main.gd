@@ -18,6 +18,10 @@ const RESET_KEY := KEY_F12
 @onready var _hud: CombatHud = $CombatHud
 
 var _save_queued := false
+## Covers the screen while a camera drag button is held. A captured mouse reads
+## as the screen centre, and Godot updates hover from it every frame, so
+## without this a window there would highlight rows and show tooltips.
+var _drag_shield := Control.new()
 
 
 func _ready() -> void:
@@ -32,11 +36,18 @@ func _ready() -> void:
 	_camera.snap_to_target()
 	_hud.setup(_player, _camera, _game_view)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
-	_player.targeting.npc_clicked.connect(_hud.open_trainer)
+	_player.targeting.npc_clicked.connect(_hud.open_npc)
 	_player.combatant.died.connect(_on_player_died)
 	_player.progression.leveled_up.connect(func(_level: int) -> void: save_game())
 	GameState.inventory_changed.connect(_queue_save)
 	GameState.money_changed.connect(_queue_save)
+	var shield_layer := CanvasLayer.new()
+	shield_layer.layer = 100
+	add_child(shield_layer)
+	_drag_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_drag_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+	_drag_shield.visible = false
+	shield_layer.add_child(_drag_shield)
 	var autosave := Timer.new()
 	autosave.wait_time = AUTOSAVE_INTERVAL
 	autosave.timeout.connect(save_game)
@@ -101,7 +112,9 @@ func _restore_player() -> void:
 func _saved_auras(c: Combatant) -> Array:
 	var saved := []
 	for aura in c.auras:
-		if aura.caster == c:
+		# Food and drink end when you stand, so they aren't kept.
+		var ends_on_standing: bool = int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED != 0
+		if aura.caster == c and not ends_on_standing:
 			saved.append({ "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts })
 	return saved
 
@@ -137,9 +150,32 @@ func _on_player_died() -> void:
 	get_tree().create_timer(RESTART_DELAY).timeout.connect(get_tree().reload_current_scene)
 
 
+## During a camera drag the mouse is captured, and Godot reports a captured
+## mouse at the screen centre, where windows like the vendor's would swallow
+## the motion. So drags go straight to the camera, before the UI, including the
+## button release that ends them.
+func _process(_delta: float) -> void:
+	_update_drag_shield()
+
+
+func _update_drag_shield() -> void:
+	_drag_shield.visible = _camera is OrbitCamera and _camera.is_dragging()
+
+
+func _input(event: InputEvent) -> void:
+	if _camera is OrbitCamera and _camera.is_dragging():
+		var ends_drag: bool = event is InputEventMouseButton and not event.pressed
+		if event is InputEventMouseMotion or ends_drag:
+			_camera.handle_mouse(event)
+			get_viewport().set_input_as_handled()
+			_update_drag_shield()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouse and _camera is OrbitCamera:
 		_camera.handle_mouse(event)
+		# Up from the moment a drag button goes down, before any hover can happen.
+		_update_drag_shield()
 	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed:
 		GameState.reset_character()
 		get_tree().reload_current_scene()
@@ -148,7 +184,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# real pause menu exists.
 		if _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_trainer():
+		elif _hud.close_vendor() or _hud.close_trainer():
 			pass
 		elif _hud.close_inventory_window():
 			pass
