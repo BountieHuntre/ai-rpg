@@ -47,6 +47,10 @@ var sitting := false:
 		if _visual:
 			_visual.scale = race_scale(GameState.race) * Vector3(1, SIT_HEIGHT if value else 1.0, 1)
 var walking := false
+## True while a text field (the dev console) has the keyboard: no movement keys.
+var typing := false
+## Run speed multiplier, for the dev console's speed command.
+var speed_scale := 1.0
 
 @onready var combatant: Combatant = $Combatant
 @onready var progression: Progression = $Progression
@@ -128,12 +132,12 @@ func _physics_process(delta: float) -> void:
 		direction = _move_direction(camera, delta)
 	_visual.rotation.y = facing
 
-	if sitting and (direction != Vector3.ZERO or Input.is_action_just_pressed("jump")):
+	if sitting and (direction != Vector3.ZERO or (not typing and Input.is_action_just_pressed("jump"))):
 		sitting = false
 	if is_on_floor():
 		velocity.x = direction.x
 		velocity.z = direction.z
-		if alive and Input.is_action_just_pressed("jump"):
+		if alive and (not typing and Input.is_action_just_pressed("jump")):
 			velocity.y = JUMP_SPEED
 	else:
 		velocity.y -= GRAVITY * delta
@@ -142,11 +146,11 @@ func _physics_process(delta: float) -> void:
 
 ## Velocity from the movement keys, already scaled to the right speed.
 func _move_direction(camera: OrbitCamera, delta: float) -> Vector3:
-	var forward := Input.get_axis("move_down", "move_up")
+	var forward := 0.0 if typing else Input.get_axis("move_down", "move_up")
 	if autorunning or camera.is_auto_running():
 		forward = maxf(forward, 1.0) if forward >= 0.0 else forward
-	var turn := Input.get_axis("move_left", "move_right")
-	var strafe := Input.get_axis("strafe_left", "strafe_right")
+	var turn := 0.0 if typing else Input.get_axis("move_left", "move_right")
+	var strafe := 0.0 if typing else Input.get_axis("strafe_left", "strafe_right")
 
 	if camera.is_steering():
 		facing = camera.yaw
@@ -162,4 +166,4 @@ func _move_direction(camera: OrbitCamera, delta: float) -> Vector3:
 		speed = WALK_SPEED
 	elif forward < 0.0:
 		speed = BACKPEDAL_SPEED
-	return Basis(Vector3.UP, facing) * local.normalized() * speed
+	return Basis(Vector3.UP, facing) * local.normalized() * speed * speed_scale

@@ -67,3 +67,65 @@ static func _get_tables() -> Dictionary:
 	if _tables.is_empty():
 		_tables = JSON.parse_string(FileAccess.get_file_as_string(TABLES_PATH))
 	return _tables
+
+
+# Factions, following FactionTemplateEntry in CMaNGOS (DBCStructure.h). Creature
+# reputation isn't kept, so this is the plain template-to-template reaction.
+
+const FACTIONS_PATH := "res://data/classic/factions.json"
+## CMaNGOS CREATURE_EXTRA_FLAG_NO_AGGRO_ON_SIGHT: hostile, but only fights back.
+const EXTRA_FLAG_NO_AGGRO_ON_SIGHT := 0x2
+
+enum Reaction { HOSTILE, NEUTRAL, FRIENDLY }
+
+static var _factions: Dictionary
+
+
+## How a creature's faction template regards a player of this race.
+static func creature_reaction(creature_faction: int, race: Race) -> Reaction:
+	var creature := _template(creature_faction)
+	var player := _template(int(_get_factions().races.get(str(race), 1)))
+	if _is_hostile(creature, player):
+		return Reaction.HOSTILE
+	if _is_friendly(creature, player):
+		return Reaction.FRIENDLY
+	return Reaction.NEUTRAL
+
+
+## Whether a creature attacks players of this race on sight. Only creatures
+## hostile to them do, and not those flagged to wait until attacked.
+static func aggressive(creature: Dictionary, race: Race) -> bool:
+	if int(creature.get("ExtraFlags", 0)) & EXTRA_FLAG_NO_AGGRO_ON_SIGHT:
+		return false
+	return creature_reaction(int(creature.get("Faction", 0)), race) == Reaction.HOSTILE
+
+
+## FactionTemplateEntry::IsHostileTo: named enemies and friends first, then
+## the enemy group mask against the other's group.
+static func _is_hostile(this: Dictionary, other: Dictionary) -> bool:
+	if int(other.faction) > 0:
+		if int(other.faction) in this.enemies:
+			return true
+		if int(other.faction) in this.friends:
+			return false
+	return int(this.enemy_group) & int(other.group) != 0
+
+
+## FactionTemplateEntry::IsFriendlyTo.
+static func _is_friendly(this: Dictionary, other: Dictionary) -> bool:
+	if int(other.faction) > 0:
+		if int(other.faction) in this.enemies:
+			return false
+		if int(other.faction) in this.friends:
+			return true
+	return int(this.friend_group) & int(other.group) != 0 or int(this.group) & int(other.friend_group) != 0
+
+
+static func _template(id: int) -> Dictionary:
+	return _get_factions().templates.get(str(id), { "faction": 0, "group": 0, "friend_group": 0, "enemy_group": 0, "enemies": [], "friends": [] })
+
+
+static func _get_factions() -> Dictionary:
+	if _factions.is_empty():
+		_factions = JSON.parse_string(FileAccess.get_file_as_string(FACTIONS_PATH))
+	return _factions

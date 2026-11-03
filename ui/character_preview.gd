@@ -1,11 +1,18 @@
 class_name CharacterPreview
 extends SubViewportContainer
-## A slowly turning model of a character for the login screens, rendered at low
-## resolution like the game. Shows the race's placeholder look from Player.
+## A model of a character for the login screens, rendered at low resolution
+## like the game. Shows the race's placeholder look from Player. It stands
+## still, facing the camera, until the player drags it with the left mouse
+## button to turn it.
 
 ## Screen pixels per rendered pixel.
 @export var pixel_scale := 3
-@export var turn_speed := 0.5
+## Radians of turn per screen pixel dragged.
+@export var drag_turn := 0.01
+
+## Kept across previews, so rebuilding a screen (picking a race) keeps the turn.
+static var _facing := PI
+var _dragging := false
 
 var _model := Node3D.new()
 var _body := MeshInstance3D.new()
@@ -16,7 +23,7 @@ func _ready() -> void:
 	stretch = true
 	stretch_shrink = pixel_scale
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	var viewport := SubViewport.new()
 	viewport.own_world_3d = true
 	viewport.transparent_bg = true
@@ -61,7 +68,7 @@ func _ready() -> void:
 	gold.albedo_color = Color(0.95, 0.75, 0.3)
 	nose.material_override = gold
 	_model.add_child(nose)
-	_model.rotation.y = PI
+	_model.rotation.y = _facing
 	viewport.add_child(_model)
 
 
@@ -70,5 +77,13 @@ func show_race(race: ClassicData.Race) -> void:
 	_material.albedo_color = Player.race_color(race)
 
 
-func _process(delta: float) -> void:
-	_model.rotation.y += turn_speed * delta
+func _gui_input(event: InputEvent) -> void:
+	var button := event as InputEventMouseButton
+	if button and button.button_index == MOUSE_BUTTON_LEFT:
+		_dragging = button.pressed
+		accept_event()
+	var motion := event as InputEventMouseMotion
+	if motion and _dragging:
+		_facing = wrapf(_facing + motion.relative.x * drag_turn, -PI, PI)
+		_model.rotation.y = _facing
+		accept_event()

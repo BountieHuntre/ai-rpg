@@ -40,5 +40,12 @@ Class ids: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman, 8 Mage,
 Formulas in `scripts/stats/` follow the CMaNGOS classic and vmangos server code
 (`StatSystem.cpp`, `Player.cpp`, `Unit.cpp`, `Formulas.h`).
 
+`factions.json` is the client's FactionTemplate table and each race's template
+(ChrRaces), from wago.tools' Classic Era exports via
+`tools/classic_db/fetch_client_tables.py`. `ClassicData` follows
+FactionTemplateEntry::IsHostileTo and IsFriendlyTo in CMaNGOS: a creature
+attacks on sight only if its template is hostile to the player's and its
+creature_template ExtraFlags lack CREATURE_EXTRA_FLAG_NO_AGGRO_ON_SIGHT (0x2).
+
 The CMaNGOS projects are GPL-licensed. Check the licensing of this data before
 shipping the game commercially.

@@ -24,6 +24,7 @@ var _save_queued := false
 ## without this a window there would highlight rows and show tooltips.
 var _drag_shield := Control.new()
 var _menu := GameMenu.new()
+var _console := DevConsole.new()
 
 
 ## Runs before the player and HUD are ready. Started straight from the editor,
@@ -59,6 +60,11 @@ func _ready() -> void:
 	menu_layer.layer = 50
 	add_child(menu_layer)
 	menu_layer.add_child(_menu)
+	var console_layer := CanvasLayer.new()
+	console_layer.layer = 40
+	add_child(console_layer)
+	console_layer.add_child(_console)
+	_console.setup(_player, _world, save_game)
 	_menu.log_out_requested.connect(_log_out)
 	_menu.exit_requested.connect(func() -> void:
 		save_game()
@@ -168,6 +174,8 @@ func _fit_game_view() -> void:
 
 
 func _on_camera_clicked(window_position: Vector2, button: MouseButton) -> void:
+	if button == MOUSE_BUTTON_LEFT and _hud.drop_held_item():
+		return
 	_player.targeting.on_camera_clicked(window_position / _game_view.stretch_shrink, button)
 
 

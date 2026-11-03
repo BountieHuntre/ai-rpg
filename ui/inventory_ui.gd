@@ -4,6 +4,8 @@ extends Control
 ## stats. Classic controls: drag an item to another slot, or click to pick it
 ## up and click again to put it down or swap. Right-click equips or uses an
 ## item from the bags, unequips equipped items, and cancels a held item.
+## Dropping a held item over the world, away from every window, asks
+## "Do you want to destroy ...?" as classic does.
 ## Slot boxes are built once and redrawn in place. Freeing a slot while it
 ## handles a mouse press crashes Godot, so windows are only rebuilt (deferred)
 ## when bags are added or removed.
@@ -46,6 +48,10 @@ var _held_icon: Control
 ## True while a vendor window is open: right-clicking bag items sells them.
 var selling := false
 var _rebuild_queued := false
+## Whether a window point is over the HUD (any window, bar or frame), set by
+## the HUD. Releasing a dragged item anywhere else offers to destroy it.
+var is_over_ui := func(_point: Vector2) -> bool: return false
+var _destroy_prompt: Control
 
 
 func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemTooltip, open: Dictionary) -> void:
@@ -72,6 +78,9 @@ func open_state() -> Dictionary:
 
 ## Esc: drops the held item, or closes open windows. Returns whether it did anything.
 func close_one() -> bool:
+	if _destroy_prompt:
+		_answer_destroy(false)
+		return true
 	if not _held.is_empty():
 		_set_held({})
 		return true
@@ -123,6 +132,7 @@ func _rebuild() -> void:
 		child.queue_free()
 	_views.clear()
 	_held_icon = null
+	_destroy_prompt = null
 	_build_character_window()
 	_build_bags_window()
 	_layout = _current_layout()
@@ -226,7 +236,7 @@ func _slot(parent: Control, at: Vector2, ref: Dictionary) -> void:
 	_draw_view(view)
 	box.mouse_entered.connect(func() -> void:
 		var current := Inventory.stack_at(ref)
-		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)))
+		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)), ref.kind == "bag")
 	)
 	box.mouse_exited.connect(func() -> void: _tooltip.show_item({}))
 	box.gui_input.connect(func(event: InputEvent) -> void: _on_slot_input(event, ref))
@@ -254,7 +264,7 @@ func _draw_view(view: Dictionary) -> void:
 
 func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 	var button := event as InputEventMouseButton
-	if button == null:
+	if button == null or _destroy_prompt:
 		return
 	var error := ""
 	if button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
@@ -271,6 +281,10 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 		# a different slot finishes a drag; over the same slot the item stays
 		# on the cursor for click-to-place.
 		var target := _view_at(button.global_position)
+		if not _held.is_empty() and target.is_empty() and not is_over_ui.call(button.global_position):
+			drop_held_on_world()
+			get_viewport().set_input_as_handled()
+			return
 		if _held.is_empty() or target.is_empty() or target.ref == _held:
 			return
 		var from := _held
@@ -304,6 +318,50 @@ func _right_click_bag_item(ref: Dictionary) -> String:
 	if not stack.is_empty() and int(ItemDB.get_item(stack.id).get("spellid_1", 0)) > 0:
 		return _player.spells.use_item(ref)
 	return Inventory.use_from_bag(ref)
+
+
+## Asks to destroy the held item, for a drop or click over the world. Returns
+## whether an item was held. Bags in the bag slots are just put back.
+func drop_held_on_world() -> bool:
+	if _held.is_empty() or _destroy_prompt:
+		return not _held.is_empty()
+	if _held.kind == "bag_slot":
+		_set_held({})
+		return true
+	var stack := Inventory.stack_at(_held)
+	var item := ItemDB.get_item(stack.id)
+	var what: String = item.name if int(stack.count) <= 1 else "%d %s" % [stack.count, item.name]
+	_tooltip.show_item({})
+	_destroy_prompt = _panel(Vector2.ZERO, Vector2(150, 40))
+	_destroy_prompt.name = "DestroyPrompt"
+	_destroy_prompt.position = (get_viewport_rect().size - _destroy_prompt.size) / 2 - Vector2(0, 40) * _ui_scale
+	var question := _text(_destroy_prompt, Vector2(4, 4), "Do you want to destroy %s?" % what, Color.WHITE, FONT_SIZE)
+	question.size.x = 142 * _ui_scale
+	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	question.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for i in 2:
+		var choice := Button.new()
+		choice.text = ["Yes", "No"][i]
+		choice.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+		choice.position = Vector2(30 + i * 52, 24) * _ui_scale
+		choice.size = Vector2(38, 12) * _ui_scale
+		var destroy := i == 0
+		# Deferred: the prompt is freed in answer, and a button can't be freed
+		# while it handles its own press.
+		choice.pressed.connect(func() -> void: _answer_destroy.call_deferred(destroy))
+		_destroy_prompt.add_child(choice)
+	return true
+
+
+func _answer_destroy(destroy: bool) -> void:
+	if not _destroy_prompt:
+		return
+	_destroy_prompt.queue_free()
+	_destroy_prompt = null
+	var ref := _held
+	_set_held({})
+	if destroy and not ref.is_empty():
+		Inventory.destroy(ref)
 
 
 func _view_at(point: Vector2) -> Dictionary:

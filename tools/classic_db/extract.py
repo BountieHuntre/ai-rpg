@@ -71,7 +71,7 @@ CREATURE_FIELDS = [
     "Entry", "Name", "SubName", "MinLevel", "MaxLevel", "MinLevelHealth", "MaxLevelHealth",
     "MinLevelMana", "MaxLevelMana", "Armor", "MinMeleeDmg", "MaxMeleeDmg", "MeleeAttackPower",
     "MeleeBaseAttackTime", "Rank", "CreatureType", "Family", "LootId", "MinLootGold", "MaxLootGold",
-    "SpeedWalk", "SpeedRun",
+    "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags",
 ]
 ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",

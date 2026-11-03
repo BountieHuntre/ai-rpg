@@ -7,6 +7,7 @@ extends CanvasLayer
 const BASE_HEIGHT := 270.0
 const FONT_SIZE := 8
 const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
+const TARGET_HEALTH := Color(0.75, 0.2, 0.2)
 ## The cast bar sits above the action bar and the stance bar.
 const CAST_BAR_Y_FROM_BOTTOM := 60.0
 const MESSAGE_TIME := 2.0
@@ -49,7 +50,7 @@ var _target_level: Label
 var _banner: Label
 var _durability_warning: Label
 var _banner_left := 0.0
-var _target_health: Control
+var _target_health: ColorRect
 var _target_health_text: Label
 var _cast_frame: Control
 var _cast_fill: Control
@@ -105,6 +106,30 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 		)
 
 
+## Whether a window point is over any visible HUD control that takes the
+## mouse: windows, bars and frames.
+func is_over_ui(point: Vector2) -> bool:
+	return _over_control(self, point)
+
+
+func _over_control(node: Node, point: Vector2) -> bool:
+	for child in node.get_children():
+		var control := child as Control
+		if control == null or not control.visible:
+			continue
+		if control.mouse_filter == Control.MOUSE_FILTER_STOP and control.get_global_rect().has_point(point):
+			return true
+		if _over_control(control, point):
+			return true
+	return false
+
+
+## A click on the world with an item on the cursor asks to destroy it.
+## Returns whether it did, so the click doesn't also pick a target.
+func drop_held_item() -> bool:
+	return _inventory.drop_held_on_world()
+
+
 func _process(delta: float) -> void:
 	if not _player:
 		return
@@ -123,9 +148,20 @@ func _process(delta: float) -> void:
 		_player_xp_text.text = "%d/%d XP" % [GameState.xp, needed]
 
 	var target := _player.targeting.target_combatant()
-	_target_frame.visible = target != null
-	if target:
+	var npc := _player.targeting.target as Npc
+	_target_frame.visible = target != null or npc != null
+	if npc:
+		# Friendly NPCs: green name, full bar, no level or numbers.
+		_target_name.text = npc.npc_name
+		_target_name.add_theme_color_override("font_color", Targeting.FRIENDLY_COLOR)
+		_target_level.text = ""
+		_set_bar(_target_health, 1.0, 1.0)
+		_target_health.color = Targeting.FRIENDLY_COLOR.darkened(0.3)
+		_target_health_text.text = ""
+	elif target:
+		_target_health.color = TARGET_HEALTH
 		_target_name.text = target.display_name
+		_target_name.add_theme_color_override("font_color", Targeting.reaction_color(target.body))
 		_target_level.text = "Lv %d" % target.level
 		_target_level.add_theme_color_override("font_color", CombatRules.level_color(me.level, target.level))
 		_set_bar(_target_health, target.health, target.max_health)
@@ -187,6 +223,7 @@ func _build() -> void:
 	_loot_window.message.connect(_on_loot_message)
 	_loot_window.closed.connect(func() -> void: _loot_corpse = null)
 	_inventory = InventoryUI.new()
+	_inventory.is_over_ui = is_over_ui
 	add_child(_inventory)
 	_spells = SpellUI.new()
 	add_child(_spells)
@@ -252,7 +289,7 @@ func _build_target_frame() -> void:
 	_target_frame = _frame(Vector2(100, 4), Vector2(90, 24))
 	_target_name = _label(_target_frame, Vector2(3, 0), "")
 	_target_level = _right_label(_target_frame, Vector2(3, 0), 84)
-	_target_health = _bar(_target_frame, Vector2(3, 12), Vector2(84, 10), Color(0.75, 0.2, 0.2))
+	_target_health = _bar(_target_frame, Vector2(3, 12), Vector2(84, 10), TARGET_HEALTH) as ColorRect
 	_target_health_text = _bar_text(_target_frame, Vector2(3, 12), Vector2(84, 10))
 
 
@@ -314,7 +351,7 @@ func _update_enemy_bars() -> void:
 func _build_npc_names() -> void:
 	for npc: Node in get_tree().get_nodes_in_group("npcs"):
 		var name_label := _label(self, Vector2.ZERO, "%s
-<%s>" % [npc.npc_name, npc.subname], Color(0.25, 1, 0.25))
+<%s>" % [npc.npc_name, npc.subname], Targeting.FRIENDLY_COLOR)
 		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_npc_names.append({ "npc": npc, "label": name_label })
@@ -335,7 +372,7 @@ func _build_enemy_bars() -> void:
 	for node in get_tree().get_nodes_in_group("combatants"):
 		if node != _player.combatant:
 			var frame := _frame(Vector2.ZERO, ENEMY_BAR_SIZE)
-			var fill := _bar(frame, Vector2(1, 1), ENEMY_BAR_SIZE - Vector2(2, 2), Color(0.8, 0.2, 0.2))
+			var fill := _bar(frame, Vector2(1, 1), ENEMY_BAR_SIZE - Vector2(2, 2), Targeting.reaction_color(node.body))
 			_enemy_bars.append({ "combatant": node, "frame": frame, "fill": fill })
 
 

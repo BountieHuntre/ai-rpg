@@ -56,6 +56,11 @@ var _modal: Control
 var _settings := ConfigFile.new()
 var _account := ""
 var _remember := false
+## Remembering the password keeps only its length: no server ever checks it,
+## so the field is refilled with stand-in characters rather than saving what
+## was typed.
+var _remember_password := false
+var _password_length := 0
 var _characters: Array[Dictionary] = []
 var _selected := 0
 var _race := ClassicData.Race.HUMAN
@@ -72,6 +77,8 @@ func _ready() -> void:
 	_settings.load(_settings_path())
 	_remember = _settings.get_value("login", "remember", false)
 	_account = _settings.get_value("login", "account", "") if _remember else ""
+	_remember_password = _settings.get_value("login", "remember_password", false)
+	_password_length = _settings.get_value("login", "password_length", 0) if _remember_password else 0
 	_build_background()
 	_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_layer)
@@ -159,6 +166,7 @@ func _build_login() -> void:
 	form.add_child(_label("Account Password", GOLD))
 	var password := LineEdit.new()
 	password.secret = true
+	password.text = "*".repeat(_password_length)
 	form.add_child(password)
 	var login := Button.new()
 	login.text = "Login"
@@ -168,6 +176,11 @@ func _build_login() -> void:
 	remember.button_pressed = _remember
 	remember.toggled.connect(func(on: bool) -> void: _remember = on)
 	form.add_child(remember)
+	var remember_password := CheckBox.new()
+	remember_password.text = "Remember Password"
+	remember_password.button_pressed = _remember_password
+	remember_password.toggled.connect(func(on: bool) -> void: _remember_password = on)
+	form.add_child(remember_password)
 	var submit := func(_text := "") -> void: _login(password.text)
 	login.pressed.connect(submit)
 	account.text_submitted.connect(submit)
@@ -179,7 +192,8 @@ func _build_login() -> void:
 	quit.text = "Quit"
 	quit.pressed.connect(get_tree().quit)
 	_place(quit, Vector2(_width() - 54, 252), Vector2(50, 14))
-	(password if not _account.is_empty() else account).grab_focus.call_deferred()
+	var focus: Control = account if _account.is_empty() else login if not password.text.is_empty() else password
+	focus.grab_focus.call_deferred()
 
 
 ## There's no server: any account and password get in, after the usual steps.
@@ -192,6 +206,8 @@ func _login(password: String) -> void:
 		return
 	_settings.set_value("login", "remember", _remember)
 	_settings.set_value("login", "account", _account.strip_edges() if _remember else "")
+	_settings.set_value("login", "remember_password", _remember_password)
+	_settings.set_value("login", "password_length", password.length() if _remember_password else 0)
 	_settings.save(_settings_path())
 	for step: Array in LOGIN_STEPS:
 		_show_modal(step[0], ["Cancel"])

@@ -261,12 +261,19 @@ static func can_use(item: Dictionary) -> String:
 	var class_mask := int(item.AllowableClass)
 	if class_mask > 0 and (class_mask & (1 << (GameState.char_class - 1))) == 0:
 		return ERR_CLASS
+	if not has_proficiency(item):
+		return ERR_PROFICIENCY
+	return ""
+
+
+## Whether the character has the skill for a weapon or armor type.
+## Miscellaneous armor (rings, cloaks...) and other items need none.
+static func has_proficiency(item: Dictionary) -> bool:
 	var item_class := int(item["class"])
 	var subclass := int(item.subclass)
 	if item_class == ItemDB.ITEM_CLASS_WEAPON or (item_class == ItemDB.ITEM_CLASS_ARMOR and subclass != ARMOR_SUBCLASS_MISC):
-		if not ("%d:%d" % [item_class, subclass] in GameState.proficiencies):
-			return ERR_PROFICIENCY
-	return ""
+		return "%d:%d" % [item_class, subclass] in GameState.proficiencies
+	return true
 
 
 ## Totals from everything equipped, for CharacterStats.
@@ -366,6 +373,15 @@ static func remove_one(ref: Dictionary) -> void:
 	stack.count -= 1
 	if stack.count <= 0:
 		_set_stack(ref, {})
+	GameState.inventory_changed.emit()
+
+
+## Destroys a whole stack in the bags or equipment, as dropping an item off
+## the windows does in classic. Bags themselves can't be destroyed this way.
+static func destroy(ref: Dictionary) -> void:
+	if ref.kind == "bag_slot" or stack_at(ref).is_empty():
+		return
+	_set_stack(ref, {})
 	GameState.inventory_changed.emit()
 
 

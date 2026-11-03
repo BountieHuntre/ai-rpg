@@ -14,6 +14,10 @@ from wago.tools' Classic Era (1.15) client exports.
 
 Starting gear is CharStartOutfit, by race and class (Player::Create in CMaNGOS
 gives each new character these items).
+
+Factions are FactionTemplate, for who is hostile to whom (FactionTemplateEntry
+in CMaNGOS), and each race's template from ChrRaces, into
+data/classic/factions.json.
 """
 
 import csv
@@ -52,6 +56,19 @@ def main():
     with open(os.path.join(OUT_DIR, "start_outfits.json"), "w", encoding="utf8") as out:
         json.dump(dict(sorted(outfits.items())), out, separators=(",", ":"))
     print(f"{len(outfits)} starting outfits")
+
+    templates = {}
+    for row in fetch("FactionTemplate"):
+        templates[row["ID"]] = {
+            "faction": int(row["Faction"]), "group": int(row["FactionGroup"]),
+            "friend_group": int(row["FriendGroup"]), "enemy_group": int(row["EnemyGroup"]),
+            "enemies": [int(row[f"Enemies_{i}"]) for i in range(8) if int(row[f"Enemies_{i}"]) > 0],
+            "friends": [int(row[f"Friend_{i}"]) for i in range(8) if int(row[f"Friend_{i}"]) > 0],
+        }
+    races = {row["ID"]: int(row["FactionID"]) for row in fetch("ChrRaces") if int(row["ID"]) <= 8}
+    with open(os.path.join(OUT_DIR, "factions.json"), "w", encoding="utf8") as out:
+        json.dump({"templates": templates, "races": races}, out, separators=(",", ":"))
+    print(f"{len(templates)} faction templates")
 
 
 if __name__ == "__main__":

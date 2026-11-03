@@ -27,6 +27,11 @@ const WEAPON_TYPES := {
 }
 const ARMOR_TYPES := { 1: "Cloth", 2: "Leather", 3: "Mail", 4: "Plate", 5: "Buckler", 6: "Shield" }
 const STAT_MODS := { 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "Intellect", 6: "Spirit", 7: "Stamina" }
+## Every playable class in an AllowableClass mask. Items allowing all of them
+## show no "Classes:" line.
+const ALL_CLASSES_MASK := 1503
+## Unmet requirements show in this red, as in the classic tooltip.
+const UNMET := Color(1, 0.13, 0.13)
 const BONDING := { 1: "Binds when picked up", 2: "Binds when equipped", 3: "Binds when used", 4: "Quest Item" }
 
 static var _items: Dictionary
@@ -66,8 +71,11 @@ static func money_words(copper: int) -> String:
 	return ", ".join(parts)
 
 
-## The classic tooltip as rows of [left text, right text, color]. Soulbound
-## replaces the binding line once the item has bound.
+## The classic tooltip as rows of [left text, right text, color], with an
+## optional fourth entry coloring the right text on its own. Soulbound
+## replaces the binding line once the item has bound. Whatever stops the
+## character equipping it is red: the weapon or armor type without the
+## proficiency, the classes line, the level.
 static func tooltip(item: Dictionary, soulbound := false, current_durability := -1) -> Array[Array]:
 	var lines: Array[Array] = []
 	lines.append([item.name, "", quality_color(item)])
@@ -83,7 +91,7 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 	elif item_class == ITEM_CLASS_ARMOR:
 		kind = ARMOR_TYPES.get(int(item.subclass), "")
 	if not slot.is_empty():
-		lines.append(_line(slot, kind))
+		lines.append([slot, kind, Color.WHITE, Color.WHITE if Inventory.has_proficiency(item) else UNMET])
 	if int(item.dmg_max1) > 0:
 		var speed := int(item.delay) / 1000.0
 		lines.append(_line("%d - %d Damage" % [item.dmg_min1, item.dmg_max1], "Speed %.2f" % speed))
@@ -102,9 +110,16 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 		var current := int(item.MaxDurability) if current_durability < 0 else current_durability
 		var color := Color(1, 0.13, 0.13) if current == 0 else Color.WHITE
 		lines.append(["Durability %d / %d" % [current, item.MaxDurability], "", color])
+	var class_mask := int(item.AllowableClass)
+	if class_mask > 0 and class_mask & ALL_CLASSES_MASK != ALL_CLASSES_MASK:
+		var names := PackedStringArray()
+		for id: int in ClassicData.CLASS_NAMES:
+			if class_mask & (1 << (id - 1)):
+				names.append(ClassicData.CLASS_NAMES[id])
+		var allowed := class_mask & (1 << (GameState.char_class - 1)) != 0
+		lines.append(["Classes: " + ", ".join(names), "", Color.WHITE if allowed else UNMET])
 	if int(item.RequiredLevel) > 1:
-		# Classic shows unmet requirements in red.
-		var color := Color.WHITE if int(item.RequiredLevel) <= GameState.level else Color(1, 0.13, 0.13)
+		var color := Color.WHITE if int(item.RequiredLevel) <= GameState.level else UNMET
 		lines.append(["Requires Level %d" % item.RequiredLevel, "", color])
 	if not str(item.description).is_empty():
 		lines.append(["\"%s\"" % item.description, "", Color("ffd100")])

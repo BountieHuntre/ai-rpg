@@ -7,23 +7,46 @@ signal loot_requested(corpse: Enemy, take_all: bool)
 signal npc_clicked(npc: Node3D)
 
 const UNIT_LAYER := 2
+const HOSTILE_COLOR := Color(0.8, 0.2, 0.2)
+const NEUTRAL_COLOR := Color(0.95, 0.8, 0.15)
+const FRIENDLY_COLOR := Color(0.25, 1, 0.25)
+## In combat with the target, the ring flashes red this many times a second.
+const COMBAT_FLASH_RATE := 2.0
 
 @export var tab_range := 40.0
 
-var target: Enemy
+## An Enemy or a friendly Npc.
+var target: Node3D
 
 @onready var _player: Player = get_parent()
-@onready var _ring: Node3D = $Ring
+@onready var _ring: MeshInstance3D = $Ring
+var _ring_material := StandardMaterial3D.new()
+var _flash_time := 0.0
 
 
+## The target's Combatant, or null for none or a friendly NPC.
 func target_combatant() -> Combatant:
-	return target.combatant if target else null
+	var enemy := target as Enemy
+	return enemy.combatant if enemy else null
 
 
-func set_target(enemy: Enemy) -> void:
-	if enemy and enemy != target:
+## Reaction colors: red for creatures that attack on sight, yellow for
+## passive ones that only fight back, green for friendly NPCs.
+static func reaction_color(unit: Node) -> Color:
+	if unit is Npc:
+		return FRIENDLY_COLOR
+	var enemy := unit as Enemy
+	if enemy and not enemy.is_aggressive():
+		return NEUTRAL_COLOR
+	return HOSTILE_COLOR
+
+
+func set_target(node: Node3D) -> void:
+	if node and node != target:
 		Sfx.play("target")
-	target = enemy
+	target = node
+	if target:
+		_ring_material.albedo_color = reaction_color(target)
 	# Auto-attack follows target changes but never starts from selecting alone.
 	if _player.combatant.attack_target:
 		_player.combatant.attack_target = target_combatant()
@@ -47,7 +70,9 @@ func cycle() -> void:
 	set_target(candidates[next % candidates.size()])
 
 
-## Left click selects the enemy under the cursor. Right click also attacks it.
+## As in classic: left click selects the creature or NPC under the cursor.
+## Right click also acts on it: attacks a creature, talks to an NPC, loots a
+## corpse.
 func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	var camera := _player.get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_position)
@@ -55,8 +80,10 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
 	query.exclude = [_player.get_rid()]
 	var collider: Object = _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider")
-	if collider is Npc and button == MOUSE_BUTTON_RIGHT:
-		npc_clicked.emit(collider)
+	if collider is Npc:
+		set_target(collider)
+		if button == MOUSE_BUTTON_RIGHT:
+			npc_clicked.emit(collider)
 		return
 	var enemy := collider as Enemy
 	if not enemy:
@@ -71,9 +98,30 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 		_player.combatant.attack_target = enemy.combatant
 
 
-func _process(_delta: float) -> void:
-	if target and not target.combatant.is_alive():
+func _ready() -> void:
+	_ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring.material_override = _ring_material
+
+
+## Whether the target is fighting the player: being auto-attacked, or chasing.
+func in_combat_with_target() -> bool:
+	var enemy := target as Enemy
+	if enemy == null or not enemy.combatant.is_alive():
+		return false
+	return _player.combatant.attack_target == enemy.combatant or enemy.state == Enemy.State.CHASE
+
+
+func _process(delta: float) -> void:
+	if target is Enemy and not (target as Enemy).combatant.is_alive():
 		set_target(null)
 	_ring.visible = target != null
 	if target:
 		_ring.global_position = target.global_position + Vector3.UP * 0.05
+		if in_combat_with_target():
+			# Flashes between bright and dark red.
+			_flash_time += delta
+			var pulse := 0.5 + 0.5 * cos(_flash_time * TAU * COMBAT_FLASH_RATE)
+			_ring_material.albedo_color = HOSTILE_COLOR.darkened(0.7).lerp(Color(1, 0.25, 0.2), pulse)
+		else:
+			_flash_time = 0.0
+			_ring_material.albedo_color = reaction_color(target)

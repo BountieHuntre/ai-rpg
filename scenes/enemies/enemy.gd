@@ -109,7 +109,7 @@ func _physics_process(delta: float) -> void:
 	var speed: float = _data.SpeedRun * BASE_RUN_SPEED
 	match state:
 		State.IDLE:
-			if player and player.combatant.is_alive():
+			if player and player.combatant.is_alive() and is_aggressive():
 				if global_position.distance_to(player.global_position) <= aggro_radius(player.combatant.level):
 					_start_chase()
 			if state == State.IDLE:
@@ -196,6 +196,12 @@ func _start_return() -> void:
 	state = State.RETURN
 	combatant.attack_target = null
 	combatant.invulnerable = true
+
+
+## Whether this creature attacks the player on sight. Neutral creatures, and
+## hostile ones flagged to wait, only fight back when attacked.
+func is_aggressive() -> bool:
+	return ClassicData.aggressive(_data, GameState.race)
 
 
 func _on_attacked() -> void:
