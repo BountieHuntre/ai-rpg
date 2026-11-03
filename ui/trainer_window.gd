@@ -21,12 +21,9 @@ const UNAVAILABLE := Color(1, 0.25, 0.25)
 const USED := Color(0.55, 0.55, 0.55)
 const NOT_IN_GAME := Color(0.35, 0.35, 0.4)
 const SELECTED := Color(1, 1, 1, 0.12)
-## Spells whose effects the game has so far. The rest show but can't be trained.
-const IN_GAME := [
-	"Mending Radiance", "Oath of Valor", "Bulwark Presence", "Boon of Strength", "Verdict",
-	"Oath of the Vanguard", "Hallowed Guard", "Stunning Gavel", "Cleansing Touch", "Parry",
-	"Last Rite", "Boon of Shelter",
-]
+## Spells that need another player (a party member to protect or bring back).
+## There's no grouping yet, so they show but can't be trained.
+const NEEDS_PARTY := ["Hallowed Ransom", "Boon of the Martyr", "Revival"]
 
 var npc: Node3D
 
@@ -67,8 +64,8 @@ func entry_state(entry: Dictionary) -> Array:
 	var spell := SpellDB.get_spell(main_id)
 	if main_id in GameState.known_spells:
 		return ["used", ""]
-	if not spell.SpellName in IN_GAME:
-		return ["not_in_game", "Not in the game yet"]
+	if spell.SpellName in NEEDS_PARTY:
+		return ["not_in_game", "Needs a party"]
 	if int(entry.level) > GameState.level:
 		return ["unavailable", "Requires Level %d" % entry.level]
 	var previous := SpellDB.previous_rank(main_id)
@@ -192,6 +189,9 @@ func _select(index: int) -> void:
 	var entry: Dictionary = _rows[index].entry
 	var state: Array = _rows[index].state
 	var cost := "Cost: %s" % ItemDB.money_text(int(entry.cost))
+	# First ranks that are talents in classic are taught here for free.
+	if entry.get("talent", false):
+		cost = "Free (a talent in classic)"
 	_details.text = cost if str(state[1]).is_empty() else "%s   %s" % [cost, state[1]]
 
 

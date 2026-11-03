@@ -203,6 +203,7 @@ SPELLS = {
     "Blessing of Salvation": "Boon of Quietude",
     "Blessing of Light": "Boon of Radiance",
     "Blessing of Sanctuary": "Boon of Refuge",
+    "Blessing of Kings": "Boon of Sovereigns",
     "Greater Blessing of Kings": "Greater Boon of Sovereigns",
     "Greater Blessing of Might": "Greater Boon of Strength",
     "Greater Blessing of Wisdom": "Greater Boon of Clarity",

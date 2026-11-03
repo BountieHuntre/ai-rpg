@@ -47,12 +47,26 @@ SEAL_OF_RIGHTEOUSNESS_PROCS = {
 }
 # Holy Light's script effect heals through this spell (SpellEffects.cpp).
 HOLY_LIGHT_HEAL = 19968
+# First ranks the trainer doesn't sell because classic gives them as talents.
+# There are no talents yet, so the game's trainer sells them at the talent's
+# tier level: Seal of Command, Consecration, Blessing of Kings, Blessing of
+# Sanctuary, Holy Shock and Holy Shield.
+TALENT_FIRST_RANKS = {"paladin": [[20375, 20], [26573, 20], [20217, 20], [20911, 30], [20473, 40], [20925, 40]]}
+# Judgement of Light and Wisdom heal or restore through a spell per rank, picked
+# in UnitAuraProcHandler.cpp (HandleDummyAuraProc), not linked in the data.
+JUDGEMENT_PROC_SPELLS = {
+    20185: 20267, 20344: 20341, 20345: 20342, 20346: 20343,
+    20186: 20268, 20354: 20352, 20355: 20353,
+}
+# Holy Shock's dummy effect casts a damage or a heal spell for its rank
+# (SpellEffects.cpp): [damage, heal].
+HOLY_SHOCK_SPELLS = {20473: [25912, 25914], 20929: [25911, 25913], 20930: [25902, 25903]}
 
 TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
     "creature_template", "creature_loot_template", "reference_loot_template", "creature",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
-    "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template",
+    "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template", "spell_proc_event",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -68,6 +82,7 @@ SPELL_FIELDS = [
     "EffectTriggerSpell",
 )]
 SPELL_EFFECT_LEARN = 36
+SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
 ITEM_CLASS_CONSUMABLE = 0
 ITEM_SUBCLASS_FOOD = 5
@@ -336,6 +351,9 @@ def export_spells(db, item_spells):
             entries.append({"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]),
                             "level": int(r["reqlevel"])})
             wanted.update(learned)
+        for spell_id, level in TALENT_FIRST_RANKS.get(name, []):
+            entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "talent": True})
+            wanted.add(spell_id)
         trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
 
     start = {}
@@ -362,6 +380,11 @@ def export_spells(db, item_spells):
         # Seals keep their judgement spell id (minus one) in effect 3's base points.
         if int(spell["Effect3"]) == 6 and int(spell["EffectApplyAuraName3"]) == SPELL_AURA_DUMMY:
             linked.append(int(spell["EffectBasePoints3"]) + 1)
+        # Judgement of Command's dummy effect names its damage spell the same way.
+        if int(spell["Effect1"]) == SPELL_EFFECT_DUMMY and int(spell["EffectBasePoints1"]) > 1000:
+            linked.append(int(spell["EffectBasePoints1"]) + 1)
+        linked.append(JUDGEMENT_PROC_SPELLS.get(spell_id, 0))
+        linked.extend(HOLY_SHOCK_SPELLS.get(spell_id, []))
         for other in linked:
             if other and other not in wanted and str(other) in spells:
                 wanted.add(other)
@@ -377,8 +400,13 @@ def export_spells(db, item_spells):
               for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
     bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}
              for r in db["spell_bonus_data"] if int(r["entry"]) in wanted}
+    # Proc rates (procs per minute) and cooldowns, by spell, from spell_proc_event.
+    procs = {r["entry"]: {"ppm": float(r["ppmRate"]), "chance": float(r["CustomChance"]), "cooldown": float(r["Cooldown"])}
+             for r in db["spell_proc_event"] if int(r["entry"]) in wanted}
     write("spells.json", {"spells": out, "chains": chains, "bonus": bonus, "trainers": trainers,
-                          "start_spells": start,
+                          "start_spells": start, "procs": procs,
+                          "judgement_procs": {str(k): v for k, v in JUDGEMENT_PROC_SPELLS.items()},
+                          "holy_shock": {str(k): v for k, v in HOLY_SHOCK_SPELLS.items()},
                           "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
     print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
 

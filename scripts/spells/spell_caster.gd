@@ -23,6 +23,13 @@ const ERR_PASSIVE := "That ability is passive."
 ## (the spell's CategoryRecoveryTime); here it's 15 minutes.
 const HOMING_TOKEN_COOLDOWN := 900.0
 const ERR_NO_OATH := "You have no Oath to pass Verdict on."
+const ERR_TARGET_HEALTH := "Target must be below 20% health."
+## Spells that only affect undead and demons (Banishment, Rebuke the Dead
+## undead only), as their spell_template TargetCreatureType in classic.
+const UNDEAD_OR_DEMON := ["Banishment", "Radiant Fury"]
+const UNDEAD_ONLY := ["Rebuke the Dead"]
+## Proficiencies taught by spells: "item class:subclass".
+const PROFICIENCY_SPELLS := { "Plate Mail": "4:4" }
 ## InterruptFlags: taking damage delays the cast.
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
 const ERR_IN_COMBAT := "You are in combat"
@@ -46,6 +53,8 @@ var _gcd_total := 1.5
 var _cooldowns: Dictionary = {}
 ## Item spell category -> seconds left.
 var _item_cooldowns: Dictionary = {}
+## Combat-driven effects: Oath procs, damage shields, hallowed ground.
+var _procs := SpellProcs.new()
 
 @onready var _player: Player = get_parent()
 
@@ -54,6 +63,7 @@ func _ready() -> void:
 	# The Player's own @onready references aren't set yet while children are readied.
 	var combatant: Combatant = $"../Combatant"
 	combatant.auto_attack_landed.connect(_on_auto_attack_landed)
+	add_child(_procs)
 	combatant.took_damage.connect(func(amount: int, _source: Combatant, _crit: bool) -> void:
 		if amount > 0:
 			_push_back()
@@ -175,6 +185,10 @@ func _pick_target(spell: Dictionary) -> Combatant:
 	match SpellDB.target_type(spell):
 		SpellDB.TARGET_ENEMY:
 			return _player.targeting.target_combatant()
+		SpellDB.TARGET_ANY:
+			# Radiant Jolt: the enemy targeted, or yourself.
+			var enemy := _player.targeting.target_combatant()
+			return enemy if enemy and enemy.is_alive() else _player.combatant
 		_:
 			return _player.combatant
 
@@ -200,11 +214,18 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 		return ERR_NO_MANA
 	if int(spell.Effect1) == SpellDB.EFFECT_DISPEL and not _has_dispellable(spell, target):
 		return ERR_NOTHING_TO_DISPEL
-	if SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
+	var at_enemy := SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY or (SpellDB.target_type(spell) == SpellDB.TARGET_ANY and target != me)
+	if at_enemy:
 		if target == null:
 			return ERR_NO_TARGET
 		if not target.is_alive():
 			return ERR_DEAD_TARGET
+		if spell.SpellName in UNDEAD_OR_DEMON and not _creature_type(target) in [SpellDB.CREATURE_UNDEAD, SpellDB.CREATURE_DEMON]:
+			return ERR_DEAD_TARGET
+		if spell.SpellName in UNDEAD_ONLY and _creature_type(target) != SpellDB.CREATURE_UNDEAD:
+			return ERR_DEAD_TARGET
+		if spell.SpellName == "Gavel of Reckoning" and target.health > target.max_health * 0.2:
+			return ERR_TARGET_HEALTH
 		if me.distance_to(target) > SpellDB.spell_range(spell):
 			return ERR_RANGE
 		if not _player.is_facing(target.body.global_position):
@@ -214,6 +235,12 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 	return ""
 
 
+## creature_template CreatureType of an enemy, or 0.
+static func _creature_type(target: Combatant) -> int:
+	var enemy := target.body as Enemy
+	return int(Enemy.creature_data(enemy.creature_entry).get("CreatureType", 0)) if enemy else 0
+
+
 ## Purify removes poisons and diseases (dispel types in the effects' misc values).
 func _has_dispellable(spell: Dictionary, target: Combatant) -> bool:
 	var types := []
@@ -221,9 +248,16 @@ func _has_dispellable(spell: Dictionary, target: Combatant) -> bool:
 		if int(spell["Effect%d" % (i + 1)]) == SpellDB.EFFECT_DISPEL:
 			types.append(int(spell["EffectMiscValue%d" % (i + 1)]))
 	for aura in target.auras:
-		if int(aura.spell.get("Dispel", 0)) in types:
+		if _is_harmful(aura) and int(aura.spell.get("Dispel", 0)) in types:
 			return true
 	return false
+
+
+## Cleansing takes only harmful effects: ones an enemy put on the target, not
+## the Paladin's own Boons and Presences (most are magic effects too).
+func _is_harmful(aura: Dictionary) -> bool:
+	var caster: Combatant = aura.caster
+	return caster == null or not is_instance_valid(caster) or not caster.is_player
 
 
 func _has_line_of_sight(target: Combatant) -> bool:
@@ -245,8 +279,19 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
 	match spell.SpellName:
-		"Mending Radiance":
+		"Mending Radiance", "Quick Radiance":
 			_holy_light(spell, target)
+		"Radiant Jolt":
+			_holy_shock(spell, target)
+		"Gavel of Reckoning", "Banishment":
+			_spell_damage(spell, target)
+		"Radiant Fury":
+			_holy_wrath(spell)
+		"Rebuke the Dead":
+			_turn_undead(spell, target)
+		"Hallowed Ground":
+			_procs.hallow_ground(spell, _player.global_position)
+			Sfx.play("buff")
 		"Verdict":
 			_judgement(target)
 		"Stunning Gavel":
@@ -256,7 +301,9 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 		"Homing Token":
 			_go_home(spell)
 		_:
-			if SpellDB.is_seal(spell):
+			if int(spell.Effect1) == SpellDB.EFFECT_DISPEL:
+				_dispel(spell, target)
+			elif SpellDB.is_seal(spell):
 				_apply_seal(spell)
 			elif SpellDB.is_paladin_aura(spell):
 				_replace_own(spell, me, SpellDB.is_paladin_aura)
@@ -296,7 +343,12 @@ func _judgement(target: Combatant) -> void:
 	if judgement.is_empty():
 		return
 	Sfx.play("bolt_hit")
-	if int(judgement.Effect1) == SpellDB.EFFECT_SCHOOL_DAMAGE:
+	if int(judgement.Effect1) == SpellDB.EFFECT_DUMMY:
+		# Verdict of Dominion: Holy damage, doubled on a stunned target
+		# (Judgement of Command's dummy effect in CMaNGOS).
+		var strike := SpellDB.get_spell(int(judgement.EffectBasePoints1) + 1)
+		_spell_damage(strike, target, 2.0 if target.is_stunned() else 1.0, false)
+	elif int(judgement.Effect1) == SpellDB.EFFECT_SCHOOL_DAMAGE:
 		# Judgement of Righteousness.
 		var amount := SpellDB.effect_value(judgement, 0, GameState.level)
 		amount += _spell_power() * SpellDB.direct_coefficient(int(judgement.Id))
@@ -459,14 +511,85 @@ static func learn(ids: Array) -> Array[String]:
 			if replaces or lower_rank:
 				GameState.action_bar[i] = id
 		learned.append(SpellDB.full_name(spell))
+		# Plate Mail teaches wearing plate.
+		var proficiency: String = PROFICIENCY_SPELLS.get(spell.SpellName, "")
+		if not proficiency.is_empty() and not proficiency in GameState.proficiencies:
+			GameState.proficiencies.append(proficiency)
 	GameState.spells_changed.emit()
 	return learned
 
 
+## Mending Radiance and Quick Radiance. Boon of Radiance on the target adds
+## its bonus: the first amount to Mending Radiance, the second to Quick.
 func _holy_light(spell: Dictionary, target: Combatant) -> void:
 	var amount := SpellDB.effect_value(spell, 0, GameState.level)
 	amount += _spell_power() * SpellDB.direct_coefficient(SpellDB.HOLY_LIGHT_HEAL)
+	var boon := target.find_aura(func(other: Dictionary) -> bool: return str(other.SpellName).ends_with("Boon of Radiance"))
+	if not boon.is_empty():
+		amount += boon.amounts[0 if spell.SpellName == "Mending Radiance" else 1]
 	target.heal_with_spell(amount)
+
+
+## Holy damage from a spell's first effect: a spell hit roll (Resist on a
+## miss, unless the spell always hits) and a crit roll.
+func _spell_damage(spell: Dictionary, target: Combatant, multiplier := 1.0, can_miss := true) -> void:
+	var me := _player.combatant
+	me.enter_combat()
+	if can_miss and CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+		target.avoid("Resist", me)
+		return
+	var amount := SpellDB.effect_value(spell, 0, GameState.level) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me) == CombatRules.Outcome.CRIT
+	Sfx.play("bolt_hit")
+	_holy_damage(target, roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
+
+
+## Radiant Jolt: its rank's damage spell on an enemy, or its heal on yourself.
+func _holy_shock(spell: Dictionary, target: Combatant) -> void:
+	var pair := SpellDB.holy_shock_spells(int(spell.Id))
+	if pair.size() < 2:
+		return
+	if target == _player.combatant:
+		var heal := SpellDB.get_spell(int(pair[1]))
+		target.heal_with_spell(SpellDB.effect_value(heal, 0, GameState.level))
+	else:
+		_spell_damage(SpellDB.get_spell(int(pair[0])), target)
+
+
+## Radiant Fury: Holy damage to every undead and demon within its radius.
+func _holy_wrath(spell: Dictionary) -> void:
+	var radius := SpellDB.effect_radius(spell)
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		var kind := _creature_type(enemy.combatant)
+		if enemy.combatant.is_alive() and kind in [SpellDB.CREATURE_UNDEAD, SpellDB.CREATURE_DEMON] \
+				and _player.global_position.distance_to(enemy.global_position) <= radius:
+			_spell_damage(spell, enemy.combatant)
+
+
+## Rebuke the Dead: classic's fear makes the undead run; here it holds them in
+## place for the duration instead (there's no fleeing yet).
+func _turn_undead(spell: Dictionary, target: Combatant) -> void:
+	var me := _player.combatant
+	me.enter_combat()
+	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+		target.avoid("Resist", me)
+		return
+	target.add_aura(spell, me)
+	target.stun(SpellDB.duration(spell))
+
+
+## Cleansing: removes one harmful effect of each dispel type the spell names.
+func _dispel(spell: Dictionary, target: Combatant) -> void:
+	for i in 3:
+		if int(spell["Effect%d" % (i + 1)]) != SpellDB.EFFECT_DISPEL:
+			continue
+		var kind := int(spell["EffectMiscValue%d" % (i + 1)])
+		for aura in target.auras:
+			if _is_harmful(aura) and int(aura.spell.get("Dispel", 0)) == kind:
+				target.remove_aura(int(aura.spell.Id))
+				break
+	Sfx.play("heal")
 
 
 ## Only one seal at a time.

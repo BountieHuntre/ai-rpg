@@ -56,8 +56,10 @@ func refresh() -> void:
 	var base := ClassicData.base_stats(race, char_class, level)
 	var gear := Inventory.gear_totals()
 	gear_stats = gear.stats
+	# Boon of Sovereigns raises every attribute by a percentage.
+	var stat_scale := 1.0 + _combatant.aura_total(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE) / 100.0
 	for i in stats.size():
-		stats[i] = int(base[i]) + int(gear_stats[i])
+		stats[i] = int((int(base[i]) + int(gear_stats[i])) * stat_scale)
 	var strength := stats[ClassicData.Stat.STRENGTH]
 	var agility := stats[ClassicData.Stat.AGILITY]
 	var stamina := stats[ClassicData.Stat.STAMINA]
@@ -80,6 +82,9 @@ func refresh() -> void:
 	c.min_damage = gear.weapon.min * damage_scale
 	c.max_damage = gear.weapon.max * damage_scale
 	c.swing_interval = gear.weapon.speed / (1.0 + haste / 100.0)
+	# Melee haste auras: Hallowed Aegis slows attacks (-100% doubles the swing time).
+	var melee_haste := c.aura_total(SpellDB.AURA_MOD_MELEE_HASTE)
+	c.swing_interval *= 1.0 / (1.0 + melee_haste / 100.0) if melee_haste >= 0.0 else 1.0 - melee_haste / 100.0
 	c.melee_crit = agility / _agility_rate(char_class, level, true)
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false)
 	# Parry has to be trained, and players need a melee weapon to parry.
@@ -87,6 +92,9 @@ func refresh() -> void:
 	c.parry = 5.0 if armed and PARRY_SPELL in GameState.known_spells else 0.0
 	# Blocking needs a shield. Block value: shield block + Strength / 20 - 1.
 	c.block = SHIELD_BLOCK_CHANCE if gear.has_shield else 0.0
+	# Radiant Bulwark adds block chance (with a shield).
+	if gear.has_shield:
+		c.block += c.aura_total(SpellDB.AURA_MOD_BLOCK_PERCENT)
 	c.block_value = maxi(gear.block + strength / 20 - 1, 0) if gear.has_shield else 0
 	c.spell_crit = spell_crit_from_intellect(char_class, level, intellect)
 	mana_per_tick = mana_regen_per_tick(char_class, spirit)

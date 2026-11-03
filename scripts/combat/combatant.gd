@@ -16,6 +16,10 @@ signal auto_attack_landed(target: Combatant)
 signal auras_changed
 ## This combatant's hit landed on a target (damage greater than zero).
 signal dealt_damage(target: Combatant)
+## A melee swing landed on this unit (damage shields answer it).
+signal melee_hit_taken(attacker: Combatant)
+## This unit blocked a melee swing, fully or partly.
+signal blocked_attack(attacker: Combatant)
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -137,7 +141,11 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 	var amounts := []
 	for i in 3:
 		amounts.append(SpellDB.effect_value(spell, i, caster.level))
-	auras.append({ "spell": spell, "caster": caster, "remaining": length, "duration": length, "amounts": amounts })
+	var aura := { "spell": spell, "caster": caster, "remaining": length, "duration": length, "amounts": amounts }
+	# Auras used up after a number of procs (Radiant Bulwark's blocks).
+	if int(spell.get("ProcCharges", 0)) > 0:
+		aura.charges = int(spell.ProcCharges)
+	auras.append(aura)
 	auras_changed.emit()
 
 
@@ -304,7 +312,8 @@ func _physics_process(delta: float) -> void:
 
 func _tick_auras(delta: float) -> void:
 	var expired := false
-	for aura in auras:
+	for aura in auras.duplicate():
+		_tick_periodic(aura, delta)
 		if aura.remaining > 0.0:
 			aura.remaining -= delta
 			expired = expired or aura.remaining <= 0.0
@@ -312,6 +321,28 @@ func _tick_auras(delta: float) -> void:
 		# A negative duration means the aura lasts until cancelled.
 		auras = auras.filter(func(aura: Dictionary) -> bool: return aura.duration < 0.0 or aura.remaining > 0.0)
 		auras_changed.emit()
+
+
+## Periodic effects tick every EffectAmplitude milliseconds: mana (Boon of
+## Clarity) and damage over time.
+func _tick_periodic(aura: Dictionary, delta: float) -> void:
+	var spell: Dictionary = aura.spell
+	for i in 3:
+		var kind := int(spell.get("EffectApplyAuraName%d" % (i + 1), 0))
+		if kind != SpellDB.AURA_PERIODIC_ENERGIZE and kind != SpellDB.AURA_PERIODIC_DAMAGE:
+			continue
+		var period := int(spell.get("EffectAmplitude%d" % (i + 1), 0)) / 1000.0
+		if period <= 0.0:
+			continue
+		var key := "tick%d" % i
+		aura[key] = aura.get(key, 0.0) + delta
+		while aura[key] >= period:
+			aura[key] -= period
+			var amount: float = aura.amounts[i]
+			if kind == SpellDB.AURA_PERIODIC_ENERGIZE:
+				mana = minf(mana + amount, max_mana)
+			elif is_alive():
+				take_damage(roundi(amount), aura.caster, false, int(spell.get("School", 0)))
 
 
 func _engage(target: Combatant) -> void:
@@ -333,9 +364,12 @@ func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outco
 			damage *= CRUSH_MULTIPLIER
 	damage = CombatRules.reduce_by_armor(damage, target, self)
 	if outcome == CombatRules.Outcome.BLOCK:
+		target.blocked_attack.emit(self)
 		damage = maxf(damage - target.block_value, 0.0)
 		if damage <= 0.0:
 			target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
 			return true
 	target.take_damage(roundi(damage), self, outcome == CombatRules.Outcome.CRIT)
+	if target.is_alive():
+		target.melee_hit_taken.emit(self)
 	return true

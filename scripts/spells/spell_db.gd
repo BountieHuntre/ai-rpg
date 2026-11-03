@@ -18,17 +18,31 @@ const EFFECT_SCHOOL_DAMAGE := 2
 const EFFECT_DUMMY := 3
 const EFFECT_APPLY_AURA := 6
 const EFFECT_HEAL := 10
+const EFFECT_PERSISTENT_AREA_AURA := 27
+const EFFECT_ENERGIZE := 30
+const EFFECT_WEAPON_PERCENT_DAMAGE := 31
 const EFFECT_APPLY_AREA_AURA := 35
+const EFFECT_PROFICIENCY := 60
 const EFFECT_SCRIPT := 77
+const EFFECT_RESURRECT := 113
 ## Aura types (EffectApplyAuraName) used here.
+const AURA_PERIODIC_DAMAGE := 3
 const AURA_DUMMY := 4
 const AURA_MOD_ATTACK_SPEED := 9
 const AURA_MOD_STUN := 12
 const AURA_MOD_DAMAGE_TAKEN := 14
+const AURA_DAMAGE_SHIELD := 15
+const AURA_PERIODIC_ENERGIZE := 24
 const AURA_MOD_RESISTANCE := 22
 const AURA_MOD_PACIFY := 25
 const AURA_SCHOOL_IMMUNITY := 39
+const AURA_PROC_TRIGGER_SPELL := 42
+const AURA_PROC_TRIGGER_DAMAGE := 43
+const AURA_MOD_BLOCK_PERCENT := 51
 const AURA_MOD_ATTACK_POWER := 99
+const AURA_MOD_TOTAL_STAT_PERCENTAGE := 137
+const AURA_MOD_MELEE_HASTE := 138
+const AURA_RESIST_PUSHBACK := 149
 ## Food (health) and drink (mana per 5 seconds).
 const AURA_MOD_REGEN := 84
 const AURA_MOD_POWER_REGEN := 85
@@ -44,6 +58,12 @@ const ATTR_EX_DRAIN_ALL_POWER := 0x2
 const TARGET_SELF := 1
 const TARGET_ENEMY := 6
 const TARGET_FRIEND := 21
+## Enemies around the caster, and any unit (Holy Shock: a foe or a friend).
+const TARGET_ENEMIES_AROUND := 22
+const TARGET_ANY := 25
+## creature_template CreatureType values some spells care about.
+const CREATURE_DEMON := 3
+const CREATURE_UNDEAD := 6
 ## AttributesEx2 / AttributesEx3 flags.
 const ATTR_EX2_CANT_CRIT := 0x20000000
 const ATTR_EX3_ALWAYS_HIT := 0x40000
@@ -148,7 +168,30 @@ static func is_paladin_aura(spell: Dictionary) -> bool:
 
 
 static func is_blessing(spell: Dictionary) -> bool:
-	return str(spell.SpellName).begins_with("Boon of")
+	return str(spell.SpellName).begins_with("Boon of") or str(spell.SpellName).begins_with("Greater Boon of")
+
+
+## A proc's rate from spell_proc_event, for a spell or its first rank:
+## { "ppm": procs per minute, "chance": percent, "cooldown": seconds }, or {}.
+static func proc_info(spell: Dictionary) -> Dictionary:
+	var procs: Dictionary = _get_data().get("procs", {})
+	var id := int(spell.get("Id", 0))
+	return procs.get(str(id), procs.get(str(first_rank(id)), {}))
+
+
+## The heal or mana spell a Judgement of Light or Wisdom rank procs, or 0.
+static func judgement_proc_spell(judgement_id: int) -> int:
+	return int(_get_data().get("judgement_procs", {}).get(str(judgement_id), 0))
+
+
+## Holy Shock's [damage spell, heal spell] for a rank.
+static func holy_shock_spells(id: int) -> Array:
+	return _get_data().get("holy_shock", {}).get(str(id), [])
+
+
+## The radius of a spell's effect in yards.
+static func effect_radius(spell: Dictionary, effect := 0) -> float:
+	return RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
 
 
 static func is_passive(spell: Dictionary) -> bool:

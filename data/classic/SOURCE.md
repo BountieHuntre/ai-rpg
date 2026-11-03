@@ -47,6 +47,13 @@ titles, text and quest givers are its own, in `data/quests.json`. Quest XP
 follows Quest::XPValue, and quest-only drops (negative loot chances) only roll
 while a quest needs the item, as in CMaNGOS.
 
+`spells.json` also carries `procs`: procs per minute and cooldowns from
+spell_proc_event (Seal of Justice 5, Light and Wisdom 20, Command 7, each with
+a 3 s cooldown), used as Unit::GetPPMProcChance does (ppm x swing time / 60).
+Judgement of Light and Wisdom's per-rank heal and mana spells, and Holy
+Shock's damage and heal spells, are mapped in `extract.py` from the CMaNGOS
+proc and effect handlers, since the data doesn't link them.
+
 `factions.json` is the client's FactionTemplate table and each race's template
 (ChrRaces), from wago.tools' Classic Era exports via
 `tools/classic_db/fetch_client_tables.py`. `ClassicData` follows
