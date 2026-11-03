@@ -102,13 +102,57 @@ ITEMS = {
     "Worn Shortbow": "Weathered Shortbow",
     "Worn Shortsword": "Nicked Shortsword",
     "Worn Wooden Shield": "Cracked Wooden Shield",
+    # Ashford Vale creature drops.
+    "Cadet's Bow": "Trainee's Bow",
+    "Native Cloak": "Homespun Cloak",
+    "Kobold Mining Shovel": "Burrowling Shovel",
+    "Pitted Defias Shortsword": "Pitted Brigand Shortsword",
+    "Red Burlap Bandana": "Red Sackcloth Mask",
+    "Slitherskin Mackerel": "Slick Mackerel",
+    "Beatstick": "Knobbed Cudgel",
+    "Long Bo Staff": "Long Quarterstaff",
+    "Grizzly Cape": "Bearhide Cape",
+    "War Torn Cape": "Battle-Frayed Cape",
+    "Sharpened Letter Opener": "Honed Paper Knife",
+    "Dry Salt Lick": "Dry Salt Block",
+    "Rust-covered Blunderbuss": "Rust-Eaten Handgonne",
+    "Mechanical Squirrel": "Clockwork Squirrel",
 }
+
+# Gear sets: the first word(s) of the name are replaced. Longest prefixes win.
+SET_PREFIXES = {
+    "Charger's": "Outrider's",
+    "Disciple's": "Novitiate's",
+    "Journeyman's": "Wayfarer's",
+    "Warrior's": "Man-at-Arms'",
+    "Ancestral": "Forebear's",
+    "Battle Chain": "Field Chain",
+    "Beaded": "Bead-Sewn",
+    "Burnt Leather": "Scorched Hide",
+    "Burnt": "Scorched",
+    "Infantry": "Pikeman's",
+    "Loose Chain": "Slack Chain",
+    "Patchwork": "Ragpatch",
+    "Pioneer": "Settler's",
+    "Primal": "Wildhide",
+    "Tribal": "Clan",
+    "Worn Leather": "Scuffed Leather",
+}
+
+# Recipes are named after what they make: "Pattern: Rugged Leather Pants"
+# follows its product's new name.
+RECIPE_PREFIXES = ("Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: ")
 
 # Item flavor text, replaced whole.
 DESCRIPTIONS = {}
 
 CREATURES = {
+    "Kobold Vermin": "Burrowling Runt",
     "Kobold Worker": "Burrowling Digger",
+    "Kobold Laborer": "Burrowling Hauler",
+    "Kobold Tunneler": "Burrowling Delver",
+    "Defias Thug": "Masked Brigand",
+    "Stonetusk Boar": "Ridgetusk Boar",
 }
 
 # Vendor names and titles, by creature entry.
@@ -183,12 +227,30 @@ KEEP = {
     "Light Chain Armor", "Copper Chain Vest", "Rough Arrow", "Light Shot", "Copper Ore", "Rough Stone",
     "Small Throwing Knife", "Crude Throwing Axe", "Shiny Red Apple", "Ruined Pelt", "Broken Fang",
     "Chipped Claw", "Timber Wolf", "Young Wolf", "Food", "Drink", "Parry", "Stun", "Plate Mail", "Haste",
+    "Worn Hide Cloak", "Carpenter's Mallet", "Battle Shield", "Beaten Battle Axe", "Billy Club",
+    "Broken Boar Tusk", "Chipped Boar Tusk", "Chunk of Boar Meat", "Cracked Buckler", "Cracked Shortbow",
+    "Cracked Sledge", "Crude Bastard Sword", "Feeble Sword", "Fine Scimitar", "Flanged Mace", "Gold Dust",
+    "Hunting Rifle", "Iron Ore", "Large Candle", "Linen Cloth", "Lumberjack Axe", "Malachite",
+    "Minor Healing Potion", "Pellet Rifle", "Practice Sword", "Rusty Hatchet", "Shadowgem", "Simple Dagger",
+    "Small Wooden Hammer", "Tigerseye", "Withered Staff", "Wood Chopper", "Worn Large Shield",
+    "Fine Leather Boots", "Fine Leather Gloves", "Red Linen Robe", "Red Linen Vest", "White Leather Jerkin",
+    "Gemmed Copper Gauntlets", "Healing Potion", "Elixir of Minor Agility", "Swiftness Potion", "Enchant Chest - Minor Mana",
 }
 
 
 def _rename(name, table, kind, missing):
     if name in table:
         return table[name]
+    # Item spells (recipes, crafting) share their item's name.
+    if table is SPELLS:
+        return _rename(name, ITEMS, kind, missing)
+    if table is ITEMS:
+        for prefix in RECIPE_PREFIXES:
+            if name.startswith(prefix):
+                return prefix + _rename(name[len(prefix):], table, kind, missing)
+        for old in sorted(SET_PREFIXES, key=len, reverse=True):
+            if name.startswith(old + " "):
+                return SET_PREFIXES[old] + name[len(old):]
     if name not in KEEP:
         missing.append(f"{kind} {name!r}")
     return name
@@ -197,14 +259,12 @@ def _rename(name, table, kind, missing):
 def apply(items, creatures, vendors, spells, classic_names):
     """Renames the exported data in place. Fails listing every name with no
     original name yet, and every new name that is itself a classic name."""
-    clashes = sorted(new for table in (ITEMS, CREATURES, SPELLS) for new in table.values() if new in classic_names)
-    clashes += sorted(name for name, _ in VENDORS.values() if name in classic_names)
-    if clashes:
-        raise KeyError("These new names are classic names too, change them in tools/classic_db/renames.py:\n"
-                       + "\n".join(clashes))
-    missing = []
+    missing, renamed = [], []
     for item in items.values():
-        item["name"] = _rename(item["name"], ITEMS, "Item", missing)
+        new = _rename(item["name"], ITEMS, "Item", missing)
+        if new != item["name"]:
+            renamed.append(new)
+        item["name"] = new
         if item.get("description"):
             item["description"] = _rename(item["description"], DESCRIPTIONS, "Description", missing)
     for creature in creatures.values():
@@ -213,6 +273,11 @@ def apply(items, creatures, vendors, spells, classic_names):
         vendor["name"], vendor["subname"] = VENDORS[entry]
     for spell in spells.values():
         spell["SpellName"] = _rename(spell["SpellName"], SPELLS, "Spell", missing)
+    renamed += list(CREATURES.values()) + list(SPELLS.values()) + [name for name, _ in VENDORS.values()]
+    clashes = sorted(set(name for name in renamed if name in classic_names))
+    if clashes:
+        raise KeyError("These new names are classic names too, change them in tools/classic_db/renames.py:\n"
+                       + "\n".join(clashes))
     if missing:
         raise KeyError("No original name yet, add these to tools/classic_db/renames.py:\n" + "\n".join(sorted(set(missing))))
 

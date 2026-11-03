@@ -13,6 +13,7 @@ const RESET_KEY := KEY_F12
 @export var min_game_height := 270
 
 @onready var _game_view: SubViewportContainer = $GameView
+@onready var _world: AshfordVale = $GameView/GameViewport/World
 @onready var _player: Player = $GameView/GameViewport/Player
 @onready var _camera: Camera3D = $GameView/GameViewport/GameCamera
 @onready var _hud: CombatHud = $CombatHud
@@ -82,7 +83,7 @@ func save_game() -> void:
 	if c.is_alive():
 		var p := _player.global_position
 		GameState.player_state = {
-			"position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
+			"zone": AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
 			"auras": _saved_auras(c),
 		}
 	_store_corpses()
@@ -113,13 +114,19 @@ func _notification(what: int) -> void:
 
 
 ## Puts the player back where the save left them.
+## New characters, the dead and saves from another zone start at the priory.
 func _restore_player() -> void:
 	var state := GameState.player_state
-	if state.is_empty():
-		return
-	var at: Array = state.position
-	_player.global_position = Vector3(at[0], at[1], at[2])
-	_player.facing = float(state.facing)
+	if state.get("zone", "") != AshfordVale.ZONE_NAME:
+		_player.global_position = AshfordVale.SPAWN
+		_player.facing = AshfordVale.SPAWN_FACING
+		_hud.show_banner.call_deferred(AshfordVale.ZONE_NAME)
+		if state.is_empty():
+			return
+	else:
+		var at: Array = state.position
+		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2])), at[2])
+		_player.facing = float(state.facing)
 	var c := _player.combatant
 	# Buffs come back with the time they had left, as WoW saves auras on logout.
 	for saved: Dictionary in state.get("auras", []):

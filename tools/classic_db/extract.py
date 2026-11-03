@@ -19,7 +19,9 @@ import sys
 import renames
 
 # creature_template entries used in the game.
-CREATURES = [299, 69, 257]  # Young Wolf, Timber Wolf, Kobold Worker
+# Young Wolf, Kobold Vermin, Timber Wolf, Kobold Worker, Kobold Laborer,
+# Defias Thug, Stonetusk Boar, Kobold Tunneler: classic levels 1 to 6.
+CREATURES = [299, 6, 69, 257, 80, 38, 113, 475]
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
 VENDORS = [152, 1213]
@@ -40,7 +42,7 @@ HOLY_LIGHT_HEAL = 19968
 
 TABLES = {
     "player_levelstats", "player_classlevelstats", "player_xp_for_level",
-    "creature_template", "creature_loot_template", "reference_loot_template",
+    "creature_template", "creature_loot_template", "reference_loot_template", "creature",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
     "spell_chain", "spell_bonus_data", "playercreateinfo_item",
 }
@@ -149,6 +151,11 @@ def number(value):
             return value
 
 
+def most_common(values):
+    values = list(values)
+    return max(sorted(set(values)), key=values.count) if values else 0
+
+
 def pick(row, fields):
     return {field: number(row[field]) for field in fields if field in row}
 
@@ -169,6 +176,12 @@ def main(path):
 
     # Creatures and their loot.
     creatures = {r["Entry"]: pick(r, CREATURE_FIELDS) for r in db["creature_template"] if int(r["Entry"]) in CREATURES}
+    # From their classic spawns: the usual respawn time, and how far they
+    # wander from their spawn point (0 stands still).
+    for entry, creature in creatures.items():
+        spawns = [s for s in db["creature"] if s["id"] == entry]
+        creature["Respawn"] = most_common(int(s["spawntimesecsmin"]) for s in spawns)
+        creature["Wander"] = most_common(float(s["spawndist"]) if s["MovementType"] == "1" else 0.0 for s in spawns)
     loot_rows = {}
     for r in db["creature_loot_template"]:
         loot_rows.setdefault(r["entry"], []).append(r)

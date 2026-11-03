@@ -453,9 +453,14 @@ func close_inventory_window() -> bool:
 
 
 func _on_leveled_up(new_level: int) -> void:
-	_banner.text = "Level %d!" % new_level
-	_banner_left = BANNER_TIME
+	show_banner("Level %d!" % new_level)
 	Sfx.play("level_up")
+
+
+## Big text across the screen for a moment, like a zone name or level-up.
+func show_banner(text: String) -> void:
+	_banner.text = text
+	_banner_left = BANNER_TIME
 
 
 ## A smaller label centered on a bar of the given position and size.
