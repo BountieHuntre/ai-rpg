@@ -1,14 +1,21 @@
 [
 	{
+		"version": "0.1.2",
+		"date": "11-04-2026",
+		"notes": [
+			"Patch note dates are now written month-day-year."
+		]
+	},
+	{
 		"version": "0.1.1",
-		"date": "2026-11-04",
+		"date": "11-04-2026",
 		"notes": [
 			"The login screen now shows the notes for the latest patch."
 		]
 	},
 	{
 		"version": "0.1.0",
-		"date": "2026-11-04",
+		"date": "11-04-2026",
 		"notes": [
 			"The game now has a version number, shown on the login screen.",
 			"Creatures cast spells: Burrowling Firecallers throw Flame Bolts from range, Pickmen pry at your armor, Brigand Footpads stab from behind and Ridgetusk Boars charge.",
