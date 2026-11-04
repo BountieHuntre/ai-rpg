@@ -12,10 +12,22 @@ const FILE_NAME := "options.cfg"
 const DEFAULTS := {
 	# Video
 	"display_mode": "Windowed",
+	"window_size": "1440x810",
+	"monitor": 0,
 	"vsync": true,
 	"max_fps": 0,
-	"shadows": true,
+	"background_fps": 30,
+	"show_fps": false,
+	"shadow_quality": "Medium",
+	"view_distance": "Normal",
+	"field_of_view": 60,
+	"environment_detail": "Medium",
+	"ambient_occlusion": false,
+	"bloom": false,
 	"brightness": 1.0,
+	"gamma": 1.0,
+	"contrast": 1.0,
+	"saturation": 1.0,
 	# Sound
 	"sound_enabled": true,
 	"master_volume": 1.0,
@@ -37,11 +49,21 @@ const DEFAULTS := {
 	"bot_min_level": 1,
 	"bot_max_level": 6,
 	"bot_classes": "All Classes",
+	"bot_quests": true,
+	"bot_chat": "Normal",
 	"bot_accept_invites": "Always",
-	"bot_assist": "Assist My Target",
+	"bot_assist": "Defend Only",
 	"bot_follow_distance": 3,
 	"bot_heal_threshold": 0.7,
 	"bot_teleport": true,
+	# Chat
+	"chat_font": "Medium",
+	"chat_background": 0.35,
+	"chat_outline": true,
+	# The chat frame's tabs, place and size (saved as you change them), and lock.
+	"chatframe_tabs": [],
+	"chatframe_rect": [],
+	"chatframe_locked": true,
 	# Developer
 	"dev_console": true,
 }
@@ -78,8 +100,9 @@ const MOUSE_NAMES := {
 	MOUSE_BUTTON_MIDDLE: ["Middle Mouse", "M3"], MOUSE_BUTTON_XBUTTON1: ["Mouse Button 4", "M4"],
 	MOUSE_BUTTON_XBUTTON2: ["Mouse Button 5", "M5"],
 }
-## Keys that can't be bound: Esc opens the game menu, ` the console.
-const RESERVED_KEYS := [KEY_ESCAPE, KEY_QUOTELEFT]
+## Keys that can't be bound: Esc opens the game menu, ` the console, and /
+## opens the chat with a slash typed (walking is on Numpad /, as in classic).
+const RESERVED_KEYS := [KEY_ESCAPE, KEY_QUOTELEFT, KEY_SLASH]
 
 var _values := DEFAULTS.duplicate()
 ## Each action's two keys as physical keycodes, or a mouse button as its
@@ -97,7 +120,8 @@ func _ready() -> void:
 		for entry: Array in ACTIONS:
 			var saved = file.get_value("keys", entry[0], null)
 			if saved is Array and saved.size() == 2:
-				_values.keys[entry[0]] = [int(saved[0]), int(saved[1])]
+				# Bindings saved before a key was reserved (/ for walking) let it go.
+				_values.keys[entry[0]] = [_unreserved(int(saved[0])), _unreserved(int(saved[1]))]
 		for key: String in DEFAULTS:
 			var saved = file.get_value("options", key, DEFAULTS[key])
 			if typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int):
@@ -148,9 +172,17 @@ func keys_for(action: String) -> Array:
 ## key taken from another action leaves that one unbound; returns its label,
 ## or "".
 func bind_key(action: String, slot: int, keycode: int) -> String:
+	var keys: Dictionary = _values.keys.duplicate(true)
+	var taken_from := bind_in(keys, action, slot, keycode)
+	set_value("keys", keys)
+	return taken_from
+
+
+## The same binding done on a copy of the bindings (the Options window's,
+## until Apply). Returns the label of the action the key was taken from.
+static func bind_in(keys: Dictionary, action: String, slot: int, keycode: int) -> String:
 	if keycode in RESERVED_KEYS:
 		return ""
-	var keys: Dictionary = _values.keys.duplicate(true)
 	var taken_from := ""
 	if keycode != 0:
 		for entry: Array in ACTIONS:
@@ -160,12 +192,15 @@ func bind_key(action: String, slot: int, keycode: int) -> String:
 					other[i] = 0
 					taken_from = entry[1]
 	keys[action][slot] = keycode
-	set_value("keys", keys)
 	return taken_from
 
 
 func reset_keys() -> void:
 	set_value("keys", _default_keys.duplicate(true))
+
+
+func default_keys() -> Dictionary:
+	return _default_keys.duplicate(true)
 
 
 ## A short name for a key: "W", "Space", "Num 1".
@@ -213,6 +248,46 @@ func folder() -> String:
 	return GameState.profile_dir
 
 
+## Window sizes offered, smallest first.
+const WINDOW_SIZES := ["1280x720", "1440x810", "1600x900", "1920x1080", "2560x1440"]
+## Graphics options the world reads (Main applies them), so the HUD and
+## camera know when to look again.
+const WORLD_OPTIONS := ["shadow_quality", "view_distance", "field_of_view", "environment_detail",
+	"ambient_occlusion", "bloom", "brightness", "gamma", "contrast", "saturation"]
+
+
+## The windowed size, centred on its monitor, never larger than the screen.
+func _apply_window_size() -> void:
+	if DisplayServer.get_name() == "headless" or DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
+		return
+	var parts := str(get_value("window_size")).split("x")
+	if parts.size() != 2:
+		return
+	var screen := DisplayServer.window_get_current_screen()
+	var room := DisplayServer.screen_get_usable_rect(screen)
+	var wanted := Vector2i(mini(int(parts[0]), room.size.x), mini(int(parts[1]), room.size.y))
+	DisplayServer.window_set_size(wanted)
+	DisplayServer.window_set_position(room.position + (room.size - wanted) / 2)
+
+
+## The frame cap: Max Frame Rate while the game has focus, Background Frame
+## Rate while it doesn't (as classic's background FPS).
+func _apply_frame_cap() -> void:
+	var cap := int(get_value("max_fps"))
+	if not _focused and int(get_value("background_fps")) > 0:
+		cap = int(get_value("background_fps")) if cap == 0 else mini(cap, int(get_value("background_fps")))
+	Engine.max_fps = cap
+
+
+var _focused := true
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_focused = what == NOTIFICATION_APPLICATION_FOCUS_IN
+		_apply_frame_cap()
+
+
 func _apply_all() -> void:
 	for key: String in DEFAULTS:
 		_apply(key)
@@ -220,6 +295,10 @@ func _apply_all() -> void:
 
 
 ## Keyboard keys of an action in the input map, as two physical keycodes.
+static func _unreserved(keycode: int) -> int:
+	return 0 if keycode in RESERVED_KEYS else keycode
+
+
 static func _keys_in_map(action: String) -> Array:
 	var keys := [0, 0]
 	var i := 0
@@ -246,10 +325,21 @@ func _apply(key: String) -> void:
 					mode = DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
 			if DisplayServer.window_get_mode() != mode:
 				DisplayServer.window_set_mode(mode)
+			if mode == DisplayServer.WINDOW_MODE_WINDOWED:
+				_apply_window_size()
 		"vsync":
 			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if get_value(key) else DisplayServer.VSYNC_DISABLED)
-		"max_fps":
-			Engine.max_fps = int(get_value(key))
+		"max_fps", "background_fps":
+			_apply_frame_cap()
+		"window_size":
+			_apply_window_size()
+		"monitor":
+			if DisplayServer.get_name() == "headless":
+				return
+			var screen := clampi(int(get_value(key)), 0, DisplayServer.get_screen_count() - 1)
+			if DisplayServer.window_get_current_screen() != screen:
+				DisplayServer.window_set_current_screen(screen)
+				_apply_window_size()
 		"keys":
 			# Keyboard and mouse events are replaced; gamepad ones stay.
 			for action: String in _values.keys:

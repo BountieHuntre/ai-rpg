@@ -48,7 +48,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_game_view)
 	_fit_game_view()
 	Settings.changed.connect(_apply_setting)
-	for key in ["shadows", "brightness"]:
+	for key in Settings.WORLD_OPTIONS:
 		_apply_setting(key)
 	_restore_player()
 	_restore_corpses()
@@ -178,16 +178,66 @@ func _queue_save() -> void:
 		)
 
 
-## Video options that live in the world: shadows and brightness.
+## Shadow Quality: [shadow distance in yards, shadow map size].
+const SHADOW_QUALITY := { "Low": [45.0, 1024], "Medium": [90.0, 2048], "High": [150.0, 4096] }
+## View Distance: [camera far in yards, fog density], the fog thick enough to
+## hide where drawing stops.
+const VIEW_DISTANCE := { "Near": [120.0, 0.0045], "Normal": [200.0, 0.0025], "Far": [300.0, 0.0016], "Very Far": [420.0, 0.0011] }
+
+
+## Video options that live in the world: shadows, view distance, field of
+## view, ground clutter, ambient occlusion, bloom and the picture's brightness,
+## gamma, contrast and saturation.
 func _apply_setting(key: String) -> void:
+	var environment := (_world.find_child("WorldEnvironment", true, false) as WorldEnvironment).environment
 	match key:
-		"shadows":
+		"shadow_quality":
+			var quality: String = Settings.get_value(key)
+			var values: Array = SHADOW_QUALITY.get(quality, SHADOW_QUALITY.Medium)
 			for light in _world.find_children("*", "DirectionalLight3D", true, false):
-				(light as DirectionalLight3D).shadow_enabled = Settings.get_value("shadows")
-		"brightness":
-			var environment := (_world.find_child("WorldEnvironment", true, false) as WorldEnvironment).environment
+				(light as DirectionalLight3D).shadow_enabled = quality != "Off"
+				(light as DirectionalLight3D).directional_shadow_max_distance = values[0]
+			RenderingServer.directional_shadow_atlas_set_size(values[1], true)
+		"view_distance":
+			var values: Array = VIEW_DISTANCE.get(Settings.get_value(key), VIEW_DISTANCE.Normal)
+			_camera.far = values[0]
+			environment.fog_density = values[1]
+		"field_of_view":
+			_camera.fov = float(Settings.get_value(key))
+		"environment_detail":
+			_world.set_clutter(Settings.get_value(key))
+		"ambient_occlusion":
+			environment.ssao_enabled = Settings.get_value(key)
+		"bloom":
+			environment.glow_enabled = Settings.get_value(key)
+			environment.glow_intensity = 0.6
+			environment.glow_bloom = 0.1
+		"brightness", "contrast", "saturation":
 			environment.adjustment_enabled = true
 			environment.adjustment_brightness = Settings.get_value("brightness")
+			environment.adjustment_contrast = Settings.get_value("contrast")
+			environment.adjustment_saturation = Settings.get_value("saturation")
+		"gamma":
+			environment.adjustment_enabled = true
+			environment.adjustment_color_correction = gamma_curve(Settings.get_value(key))
+
+
+## Gamma as a color-correction curve: each level raised to 1 / gamma, so
+## above 1 lifts the shadows and below darkens them. None at 1.
+static func gamma_curve(gamma: float) -> GradientTexture1D:
+	if is_equal_approx(gamma, 1.0):
+		return null
+	var gradient := Gradient.new()
+	gradient.remove_point(1)
+	gradient.remove_point(0)
+	for i in 33:
+		var level := i / 32.0
+		var value := pow(level, 1.0 / gamma)
+		gradient.add_point(level, Color(value, value, value))
+	var texture := GradientTexture1D.new()
+	texture.gradient = gradient
+	texture.width = 256
+	return texture
 
 
 ## Picks the largest whole pixel scale that fits, then rounds the view up so it
@@ -279,7 +329,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_menu.toggle()
 		elif _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
+		elif _hud.close_trade() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
 			pass
 		elif _hud.close_inventory_window():
 			pass

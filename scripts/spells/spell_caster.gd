@@ -64,6 +64,7 @@ func _ready() -> void:
 	# The Player's own @onready references aren't set yet while children are readied.
 	var combatant: Combatant = $"../Combatant"
 	combatant.auto_attack_landed.connect(_on_auto_attack_landed)
+	_procs.name = "SpellProcs"
 	add_child(_procs)
 	combatant.took_damage.connect(func(amount: int, _source: Combatant, _crit: bool) -> void:
 		if amount > 0:
@@ -143,8 +144,11 @@ func out_of_range(id: int) -> bool:
 func _physics_process(delta: float) -> void:
 	_unit.combatant.is_casting = not casting.is_empty()
 	_gcd_left = maxf(_gcd_left - delta, 0.0)
+	# Cooldowns that ran out are dropped, so idle casters have nothing to count.
 	for id: int in _cooldowns.keys():
-		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)
+		_cooldowns[id] -= delta
+		if _cooldowns[id] <= 0.0:
+			_cooldowns.erase(id)
 	for category: int in _item_cooldowns.keys():
 		_item_cooldowns[category] = maxf(_item_cooldowns[category] - delta, 0.0)
 	if casting.is_empty():

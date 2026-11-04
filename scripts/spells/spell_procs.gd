@@ -27,6 +27,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _grounds.is_empty():
+		return
 	for ground in _grounds.duplicate():
 		ground.left -= delta
 		ground.tick += delta

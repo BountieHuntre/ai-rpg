@@ -26,6 +26,25 @@ const PRIORY_FLAT := 34.0
 ## Where new characters start, and where the dead come back.
 const SPAWN := Vector3(0, PRIORY_HEIGHT, 12)
 const SPAWN_FACING := PI
+## Walled places that playerbots go in and out of by their gate:
+## [x min, z min, x max, z max, outside the gate, inside the gate].
+const ENCLOSURES := [
+	[-24.0, -20.0, 24.0, 22.0, Vector2(0, 27), Vector2(0, 17)],  # the priory, gate in the south wall
+]
+
+## Named places, for what playerbots say: [name, center, radius], smallest
+## first, so a point is in the first place that holds it.
+const PLACES := [
+	["the bridge", Vector2(0, 86), 9.0],
+	["the priory", Vector2(0, 0), 30.0],
+	["the mine", Vector2(-98, 5), 22.0],
+	["the brigand camp", Vector2(105, 135), 24.0],
+	["the mine road", Vector2(-45, 28), 22.0],
+	["the meadow", Vector2(30, 52), 30.0],
+	["the boar hills", Vector2(-95, 135), 45.0],
+	["the east woods", Vector2(110, -20), 70.0],
+	["the north woods", Vector2(0, -115), 75.0],
+]
 
 ## Level areas flattened for camps: [center, radius, height].
 const FLATS := [
@@ -116,6 +135,7 @@ func _ready() -> void:
 	_build_bridge()
 	_build_trees()
 	_build_rocks()
+	_build_clutter()
 	_spawn_creatures()
 
 
@@ -463,6 +483,75 @@ func _build_rocks() -> void:
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
 	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+
+
+## Ground clutter for the Environment Detail option: share of the tufts and
+## flowers drawn.
+const CLUTTER_SHARE := { "Off": 0.0, "Low": 0.33, "Medium": 0.66, "High": 1.0 }
+const CLUTTER_ATTEMPTS := 16000
+
+var _clutter: Array[MultiMeshInstance3D] = []
+
+
+## Grass tufts and flowers on open ground: only for looks, so no collision
+## and no shadows. Placed in random order, so drawing a share of them thins
+## them evenly.
+func _build_clutter() -> void:
+	var clutter := Node3D.new()
+	clutter.name = "Clutter"
+	add_child(clutter)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = SEED + 3
+	var grass: Array[Transform3D] = []
+	var tall_grass: Array[Transform3D] = []
+	var yellow: Array[Transform3D] = []
+	var white: Array[Transform3D] = []
+	for attempt in CLUTTER_ATTEMPTS:
+		var point := Vector2(rng.randf_range(-EDGE, EDGE), rng.randf_range(-EDGE, EDGE))
+		var y := height_at(point.x, point.y)
+		if y > 26.0 or not _clear_for_clutter(point, y):
+			continue
+		var spin := Basis(Vector3.UP, rng.randf() * TAU)
+		var at := Vector3(point.x, y, point.y)
+		var roll := rng.randf()
+		if roll < 0.06:
+			(yellow if rng.randf() < 0.6 else white).append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.1)), at + Vector3.UP * 0.25))
+		elif roll < 0.4:
+			tall_grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.2, 1.8), 1)), at + Vector3.UP * 0.2))
+		else:
+			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.2), 1)), at + Vector3.UP * 0.15))
+	_add_clutter(clutter, Props.cone(0.18, 0.3, 4), Color(0.3, 0.52, 0.22), grass)
+	_add_clutter(clutter, Props.cone(0.14, 0.4, 4), Color(0.36, 0.56, 0.24), tall_grass)
+	_add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.95, 0.82, 0.25), yellow)
+	_add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.92, 0.92, 0.88), white)
+
+
+func _add_clutter(parent: Node3D, mesh: Mesh, color: Color, transforms: Array[Transform3D]) -> void:
+	Props.scatter(parent, mesh, color, transforms)
+	var view := parent.get_child(parent.get_child_count() - 1) as MultiMeshInstance3D
+	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_clutter.append(view)
+
+
+## Open ground: not on roads, water, paving or camps.
+func _clear_for_clutter(point: Vector2, y: float) -> bool:
+	if y < WATER_LEVEL + 0.4 or _priory_distance(point) < 28.0 or _distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5:
+		return false
+	for line: Array in ROADS:
+		if _distance_to_line(point, line) < ROAD_WIDTH + 0.8:
+			return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true
+
+
+## The Environment Detail option: how much of the clutter is drawn.
+func set_clutter(level: String) -> void:
+	var share: float = CLUTTER_SHARE.get(level, 0.66)
+	for view in _clutter:
+		view.visible = share > 0.0
+		view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * share)
 
 
 # Creatures, placed the same way each time so saved corpses match by name.

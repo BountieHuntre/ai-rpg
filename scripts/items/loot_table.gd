@@ -42,6 +42,42 @@ static func quest_items(loot_id: int) -> Array[int]:
 	return items
 
 
+## The percent chance a creature's loot holds an item, quest drops included
+## (their chance as when a quest needs them). An item in a group of equal
+## chances gets its share of the group; one behind a reference, the
+## reference's chance times its own. For playerbots, which don't loot.
+static func drop_chance(loot_id: int, item_id: int) -> float:
+	return _chance_in(_get_tables().creature.get(str(loot_id), []), item_id, {})
+
+
+static func _chance_in(entries: Array, item_id: int, seen: Dictionary) -> float:
+	var best := 0.0
+	for entry: Dictionary in entries:
+		var ref := -int(entry.min_or_ref)
+		var chance := absf(float(entry.chance))
+		if ref > 0:
+			if seen.has(ref):
+				continue
+			seen[ref] = true
+			var inner := _chance_in(_get_tables().reference.get(str(ref), []), item_id, seen)
+			best = maxf(best, inner * (chance if chance > 0.0 else 100.0) / 100.0)
+		elif int(entry.item) == item_id:
+			if chance == 0.0:
+				var equal := entries.filter(func(e: Dictionary) -> bool: return int(e.group) == int(entry.group) and float(e.chance) == 0.0)
+				chance = 100.0 / maxf(equal.size(), 1.0)
+			best = maxf(best, chance)
+	return best
+
+
+## Every item a creature's loot can hold directly (not behind references).
+static func items_of(loot_id: int) -> Array[int]:
+	var items: Array[int] = []
+	for entry: Dictionary in _get_tables().creature.get(str(loot_id), []):
+		if int(entry.min_or_ref) > 0 and not int(entry.item) in items:
+			items.append(int(entry.item))
+	return items
+
+
 ## Copper dropped, as in Loot::GenerateMoneyLoot.
 static func roll_money(min_copper: int, max_copper: int) -> int:
 	if max_copper <= 0:

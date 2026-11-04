@@ -12,6 +12,10 @@ extends Control
 ## Sizes are in HUD units (1/270 of the window height), times ui_scale.
 
 signal message(text: String, is_error: bool)
+## Shift-click on an item: link it in the chat.
+signal link_requested(item_id: int)
+## Right-click on a bag item while trading: put it up for trade.
+signal trade_requested(ref: Dictionary)
 
 const SLOT := 16.0
 const GAP := 2.0
@@ -47,6 +51,8 @@ var _held: Dictionary = {}
 var _held_icon: Control
 ## True while a vendor window is open: right-clicking bag items sells them.
 var selling := false
+## A trade window is open: right-clicked bag items go into the trade.
+var trading := false
 var _rebuild_queued := false
 ## Whether a window point is over the HUD (any window, bar or frame), set by
 ## the HUD. Releasing a dragged item anywhere else offers to destroy it.
@@ -272,6 +278,11 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 	if button == null or _destroy_prompt:
 		return
 	var error := ""
+	if button.button_index == MOUSE_BUTTON_LEFT and button.pressed and button.shift_pressed and _held.is_empty():
+		var stack := Inventory.stack_at(ref)
+		if not stack.is_empty():
+			link_requested.emit(int(stack.id))
+		return
 	if button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
 		if _held.is_empty():
 			if not Inventory.stack_at(ref).is_empty():
@@ -312,8 +323,12 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 	get_viewport().set_input_as_handled()
 
 
-## Sells to an open vendor, uses consumables, or equips gear and bags.
+## Puts the item up for trade, sells to an open vendor, uses consumables, or
+## equips gear and bags.
 func _right_click_bag_item(ref: Dictionary) -> String:
+	if trading:
+		trade_requested.emit(ref)
+		return ""
 	if selling:
 		var sold := Inventory.sell(ref)
 		if sold.is_empty():
@@ -327,6 +342,15 @@ func _right_click_bag_item(ref: Dictionary) -> String:
 
 ## Asks to destroy the held item, for a drop or click over the world. Returns
 ## whether an item was held. Bags in the bag slots are just put back.
+## The bag or equipment slot of the item on the cursor, or {}.
+func held_ref() -> Dictionary:
+	return _held
+
+
+func clear_held() -> void:
+	_set_held({})
+
+
 func drop_held_on_world() -> bool:
 	if _held.is_empty() or _destroy_prompt:
 		return not _held.is_empty()

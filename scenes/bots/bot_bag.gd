@@ -1,0 +1,146 @@
+class_name BotBag
+extends RefCounted
+## A playerbot's bag and purse: the loot and money from its own kills, which
+## it sells to the player in trade and talks about in Trade chat. Bots ask a
+## few times the vendor price for what they sell and a little over it for
+## what they buy, each bot its own rates, and remember prices they quote or
+## agree in chat. Saved in the bot's roster entry.
+
+## Stacks it keeps; when full, the cheapest goes to a vendor.
+const MAX_STACKS := 12
+## Item bonding that can't be traded: binds when picked up, quest items.
+const UNTRADEABLE := [1, 4]
+## What bots pay for items: their own rate over the vendor price, and the
+## most they'll go to when haggled.
+const BUY_RATE_MIN := 1.1
+const BUY_RATE_MAX := 1.4
+const BUY_CEILING := 1.6
+## The least they'll sell for, haggled down: times the vendor price.
+const SELL_FLOOR := 1.5
+
+## { "id", "count" } stacks.
+var stacks: Array[Dictionary] = []
+## Copper.
+var money := 0
+## How many times the vendor price it asks.
+var markup := randf_range(2.0, 4.0)
+## How many times the vendor price it pays.
+var buy_rate := randf_range(BUY_RATE_MIN, BUY_RATE_MAX)
+## Prices it has quoted or agreed, per item, copper each: what it'll pay the
+## player ("buy") and what it'll sell for ("sell"). Trades use them.
+var quotes := { "buy": {}, "sell": {} }
+
+
+static func can_trade(id: int) -> bool:
+	return not int(ItemDB.get_item(id).get("bonding", 0)) in UNTRADEABLE
+
+
+func count_of(id: int) -> int:
+	var total := 0
+	for stack in stacks:
+		if int(stack.id) == id:
+			total += int(stack.count)
+	return total
+
+
+func add(id: int, count: int) -> void:
+	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
+	for stack in stacks:
+		if count > 0 and int(stack.id) == id and int(stack.count) < stack_size:
+			var moved := mini(stack_size - int(stack.count), count)
+			stack.count = int(stack.count) + moved
+			count -= moved
+	while count > 0:
+		var moved := mini(stack_size, count)
+		stacks.append({ "id": id, "count": moved })
+		count -= moved
+	_make_room()
+
+
+func remove(id: int, count: int) -> void:
+	for i in range(stacks.size() - 1, -1, -1):
+		if count > 0 and int(stacks[i].id) == id:
+			var taken := mini(int(stacks[i].count), count)
+			stacks[i].count = int(stacks[i].count) - taken
+			count -= taken
+			if int(stacks[i].count) <= 0:
+				stacks.remove_at(i)
+
+
+## Its share of a creature it killed: the loot that can change hands, and the
+## money, rolled from the classic tables as the player's kills are.
+func loot(enemy: Enemy) -> void:
+	var data := Enemy.creature_data(enemy.creature_entry)
+	for drop in LootTable.roll_creature(int(data.get("LootId", 0))):
+		if can_trade(int(drop.id)):
+			add(int(drop.id), int(drop.count))
+	money += LootTable.roll_money(int(data.get("MinLootGold", 0)), int(data.get("MaxLootGold", 0)))
+
+
+## Full bags: the cheapest stacks go to a vendor for their sell price.
+func _make_room() -> void:
+	while stacks.size() > MAX_STACKS:
+		var cheapest := 0
+		for i in stacks.size():
+			if _vendor_value(stacks[i]) < _vendor_value(stacks[cheapest]):
+				cheapest = i
+		money += _vendor_value(stacks[cheapest])
+		stacks.remove_at(cheapest)
+
+
+static func _vendor_value(stack: Dictionary) -> int:
+	return int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) * int(stack.count)
+
+
+## The stacks it would sell: things that can change hands and are worth
+## something.
+func for_sale() -> Array[Dictionary]:
+	var goods: Array[Dictionary] = []
+	for stack in stacks:
+		if can_trade(int(stack.id)) and int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) > 0:
+			goods.append(stack)
+	return goods
+
+
+## What it asks for some of an item: an agreed price, or its markup.
+func asking_price(id: int, count: int) -> int:
+	if quotes.sell.has(id):
+		return int(quotes.sell[id]) * count
+	return maxi(roundi(_vendor(id) * count * markup), 1)
+
+
+## What it pays for some of an item: an agreed price, or its rate. 0 for
+## things vendors won't take.
+func buying_price(id: int, count: int) -> int:
+	if quotes.buy.has(id):
+		return int(quotes.buy[id]) * count
+	return roundi(_vendor(id) * count * buy_rate)
+
+
+## The most it would pay, haggled up, and the least it would sell for,
+## haggled down: copper each.
+func top_bid(id: int) -> int:
+	return roundi(_vendor(id) * BUY_CEILING)
+
+
+func lowest_ask(id: int) -> int:
+	return maxi(roundi(_vendor(id) * SELL_FLOOR), 1)
+
+
+static func _vendor(id: int) -> int:
+	return int(ItemDB.get_item(id).get("SellPrice", 0))
+
+
+func to_dict() -> Dictionary:
+	return { "stacks": stacks, "money": money, "markup": markup, "buy_rate": buy_rate }
+
+
+static func from_dict(data: Dictionary) -> BotBag:
+	var bag := BotBag.new()
+	for stack in data.get("stacks", []):
+		if not ItemDB.get_item(int(stack.id)).is_empty():
+			bag.stacks.append({ "id": int(stack.id), "count": int(stack.count) })
+	bag.money = int(data.get("money", 0))
+	bag.markup = float(data.get("markup", bag.markup))
+	bag.buy_rate = float(data.get("buy_rate", bag.buy_rate))
+	return bag

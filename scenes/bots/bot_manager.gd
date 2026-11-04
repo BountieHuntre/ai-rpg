@@ -29,12 +29,19 @@ var _roster: Array[Dictionary] = []
 ## Bots in the world by name.
 var _bots: Dictionary = {}
 var _sync_queued := false
+var _chatter := BotChatter.new()
+var _creatures: Array = []
+## Where the player is this frame, for bots asking whether they're far off.
+var _player_at := Vector3.ZERO
 
 
 func setup(player: Player, world: Node3D) -> void:
 	_player = player
 	_world = world
 	_load_roster()
+	_chatter.name = "BotChatter"
+	add_child(_chatter)
+	_chatter.setup(self)
 	Party.clear_for_reload()
 	sync()
 	Settings.changed.connect(_on_setting_changed)
@@ -189,12 +196,17 @@ func _spawn(entry: Dictionary, at: Vector3) -> Bot:
 	bot.name = "Bot_%s" % entry.name
 	bot.profile = profile
 	bot.manager = self
+	bot.quests = BotQuests.from_dict(entry.get("quests", {}))
+	bot.bag = BotBag.from_dict(entry.get("bag", {}))
 	bot.add_child(profile)
 	_world.get_parent().add_child(bot)
 	bot.global_position = at
 	bot.facing = randf() * TAU
 	bot.progression.level_cap = max_level()
 	bot.restore_state(entry.get("state", {}))
+	bot.progression.leveled_up.connect(_chatter.on_level.bind(bot))
+	bot.revived.connect(_chatter.on_revived.bind(bot))
+	bot.arrived.connect(_chatter.on_arrived.bind(bot))
 	if Party.is_member(bot) or entry.name in GameState.party:
 		bot.progression.level_cap = ClassicData.MAX_LEVEL
 	_bots[entry.name] = bot
@@ -237,6 +249,8 @@ func _store(bot: Bot) -> void:
 		entry.level = bot.profile.level
 		entry.xp = bot.profile.xp
 		entry.state = bot.saved_state()
+		entry.quests = bot.quests.to_dict()
+		entry.bag = bot.bag.to_dict()
 
 
 func _number_party() -> void:
@@ -250,10 +264,178 @@ func _near_player() -> Vector3:
 	return _player.global_position + Basis(Vector3.UP, angle) * Vector3.FORWARD * 2.5 + Vector3.UP * 0.3
 
 
-## Somewhere in a creature spawn area suited to a level: creatures from three
-## levels below to one above, or the nearest in level if none fit.
-func hunting_spot(level: int) -> Vector3:
-	var spawns: Array = _world.get("SPAWNS") if _world.get("SPAWNS") != null else []
+## Waypoints from one point to another: through the gate of any walled
+## place (the zone's ENCLOSURES) that one end is inside and the other isn't,
+## then the point itself.
+func route(from: Vector3, to: Vector3) -> Array[Vector3]:
+	var points: Array[Vector3] = []
+	var enclosures: Array = _world.get("ENCLOSURES") if _world.get("ENCLOSURES") != null else []
+	for walls: Array in enclosures:
+		var inside_from := _within(walls, from)
+		if inside_from == _within(walls, to):
+			continue
+		var outside: Vector2 = walls[4]
+		var inside: Vector2 = walls[5]
+		var flat: Array[Vector2] = []
+		if inside_from:
+			flat.append_array([inside, outside])
+			var back := _around(walls, Vector2(to.x, to.z), outside)
+			back.reverse()
+			flat.append_array(back)
+		else:
+			flat.append_array(_around(walls, Vector2(from.x, from.z), outside))
+			flat.append_array([outside, inside])
+		for point in flat:
+			points.append(Vector3(point.x, _world.height_at(point.x, point.y), point.y))
+	points.append(to)
+	return points
+
+
+## Yards kept clear of the walls when going round them.
+const WALL_MARGIN := 4.0
+
+
+## Corners to go round a walled place from a point outside it to its gate,
+## when the straight way would run into the walls: the nearer corner on the
+## gate's side, and before it the corner behind that if that's blocked too.
+func _around(walls: Array, from: Vector2, gate: Vector2) -> Array[Vector2]:
+	var corners: Array[Vector2] = []
+	if not _crosses(walls, from, gate):
+		return corners
+	var left: float = walls[0] - WALL_MARGIN
+	var right: float = walls[2] + WALL_MARGIN
+	var near_z: float = walls[3] + WALL_MARGIN if gate.y > walls[3] else walls[1] - WALL_MARGIN
+	var far_z: float = walls[1] - WALL_MARGIN if gate.y > walls[3] else walls[3] + WALL_MARGIN
+	var x := left if absf(from.x - left) < absf(from.x - right) else right
+	var corner := Vector2(x, near_z)
+	if _crosses(walls, from, corner):
+		corners.append(Vector2(x, far_z))
+	corners.append(corner)
+	return corners
+
+
+## Whether a straight line between two points passes through the walls
+## (with a margin).
+static func _crosses(walls: Array, a: Vector2, b: Vector2) -> bool:
+	var low := Vector2(walls[0] - 1.5, walls[1] - 1.5)
+	var high := Vector2(walls[2] + 1.5, walls[3] + 1.5)
+	var box := [low, Vector2(high.x, low.y), high, Vector2(low.x, high.y)]
+	for i in 4:
+		if Geometry2D.segment_intersects_segment(a, b, box[i], box[(i + 1) % 4]) != null:
+			return true
+	return false
+
+
+static func _within(walls: Array, point: Vector3) -> bool:
+	return point.x > walls[0] and point.z > walls[1] and point.x < walls[2] and point.z < walls[3]
+
+
+## The zone's creatures. They're placed once and respawn in place, so the
+## list is made once.
+func creatures() -> Array:
+	if _creatures.is_empty():
+		_creatures = get_tree().get_nodes_in_group("enemies")
+	return _creatures
+
+
+## Far bots are ticked by the manager instead of every frame: each frame
+## one slice of them, with the time since their last tick.
+const FAR_SLICES := 6
+var _far_slice := 0
+var _far_delta: Array[float] = []
+
+
+func _physics_process(delta: float) -> void:
+	if _player:
+		_player_at = _player.global_position
+	if _far_delta.size() != FAR_SLICES:
+		_far_delta.resize(FAR_SLICES)
+		_far_delta.fill(0.0)
+	for i in FAR_SLICES:
+		_far_delta[i] += delta
+	var slice := _far_slice
+	_far_slice = (_far_slice + 1) % FAR_SLICES
+	var i := 0
+	for bot: Bot in _bots.values():
+		bot.set_far(far_from_player(bot.global_position) and not Party.is_member(bot) and not bot.trading)
+		if bot._far and i % FAR_SLICES == slice:
+			bot.far_tick(_far_delta[slice])
+		i += 1
+	_far_delta[slice] = 0.0
+
+
+func far_from_player(point: Vector3) -> bool:
+	return point.distance_squared_to(_player_at) > Bot.FAR * Bot.FAR
+
+
+## The ground's height at a point.
+func ground_height(x: float, z: float) -> float:
+	return _world.height_at(x, z)
+
+
+## The named place a point is in (the zone's PLACES), or "".
+func place_at(point: Vector3) -> String:
+	for place: Array in _places():
+		if Vector2(point.x, point.z).distance_to(place[1]) <= float(place[2]):
+			return place[0]
+	return ""
+
+
+## Where a named place is, from the priory: "west", "southeast"...
+func direction_of(place_name: String) -> String:
+	for place: Array in _places():
+		if place[0] == place_name:
+			var offset: Vector2 = place[1] - AshfordVale.PRIORY
+			# -Z is north.
+			var angle := fposmod(rad_to_deg(atan2(offset.x, -offset.y)), 360.0)
+			return ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"][roundi(angle / 45.0) % 8]
+	return ""
+
+
+func place_names() -> Array:
+	return _places().map(func(place: Array) -> String: return place[0])
+
+
+## The named place where a creature spawns nearest a point, or "".
+func spawn_place(entry: int, near: Vector3) -> String:
+	var best := ""
+	var best_distance := INF
+	for spawn: Array in _spawns():
+		if int(spawn[0]) != entry:
+			continue
+		var center: Vector2 = spawn[1]
+		var distance := center.distance_to(Vector2(near.x, near.z))
+		if distance < best_distance:
+			best_distance = distance
+			best = place_at(Vector3(center.x, 0, center.y))
+	return best
+
+
+func _places() -> Array:
+	return _world.get("PLACES") if _world.get("PLACES") != null else []
+
+
+## Creature entries the zone spawns.
+func spawn_entries() -> Array:
+	var entries := []
+	for spawn: Array in _spawns():
+		if not int(spawn[0]) in entries:
+			entries.append(int(spawn[0]))
+	return entries
+
+
+func _spawns() -> Array:
+	return _world.get("SPAWNS") if _world.get("SPAWNS") != null else []
+
+
+## Somewhere in a creature spawn area: one of the creatures a quest wants if
+## given, or else one suited to a level, creatures from three levels below to
+## one above, or the nearest in level if none fit.
+func hunting_spot(level: int, wanted: Array[int] = []) -> Vector3:
+	var spawns := _spawns()
+	var quest_spawns := spawns.filter(func(spawn: Array) -> bool: return int(spawn[0]) in wanted)
+	if not quest_spawns.is_empty():
+		spawns = quest_spawns
 	var suited := []
 	var closest := []
 	var closest_gap := 1000
@@ -270,6 +452,8 @@ func hunting_spot(level: int) -> Vector3:
 		elif gap == closest_gap:
 			closest.append(spawn)
 	var pool := suited if not suited.is_empty() else closest
+	if not quest_spawns.is_empty():
+		pool = quest_spawns
 	if pool.is_empty():
 		return AshfordVale.SPAWN
 	var spawn: Array = pool.pick_random()
@@ -295,6 +479,8 @@ func _load_roster() -> void:
 				"name": str(entry.name), "race": int(entry.race), "class": int(entry["class"]),
 				"level": int(entry.level), "xp": int(entry.get("xp", 0)),
 				"state": entry.get("state", {}),
+				"quests": entry.get("quests", {}),
+				"bag": entry.get("bag", {}),
 			})
 
 

@@ -1,7 +1,8 @@
 class_name Bot
 extends PlayerUnit
 ## A playerbot: a computer-run player character, like the playerbots of
-## classic private servers. On its own it hunts creatures near its level,
+## classic private servers. On its own it takes quests from the quest givers,
+## does them and turns them in (BotQuests), hunts creatures near its level,
 ## sits down to eat and drink when low, and gets back up after dying. In the
 ## player's party it follows, fights what the group fights (by the Playerbots
 ## options), and Templars heal, buff and raise the party. BotManager makes
@@ -12,8 +13,16 @@ enum Command { FOLLOW, STAY }
 const RUN_SPEED := 7.0
 const GRAVITY := 19.29
 const JUMP_SPEED := 7.96
-## Seconds between decisions.
+## Seconds between decisions; bots far from the player think less often.
 const THINK_INTERVAL := 0.25
+const FAR_THINK_INTERVAL := 0.75
+## Beyond this many yards from the player a bot walks the ground's height
+## without collision, which costs far less with hundreds of bots about. The
+## player never sees it up close.
+const FAR := 45.0
+## Seconds between working out what its quests need and which quest giver it
+## has business with.
+const QUEST_CHECK := 2.0
 ## Yards a bot on its own looks around for creatures to hunt.
 const HUNT_RANGE := 30.0
 ## A bot on its own leaves creatures this many levels above it alone.
@@ -25,7 +34,11 @@ const ASSIST_RANGE := 40.0
 const REVIVE_TIME := 30.0
 ## Party bots further than this from the leader catch up by teleporting, when
 ## the Playerbots options allow it, as playerbots do.
-const TELEPORT_DISTANCE := 60.0
+const TELEPORT_DISTANCE := 40.0
+## Following bots also teleport after this many seconds of getting no closer
+## while more than BEHIND_DISTANCE yards away (stuck on a wall or a tree).
+const BEHIND_TIME := 4.0
+const BEHIND_DISTANCE := 12.0
 ## Sits down to eat below half health, to drink below a third of its mana,
 ## and stands once both are nearly full.
 const REST_HEALTH := 0.5
@@ -40,6 +53,9 @@ const DRINK_SPELL := 430
 ## aside.
 const STUCK_TIME := 0.6
 const SIDESTEP_TIME := 0.8
+## Yards from a quest giver to talk to them, and seconds spent talking.
+const NPC_REACH := 3.0
+const TALK_TIME := 1.5
 ## Templars renew their Boons with this many seconds left.
 const BOON_REFRESH := 30.0
 ## Spellcasters get Boon of Clarity (mana), everyone else Boon of Strength.
@@ -50,7 +66,51 @@ const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 const OATHS := ["Oath of Dominion", "Oath of Valor"]
 
 ## Set by BotManager: where bots on their own go hunting.
+## Far from the player, the BotManager ticks the bot itself, a slice of the
+## far bots each frame, in bigger steps: its nodes' own per-frame work is
+## switched off.
+func set_far(far: bool) -> void:
+	if far == _far:
+		return
+	_far = far
+	for node: Node in [self, combatant, stats, spells, spells.get_node_or_null("SpellProcs")]:
+		if node:
+			node.set_physics_process(not far)
+	_feedback.set_process(not far)
+
+
+## One slow tick for a far bot: what its nodes would do over `delta` seconds.
+func far_tick(delta: float) -> void:
+	combatant._physics_process(delta)
+	stats._physics_process(delta)
+	spells._physics_process(delta)
+	_physics_process(delta)
+
+
+## Brought back to life: raised by a spell, or got up after the wait.
+signal revived(raised: bool)
+## Reached the player it was walking to (to trade).
+signal arrived
+
 var manager: BotManager
+## What it remembers, for what it says: { "killer", "place", "time" } of its
+## last death, { "title", "time" } of the last quest it handed in, and the
+## creature entry it last killed.
+var last_death := {}
+var last_quest_done := {}
+var last_kill := 0
+var _last_attacker := ""
+## Its quest log, saved in its roster entry.
+var quests := BotQuests.new()
+## Its loot and money, for trading; saved in its roster entry.
+var bag := BotBag.new()
+## Standing still for a trade with the player.
+var trading := false
+## Walking over to the player (to trade), until this time (seconds).
+var _coming_until := 0.0
+## Yards from the player that count as there, and how long it keeps trying.
+const COME_REACH := 4.0
+const COME_TIME := 120.0
 var in_party := false
 var command := Command.FOLLOW
 ## Its place in the party, which spreads the members out behind the leader.
@@ -64,11 +124,24 @@ var _resting := false
 var _rest_carry := Vector2.ZERO
 var _destination := Vector3.ZERO
 var _has_destination := false
+## Waypoints to the destination, through gates (BotManager.route).
+var _route: Array[Vector3] = []
 var _stuck_for := 0.0
+## Seconds a following bot has gone without closing in on the leader.
+var _behind_for := 0.0
+var _last_leader_distance := 0.0
 var _sidestep_left := 0.0
 var _sidestep_side := 1.0
 var _stay_at := Vector3.ZERO
 var _roam_left := 0.0
+var _talk_left := 0.0
+## Creatures its quests still need, and the quest giver it has business with,
+## worked out every QUEST_CHECK seconds.
+var _wanted: Array[int] = []
+var _business: Npc
+var _quest_check_left := 0.0
+var _far := false
+
 
 @onready var stats: CharacterStats = $CharacterStats
 @onready var progression: Progression = $Progression
@@ -80,9 +153,11 @@ func _ready() -> void:
 	combatant.display_name = profile.char_name
 	apply_race_look()
 	combatant.faces_point = is_facing
-	combatant.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void:
+	combatant.took_damage.connect(func(_amount: int, source: Combatant, _crit: bool) -> void:
 		sitting = false
 		_resting = false
+		if source and is_instance_valid(source):
+			_last_attacker = source.display_name
 	)
 	combatant.died.connect(_on_died)
 	progression.leveled_up.connect(func(_level: int) -> void: learn_spells())
@@ -181,7 +256,7 @@ func left_party() -> void:
 
 
 ## Revival, or getting back up after the wait.
-func resurrect(health: int, mana: int) -> void:
+func resurrect(health: int, mana: int, raised := true) -> void:
 	if combatant.is_alive():
 		return
 	combatant.health = clampi(health, 1, combatant.max_health)
@@ -189,9 +264,14 @@ func resurrect(health: int, mana: int) -> void:
 	_feedback.reset()
 	_dead_for = 0.0
 	_stay_at = global_position
+	revived.emit(raised)
 
 
 func _on_died() -> void:
+	last_death = {
+		"killer": _last_attacker, "place": manager.place_at(global_position) if manager else "",
+		"time": Time.get_ticks_msec() / 1000.0,
+	}
 	_dead_for = 0.0
 	sitting = false
 	_resting = false
@@ -203,14 +283,22 @@ func _physics_process(delta: float) -> void:
 	_visual.rotation.y = facing
 	if not combatant.is_alive():
 		velocity = Vector3(0.0, 0.0 if is_on_floor() else velocity.y - GRAVITY * delta, 0.0)
-		move_and_slide()
+		if not _far:
+			move_and_slide()
 		_dead_for += delta
 		if _dead_for >= REVIVE_TIME and _may_get_up():
-			resurrect(combatant.max_health / 2, int(combatant.max_mana / 2.0))
+			# Bots on their own come back at the priory, like the player, so
+			# they don't rise among whatever killed them.
+			if not in_party:
+				for enemy: Enemy in _creatures():
+					enemy.forget(combatant)
+				global_position = AshfordVale.SPAWN + Vector3(randf_range(-3, 3), 0.5, randf_range(-3, 3))
+				velocity = Vector3.ZERO
+			resurrect(combatant.max_health / 2, int(combatant.max_mana / 2.0), false)
 		return
 	_think_left -= delta
 	if _think_left <= 0.0:
-		_think_left = THINK_INTERVAL
+		_think_left = FAR_THINK_INTERVAL if _far else THINK_INTERVAL
 		_think()
 	if _resting:
 		_rest(delta)
@@ -225,6 +313,21 @@ func _may_get_up() -> bool:
 
 
 func _think() -> void:
+	# Waits where it is while trading, unless something attacks it.
+	if trading and not combatant.is_in_combat():
+		_has_destination = false
+		combatant.attack_target = null
+		return
+	# Left behind, whatever it was doing: catch up first.
+	if in_party and _left_behind():
+		_teleport_to(_leader())
+		return
+	_quest_check_left -= THINK_INTERVAL
+	if _quest_check_left <= 0.0:
+		_quest_check_left = QUEST_CHECK
+		var questing: bool = manager != null and not in_party and Settings.get_value("bot_quests")
+		_wanted = quests.wanted_creatures(manager.spawn_entries()) if questing else ([] as Array[int])
+		_business = _quest_npc() if questing else null
 	_enemy = _choose_enemy()
 	if spells.casting.is_empty():
 		_use_spells()
@@ -267,7 +370,7 @@ func _choose_enemy() -> Combatant:
 			return target
 	# Creatures attacking the group (Passive only fights back for itself).
 	var best: Combatant = null
-	for node in get_tree().get_nodes_in_group("enemies"):
+	for node in _creatures():
 		var enemy := node as Enemy
 		if enemy.state != Enemy.State.CHASE or not enemy.combatant.is_alive():
 			continue
@@ -294,7 +397,7 @@ func _fights_group(enemy: Enemy) -> bool:
 ## then the nearest creature worth hunting, unless it needs a rest.
 func _solo_enemy() -> Combatant:
 	var attacker: Combatant = null
-	for node in get_tree().get_nodes_in_group("enemies"):
+	for node in _creatures():
 		var enemy := node as Enemy
 		if enemy.state == Enemy.State.CHASE and enemy.combatant.is_alive() and enemy.threat.has(combatant):
 			if attacker == null or combatant.distance_to(enemy.combatant) < combatant.distance_to(attacker):
@@ -305,12 +408,22 @@ func _solo_enemy() -> Combatant:
 		return _enemy
 	if _resting or _needs_rest():
 		return null
+	# On its way to the player or a quest giver it only fights what attacks it.
+	if is_coming() or _quest_business():
+		return null
+	# Creatures its quests need come first, then anything worth hunting.
 	var best: Combatant = null
-	for node in get_tree().get_nodes_in_group("enemies"):
+	var best_wanted := false
+	for node in _creatures():
 		var enemy := node as Enemy
-		if _can_hunt(enemy, false) and global_position.distance_to(enemy.global_position) <= HUNT_RANGE:
-			if best == null or combatant.distance_to(enemy.combatant) < combatant.distance_to(best):
-				best = enemy.combatant
+		if not _can_hunt(enemy, false) or global_position.distance_to(enemy.global_position) > HUNT_RANGE:
+			continue
+		var wanted := enemy.creature_entry in _wanted
+		if best_wanted and not wanted:
+			continue
+		if best == null or (wanted and not best_wanted) or combatant.distance_to(enemy.combatant) < combatant.distance_to(best):
+			best = enemy.combatant
+			best_wanted = wanted
 	return best
 
 
@@ -323,7 +436,15 @@ func _can_hunt(enemy: Enemy, already_fighting: bool) -> bool:
 	if not already_fighting and enemy.state == Enemy.State.CHASE:
 		return false
 	var level := profile.level
-	return enemy.level <= level + HUNT_LEVELS_ABOVE and enemy.level > CombatRules.gray_level(level)
+	# Grey creatures are still worth killing for a quest.
+	var worth := enemy.level > CombatRules.gray_level(level) or enemy.creature_entry in _wanted
+	return enemy.level <= level + HUNT_LEVELS_ABOVE and worth
+
+
+## The zone's creatures (a list kept by the BotManager, cheaper than asking
+## the tree).
+func _creatures() -> Array:
+	return manager.creatures() if manager else get_tree().get_nodes_in_group("enemies")
 
 
 func _leader() -> Player:
@@ -339,27 +460,106 @@ func _needs_rest() -> bool:
 	return c.health < c.max_health * REST_HEALTH or (c.max_mana > 0 and c.mana < c.max_mana * REST_MANA)
 
 
-## Hunting grounds near its level, then a creature there.
+## Quest givers with something to hand in or take, then the creatures its
+## quests need, or else hunting grounds near its level.
 func _solo_idle() -> void:
 	if _resting:
 		return
 	if _needs_rest():
 		_start_rest()
 		return
+	if _talk_left > 0.0:
+		_talk_left -= THINK_INTERVAL
+		return
+	if is_coming():
+		_come_closer()
+		return
+	if _quest_business():
+		var npc := _business
+		if npc:
+			if global_position.distance_to(npc.global_position) <= NPC_REACH:
+				_talk_to(npc)
+			else:
+				_go_to(npc.global_position)
+			return
 	_roam_left -= THINK_INTERVAL
 	var arrived := not _has_destination or global_position.distance_to(_destination) < 2.0
 	if (arrived or _roam_left <= 0.0) and manager:
-		_go_to(manager.hunting_spot(profile.level))
+		_go_to(manager.hunting_spot(profile.level, _wanted))
 		_roam_left = 20.0
+
+
+## Sets off to walk over to the player, to trade.
+func come_to_player() -> void:
+	_coming_until = Time.get_ticks_msec() / 1000.0 + COME_TIME
+	_resting = false
+	sitting = false
+
+
+func is_coming() -> bool:
+	return not in_party and Time.get_ticks_msec() / 1000.0 < _coming_until
+
+
+func _come_closer() -> void:
+	var player := _leader()
+	if player == null or not player.combatant.is_alive():
+		return
+	if global_position.distance_to(player.global_position) <= COME_REACH:
+		_coming_until = 0.0
+		_has_destination = false
+		_face(player.global_position)
+		arrived.emit()
+	else:
+		_go_to(player.global_position)
+
+
+func _quest_business() -> bool:
+	return _business != null and not in_party
+
+
+## The nearest quest giver it has business with: one to hand a finished
+## quest to, or one with a quest it can take.
+func _quest_npc() -> Npc:
+	var best: Npc = null
+	for node in get_tree().get_nodes_in_group("npcs"):
+		var npc := node as Npc
+		if not _has_business(npc.npc_id()):
+			continue
+		if best == null or global_position.distance_to(npc.global_position) < global_position.distance_to(best.global_position):
+			best = npc
+	return best
+
+
+func _has_business(npc_id: String) -> bool:
+	for id: int in QuestDB.all_ids():
+		var quest := QuestDB.get_quest(id)
+		if quest.get("ender") == npc_id and quests.is_complete(id):
+			return true
+		if quest.get("giver") == npc_id and quests.can_take(id, profile.level):
+			return true
+	return false
+
+
+## Hands in its finished quests for their XP, then takes what's on offer.
+func _talk_to(npc: Npc) -> void:
+	_has_destination = false
+	_face(npc.global_position)
+	var npc_id := npc.npc_id()
+	for id: int in quests.active.keys():
+		if QuestDB.get_quest(id).get("ender") == npc_id and quests.is_complete(id):
+			last_quest_done = { "title": str(QuestDB.get_quest(id).title), "time": Time.get_ticks_msec() / 1000.0 }
+			progression.add_xp(quests.turn_in(id, profile.level))
+			_quest_check_left = 0.0
+	for id: int in QuestDB.all_ids():
+		if QuestDB.get_quest(id).get("giver") == npc_id and quests.can_take(id, profile.level):
+			quests.accept(id)
+			_quest_check_left = 0.0
+	_talk_left = TALK_TIME
 
 
 func _party_idle() -> void:
 	var leader := _leader()
 	if leader == null:
-		return
-	var distance := global_position.distance_to(leader.global_position)
-	if Settings.get_value("bot_teleport") and distance > TELEPORT_DISTANCE and leader.combatant.is_alive() and leader.is_on_floor():
-		_teleport_to(leader)
 		return
 	if command == Command.STAY:
 		if global_position.distance_to(_stay_at) > 1.0:
@@ -385,7 +585,32 @@ func _follow_spot(leader: Player) -> Vector3:
 	return leader.global_position + Basis(Vector3.UP, angle) * Vector3.FORWARD * distance
 
 
+## A following bot is left behind when it's out of party-frame range, or
+## hasn't got any closer for a few seconds while well back. Bots told to stay
+## stay, and nobody teleports to a leader who's dead or in the air.
+func _left_behind() -> bool:
+	var leader := _leader()
+	if leader == null or command != Command.FOLLOW or not Settings.get_value("bot_teleport"):
+		_behind_for = 0.0
+		return false
+	var distance := global_position.distance_to(leader.global_position)
+	var closing := distance < _last_leader_distance - 0.5
+	_last_leader_distance = distance
+	# Fighting isn't falling behind, as long as it's within range.
+	var following := _enemy == null and spells.casting.is_empty() and not _resting
+	_behind_for = 0.0 if closing or distance <= BEHIND_DISTANCE or not following else _behind_for + THINK_INTERVAL
+	if not leader.combatant.is_alive() or not leader.is_on_floor():
+		return false
+	return distance > TELEPORT_DISTANCE or _behind_for >= BEHIND_TIME
+
+
 func _teleport_to(leader: Player) -> void:
+	_behind_for = 0.0
+	_enemy = null
+	combatant.attack_target = null
+	sitting = false
+	_resting = false
+	_route.clear()
 	velocity = Vector3.ZERO
 	global_position = _follow_spot(leader) + Vector3.UP * 0.5
 	_has_destination = false
@@ -440,8 +665,7 @@ func _use_spells() -> void:
 		return
 	if fighting and me.health < me.max_health * 0.2 and _try("Hallowed Aegis", me):
 		return
-	var heal_below: float = Settings.get_value("bot_heal_threshold")
-	if hurt and hurt.health < hurt.max_health * heal_below:
+	if hurt and hurt.health < hurt.max_health * heal_threshold():
 		var quick := hurt.health < hurt.max_health * 0.35
 		if (quick and _try("Quick Radiance", hurt)) or _try("Mending Radiance", hurt):
 			return
@@ -473,6 +697,12 @@ func _use_spells() -> void:
 			var name := "Boon of Clarity" if unit.profile.char_class in CASTER_CLASSES else "Boon of Strength"
 			if _try(name, target):
 				return
+
+
+## The share of health below which a bot heals someone: the "Bots Heal
+## Below" option. Every class's healing reads it.
+static func heal_threshold() -> float:
+	return Settings.get_value("bot_heal_threshold")
 
 
 ## The group it looks after: the party, or itself.
@@ -526,7 +756,14 @@ func _try(spell_name: String, target: Combatant) -> bool:
 
 # Moving.
 
+## Heads for a point, by way of any gate in between. The route is worked
+## out again only when the point moves a few yards (a creature or the leader
+## moving), so the bot keeps going through the gate it chose.
 func _go_to(point: Vector3) -> void:
+	if not _has_destination or _route.is_empty() or point.distance_to(_destination) > 3.0:
+		_route = manager.route(global_position, point) if manager else ([point] as Array[Vector3])
+	else:
+		_route[-1] = point
 	_destination = point
 	_has_destination = true
 
@@ -534,10 +771,13 @@ func _go_to(point: Vector3) -> void:
 func _move(delta: float) -> void:
 	var direction := Vector3.ZERO
 	if _has_destination and not sitting and spells.casting.is_empty() and not combatant.is_stunned():
-		var offset := _destination - global_position
+		var waypoint := _route[0] if not _route.is_empty() else _destination
+		var offset := waypoint - global_position
 		offset.y = 0.0
-		if offset.length() > 0.3:
+		if offset.length() > (0.3 if _route.size() <= 1 else 1.0):
 			direction = offset.normalized()
+		elif _route.size() > 1:
+			_route.pop_front()
 		else:
 			_has_destination = false
 	if direction != Vector3.ZERO and _sidestep_left > 0.0:
@@ -548,6 +788,18 @@ func _move(delta: float) -> void:
 		_face(target.body.global_position)
 	elif direction != Vector3.ZERO:
 		_face(global_position + direction)
+	if _far:
+		# Far from the player: along the ground, no collision.
+		velocity = Vector3.ZERO
+		_stuck_for = 0.0
+		var step := global_position + direction * RUN_SPEED * delta
+		global_position = Vector3(step.x, manager.ground_height(step.x, step.z), step.z)
+		return
+	# Standing still on the ground: nothing to move, so no collision work.
+	if direction == Vector3.ZERO and is_on_floor() and velocity.y <= 0.0:
+		velocity = Vector3.ZERO
+		_stuck_for = 0.0
+		return
 	if is_on_floor():
 		velocity.x = direction.x * RUN_SPEED
 		velocity.z = direction.z * RUN_SPEED

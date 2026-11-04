@@ -49,6 +49,19 @@ static func get_item(id: int) -> Dictionary:
 	return _items.get(str(id), {})
 
 
+static var _by_name: Dictionary
+
+
+## An item's id by its exact name (any case), or 0: "[Wool Scraps]" typed
+## into the chat becomes a link.
+static func find_by_name(item_name: String) -> int:
+	if _by_name.is_empty():
+		get_item(0)
+		for key: String in _items:
+			_by_name[str(_items[key].get("name", "")).to_lower()] = int(key)
+	return int(_by_name.get(item_name.to_lower(), 0))
+
+
 static func quality_color(item: Dictionary) -> Color:
 	return QUALITY_COLORS.get(int(item.get("Quality", 1)), Color.WHITE)
 

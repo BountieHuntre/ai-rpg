@@ -410,6 +410,15 @@ const ERR_CANT_SELL := "Can't sell that item."
 const BUYBACK_SLOTS := 12
 
 
+## Takes a whole stack out of its slot (traded away), returning it.
+static func take_stack(ref: Dictionary) -> Dictionary:
+	var stack := stack_at(ref)
+	if not stack.is_empty():
+		_set_stack(ref, {})
+		GameState.inventory_changed.emit()
+	return stack
+
+
 static func remove_one(ref: Dictionary) -> void:
 	var stack := stack_at(ref)
 	if stack.is_empty():

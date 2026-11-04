@@ -5,6 +5,8 @@ extends Control
 ## Sizes are in HUD units (1/270 of the window height), times ui_scale.
 
 signal hovered(item: Dictionary)
+## Shift-click on a quest: link it in the chat.
+signal link_requested(quest_id: int)
 
 const WIDTH := 170.0
 const LIST_HEIGHT := 56.0
@@ -106,7 +108,9 @@ func _build() -> void:
 		_text(row, Vector2(2, 1), "[%d] %s%s" % [quest.level, quest.title, " (Complete)" if complete else ""], color, FONT_SIZE)
 		row.gui_input.connect(func(event: InputEvent) -> void:
 			var button := event as InputEventMouseButton
-			if button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
+			if button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT and button.shift_pressed:
+				link_requested.emit(id)
+			elif button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
 				_selected = i
 				_confirming = false
 				_build.call_deferred()

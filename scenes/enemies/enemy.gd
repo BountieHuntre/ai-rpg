@@ -73,6 +73,10 @@ var threat: Dictionary = {}
 ## credit and the loot. Others see the creature grey.
 var tapped_by: Combatant
 var _victim: Combatant
+## Seconds to the next look around for players to attack (staggered, so
+## creatures don't all look on the same frame).
+var _aggro_left := randf() * AGGRO_CHECK
+const AGGRO_CHECK := 0.2
 
 var _home := Vector3.ZERO
 var _data: Dictionary
@@ -137,7 +141,9 @@ func _physics_process(delta: float) -> void:
 	var speed: float = _data.SpeedRun * BASE_RUN_SPEED
 	match state:
 		State.IDLE:
-			if is_aggressive():
+			_aggro_left -= delta
+			if _aggro_left <= 0.0 and is_aggressive():
+				_aggro_left = AGGRO_CHECK
 				for node in get_tree().get_nodes_in_group("player_units"):
 					var unit := node as PlayerUnit
 					if unit.combatant.is_alive() and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):

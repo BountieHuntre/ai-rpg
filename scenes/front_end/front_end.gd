@@ -41,8 +41,10 @@ const CLASS_TEXT := {
 ## Classes with spells in the game so far. The rest can be made, but only attack.
 const CLASSES_WITH_SPELLS := [ClassicData.CharClass.PALADIN]
 const NAME_STARTS := ["Al", "Bran", "Cor", "Dun", "El", "Fen", "Gar", "Hal", "Is", "Jor", "Kel", "Lor",
-	"Mar", "Nor", "Os", "Per", "Quen", "Ros", "Sel", "Tor", "Ul", "Vor", "Wen", "Yr"]
-const NAME_ENDS := ["ric", "wyn", "dor", "mar", "eth", "ia", "on", "ald", "ra", "ith", "us", "en", "a", "os", "ell"]
+	"Mar", "Nor", "Os", "Per", "Quen", "Ros", "Sel", "Tor", "Ul", "Vor", "Wen", "Yr",
+	"Ash", "Bel", "Cal", "Dar", "Ed", "Gil", "Har", "Ing", "Lyn", "Mer", "Od", "Rand", "Sten", "Tam", "Ward", "Ald"]
+const NAME_ENDS := ["ric", "wyn", "dor", "mar", "eth", "ia", "on", "ald", "ra", "ith", "us", "en", "a", "os", "ell",
+	"win", "ard", "da", "ford", "mund", "rid", "ana", "ley", "ton", "ise", "aric", "elm", "una"]
 
 enum Screen { LOGIN, SELECT, CREATE }
 

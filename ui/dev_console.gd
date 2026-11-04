@@ -52,6 +52,7 @@ func setup(player: Player, world: AshfordVale, save: Callable, bots: BotManager 
 	_world = world
 	_save = save
 	_bots = bots
+	add_to_group("dev_console")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var panel := ColorRect.new()

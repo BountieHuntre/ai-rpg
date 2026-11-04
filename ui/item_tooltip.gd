@@ -15,8 +15,6 @@ const COMPARE_HEADER := Color(0.5, 0.5, 0.5)
 ## Pinned to the bottom right of the screen instead of following the mouse,
 ## as classic's tooltip for units in the world.
 var anchored := false
-## Screen pixels to keep clear below the anchored tooltip (open bags).
-var anchor_lift := 0.0
 
 var _rows := VBoxContainer.new()
 var _ui_scale := 1.0
@@ -166,7 +164,7 @@ func _process(_delta: float) -> void:
 func _place() -> void:
 	var window := get_viewport().get_visible_rect().size
 	if anchored:
-		position = window - size - ANCHOR_MARGIN * _ui_scale - Vector2(0, anchor_lift)
+		position = window - size - ANCHOR_MARGIN * _ui_scale
 		return
 	var at := get_viewport().get_mouse_position() + OFFSET * _ui_scale
 	var shown := _compare.filter(func(panel: PanelContainer) -> bool: return panel.visible)

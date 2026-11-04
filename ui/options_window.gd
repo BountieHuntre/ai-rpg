@@ -1,9 +1,11 @@
 class_name OptionsWindow
 extends PanelContainer
 ## The Options window, with a tab down the left for each category: Video,
-## Sound, Interface, Playerbots, Key Bindings and Developer. A new category is a TABS entry plus its
-## rows in CATEGORIES (or its own builder, as Key Bindings has). Changes show at once; Okay keeps them all, Cancel puts
-## them all back, and Defaults resets the open tab. In Key Bindings, click a
+## Sound, Interface, Chat, Playerbots, Key Bindings and Developer. A new category is a TABS entry plus its
+## rows in CATEGORIES (or its own builder, as Key Bindings has). Changes wait
+## until Apply, which applies and saves every changed option at once; Okay
+## does the same and closes, Cancel drops what wasn't applied, and Defaults
+## sets the open tab back (applied with the rest). In Key Bindings, click a
 ## key to bind a new one (Esc stops), right-click to clear it.
 
 signal closed
@@ -17,10 +19,22 @@ const TEXT := Color(0.92, 0.9, 0.84)
 const CATEGORIES := {
 	"Video": [
 		["display_mode", "Display Mode", "choice", ["Windowed", "Fullscreen", "Exclusive Fullscreen"]],
+		["window_size", "Window Size", "choice", Settings.WINDOW_SIZES],
+		["monitor", "Monitor", "monitor", null],
 		["vsync", "Vertical Sync", "check", null],
 		["max_fps", "Max Frame Rate", "fps", [0, 30, 60, 120, 144, 240]],
-		["shadows", "Shadows", "check", null],
+		["background_fps", "Background Frame Rate", "fps", [0, 10, 15, 30, 60]],
+		["show_fps", "Show Frame Rate", "check", null],
+		["shadow_quality", "Shadow Quality", "choice", ["Off", "Low", "Medium", "High"]],
+		["view_distance", "View Distance", "choice", ["Near", "Normal", "Far", "Very Far"]],
+		["field_of_view", "Field of View", "number", [50, 90, 1, "°"]],
+		["environment_detail", "Environment Detail", "choice", ["Off", "Low", "Medium", "High"]],
+		["ambient_occlusion", "Ambient Occlusion", "check", null],
+		["bloom", "Bloom", "check", null],
 		["brightness", "Brightness", "slider", [0.6, 1.4]],
+		["gamma", "Gamma", "slider", [0.6, 1.6]],
+		["contrast", "Contrast", "slider", [0.6, 1.4]],
+		["saturation", "Saturation", "slider", [0.0, 2.0]],
 	],
 	"Sound": [
 		["sound_enabled", "Enable Sound", "check", null],
@@ -41,15 +55,23 @@ const CATEGORIES := {
 	# Numbers are [lowest, highest, step, unit].
 	"Playerbots": [
 		["bots_enabled", "Enable Playerbots", "check", null],
-		["bot_count", "Random Bots in the World", "number", [0, 30, 1, ""]],
+		# 250 holds about 60 fps; beyond 300 the physics can't keep up.
+		["bot_count", "Random Bots in the World", "number", [0, 250, 5, ""]],
 		["bot_min_level", "Random Bot Lowest Level", "number", [1, 60, 1, ""]],
 		["bot_max_level", "Random Bot Highest Level", "number", [1, 60, 1, ""]],
 		["bot_classes", "Bot Classes", "choice", ["All Classes", "Templars Only"]],
+		["bot_quests", "Random Bots Do Quests", "check", null],
+		["bot_chat", "Bot Chat", "choice", ["Off", "Quiet", "Normal", "Chatty"]],
 		["bot_accept_invites", "Accept Party Invitations", "choice", ["Always", "Near My Level", "Never"]],
 		["bot_assist", "Party Bots Attack", "choice", ["Assist My Target", "Defend Only", "Passive"]],
 		["bot_follow_distance", "Follow Distance", "number", [2, 10, 1, " yd"]],
-		["bot_heal_threshold", "Templar Bots Heal Below", "slider", [0.3, 0.9]],
+		["bot_heal_threshold", "Bots Heal Below", "slider", [0.3, 0.9]],
 		["bot_teleport", "Teleport to Me When Left Behind", "check", null],
+	],
+	"Chat": [
+		["chat_font", "Text Size", "choice", ["Small", "Medium", "Large", "Huge"]],
+		["chat_background", "Background", "slider", [0.0, 0.9]],
+		["chat_outline", "Outline Text", "check", null],
 	],
 	"Developer": [
 		["dev_console", "Developer Console (` key)", "check", null],
@@ -60,7 +82,7 @@ static var _check_icons: Dictionary
 
 const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
-const TABS := ["Video", "Sound", "Interface", "Playerbots", KEY_BINDINGS, DEVELOPER]
+const TABS := ["Video", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, DEVELOPER]
 ## One-click developer commands: [button text, console command]. "level+" is
 ## the next level, filled in when pressed.
 const DEV_BUTTONS := [
@@ -87,7 +109,11 @@ var _item_filter := ""
 var _item_tooltip: ItemTooltip
 
 var _category := "Video"
-var _before: Dictionary
+## Options changed in the window but not yet applied: key -> value.
+var _pending: Dictionary = {}
+## The key bindings as edited in the window, applied with the rest.
+var _keys: Dictionary = {}
+var _apply_button: Button
 var _ui_scale := 1.0
 ## The key being rebound: [action, slot], or [] when not waiting for a key.
 var _binding := []
@@ -99,7 +125,8 @@ var _key_buttons: Dictionary
 
 func open(category := "Video") -> void:
 	_category = category
-	_before = Settings.snapshot()
+	_pending.clear()
+	_keys = Settings.snapshot_keys()
 	_binding = []
 	visible = true
 	_build()
@@ -113,24 +140,62 @@ func show_tab(category: String) -> void:
 	_build()
 
 
-func okay() -> void:
+## Applies and saves every changed option.
+func apply() -> void:
+	var rebuild := _pending.has("ui_scale")
+	for key: String in _pending:
+		Settings.set_value(key, _pending[key])
+	_pending.clear()
+	if _keys != Settings.snapshot_keys():
+		Settings.set_value("keys", _keys.duplicate(true))
 	Settings.save()
+	# A new UI Scale resizes this window too.
+	if rebuild and visible:
+		_build()
+	_update_apply()
+
+
+func okay() -> void:
+	apply()
 	_close()
 
 
+## Drops what wasn't applied.
 func cancel() -> void:
-	Settings.restore(_before)
+	_pending.clear()
 	_close()
 
 
 func defaults() -> void:
 	if _category == KEY_BINDINGS:
-		Settings.reset_keys()
+		_keys = Settings.default_keys()
 	else:
 		for row: Array in CATEGORIES[_category]:
-			Settings.set_value(row[0], Settings.DEFAULTS[row[0]])
+			_set_pending(row[0], Settings.DEFAULTS[row[0]])
 	_binding = []
 	_build()
+
+
+## An option as shown in the window: changed but not applied, or its setting.
+func _value(key: String) -> Variant:
+	return _pending.get(key, Settings.get_value(key))
+
+
+func _set_pending(key: String, value: Variant) -> void:
+	if Settings.get_value(key) == value:
+		_pending.erase(key)
+	else:
+		_pending[key] = value
+	_update_apply()
+
+
+func _has_changes() -> bool:
+	return not _pending.is_empty() or _keys != Settings.snapshot_keys()
+
+
+func _update_apply() -> void:
+	if _apply_button and is_instance_valid(_apply_button):
+		_apply_button.disabled = not _has_changes()
 
 
 ## While waiting for a key, the next key or bindable mouse button pressed is
@@ -157,7 +222,8 @@ func _input(event: InputEvent) -> void:
 	elif code in Settings.RESERVED_KEYS:
 		note = "%s can't be bound." % Settings.key_name(code)
 	else:
-		var taken_from := Settings.bind_key(action, slot, code)
+		var taken_from := Settings.bind_in(_keys, action, slot, code)
+		_update_apply()
 		if not taken_from.is_empty():
 			note = "%s unbound from %s." % [Settings.key_name(code), taken_from]
 	_refresh_keys()
@@ -166,7 +232,7 @@ func _input(event: InputEvent) -> void:
 
 func _refresh_keys() -> void:
 	for action: String in _key_buttons:
-		var keys := Settings.keys_for(action)
+		var keys: Array = _keys.get(action, [0, 0])
 		for slot in 2:
 			var button: Button = _key_buttons[action][slot]
 			if not is_instance_valid(button):
@@ -244,6 +310,9 @@ func _build() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(gap)
+	_apply_button = _button("Apply", apply)
+	buttons.add_child(_apply_button)
+	_update_apply()
 	buttons.add_child(_button("Okay", okay))
 	buttons.add_child(_button("Cancel", cancel))
 	reset_size()
@@ -488,7 +557,8 @@ func _key_button(action: String, slot: int) -> Button:
 		var click := event as InputEventMouseButton
 		if click and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
 			_binding = []
-			Settings.bind_key(action, slot, 0)
+			Settings.bind_in(_keys, action, slot, 0)
+			_update_apply()
 			_note.text = ""
 			_refresh_keys()
 	)
@@ -507,14 +577,25 @@ func _row(row: Array) -> Control:
 	var label := _label(row[1], TEXT)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(label)
-	var value = Settings.get_value(key)
+	var value = _value(key)
 	match row[2]:
 		"check":
 			var check := CheckBox.new()
 			check.button_pressed = value
 			style_check(check, _ui_scale)
-			check.toggled.connect(func(on: bool) -> void: Settings.set_value(key, on))
+			check.toggled.connect(func(on: bool) -> void: _set_pending(key, on))
 			line.add_child(check)
+		"monitor":
+			# One entry per screen, found when the window opens.
+			var options := OptionButton.new()
+			options.custom_minimum_size.x = 80 * _ui_scale
+			options.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+			options.get_popup().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+			for i in maxi(DisplayServer.get_screen_count(), 1):
+				options.add_item("Monitor %d" % (i + 1))
+			options.select(clampi(int(value), 0, options.item_count - 1))
+			options.item_selected.connect(func(index: int) -> void: _set_pending(key, index))
+			line.add_child(options)
 		"choice", "fps":
 			var options := OptionButton.new()
 			options.custom_minimum_size.x = 80 * _ui_scale
@@ -527,7 +608,7 @@ func _row(row: Array) -> Control:
 					text = "Unlimited" if int(choice) == 0 else "%d" % choice
 				options.add_item(text)
 			options.select(maxi(choices.find(value), 0))
-			options.item_selected.connect(func(index: int) -> void: Settings.set_value(key, choices[index]))
+			options.item_selected.connect(func(index: int) -> void: _set_pending(key, choices[index]))
 			line.add_child(options)
 		"slider":
 			var limits: Array = row[3]
@@ -543,7 +624,7 @@ func _row(row: Array) -> Control:
 			shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			slider.value_changed.connect(func(new_value: float) -> void:
 				shown.text = _percent(new_value)
-				Settings.set_value(key, new_value)
+				_set_pending(key, new_value)
 			)
 			line.add_child(slider)
 			line.add_child(shown)
@@ -562,7 +643,7 @@ func _row(row: Array) -> Control:
 			shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			slider.value_changed.connect(func(new_value: float) -> void:
 				shown.text = "%d%s" % [new_value, unit]
-				Settings.set_value(key, int(new_value))
+				_set_pending(key, int(new_value))
 			)
 			line.add_child(slider)
 			line.add_child(shown)

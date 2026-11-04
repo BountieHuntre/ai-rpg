@@ -9,6 +9,8 @@ extends Node
 signal changed
 ## Party lines for the HUD: "Aldric joins the party."
 signal message(text: String)
+## A bot accepted an invitation (it greets the party).
+signal member_joined(bot: Bot)
 
 const MAX_SIZE := 5
 ## CONFIG_FLOAT_GROUP_XP_DISTANCE: members further away get no share.
@@ -65,6 +67,7 @@ func invite(bot: Bot) -> void:
 	members.append(bot)
 	bot.joined_party()
 	message.emit("%s joins the party." % bot.profile.char_name)
+	member_joined.emit(bot)
 	_save()
 	changed.emit()
 
@@ -152,6 +155,11 @@ func reward_kill(enemy: Enemy, tapper: Combatant) -> bool:
 			_progression(unit).add_xp(amount)
 	if player and player in near:
 		QuestLog.on_kill(enemy.creature_entry)
+	# A bot on its own counts the kill for its own quests.
+	if not players_group and not near.is_empty() and near[0] is Bot:
+		(near[0] as Bot).quests.on_kill(enemy.creature_entry)
+		(near[0] as Bot).last_kill = enemy.creature_entry
+		(near[0] as Bot).bag.loot(enemy)
 	return players_group
 
 

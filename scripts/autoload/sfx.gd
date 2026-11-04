@@ -5,8 +5,11 @@ extends Node
 const SOUND_DIR := "res://assets/audio/rpg_sfx/"
 const POOL_SIZE := 12
 const PITCH_VARIATION := 0.06
-const VOLUME_DB := -6.0
-## World sounds further than this from the camera aren't played.
+## Every sound's base level: three quarters of the old -6 dB.
+const VOLUME_DB := -6.0 + 20.0 * log(0.75) / log(10.0)
+## World sounds fade with distance from you: full within NEAR, nothing
+## beyond HEARING_RANGE, and a smooth falloff between.
+const NEAR := 4.0
 const HEARING_RANGE := 40.0
 
 const SOUNDS: Dictionary[String, Array] = {
@@ -47,15 +50,35 @@ func _ready() -> void:
 		_players.append(player)
 
 
-## Plays a sound made somewhere in the world, if it's within earshot of the
-## camera, so far-off fights between creatures and playerbots stay quiet.
+## Plays a sound made somewhere in the world, quieter the further it is from
+## you (the player, or the camera without one), and not at all out of earshot.
 func play_at(sound_name: String, at: Vector3) -> void:
-	var camera := get_viewport().get_camera_3d()
-	if camera == null or camera.global_position.distance_to(at) <= HEARING_RANGE:
-		play(sound_name)
+	var listener := get_tree().get_first_node_in_group("player") as Node3D
+	var ear := listener.global_position if listener else Vector3.INF
+	if listener == null:
+		var camera := get_viewport().get_camera_3d()
+		if camera == null:
+			play(sound_name)
+			return
+		ear = camera.global_position
+	var loudness := falloff(ear.distance_to(at))
+	if loudness > 0.0:
+		play(sound_name, loudness)
 
 
-func play(sound_name: String) -> void:
+## How loud a sound is at a distance, 1 to 0: full up close, then fading as
+## the square of how far into the hearing range it is.
+static func falloff(distance: float) -> float:
+	if distance <= NEAR:
+		return 1.0
+	if distance >= HEARING_RANGE:
+		return 0.0
+	var t := (distance - NEAR) / (HEARING_RANGE - NEAR)
+	return (1.0 - t) * (1.0 - t)
+
+
+## Plays a sound at a share of its full volume (1 for interface sounds).
+func play(sound_name: String, loudness := 1.0) -> void:
 	var files: Array = SOUNDS[sound_name]
 	for player in _players:
 		if not player.playing:
@@ -63,6 +86,6 @@ func play(sound_name: String) -> void:
 			var speed: float = SPEEDS.get(sound_name, 1.0)
 			player.pitch_scale = speed * randf_range(1.0 - PITCH_VARIATION, 1.0 + PITCH_VARIATION)
 			var effects: float = Settings.get_value("effects_volume")
-			player.volume_db = VOLUME_DB + linear_to_db(maxf(effects, 0.0001))
+			player.volume_db = VOLUME_DB + linear_to_db(maxf(effects * loudness, 0.0001))
 			player.play()
 			return

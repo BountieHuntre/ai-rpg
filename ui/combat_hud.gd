@@ -20,8 +20,6 @@ const BAR_FONT_SIZE := 7
 const XP_FONT_SIZE := 5
 const CRIT_FONT_SIZE := 12
 const SHEET_FONT_SIZE := 6
-const LOG_TIME := 8.0
-const LOG_LINES := 6
 const BANNER_FONT_SIZE := 18
 const BANNER_TIME := 2.5
 ## Show the worn gear warning at or below this share of durability.
@@ -43,7 +41,7 @@ const PARTY_RANGE := 40.0
 const PARTY_FRAME_SIZE := Vector2(80, 25)
 const PARTY_XP := Color(0.55, 0.3, 0.85)
 ## Unit menu entries.
-enum MenuItem { INVITE, REMOVE, FOLLOW, STAY, CANCEL }
+enum MenuItem { WHISPER, INVITE, REMOVE, FOLLOW, STAY, TRADE, CANCEL }
 
 var _player: Player
 var _camera: Camera3D
@@ -91,6 +89,7 @@ var _quest_window: QuestWindow
 var _quest_npc: Npc
 var _quest_log: QuestLogUI
 var _social: SocialWindow
+var _trade: TradeWindow
 ## Objectives of the quests underway, down the right side.
 var _tracker: RichTextLabel
 var _minimap: Minimap
@@ -103,9 +102,10 @@ var _tooltip: ItemTooltip
 ## The creature or NPC under the mouse, described in the bottom right corner.
 var _unit_tooltip: ItemTooltip
 var _unit_lines: Array = []
-var _loot_log: Label
+var _chat: ChatFrame
+## Show Frame Rate: frames per second, above the minimap.
+var _fps: Label
 ## Recent loot messages as [text, seconds left].
-var _log_lines: Array[Array] = []
 ## Party frames: { "bot", "frame", "name", "level", "health", "mana" }.
 var _party_frames: Array[Dictionary] = []
 var _unit_menu: PopupMenu
@@ -121,7 +121,7 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	_build()
 	get_viewport().size_changed.connect(_build)
 	Settings.changed.connect(func(key: String) -> void:
-		if key == "ui_scale":
+		if key == "ui_scale" or key.begins_with("chat_"):
 			_build()
 	)
 
@@ -156,18 +156,30 @@ func _watch_combatants() -> void:
 			continue
 		_watched[combatant] = true
 		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
-		combatant.took_damage.connect(func(amount: int, _source: Combatant, crit: bool) -> void:
-			_add_float(combatant, "%d!" % amount if crit else str(amount), hit_color, crit)
+		# As in classic, only your own fight shows: hits you deal and take,
+		# misses either way, heals on you, and stuns on you or your target.
+		combatant.took_damage.connect(func(amount: int, source: Combatant, crit: bool) -> void:
+			if _involves_player(combatant, source):
+				_add_float(combatant, "%d!" % amount if crit else str(amount), hit_color, crit)
 		)
-		combatant.avoided.connect(func(text: String, _source: Combatant) -> void:
-			_add_float(combatant, text, Color(0.8, 0.8, 0.8))
+		combatant.avoided.connect(func(text: String, source: Combatant) -> void:
+			if _involves_player(combatant, source):
+				_add_float(combatant, text, Color(0.8, 0.8, 0.8))
 		)
 		combatant.healed.connect(func(amount: int, crit: bool) -> void:
-			_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
+			if combatant == _player.combatant:
+				_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
 		)
 		combatant.stunned.connect(func() -> void:
-			_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
+			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
+				_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
 		)
+
+
+## Whether a hit is the player's: struck or dealt by them.
+func _involves_player(struck: Combatant, source: Combatant) -> bool:
+	var me := _player.combatant
+	return struck == me or (source != null and is_instance_valid(source) and source == me)
 
 
 ## Playerbots came or went: watch the new ones and redraw names and frames.
@@ -277,10 +289,12 @@ func _process(delta: float) -> void:
 	_update_durability_warning()
 	_update_floats(delta)
 	_update_party_frames()
+	_fps.visible = Settings.get_value("show_fps")
+	if _fps.visible:
+		_fps.text = "%d fps" % Engine.get_frames_per_second()
 	_update_enemy_names()
 	_update_unit_tooltip()
 	_update_npc_names()
-	_update_loot_log(delta)
 
 
 func _build() -> void:
@@ -336,6 +350,9 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
+	_fps = _label(self, Vector2(map_corner.x - 30, map_corner.y), "", Color(0.6, 1, 0.6))
+	_fps.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_fps.visible = false
 	_minimap = Minimap.new()
 	add_child(_minimap)
 	_minimap.setup(_player, _game_view.get_node("GameViewport/World"), _ui_scale, _width)
@@ -343,8 +360,6 @@ func _build() -> void:
 	_durability_warning = _label(self, Vector2(map_corner.x - 50, map_corner.y + 20), "", Color.WHITE)
 	_durability_warning.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_durability_warning.visible = false
-	_loot_log = _label(self, Vector2(4, _height - 60), "", Color(0.4, 0.75, 1))
-	_loot_log.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_loot_window = LootWindow.new()
 	_loot_window.position = Vector2(130, 60) * _ui_scale
 	_loot_window.visible = false
@@ -405,6 +420,14 @@ func _build() -> void:
 	_social.setup(_ui_scale)
 	add_child(_social)
 	_social.message.connect(_on_loot_message)
+	var typing: bool = _chat.is_typing() if _chat and is_instance_valid(_chat) else false
+	_chat = ChatFrame.new()
+	add_child(_chat)
+	_chat.setup(_ui_scale, Vector2(_width, _height), _player, _social, _tooltip, _open_name_menu)
+	_inventory.link_requested.connect(_chat.insert_item)
+	_quest_log.link_requested.connect(_chat.insert_quest)
+	if typing:
+		_chat.open()
 	if social_open:
 		_social.toggle()
 	_quest_window = QuestWindow.new()
@@ -423,10 +446,23 @@ func _build() -> void:
 	move_child(_tooltip, -1)
 	if _loot_corpse and is_instance_valid(_loot_corpse) and _loot_corpse.has_loot():
 		_loot_window.open(_loot_corpse, _player, _ui_scale)
+	var trading_with: Bot = _trade.bot if _trade and is_instance_valid(_trade) and _trade.is_open() else null
+	if trading_with:
+		_trade.cancel()
+	_trade = TradeWindow.new()
+	_trade.position = Vector2(130, 40) * _ui_scale
+	add_child(_trade)
+	_trade.setup(_player, _inventory, _ui_scale)
+	_trade.message.connect(_on_loot_message)
+	_trade.hovered.connect(_tooltip.show_item)
 	_unit_menu = PopupMenu.new()
 	_unit_menu.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 	_unit_menu.id_pressed.connect(_on_unit_menu)
 	add_child(_unit_menu)
+	# The unit tooltip stays in its corner over the bags and windows, under
+	# the item tooltip.
+	move_child(_unit_tooltip, -1)
+	move_child(_tooltip, -1)
 
 
 ## Yellow when any equipped item is low on durability, red when one is broken.
@@ -610,12 +646,14 @@ func _on_party_frame_input(event: InputEvent, bot: Bot) -> void:
 func open_unit_menu(bot: Bot) -> void:
 	_menu_bot = bot
 	_unit_menu.clear()
+	_unit_menu.add_item("Whisper", MenuItem.WHISPER)
 	if Party.is_member(bot):
 		_unit_menu.add_item("Follow", MenuItem.FOLLOW)
 		_unit_menu.add_item("Stay", MenuItem.STAY)
 		_unit_menu.add_item("Remove from Party", MenuItem.REMOVE)
 	else:
 		_unit_menu.add_item("Invite to Party", MenuItem.INVITE)
+	_unit_menu.add_item("Trade", MenuItem.TRADE)
 	_unit_menu.add_item("Cancel", MenuItem.CANCEL)
 	_unit_menu.reset_size()
 	_unit_menu.popup(Rect2i(Vector2i(get_viewport().get_mouse_position()), Vector2i.ZERO))
@@ -633,6 +671,10 @@ func _on_unit_menu(id: int) -> void:
 		MenuItem.FOLLOW:
 			bot.follow()
 			_on_loot_message("%s is following you." % bot.profile.char_name, false)
+		MenuItem.WHISPER:
+			_chat.whisper_to(bot.profile.char_name)
+		MenuItem.TRADE:
+			_trade.open(bot)
 		MenuItem.STAY:
 			bot.stay()
 			_on_loot_message("%s stays here." % bot.profile.char_name, false)
@@ -769,9 +811,15 @@ func _update_unit_tooltip() -> void:
 	if lines != _unit_lines:
 		_unit_lines = lines
 		_unit_tooltip.show_lines(lines)
-	# Sits above the bags when they're open in the same corner, as in classic.
-	var bags := _inventory.bags_rect()
-	_unit_tooltip.anchor_lift = 0.0 if bags.size == Vector2.ZERO else get_viewport().get_visible_rect().size.y - bags.position.y
+
+
+## Right-click on a player's name in the chat: the bot's menu, as on its
+## frame. Nothing for yourself or a bot that isn't in the world.
+func _open_name_menu(player_name: String) -> void:
+	var manager := get_tree().get_first_node_in_group("bot_manager") as BotManager
+	var bot := manager.find_bot(player_name) if manager else null
+	if bot:
+		open_unit_menu(bot)
 
 
 ## Classic unit tooltip rows: the name in its reaction color, level and kind
@@ -791,6 +839,9 @@ func unit_tooltip(unit: Node3D) -> Array:
 		if Party.is_member(bot):
 			lines.append(["In your party", "", QUEST_DONE])
 		else:
+			var questing := bot.quests.current_title()
+			if not questing.is_empty():
+				lines.append(["Questing: %s" % questing, "", QuestLog.YELLOW])
 			lines.append(["Target, then right-click its frame to invite", "", GREY])
 		if not bot.combatant.is_alive():
 			lines.append(["Dead", "", GREY])
@@ -813,6 +864,13 @@ func unit_tooltip(unit: Node3D) -> Array:
 	return lines
 
 
+func close_trade() -> bool:
+	if not _trade.is_open():
+		return false
+	_trade.cancel()
+	return true
+
+
 func close_social() -> bool:
 	return _social.close()
 
@@ -826,6 +884,10 @@ func close_quests() -> bool:
 
 
 func _on_quest_message(text: String) -> void:
+	# Taking and finishing quests also go in the chat, as in classic; progress
+	# only shows on screen.
+	if text.begins_with("Quest accepted") or text.ends_with(" completed."):
+		Chat.system(text)
 	_quest_note.text = text
 	_quest_note_left = QUEST_NOTE_TIME
 
@@ -877,20 +939,9 @@ func _on_loot_message(text: String, is_error: bool) -> void:
 		_show_message(text)
 		Sfx.play("error")
 		return
-	_log_lines.append([text, LOG_TIME])
-	if _log_lines.size() > LOG_LINES:
-		_log_lines.pop_front()
-
-
-func _update_loot_log(delta: float) -> void:
-	for line in _log_lines:
-		line[1] -= delta
-	_log_lines = _log_lines.filter(func(line: Array) -> bool: return line[1] > 0.0)
-	var texts := PackedStringArray()
-	for line in _log_lines:
-		texts.append(line[0])
-	_loot_log.text = "\n".join(texts)
-	_loot_log.position.y = _height * _ui_scale - _loot_log.get_minimum_size().y - 4 * _ui_scale
+	# Loot in green, everything else as a system line, in the chat.
+	var loot := text.begins_with("You loot") or text.begins_with("You receive") or text.begins_with("Your share")
+	Chat.add("loot" if loot else "system", text)
 
 
 ## Esc handling: drops a held item or spell, or closes the bag, character and
@@ -904,6 +955,7 @@ func _on_leveled_up(new_level: int) -> void:
 	if new_level >= ClassicData.MAX_LEVEL:
 		_build.call_deferred()
 	show_banner("Level %d!" % new_level)
+	Chat.system("Congratulations, you have reached level %d!" % new_level)
 	Sfx.play("level_up")
 
 

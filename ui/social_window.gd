@@ -31,6 +31,11 @@ var _selected := ""
 var _filter := ""
 var _adding := false
 var _refresh_left := 0.0
+## What the list showed when last drawn, so it's only redrawn on a change.
+var _shown := ""
+var _scroll: ScrollContainer
+## The tab the list was scrolled on: a new tab starts at the top.
+var _scroll_tab := ""
 
 
 func setup(ui_scale: float) -> void:
@@ -60,20 +65,36 @@ func show_tab(tab: String) -> void:
 	_build()
 
 
+## Opens the Who tab searching for something (/who in the chat).
+func show_who(filter := "") -> void:
+	_filter = filter
+	show_tab(WHO)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("social"):
 		toggle()
 		get_viewport().set_input_as_handled()
 
 
-## Levels, zones and who's about change: redraw every second while open.
+## Levels, zones and who's about change: checked every second while open,
+## and redrawn only when something shown has changed.
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	_refresh_left -= delta
 	if _refresh_left <= 0.0 and not _adding and not get_viewport().gui_get_focus_owner() is LineEdit:
 		_refresh_left = 1.0
-		_build()
+		if _snapshot() != _shown:
+			_build()
+
+
+## Everything the list shows, as text, to tell when it has changed.
+func _snapshot() -> String:
+	var parts := PackedStringArray([_tab, _selected, _filter, ",".join(GameState.friends)])
+	for bot in _online():
+		parts.append("%s %d" % [bot.profile.char_name, bot.profile.level])
+	return "|".join(parts)
 
 
 func _manager() -> BotManager:
@@ -89,6 +110,9 @@ func _online() -> Array[Bot]:
 
 
 func _build() -> void:
+	# Redrawing keeps the list where it was scrolled to, on the same tab.
+	var kept := _scroll.scroll_vertical if _scroll and is_instance_valid(_scroll) and _scroll_tab == _tab else 0
+	_shown = _snapshot()
 	for child in get_children():
 		child.queue_free()
 	size = Vector2(WIDTH, 14 + 12 + LIST_HEIGHT + 34) * _ui_scale
@@ -118,6 +142,13 @@ func _build() -> void:
 	rows.custom_minimum_size.x = (WIDTH - 14) * _ui_scale
 	scroll.add_child(rows)
 	add_child(scroll)
+	_scroll = scroll
+	_scroll_tab = _tab
+	# Once the rows are laid out, back to where it was.
+	get_tree().process_frame.connect(func() -> void:
+		if is_instance_valid(scroll):
+			scroll.scroll_vertical = kept
+	, CONNECT_ONE_SHOT)
 	if _tab == FRIENDS:
 		_build_friends(rows)
 	else:
