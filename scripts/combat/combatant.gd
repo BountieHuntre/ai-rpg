@@ -20,6 +20,8 @@ signal dealt_damage(target: Combatant)
 signal melee_hit_taken(attacker: Combatant)
 ## This unit blocked a melee swing, fully or partly.
 signal blocked_attack(attacker: Combatant)
+## This unit's damage of a school landed on a target (Leeching Embrace heals from shadow).
+signal damage_done(target: Combatant, amount: int, school: int)
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -163,6 +165,51 @@ func aura_total(aura_type: int, misc_mask := -1) -> float:
 	return total
 
 
+## Sum of an aura type's amounts whose misc value is exactly misc (a stat
+## index for Litany of Fortitude; -1 there means every stat).
+func aura_total_exact(aura_type: int, misc: int) -> float:
+	var total := 0.0
+	for aura in auras:
+		for i in 3:
+			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) == aura_type and int(aura.spell["EffectMiscValue%d" % (i + 1)]) == misc:
+				total += aura.amounts[i]
+	return total
+
+
+## The strongest (most negative) amount of an aura type, or 0: slows don't add up.
+func aura_lowest(aura_type: int) -> float:
+	var lowest := 0.0
+	for aura in auras:
+		for i in 3:
+			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) == aura_type:
+				lowest = minf(lowest, aura.amounts[i])
+	return lowest
+
+
+## Feared units run from whoever frightened them and can't fight.
+func is_feared() -> bool:
+	return has_aura_type(SpellDB.AURA_MOD_FEAR)
+
+
+## The unit that feared this one, or null.
+func fear_source() -> Combatant:
+	for aura in auras:
+		if SpellDB.has_effect(aura.spell, SpellDB.AURA_MOD_FEAR, true) and is_instance_valid(aura.caster):
+			return aura.caster
+	return null
+
+
+## Movement speed factor from speed auras: the strongest slow (Mind Rend) and
+## any speed-ups.
+func speed_multiplier() -> float:
+	return maxf(1.0 + aura_total(SpellDB.AURA_MOD_INCREASE_SPEED) / 100.0 + aura_lowest(SpellDB.AURA_MOD_DECREASE_SPEED) / 100.0, 0.0)
+
+
+## Damage done bonus in percent for a school (Kindled Power, Shroud of Shadow).
+func damage_done_percent(school: int) -> float:
+	return aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_DONE, 1 << school)
+
+
 func has_aura_type(aura_type: int, misc_mask := -1) -> bool:
 	for aura in auras:
 		for i in 3:
@@ -224,8 +271,10 @@ func spend_mana(amount: int) -> void:
 
 
 ## Weapon damage plus the attack power bonus of AP / 14 per second of swing time.
+## Flat physical damage done auras (Feeble Hex and Withering Touch lower it) apply too.
 func roll_weapon_damage() -> float:
-	return randf_range(min_damage, max_damage) + attack_power / 14.0 * swing_interval
+	var damage := randf_range(min_damage, max_damage) + attack_power / 14.0 * swing_interval
+	return maxf(damage + aura_total(SpellDB.AURA_MOD_DAMAGE_DONE, 1), 0.0)
 
 
 ## Resolves a melee ability against the target. Returns whether it landed.
@@ -245,8 +294,11 @@ func hit_with_spell(target: Combatant, damage: float) -> bool:
 	return true
 
 
-func heal_with_spell(amount: float, healer: Combatant = null) -> void:
-	var crit := CombatRules.roll_heal(healer if healer else self) == CombatRules.Outcome.CRIT
+func heal_with_spell(amount: float, healer: Combatant = null, extra_crit := 0.0) -> void:
+	var crit := CombatRules.roll_heal(healer if healer else self, extra_crit) == CombatRules.Outcome.CRIT
+	# Kindled Power raises healing done.
+	if healer:
+		amount *= 1.0 + healer.aura_total(SpellDB.AURA_MOD_HEALING_DONE_PERCENT) / 100.0
 	heal(roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit, healer)
 
 
@@ -259,15 +311,62 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 		avoid("Immune", source)
 		return
 	amount += int(aura_total(SpellDB.AURA_MOD_DAMAGE_TAKEN, 1 << school))
+	# Percentage damage done (Kindled Power, Shroud of Shadow) and taken.
+	var percent := 1.0 + aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_TAKEN, 1 << school) / 100.0
+	if source and is_instance_valid(source):
+		percent *= 1.0 + source.damage_done_percent(school) / 100.0
+	amount = maxi(roundi(amount * percent), 0)
+	amount = _absorb(amount, school, source)
 	enter_combat()
+	if amount <= 0:
+		return
 	health = maxi(health - amount, 0)
 	took_damage.emit(amount, source, crit)
-	if source and amount > 0:
+	if source and is_instance_valid(source) and amount > 0:
 		source.dealt_damage.emit(self)
+		source.damage_done.emit(self, amount, school)
+	_break_on_damage(amount)
 	if health == 0:
 		attack_target = null
 		_clear_auras_on_death()
 		died.emit()
+
+
+## Absorb shields (Sanctified Ward) soak damage of their schools until used up.
+func _absorb(amount: int, school: int, source: Combatant) -> int:
+	for aura in auras.duplicate():
+		var spell: Dictionary = aura.spell
+		for i in 3:
+			if amount <= 0 or int(spell["EffectApplyAuraName%d" % (i + 1)]) != SpellDB.AURA_SCHOOL_ABSORB:
+				continue
+			if int(spell["EffectMiscValue%d" % (i + 1)]) & (1 << school) == 0:
+				continue
+			var soaked := mini(amount, int(aura.amounts[i]))
+			aura.amounts[i] -= soaked
+			amount -= soaked
+			if amount <= 0:
+				avoid("Absorb", source)
+			if aura.amounts[i] <= 0:
+				remove_aura(int(spell.Id))
+	return amount
+
+
+## Damage ends auras that break on it (Bind the Dead, Featherfall), and may
+## break fear: the chance is the damage over 25 per level less 150 (at least
+## 50), as HandleRemoveByDamageChanceProc in CMaNGOS.
+func _break_on_damage(amount: int) -> void:
+	if not is_alive():
+		return
+	var limit := 25.0 * level - 150.0 if level > 8 else 50.0
+	for aura in auras.duplicate():
+		var spell: Dictionary = aura.spell
+		var breaks := int(spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_DAMAGE != 0
+		if SpellDB.has_effect(spell, SpellDB.AURA_MOD_FEAR, true) and randf() * 100.0 < amount / limit * 100.0:
+			breaks = true
+		if breaks:
+			remove_aura(int(spell.Id))
+			if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+				_stun_left = 0.0
 
 
 func avoid(text: String, source: Combatant) -> void:
@@ -281,6 +380,8 @@ func avoid(text: String, source: Combatant) -> void:
 func heal(amount: int, crit := false, healer: Combatant = null) -> void:
 	if not is_alive():
 		return
+	# Feeble Hex lowers healing taken.
+	amount = maxi(roundi(amount * (1.0 + aura_total(SpellDB.AURA_MOD_HEALING_PCT) / 100.0)), 0)
 	var gained := mini(amount, max_health - health)
 	health = mini(health + amount, max_health)
 	healed.emit(amount, crit)
@@ -306,7 +407,7 @@ func _physics_process(delta: float) -> void:
 
 	if attack_target and (not is_instance_valid(attack_target) or not attack_target.is_alive()):
 		attack_target = null
-	if attack_target and not is_stunned() and not is_pacified() and not is_casting and _swing_left == 0.0:
+	if attack_target and not is_stunned() and not is_pacified() and not is_feared() and not is_casting and _swing_left == 0.0:
 		if faces(attack_target) and distance_to(attack_target) <= melee_range:
 			swung.emit(attack_target)
 			var target := attack_target
@@ -329,12 +430,19 @@ func _tick_auras(delta: float) -> void:
 
 
 ## Periodic effects tick every EffectAmplitude milliseconds: mana (Boon of
-## Clarity) and damage over time.
+## Clarity), damage and healing over time, draining life (Ravening Blight)
+## and spells triggered on each tick (Cleanse Sickness).
+const PERIODIC_KINDS := [
+	SpellDB.AURA_PERIODIC_ENERGIZE, SpellDB.AURA_PERIODIC_DAMAGE, SpellDB.AURA_PERIODIC_HEAL,
+	SpellDB.AURA_PERIODIC_LEECH, SpellDB.AURA_PERIODIC_TRIGGER_SPELL,
+]
+
+
 func _tick_periodic(aura: Dictionary, delta: float) -> void:
 	var spell: Dictionary = aura.spell
 	for i in 3:
 		var kind := int(spell.get("EffectApplyAuraName%d" % (i + 1), 0))
-		if kind != SpellDB.AURA_PERIODIC_ENERGIZE and kind != SpellDB.AURA_PERIODIC_DAMAGE:
+		if not kind in PERIODIC_KINDS:
 			continue
 		var period := int(spell.get("EffectAmplitude%d" % (i + 1), 0)) / 1000.0
 		if period <= 0.0:
@@ -344,10 +452,38 @@ func _tick_periodic(aura: Dictionary, delta: float) -> void:
 		while aura[key] >= period:
 			aura[key] -= period
 			var amount: float = aura.amounts[i]
+			var caster: Combatant = aura.caster if is_instance_valid(aura.caster) else null
 			if kind == SpellDB.AURA_PERIODIC_ENERGIZE:
 				mana = minf(mana + amount, max_mana)
-			elif is_alive():
-				take_damage(roundi(amount), aura.caster, false, int(spell.get("School", 0)))
+			elif not is_alive():
+				return
+			elif kind == SpellDB.AURA_PERIODIC_HEAL:
+				heal(roundi(amount), false, caster)
+			elif kind == SpellDB.AURA_PERIODIC_TRIGGER_SPELL:
+				_triggered(SpellDB.get_spell(int(spell.get("EffectTriggerSpell%d" % (i + 1), 0))))
+			else:
+				var before := health
+				take_damage(roundi(amount), caster, false, int(spell.get("School", 0)))
+				# Draining life heals the caster by what it took, times the effect's multiplier.
+				if kind == SpellDB.AURA_PERIODIC_LEECH and caster and caster.is_alive():
+					var multiplier := float(spell.get("EffectMultipleValue%d" % (i + 1), 1.0))
+					caster.heal(roundi((before - health) * (multiplier if multiplier > 0.0 else 1.0)), false, caster)
+			if not aura in auras:
+				return
+
+
+## A spell an aura on this unit triggers each tick. Only dispels so far
+## (Cleanse Sickness Effect): one harmful effect of the type, from a creature.
+func _triggered(spell: Dictionary) -> void:
+	if int(spell.get("Effect1", 0)) != SpellDB.EFFECT_DISPEL:
+		return
+	var kind := int(spell.get("EffectMiscValue1", 0))
+	for aura in auras:
+		var caster: Combatant = aura.caster
+		var from_creature := caster == null or not is_instance_valid(caster) or not caster.is_player
+		if from_creature and int(aura.spell.get("Dispel", 0)) == kind:
+			remove_aura(int(aura.spell.Id))
+			return
 
 
 func _engage(target: Combatant) -> void:

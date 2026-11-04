@@ -22,8 +22,11 @@ const USED := Color(0.55, 0.55, 0.55)
 const NOT_IN_GAME := Color(0.35, 0.35, 0.4)
 const SELECTED := Color(1, 1, 1, 0.12)
 ## Spells that need another player (a party member to protect or bring back).
-## Revival (raising a party member) works; these two show but can't be trained yet.
+## Revival (raising a party member) works; these show but can't be trained yet.
 const NEEDS_PARTY := ["Hallowed Ransom", "Boon of the Martyr"]
+## Spells whose effect the game doesn't have yet: taking over a creature,
+## seeing through its eyes, and a well others click to heal.
+const NOT_YET := ["Dominate Will", "Borrowed Eyes", "Font of Light"]
 
 var npc: Node3D
 
@@ -66,6 +69,8 @@ func entry_state(entry: Dictionary) -> Array:
 		return ["used", ""]
 	if spell.SpellName in NEEDS_PARTY:
 		return ["not_in_game", "Needs a party"]
+	if spell.SpellName in NOT_YET:
+		return ["not_in_game", "Not in the game yet"]
 	if int(entry.level) > GameState.level:
 		return ["unavailable", "Requires Level %d" % entry.level]
 	var previous := SpellDB.previous_rank(main_id)
@@ -103,7 +108,9 @@ func _build() -> void:
 	for child in get_children():
 		child.queue_free()
 	_rows.clear()
-	var list := SpellDB.trainer_list(npc.trainer)
+	var list := SpellDB.trainer_list(npc.trainer, GameState.race)
+	# Classic trainers only teach their own class.
+	var trainer_class := int(SpellDB.TRAINER_CLASSES.get(npc.trainer, 0))
 	size = Vector2(WIDTH, 14 + LIST_HEIGHT + 30) * _ui_scale
 	var back := ColorRect.new()
 	back.color = BACK
@@ -118,6 +125,14 @@ func _build() -> void:
 			close()
 	)
 
+	if trainer_class != GameState.char_class:
+		var refusal := _text(self, Vector2(6, 20), "I can only train %ss. Seek out a trainer of your own calling." % ClassicData.CLASS_NAMES.get(trainer_class, ""), Color.WHITE, FONT_SIZE)
+		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		refusal.custom_minimum_size.x = (WIDTH - 12) * _ui_scale
+		size.y = 50 * _ui_scale
+		back.size = size
+		_rows.clear()
+		return
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(2, 14) * _ui_scale
 	scroll.size = Vector2(WIDTH - 4, LIST_HEIGHT) * _ui_scale

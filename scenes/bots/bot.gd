@@ -64,6 +64,15 @@ const CASTER_CLASSES := [ClassicData.CharClass.PRIEST, ClassicData.CharClass.MAG
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 ## Oaths a Templar bot fights with, best first.
 const OATHS := ["Oath of Dominion", "Oath of Valor"]
+## How far from its enemy a Cleric bot with mana stands to cast.
+const CASTER_RANGE := 25.0
+## A Cleric bot fights from range while it has this share of its mana.
+const CASTER_MANA := 0.15
+## Buffs a Cleric bot keeps on its group, and the ones on itself.
+const CLERIC_GROUP_BUFFS := ["Litany of Fortitude", "Uplifted Spirit"]
+const CLERIC_SELF_BUFFS := ["Inner Flame", "Umbral Guard", "Withering Touch"]
+## Cleric heals, biggest last: the bot casts the first it can.
+const CLERIC_HEALS := ["Greater Mending", "Mending", "Lesser Mending"]
 
 ## Set by BotManager: where bots on their own go hunting.
 ## Far from the player, the BotManager ticks the bot itself, a slice of the
@@ -182,12 +191,11 @@ func learn_spells() -> void:
 	var known: Array[int] = [SpellDB.ATTACK]
 	for id in SpellDB.start_spells(profile.race, profile.char_class):
 		known.append(int(id))
-	if profile.char_class == ClassicData.CharClass.PALADIN:
-		for entry: Dictionary in SpellDB.trainer_list("paladin"):
-			if int(entry.level) <= profile.level:
-				for id in entry.spells:
-					if not int(id) in known:
-						known.append(int(id))
+	for entry: Dictionary in SpellDB.class_trainer_list(profile.char_class, profile.race):
+		if int(entry.level) <= profile.level:
+			for id in entry.spells:
+				if not int(id) in known:
+					known.append(int(id))
 	profile.known_spells = known
 	stats.refresh()
 
@@ -338,7 +346,7 @@ func _think() -> void:
 		_resting = false
 		sitting = false
 		combatant.attack_target = _enemy
-		var reach := combatant.melee_range * 0.8
+		var reach := CASTER_RANGE if _casts_from_range() else combatant.melee_range * 0.8
 		if combatant.distance_to(_enemy) > reach:
 			_go_to(_enemy.body.global_position)
 		else:
@@ -652,11 +660,88 @@ func _rest(delta: float) -> void:
 		_resting = false
 
 
-# Templar spells.
+## Clerics with mana stand back and cast; out of mana they close in and swing.
+func _casts_from_range() -> bool:
+	var c := combatant
+	return profile.char_class == ClassicData.CharClass.PRIEST and c.max_mana > 0 and c.mana >= c.max_mana * CASTER_MANA \
+		and profile.best_rank("Chastise") != 0
+
 
 func _use_spells() -> void:
-	if profile.char_class != ClassicData.CharClass.PALADIN:
+	match profile.char_class:
+		ClassicData.CharClass.PALADIN:
+			_use_templar_spells()
+		ClassicData.CharClass.PRIEST:
+			_use_cleric_spells()
+
+
+# Cleric spells: heal the group (a Ward first when someone is in trouble),
+# raise the fallen, keep buffs up, and fight with shadow and holy spells.
+
+func _use_cleric_spells() -> void:
+	var me := combatant
+	var fighting := me.is_in_combat()
+	var group := _group_units()
+	var hurt := _most_hurt(group)
+	if fighting and me.health < me.max_health * 0.3 and _try("Desperate Plea", me):
 		return
+	if hurt and fighting and hurt.health < hurt.max_health * 0.5 and _try("Sanctified Ward", hurt):
+		return
+	if hurt and hurt.health < hurt.max_health * heal_threshold():
+		var hurting := group.filter(func(unit: PlayerUnit) -> bool:
+			var c := unit.combatant
+			return c.is_alive() and c.health < c.max_health * heal_threshold() and me.distance_to(c) <= 30.0)
+		if hurting.size() >= 3 and _try("Communal Mending", me):
+			return
+		if hurt.health < hurt.max_health * 0.35 and _try("Swift Mending", hurt):
+			return
+		if hurt.health >= hurt.max_health * 0.5 and _lacks(hurt, "Lingering Grace") and _try("Lingering Grace", hurt):
+			return
+		for name in CLERIC_HEALS:
+			if _try(name, hurt):
+				return
+	for unit in group:
+		if unit.combatant.is_alive() and me.distance_to(unit.combatant) <= 30.0 and _try("Purge Sickness", unit.combatant):
+			return
+	if not fighting:
+		for unit in group:
+			if unit != self and not unit.combatant.is_alive() and _try("Rite of Return", unit.combatant):
+				return
+	if _enemy:
+		if _casts_from_range():
+			if _lacks(_enemy, "Gnawing Shadow", false) and _try("Gnawing Shadow", _enemy):
+				return
+			if _try("Mind Lash", _enemy):
+				return
+			if _try("Chastise", _enemy):
+				return
+		return
+	if fighting or _resting:
+		return
+	for name in CLERIC_SELF_BUFFS:
+		if _lacks(me, name) and _try(name, me):
+			return
+	for unit in group:
+		var target := unit.combatant
+		if not target.is_alive() or me.distance_to(target) > 30.0:
+			continue
+		for name in CLERIC_GROUP_BUFFS:
+			if _lacks(target, name) and _try(name, target):
+				return
+
+
+## Whether a target lacks a spell's aura (from anyone, or only from this bot),
+## or has it with under BOON_REFRESH seconds left.
+func _lacks(target: Combatant, spell_name: String, anyone := true) -> bool:
+	for aura in target.auras:
+		if aura.spell.SpellName == spell_name and (anyone or aura.caster == combatant):
+			return aura.remaining >= 0.0 and aura.remaining < minf(BOON_REFRESH, aura.duration * 0.25)
+	return true
+
+
+# Templar spells.
+
+func _use_templar_spells() -> void:
 	var me := combatant
 	var fighting := me.is_in_combat()
 	var group := _group_units()
@@ -805,6 +890,8 @@ func _move(delta: float) -> void:
 		velocity.z = direction.z * RUN_SPEED
 	else:
 		velocity.y -= GRAVITY * delta
+		if combatant.has_aura_type(SpellDB.AURA_FEATHER_FALL):
+			velocity.y = maxf(velocity.y, -FEATHER_FALL_SPEED)
 	var before := global_position
 	move_and_slide()
 	if direction == Vector3.ZERO or not is_on_floor():

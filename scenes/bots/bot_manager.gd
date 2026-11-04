@@ -134,7 +134,7 @@ func sync() -> void:
 ## Whether a saved bot can be a random bot under the current options. Bots
 ## below the level range move up to it; ones above it wait in the roster.
 func _fits(entry: Dictionary) -> bool:
-	if Settings.get_value("bot_classes") == "Templars Only" and int(entry["class"]) != ClassicData.CharClass.PALADIN:
+	if Settings.get_value("bot_classes") != "All Classes" and not int(entry["class"]) in SpellDB.classes_with_spells():
 		return false
 	if int(entry.race) not in _races():
 		return false
@@ -153,9 +153,14 @@ func _races() -> Array:
 func _new_entry() -> Dictionary:
 	var race: int = _races().pick_random()
 	var classes: Array = ClassicData.CLASS_NAMES.keys().filter(func(c: int) -> bool: return ClassicData.is_allowed(race, c))
-	if Settings.get_value("bot_classes") == "Templars Only":
-		race = [ClassicData.Race.HUMAN, ClassicData.Race.DWARF].pick_random() if not GameState.race in HORDE else race
-		classes = [ClassicData.CharClass.PALADIN] if ClassicData.is_allowed(race, ClassicData.CharClass.PALADIN) else classes
+	if Settings.get_value("bot_classes") != "All Classes":
+		# A race that can be one of the classes with spells (Horde Templars don't exist).
+		var casters := _races().filter(func(r: int) -> bool:
+			return SpellDB.classes_with_spells().any(func(c: int) -> bool: return ClassicData.is_allowed(r, c)))
+		race = casters.pick_random() if not casters.is_empty() else race
+		classes = ClassicData.CLASS_NAMES.keys().filter(func(c: int) -> bool: return ClassicData.is_allowed(race, c))
+		var with_spells := classes.filter(func(c: int) -> bool: return c in SpellDB.classes_with_spells())
+		classes = with_spells if not with_spells.is_empty() else classes
 	var entry := {
 		"name": _new_name(), "race": race, "class": classes.pick_random(),
 		"level": randi_range(min_level(), max_level()), "xp": 0,

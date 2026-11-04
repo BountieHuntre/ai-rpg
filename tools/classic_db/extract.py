@@ -34,10 +34,16 @@ VENDORS = [152, 1213]
 # Gold Dust Exchange.
 QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
 
-# Class trainer whose spell list is exported. 927 is Brother Wilhelm, Paladin Trainer.
-CLASS_TRAINERS = {"paladin": 927}
+# Class trainers whose spell lists are exported. 927 is Brother Wilhelm, Paladin
+# Trainer. Priests have racial spells, so their list merges one trainer per race
+# (race id: trainer): Brother Joshua (Human), Maxan Anvol (Dwarf), Astarii
+# Starseeker (Night Elf), Father Cobb (Undead) and Tai'jin (Troll). Entries that
+# not every one of them teaches get a "races" list.
+CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}}
 # Classes whose starting spells are exported: the ones with spell code in the game.
-SPELL_CLASSES = {2}  # Paladin
+SPELL_CLASSES = {2, 5}  # Paladin, Priest
+# Each class's SpellFamilyName: start spells of other families (racials) are left out.
+CLASS_SPELL_FAMILIES = {2: 10, 5: 6}
 # Starting spells worth keeping (the rest are passives and internals).
 START_SPELL_EFFECTS = {2, 6, 10, 35, 77}
 # Seal of Righteousness procs by rank, from UnitAuraProcHandler.cpp in CMaNGOS.
@@ -51,7 +57,32 @@ HOLY_LIGHT_HEAL = 19968
 # There are no talents yet, so the game's trainer sells them at the talent's
 # tier level: Seal of Command, Consecration, Blessing of Kings, Blessing of
 # Sanctuary, Holy Shock and Holy Shield.
-TALENT_FIRST_RANKS = {"paladin": [[20375, 20], [26573, 20], [20217, 20], [20911, 30], [20473, 40], [20925, 40]]}
+# Priest: Inner Focus, Holy Nova, Mind Flay, Divine Spirit, Silence, Vampiric
+# Embrace, Power Infusion, Shadowform and Lightwell.
+TALENT_FIRST_RANKS = {
+    "paladin": [[20375, 20], [26573, 20], [20217, 20], [20911, 30], [20473, 40], [20925, 40]],
+    "priest": [[14751, 20], [15237, 20], [15407, 20], [14752, 30], [15487, 30], [15286, 30],
+               [10060, 40], [15473, 40], [724, 40]],
+}
+# First ranks of priest racial spells, which classic gives from a quest: sold
+# free at the spell's level to the races that have them. Desperate Prayer
+# (Human, Dwarf), Feedback (Human), Fear Ward (Dwarf), Starshards and Elune's
+# Grace (Night Elf), Touch of Weakness and Devouring Plague (Undead), Hex of
+# Weakness and Shadowguard (Troll).
+RACIAL_FIRST_RANKS = {"priest": [
+    [13908, [1, 3]], [13896, [1]], [6346, [3]], [10797, [4]], [2651, [4]],
+    [2652, [5]], [2944, [5]], [9035, [8]], [18137, [8]],
+]}
+# Spells another spell casts that the data doesn't link (from the CMaNGOS spell
+# scripts): Holy Nova's heal per rank, Touch of Weakness's and Shadowguard's
+# damage per rank, Power Word: Shield's Weakened Soul and Vampiric Embrace's heal.
+SPELL_LINKS = {
+    15237: 23455, 15430: 23458, 15431: 23459, 27799: 27803, 27800: 27804, 27801: 27805,
+    2652: 2943, 19261: 19249, 19262: 19251, 19264: 19252, 19265: 19253, 19266: 19254,
+    18137: 28377, 19308: 28378, 19309: 28379, 19310: 28380, 19311: 28381, 19312: 28382,
+    15286: 15290,
+}
+WEAKENED_SOUL = 6788
 # Judgement of Light and Wisdom heal or restore through a spell per rank, picked
 # in UnitAuraProcHandler.cpp (HandleDummyAuraProc), not linked in the data.
 JUDGEMENT_PROC_SPELLS = {
@@ -79,8 +110,8 @@ SPELL_FIELDS = [
     "Effect", "EffectDieSides", "EffectBaseDice", "EffectDicePerLevel", "EffectRealPointsPerLevel",
     "EffectBasePoints", "EffectMechanic", "EffectImplicitTargetA", "EffectImplicitTargetB",
     "EffectRadiusIndex", "EffectApplyAuraName", "EffectAmplitude", "EffectMiscValue",
-    "EffectTriggerSpell",
-)]
+    "EffectTriggerSpell", "EffectMultipleValue",
+)] + ["TargetCreatureType"]
 SPELL_EFFECT_LEARN = 36
 SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
@@ -339,8 +370,8 @@ def export_spells(db, item_spells):
                    if int(teach[f"Effect{i}"]) == SPELL_EFFECT_LEARN]
         return learned or [int(teach_id)]
 
-    for name, trainer in CLASS_TRAINERS.items():
-        entries = []
+    def trainer_entries(trainer):
+        entries = {}
         for r in db["npc_trainer"]:
             if int(r["entry"]) != trainer:
                 continue
@@ -348,11 +379,31 @@ def export_spells(db, item_spells):
             # Skip junk rows that point at unrelated, retired spells.
             if any(spells[str(s)]["SpellName"].startswith("zzOLD") for s in learned):
                 continue
-            entries.append({"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]),
-                            "level": int(r["reqlevel"])})
-            wanted.update(learned)
+            entries[int(r["spell"])] = {"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]),
+                                        "level": int(r["reqlevel"])}
+        return entries
+
+    for name, trainer in CLASS_TRAINERS.items():
+        if isinstance(trainer, dict):
+            by_race = {race: trainer_entries(entry) for race, entry in trainer.items()}
+            merged = {}
+            for race, entries in by_race.items():
+                for teach, entry in entries.items():
+                    merged.setdefault(teach, dict(entry, races=[]))["races"].append(race)
+            for entry in merged.values():
+                if len(entry["races"]) == len(trainer):
+                    del entry["races"]
+            entries = list(merged.values())
+        else:
+            entries = list(trainer_entries(trainer).values())
+        for entry in entries:
+            wanted.update(entry["spells"])
         for spell_id, level in TALENT_FIRST_RANKS.get(name, []):
             entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "talent": True})
+            wanted.add(spell_id)
+        for spell_id, races in RACIAL_FIRST_RANKS.get(name, []):
+            level = int(spells[str(spell_id)]["SpellLevel"])
+            entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "races": races})
             wanted.add(spell_id)
         trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
 
@@ -361,7 +412,7 @@ def export_spells(db, item_spells):
         if int(r["class"]) in SPELL_CLASSES:
             spell = spells.get(r["Spell"])
             if spell and any(int(spell[f"Effect{i}"]) in START_SPELL_EFFECTS for i in (1, 2, 3)) \
-                    and int(spell["SpellFamilyName"]) != 0:
+                    and int(spell["SpellFamilyName"]) == CLASS_SPELL_FAMILIES[int(r["class"])]:
                 start.setdefault(f'{r["race"]}-{r["class"]}', []).append(int(r["Spell"]))
                 wanted.add(int(r["Spell"]))
 
@@ -385,6 +436,9 @@ def export_spells(db, item_spells):
             linked.append(int(spell["EffectBasePoints1"]) + 1)
         linked.append(JUDGEMENT_PROC_SPELLS.get(spell_id, 0))
         linked.extend(HOLY_SHOCK_SPELLS.get(spell_id, []))
+        linked.append(SPELL_LINKS.get(spell_id, 0))
+        if spell["SpellName"] == "Power Word: Shield":
+            linked.append(WEAKENED_SOUL)
         for other in linked:
             if other and other not in wanted and str(other) in spells:
                 wanted.add(other)
@@ -407,6 +461,7 @@ def export_spells(db, item_spells):
                           "start_spells": start, "procs": procs,
                           "judgement_procs": {str(k): v for k, v in JUDGEMENT_PROC_SPELLS.items()},
                           "holy_shock": {str(k): v for k, v in HOLY_SHOCK_SPELLS.items()},
+                          "links": {str(k): v for k, v in SPELL_LINKS.items()},
                           "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
     print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
 

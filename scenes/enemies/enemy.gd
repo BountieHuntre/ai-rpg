@@ -155,7 +155,16 @@ func _physics_process(delta: float) -> void:
 				speed = _data.SpeedWalk * BASE_WALK_SPEED
 		State.CHASE:
 			_victim = _pick_victim()
-			if _victim == null or global_position.distance_to(_home) > leash_radius:
+			var feared := combatant.fear_source()
+			if feared:
+				# Runs from whoever frightened it, without fighting.
+				combatant.attack_target = null
+				combatant.enter_combat()
+				var away := global_position - feared.body.global_position
+				away.y = 0.0
+				destination = global_position + (away.normalized() if away.length() > 0.1 else Vector3.FORWARD) * 5.0
+				_face(destination)
+			elif _victim == null or global_position.distance_to(_home) > leash_radius:
 				_start_return()
 			else:
 				var at := _victim.body.global_position
@@ -172,6 +181,7 @@ func _physics_process(delta: float) -> void:
 				state = State.IDLE
 				_wander_target = _home
 
+	speed *= combatant.speed_multiplier()
 	var offset := destination - global_position
 	offset.y = 0.0
 	var direction := offset.normalized() if state != State.DEAD and not combatant.is_stunned() else Vector3.ZERO
@@ -263,13 +273,19 @@ func _pick_victim() -> Combatant:
 		return null
 	var best: Combatant = null
 	for unit: Combatant in threat:
-		if best == null or threat[unit] > threat[best]:
+		if best == null or _threat_of(unit) > _threat_of(best):
 			best = unit
 	if _victim and threat.has(_victim) and best != _victim:
 		var margin := THREAT_SWITCH_MELEE if combatant.distance_to(best) <= combatant.melee_range else THREAT_SWITCH_RANGED
-		if threat[best] <= threat[_victim] * margin:
+		if _threat_of(best) <= _threat_of(_victim) * margin:
 			return _victim
 	return best
+
+
+## Threat on a unit, less what Veil of Humility hides for as long as it lasts
+## (SPELL_AURA_MOD_TOTAL_THREAT).
+func _threat_of(unit: Combatant) -> float:
+	return threat[unit] + unit.aura_total(SpellDB.AURA_MOD_TOTAL_THREAT)
 
 
 ## A player unit left the world (a playerbot removed): off the threat list.
@@ -305,6 +321,12 @@ func is_aggressive() -> bool:
 	return not passive and ClassicData.aggressive(_data, GameState.race)
 
 
+## A harmful spell without damage (a fear, a slow) landed: the creature
+## fights back as if hit.
+func provoke(source: Combatant) -> void:
+	_on_attacked(source, 0)
+
+
 func _on_attacked(source: Combatant, damage: int) -> void:
 	if source == null or not source.is_player or state == State.RETURN or state == State.DEAD:
 		return
@@ -318,9 +340,10 @@ func _on_attacked(source: Combatant, damage: int) -> void:
 ## Classic aggro radius: about 20 yards at equal level, one yard less per level
 ## the player is above it and one more per level below (counted up to 25),
 ## never under 5 yards. From Creature::GetAttackDistance in CMaNGOS.
+## Calm Mind shortens it (SPELL_AURA_MOD_DETECT_RANGE).
 func aggro_radius(player_level: int) -> float:
 	var level_difference := maxi(player_level - level, -25)
-	return maxf(20.0 - level_difference, 5.0)
+	return maxf(maxf(20.0 - level_difference, 5.0) + combatant.aura_total(SpellDB.AURA_MOD_DETECT_RANGE), 0.0)
 
 
 func has_loot() -> bool:

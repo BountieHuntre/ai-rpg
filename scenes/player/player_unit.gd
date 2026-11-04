@@ -6,6 +6,8 @@ extends CharacterBody3D
 
 ## How squashed the placeholder model looks while sitting.
 const SIT_HEIGHT := 0.55
+## Highest falling speed under Featherfall, in yards per second.
+const FEATHER_FALL_SPEED := 3.0
 ## Placeholder looks for each race until there are models: size and body color.
 const RACE_LOOKS := {
 	ClassicData.Race.HUMAN: [Vector3(1, 1, 1), Color(0.25, 0.55, 0.85)],

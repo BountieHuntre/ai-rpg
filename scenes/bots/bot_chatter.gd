@@ -171,7 +171,7 @@ func _things_to_say(bot: Bot) -> Array:
 		options.append(["channel", 1, "first character, any tips?"])
 	if level < 10 and randf() < 0.3:
 		options.append(["channel", 1, "how long does it take to hit 10?"])
-	if bot.profile.char_class != ClassicData.CharClass.PALADIN and randf() < 0.3:
+	if not bot.profile.char_class in SpellDB.classes_with_spells() and randf() < 0.3:
 		options.append(["channel", 1, "is there a %s trainer anywhere around here?" % ClassicData.CLASS_NAMES[bot.profile.char_class].to_lower()])
 	return options
 
@@ -298,11 +298,14 @@ func _trainer_answer(lower: String) -> String:
 	if not asked.is_empty() and not trainers.has(asked.to_lower()):
 		if trainers.is_empty():
 			return "haven't seen a %s trainer anywhere around here" % asked.to_lower()
-		var known: String = trainers.keys()[0]
-		return "no %s trainer around here that i've seen, only %s for %s" % [asked.to_lower(), trainers[known].npc_name, _class_plural(known)]
+		var known: Array = trainers.keys().map(func(kind: String) -> String: return "%s for %s" % [trainers[kind].npc_name, _class_plural(kind)])
+		return "no %s trainer around here that i've seen, only %s" % [asked.to_lower(), " and ".join(known)]
 	var wanted: String = asked.to_lower() if not asked.is_empty() else (trainers.keys()[0] if trainers.size() == 1 else "")
 	if wanted.is_empty():
-		return "which class? i only know where the %s trainer is" % trainers.keys()[0] if not trainers.is_empty() else SHRUGS.pick_random()
+		if trainers.is_empty():
+			return SHRUGS.pick_random()
+		var kinds: Array = trainers.keys().map(func(kind: String) -> String: return "the %s trainer" % kind)
+		return "which class? i know where %s %s" % [" and ".join(kinds), "is" if kinds.size() == 1 else "are"]
 	var npc: Node3D = trainers[wanted]
 	var place := _manager.place_at(npc.global_position)
 	return "%s trains %s%s" % [npc.npc_name, _class_plural(wanted), (", in " if place == "the priory" else ", at ") + place if not place.is_empty() else ""]

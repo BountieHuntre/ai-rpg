@@ -104,6 +104,9 @@ func _physics_process(delta: float) -> void:
 			velocity.y = JUMP_SPEED
 	else:
 		velocity.y -= GRAVITY * delta
+		# Featherfall: a slow drift down.
+		if combatant.has_aura_type(SpellDB.AURA_FEATHER_FALL):
+			velocity.y = maxf(velocity.y, -FEATHER_FALL_SPEED)
 	move_and_slide()
 
 

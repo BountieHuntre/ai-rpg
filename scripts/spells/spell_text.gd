@@ -28,6 +28,9 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 		return _presence(name, t)
 	if name.begins_with("Oath of "):
 		return _oath(name, spell, t, caster)
+	var cleric := _cleric(name, spell, t)
+	if not cleric.is_empty():
+		return cleric
 	match name:
 		"Attack":
 			return "Toggles melee attack on your target."
@@ -162,6 +165,106 @@ static func _oath(name: String, spell: Dictionary, t: _Values, caster: Node) -> 
 	return text + (" Verdict unleashes it on your target." if judged else "") + " You can keep only one Oath at a time."
 
 
+## Cleric spells, or "" for other names.
+static func _cleric(name: String, spell: Dictionary, t: _Values) -> String:
+	var linked := _Values.new(SpellDB.get_spell(SpellDB.linked_spell(int(spell.get("Id", 0)))), t.level)
+	match name:
+		"Lesser Mending", "Mending", "Greater Mending":
+			return "Heals a friendly target for %s." % t.amount(0)
+		"Swift Mending":
+			return "Quickly heals a friendly target for %s." % t.amount(0)
+		"Desperate Plea":
+			return "Instantly heals you for %s." % t.amount(0)
+		"Communal Mending":
+			return "Heals every party member within 30 yards for %s." % t.amount(0)
+		"Lingering Grace":
+			return "Heals a friendly target for %s over %s." % [t.over_time(0), t.duration()]
+		"Chastise":
+			return "Strikes an enemy with holy light for %s Holy damage." % t.amount(0)
+		"Sacred Flame":
+			return "Burns an enemy with holy fire for %s Holy damage, and %s more over %s." % [t.amount(0), t.over_time(1), t.duration()]
+		"Mind Lash":
+			return "Lashes an enemy's mind for %s Shadow damage." % t.amount(0)
+		"Gnawing Shadow":
+			return "A shadow gnaws at an enemy for %s Shadow damage over %s." % [t.over_time(0), t.duration()]
+		"Ravening Blight":
+			return "A blight eats at an enemy for %s Shadow damage over %s, and heals you for the damage it deals." % [t.over_time(0), t.duration()]
+		"Mind Rend":
+			return "Rends an enemy's mind for %s Shadow damage over %s, slowing them by %s%% while you channel. Moving ends it." % [t.over_time(0), t.duration(), t.magnitude(1)]
+		"Falling Stars":
+			return "Calls down stars on an enemy for %s Arcane damage over %s while you channel. Moving ends it." % [t.over_time(0), t.duration()]
+		"Blessed Burst":
+			var heal := linked.amount(0) if not linked.spell.is_empty() else "some"
+			return "A burst of holy light deals %s Holy damage to enemies within 10 yards and heals party members within 10 yards for %s. Causes no threat." % [t.amount(0), heal]
+		"Mana Scorch":
+			return "Burns away %s of an enemy's mana; they take half the burned amount as damage." % t.amount(0)
+		"Litany of Fortitude":
+			return "Increases a friendly target's Stamina by %s for %s." % [t.amount(0), t.duration()]
+		"Uplifted Spirit":
+			return "Increases a friendly target's Spirit by %s for %s." % [t.amount(0), t.duration()]
+		"Communal Spirit":
+			return "Increases the Spirit of everyone in your party by %s for %s." % [t.amount(0), t.duration()]
+		"Shadow Warding":
+			return "Increases a friendly target's Shadow resistance by %s for %s." % [t.amount(0), t.duration()]
+		"Inner Flame":
+			return "Increases your armor by %s for %s or %d melee hits taken." % [t.amount(0), t.duration(), int(spell.get("ProcCharges", 0))]
+		"Sanctified Ward":
+			return "Wards a friendly target, absorbing %s damage for %s. The target can't be warded again for 15 sec." % [t.amount(0), t.duration()]
+		"Spent Soul":
+			return "Can't be given a Sanctified Ward."
+		"Veil of Humility":
+			return "Fades from your enemies' notice, lowering your threat by %s for %s." % [t.magnitude(0), t.duration()]
+		"Rite of Return":
+			return "Brings a dead ally back to life with %s health and %s mana. Can't be used in combat." % [t.amount(0), t.misc(0)]
+		"Purge Sickness":
+			return "Cures a friendly target of one disease."
+		"Cleanse Sickness":
+			return "Cures a friendly target of one disease, and of another every 5 sec for %s." % t.duration()
+		"Unweave":
+			return "Removes a harmful magic effect from a friendly target, or a magic buff from an enemy."
+		"Dread Wail":
+			return "Lets out a terrible wail: up to %d enemies within 8 yards flee in fear for %s. Damage may break the effect." % [SpellCaster.MAX_FEAR_TARGETS, t.duration()]
+		"Bind the Dead":
+			return "Binds an undead enemy in place for up to %s. Damage breaks the effect." % t.duration()
+		"Calm Mind":
+			return "Calms a humanoid enemy for %s, so it notices you %s yards closer than before." % [t.duration(), t.magnitude(0)]
+		"Featherfall":
+			return "You fall slowly for %s. Taking damage ends it." % t.duration()
+		"Stillness":
+			return "Your next spell costs no mana and has a %d%% greater chance to be a critical strike." % roundi(SpellCaster.STILLNESS_CRIT)
+		"Hush":
+			return "Silences an enemy for %s, so it can't cast." % t.duration()
+		"Leeching Embrace":
+			return "Embraces an enemy for %s: your Shadow damage to it heals your party for %d%% of the damage." % [t.duration(), roundi(SpellCaster.EMBRACE_SHARE * 100.0)]
+		"Kindled Power":
+			return "Kindles a friendly target's power, increasing their spell damage and healing by %s%% for %s." % [t.amount(0), t.duration()]
+		"Shroud of Shadow":
+			return "Wraps you in shadow: your Shadow damage rises by %s%% and physical damage taken falls by %s%%, but you can't cast Holy spells. Cast again to leave it." % [t.amount(1), t.magnitude(2)]
+		"Mana Rebuke":
+			return "For %s, each spell that hits you burns %s of the caster's mana." % [t.duration(), _Values.new(SpellDB.get_spell(int(spell.get("EffectTriggerSpell1", 0))), t.level).amount(0)]
+		"Dread Ward":
+			return "Wards a friendly target against the next fear effect, for %s." % t.duration()
+		"Moon's Grace":
+			return "Raises your chance to dodge by %s%% for %s." % [t.amount(1), t.duration()]
+		"Withering Touch":
+			if linked.spell.is_empty():
+				return ""
+			return "The next enemy to strike you in melee within %s takes %s Shadow damage, and its melee damage falls by %s for %s." % [t.duration(), linked.amount(0), linked.magnitude(1), linked.duration()]
+		"Feeble Hex":
+			return "Hexes an enemy for %s: its melee damage falls by %s and healing it receives by %s%%." % [t.duration(), t.magnitude(0), t.magnitude(1)]
+		"Umbral Guard":
+			if linked.spell.is_empty():
+				return ""
+			return "Surrounds you with shadows for %s. Each of the next %d attacks against you deals %s Shadow damage to the attacker." % [t.duration(), int(spell.get("ProcCharges", 0)), linked.amount(0)]
+		"Borrowed Eyes":
+			return "Lets you see through a target's eyes for %s. (Not in the game yet.)" % t.duration()
+		"Dominate Will":
+			return "Takes control of a humanoid's mind for up to %s. (Not in the game yet.)" % t.duration()
+		"Font of Light":
+			return "Raises a font of light that party members can use to heal. (Not in the game yet.)"
+	return ""
+
+
 ## For spells with no written description: what their effects do.
 static func _generic(spell: Dictionary, t: _Values) -> String:
 	var parts := PackedStringArray()
@@ -200,6 +303,14 @@ class _Values:
 
 	func low(effect: int) -> float:
 		return absf(SpellDB.effect_range(spell, effect, level).x)
+
+	## The total of a periodic effect over its duration: "90", or "84 to 90".
+	func over_time(effect: int) -> String:
+		var ticks := floori(seconds() / period(effect) + 0.001)
+		var span := SpellDB.effect_range(spell, effect, level) * ticks
+		var low_total := roundi(absf(span.x))
+		var high_total := roundi(absf(span.y))
+		return str(low_total) if high_total <= low_total else "%d to %d" % [low_total, high_total]
 
 	## The size of a reduction, as a positive number.
 	func magnitude(effect: int) -> String:

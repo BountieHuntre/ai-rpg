@@ -9,6 +9,8 @@ const SPELLS_PATH := "res://data/classic/spells.json"
 ## Spell ids with special meaning.
 const ATTACK := 6603
 const HOLY_LIGHT_HEAL := 19968
+## Spent Soul, which Sanctified Ward leaves on its target.
+const WEAKENED_SOUL := 6788
 
 enum School { PHYSICAL, HOLY, FIRE, NATURE, FROST, SHADOW, ARCANE }
 const SCHOOL_NAMES := ["Physical", "Holy", "Fire", "Nature", "Frost", "Shadow", "Arcane"]
@@ -28,6 +30,27 @@ const EFFECT_RESURRECT := 113
 ## Aura types (EffectApplyAuraName) used here.
 const AURA_PERIODIC_DAMAGE := 3
 const AURA_DUMMY := 4
+const AURA_MOD_FEAR := 7
+const AURA_PERIODIC_HEAL := 8
+const AURA_MOD_DAMAGE_DONE := 13
+const AURA_PERIODIC_TRIGGER_SPELL := 23
+const AURA_MOD_SILENCE := 27
+const AURA_MOD_STAT := 29
+const AURA_MOD_INCREASE_SPEED := 31
+const AURA_MOD_DECREASE_SPEED := 33
+const AURA_MOD_DODGE_PERCENT := 49
+const AURA_PERIODIC_LEECH := 53
+const AURA_SCHOOL_ABSORB := 69
+const AURA_MECHANIC_IMMUNITY := 77
+const AURA_MOD_DAMAGE_PERCENT_DONE := 79
+const AURA_MOD_DAMAGE_PERCENT_TAKEN := 87
+const AURA_MOD_DETECT_RANGE := 91
+const AURA_MOD_TOTAL_THREAT := 103
+const AURA_FEATHER_FALL := 105
+const AURA_ADD_FLAT_MODIFIER := 107
+const AURA_ADD_PCT_MODIFIER := 108
+const AURA_MOD_HEALING_PCT := 118
+const AURA_MOD_HEALING_DONE_PERCENT := 136
 const AURA_MOD_ATTACK_SPEED := 9
 const AURA_MOD_STUN := 12
 const AURA_MOD_DAMAGE_TAKEN := 14
@@ -49,17 +72,27 @@ const AURA_MOD_POWER_REGEN := 85
 ## AuraInterruptFlags: the aura ends when the unit stands up.
 const AURA_INTERRUPT_NOT_SEATED := 0x80
 const EFFECT_DISPEL := 38
+const EFFECT_POWER_BURN := 62
+## AuraInterruptFlags: the aura ends when the unit takes damage.
+const AURA_INTERRUPT_DAMAGE := 0x2
 const EFFECT_HEAL_MAX_HEALTH := 67
 ## Attributes / AttributesEx flags.
 const ATTR_PASSIVE := 0x40
 const ATTR_CANT_USE_IN_COMBAT := 0x10000000
 const ATTR_EX_DRAIN_ALL_POWER := 0x2
+## Channeled spells: the caster holds still while the effect lasts.
+const ATTR_EX_CHANNELED_1 := 0x4
+const ATTR_EX_CHANNELED_2 := 0x40
 ## Implicit targets.
 const TARGET_SELF := 1
 const TARGET_ENEMY := 6
 const TARGET_FRIEND := 21
-## Enemies around the caster, and any unit (Holy Shock: a foe or a friend).
+## The caster's party around them (Prayer of Healing), enemies around the
+## caster, the caster's party (Prayer of Spirit), and any unit (Holy Shock: a
+## foe or a friend).
+const TARGET_PARTY_AROUND := 20
 const TARGET_ENEMIES_AROUND := 22
+const TARGET_PARTY := 37
 const TARGET_ANY := 25
 ## creature_template CreatureType values some spells care about.
 const CREATURE_DEMON := 3
@@ -75,14 +108,18 @@ const AURA_MOD_SHAPESHIFT := 36
 ## Values match the classic spell tooltips (Holy Light 2.5 s, Flash of Light
 ## 1.5 s, seals 30 s, Hammer of Justice rank 1 3 s, Judgement 10 yards).
 ## Cast times and durations in seconds, ranges and radii in yards.
-const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 16: 1.5, 20: 2.5 }
+## Cleric spells add 14 (3 s: Mending), 19 (2.5 s: Chastise), 22 (3.5 s:
+## Sacred Flame), and durations 3 (1 min), 4 (2 min), 6 (10 min), 42 (1 hour),
+## 64 (40 s: Bind the Dead rank 2) and 106 (24 s: Ravening Blight).
+const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 14: 3.0, 16: 1.5, 19: 2.5, 20: 2.5, 22: 3.5 }
 ## -1 means until cancelled.
 const DURATIONS := {
-	0: 0.0, 1: 10.0, 5: 300.0, 8: 15.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
-	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 85: 18.0, 86: 21.0, 347: 900.0,
+	0: 0.0, 1: 10.0, 3: 60.0, 4: 120.0, 5: 300.0, 6: 600.0, 8: 15.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
+	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 42: 3600.0, 64: 40.0, 85: 18.0,
+	86: 21.0, 106: 24.0, 347: 900.0,
 }
 const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 13: 50000.0 }
-const RADII := { 0: 0.0, 9: 20.0, 10: 30.0, 12: 100.0, 14: 8.0 }
+const RADII := { 0: 0.0, 7: 2.0, 9: 20.0, 10: 30.0, 12: 100.0, 13: 10.0, 14: 8.0 }
 
 static var _data: Dictionary
 
@@ -194,6 +231,20 @@ static func effect_radius(spell: Dictionary, effect := 0) -> float:
 	return RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
 
 
+static func is_channeled(spell: Dictionary) -> bool:
+	return int(spell.get("AttributesEx", 0)) & (ATTR_EX_CHANNELED_1 | ATTR_EX_CHANNELED_2) != 0
+
+
+## Whether a spell has an effect of a kind (an Effect value) or an aura of a
+## kind (an EffectApplyAuraName value, with aura = true).
+static func has_effect(spell: Dictionary, kind: int, aura := false) -> bool:
+	for i in 3:
+		var field := "EffectApplyAuraName%d" % (i + 1) if aura else "Effect%d" % (i + 1)
+		if int(spell.get(field, 0)) == kind:
+			return true
+	return false
+
+
 static func is_passive(spell: Dictionary) -> bool:
 	return int(spell.get("Attributes", 0)) & ATTR_PASSIVE != 0
 
@@ -235,8 +286,37 @@ static func start_spells(race: int, char_class: int) -> Array:
 	return _get_data().start_spells.get("%d-%d" % [race, char_class], [])
 
 
-static func trainer_list(trainer: String) -> Array:
-	return _get_data().trainers.get(trainer, [])
+## The class each trainer list teaches (code keeps classic's class names).
+const TRAINER_CLASSES := {
+	"paladin": ClassicData.CharClass.PALADIN,
+	"priest": ClassicData.CharClass.PRIEST,
+}
+
+
+## A trainer's whole list. Pass a race to leave out other races' spells
+## (entries with a "races" list, such as the Cleric's racial spells).
+static func trainer_list(trainer: String, race := 0) -> Array:
+	var list: Array = _get_data().trainers.get(trainer, [])
+	if race == 0:
+		return list
+	return list.filter(func(entry: Dictionary) -> bool:
+		return not entry.has("races") or race in (entry.races as Array).map(func(r: Variant) -> int: return int(r)))
+
+
+## The trainer list for a class's own trainer, for one race.
+static func class_trainer_list(char_class: int, race: int) -> Array:
+	var trainer: String = TRAINER_CLASSES.find_key(char_class) if TRAINER_CLASSES.values().has(char_class) else ""
+	return [] if trainer.is_empty() else trainer_list(trainer, race)
+
+
+## Classes with spells in the game.
+static func classes_with_spells() -> Array:
+	return TRAINER_CLASSES.values()
+
+
+## Linked spell another spell casts (Holy Nova's heal, Touch of Weakness's damage...), or 0.
+static func linked_spell(id: int) -> int:
+	return int(_get_data().get("links", {}).get(str(id), 0))
 
 
 ## Rank number within its chain, or 0 for spells without ranks.

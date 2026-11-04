@@ -71,8 +71,9 @@ static func roll_spell(caster: Combatant, victim: Combatant) -> Outcome:
 	return Outcome.HIT
 
 
-static func roll_heal(caster: Combatant) -> Outcome:
-	return Outcome.CRIT if _chance(caster.spell_crit) else Outcome.HIT
+## Extra crit chance in percent (Stillness adds 25 to the next spell).
+static func roll_heal(caster: Combatant, extra_crit := 0.0) -> Outcome:
+	return Outcome.CRIT if _chance(caster.spell_crit + extra_crit) else Outcome.HIT
 
 
 static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -> float:

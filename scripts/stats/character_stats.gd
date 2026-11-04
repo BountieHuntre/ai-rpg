@@ -61,8 +61,11 @@ func refresh() -> void:
 	gear_stats = gear.stats
 	# Boon of Sovereigns raises every attribute by a percentage.
 	var stat_scale := 1.0 + _combatant.aura_total(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE) / 100.0
+	# Litany of Fortitude and Uplifted Spirit add to one attribute (misc value
+	# is the stat, -1 all of them).
 	for i in stats.size():
-		stats[i] = int((int(base[i]) + int(gear_stats[i])) * stat_scale)
+		var bonus := _combatant.aura_total_exact(SpellDB.AURA_MOD_STAT, i) + _combatant.aura_total_exact(SpellDB.AURA_MOD_STAT, -1)
+		stats[i] = int((int(base[i]) + int(gear_stats[i]) + bonus) * stat_scale)
 	var strength := stats[ClassicData.Stat.STRENGTH]
 	var agility := stats[ClassicData.Stat.AGILITY]
 	var stamina := stats[ClassicData.Stat.STAMINA]
@@ -89,7 +92,8 @@ func refresh() -> void:
 	var melee_haste := c.aura_total(SpellDB.AURA_MOD_MELEE_HASTE)
 	c.swing_interval *= 1.0 / (1.0 + melee_haste / 100.0) if melee_haste >= 0.0 else 1.0 - melee_haste / 100.0
 	c.melee_crit = agility / _agility_rate(char_class, level, true)
-	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false)
+	# Moon's Grace adds dodge.
+	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false) + c.aura_total(SpellDB.AURA_MOD_DODGE_PERCENT)
 	# Parry has to be trained, and players need a melee weapon to parry.
 	var armed: bool = gear.weapon != Inventory.UNARMED_WEAPON
 	c.parry = 5.0 if armed and PARRY_SPELL in _profile.known_spells else 0.0

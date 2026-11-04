@@ -40,6 +40,13 @@ position = Vector3(0, 4.5, -6.6)
 rotation = Vector3(0, 3.14159, 0)
 trainer = "paladin"
 
+[node name="SisterMaud" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-4, 4.5, -6.6)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Sister Maud Ellery"
+subname = "Cleric Trainer"
+trainer = "priest"
+
 [node name="FriarOsric" parent="." instance=ExtResource("2_npc")]
 position = Vector3(10.4, 4.5, 6)
 rotation = Vector3(0, 1.5708, 0)

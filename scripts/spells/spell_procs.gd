@@ -4,7 +4,9 @@ extends Node
 ## player: Oath procs on melee hits (procs per minute and cooldowns from
 ## spell_proc_event), Verdict debuffs that heal or restore the attacker,
 ## damage shields (Thorned Presence, Boon of Refuge, Radiant Bulwark's blocks)
-## and hallowed ground that burns enemies standing on it.
+## and hallowed ground that burns enemies standing on it. For the Cleric:
+## Umbral Guard and Withering Touch striking back, Inner Flame's charges and
+## Leeching Embrace's healing.
 ## Child of the SpellCaster; follows CMaNGOS classic's proc handling.
 
 ## Glowing disc shown on hallowed ground.
@@ -24,6 +26,7 @@ func _ready() -> void:
 	_combatant.auto_attack_landed.connect(_on_melee_hit)
 	_combatant.melee_hit_taken.connect(_on_hit_taken)
 	_combatant.blocked_attack.connect(_on_block)
+	_combatant.damage_done.connect(_on_damage_done)
 
 
 func _physics_process(delta: float) -> void:
@@ -99,7 +102,9 @@ func _apply(spell: Dictionary, target: Combatant) -> void:
 
 
 ## Struck in melee: Thorned Presence and Boon of Refuge strike back with Holy
-## damage. (Radiant Bulwark's strike-back answers blocks instead.)
+## damage. (Radiant Bulwark's strike-back answers blocks instead.) Umbral
+## Guard and Withering Touch cast their rank's spell at the attacker, and
+## charges run down (Inner Flame's 20 hits).
 func _on_hit_taken(attacker: Combatant) -> void:
 	if attacker == null or not attacker.is_alive():
 		return
@@ -111,6 +116,46 @@ func _on_hit_taken(attacker: Combatant) -> void:
 			var kind := int(spell.get("EffectApplyAuraName%d" % (i + 1), 0))
 			if kind == SpellDB.AURA_DAMAGE_SHIELD or kind == SpellDB.AURA_PROC_TRIGGER_DAMAGE:
 				attacker.take_damage(roundi(aura.amounts[i]), _combatant, false, SpellDB.School.HOLY)
+		var strike := SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id)))
+		var struck_back := not strike.is_empty() and SpellDB.has_effect(spell, SpellDB.AURA_PROC_TRIGGER_SPELL, true)
+		if struck_back and attacker.is_alive():
+			_strike_back(strike, attacker)
+		if aura.has("charges") and (struck_back or int(spell.get("ProcFlags", 0)) & PROC_TAKEN_MELEE_HIT):
+			aura.charges -= 1
+			if aura.charges <= 0:
+				_combatant.remove_aura(int(spell.Id))
+
+
+## ProcFlags: struck by a melee swing (Inner Flame's charges).
+const PROC_TAKEN_MELEE_HIT := 0x8
+
+
+## Umbral Guard's and Withering Touch's strike: Shadow damage, and for
+## Withering Touch a debuff that weakens the attacker's blows.
+func _strike_back(strike: Dictionary, attacker: Combatant) -> void:
+	var school := int(strike.get("School", SpellDB.School.SHADOW))
+	attacker.take_damage(roundi(SpellDB.effect_value(strike, 0, _unit.profile.level)), _combatant, false, school)
+	if attacker.is_alive() and SpellDB.has_effect(strike, SpellDB.EFFECT_APPLY_AURA):
+		attacker.add_aura(strike, _combatant)
+
+
+## Leeching Embrace: Shadow damage to its target heals the caster's group for
+## a fifth of it.
+func _on_damage_done(target: Combatant, amount: int, school: int) -> void:
+	if school != SpellDB.School.SHADOW:
+		return
+	var embrace := target.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == "Leeching Embrace")
+	if embrace.is_empty() or embrace.caster != _combatant:
+		return
+	var heal := roundi(amount * SpellCaster.EMBRACE_SHARE)
+	if heal <= 0:
+		return
+	var units: Array[PlayerUnit] = [_unit]
+	if Party.has_unit(_combatant):
+		units = Party.units()
+	for unit in units:
+		if unit.combatant.is_alive() and unit.global_position.distance_to(_unit.global_position) <= 30.0:
+			unit.combatant.heal(heal, false)
 
 
 ## Blocked a swing: Radiant Bulwark deals Holy damage back and uses a charge.

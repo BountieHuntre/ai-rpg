@@ -1,8 +1,9 @@
 class_name SpellCaster
 extends Node
 ## Casts a player character's classic WoW spells: checks, global cooldown,
-## cooldowns, cast times and the effects of each Paladin spell. Formulas
-## follow the CMaNGOS classic code; see data/classic/SOURCE.md.
+## cooldowns, cast times, channels and the effects of each Templar (Paladin)
+## and Cleric (Priest) spell. Formulas follow the CMaNGOS classic code; see
+## data/classic/SOURCE.md.
 ## Must be a child of a PlayerUnit: the Player, or a playerbot, whose AI picks
 ## its targets.
 
@@ -35,14 +36,25 @@ const PROFICIENCY_SPELLS := { "Plate Mail": "4:4" }
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
 const ERR_IN_COMBAT := "You are in combat"
 const ERR_ITEM_NOT_READY := "Item is not ready yet."
+const ERR_CANT_YET := "You can't do that yet"
+const ERR_SHAPESHIFTED := "You can't do that while shapeshifted."
+## Dread Wail frightens up to this many enemies (MaxAffectedTargets in classic).
+const MAX_FEAR_TARGETS := 5
+## Leeching Embrace heals the caster's party for this share of shadow damage.
+const EMBRACE_SHARE := 0.2
+## Stillness: the next spell costs no mana and has this much more crit chance.
+const STILLNESS_CRIT := 25.0
 ## item_template spelltrigger: 0 is "Use:".
 const ITEM_SPELL_ON_USE := 0
 
 const WORLD_LAYER := 1
 const EYE_HEIGHT := 1.2
 
-## The spell being cast, or {} when not casting.
+## The spell being cast or channeled, or {} when not casting.
 var casting: Dictionary = {}
+## True while `casting` is a channel (Mind Rend, Falling Stars): its effect
+## already landed and lasts while the caster holds still.
+var channeling := false
 
 var _cast_left := 0.0
 var _cast_total := 0.0
@@ -86,6 +98,9 @@ func cast(id: int) -> void:
 	if not problem.is_empty():
 		failed.emit(problem)
 		return
+	# A new spell ends a channel.
+	if channeling:
+		_stop_channel()
 	# Casting stands you up.
 	_unit.sitting = false
 	var gcd := SpellDB.global_cooldown(spell)
@@ -112,8 +127,11 @@ func problem(id: int) -> String:
 	return _find_problem(spell, _pick_target(spell), true)
 
 
+## How far the cast has got, 0 to 1; a channel's bar runs down instead.
 func cast_fraction() -> float:
-	return 1.0 - _cast_left / _cast_total if not casting.is_empty() else 0.0
+	if casting.is_empty():
+		return 0.0
+	return _cast_left / _cast_total if channeling else 1.0 - _cast_left / _cast_total
 
 
 ## How much of a spell's cooldown (or the global cooldown) is left, 1 to 0.
@@ -128,8 +146,19 @@ func cooldown_fraction(id: int) -> float:
 	return fraction
 
 
+## Stillness makes the next spell free.
 func mana_cost(spell: Dictionary) -> int:
-	return SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level))
+	var cost := SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level))
+	return 0 if cost > 0 and _stillness() else cost
+
+
+## Stillness waiting for the next spell, or {}.
+func _stillness() -> Dictionary:
+	return _unit.combatant.find_aura(func(spell: Dictionary) -> bool: return SpellDB.has_effect(spell, SpellDB.AURA_ADD_PCT_MODIFIER, true))
+
+
+func _extra_crit() -> float:
+	return STILLNESS_CRIT if not _stillness().is_empty() else 0.0
 
 
 ## Whether the current target is out of the spell's range, for the action bar.
@@ -153,6 +182,15 @@ func _physics_process(delta: float) -> void:
 		_item_cooldowns[category] = maxf(_item_cooldowns[category] - delta, 0.0)
 	if casting.is_empty():
 		return
+	if channeling:
+		_cast_left -= delta
+		var held := _cast_target != null and is_instance_valid(_cast_target) and _cast_target.is_alive()
+		if _unit.is_moving() or not _unit.combatant.is_alive() or not held:
+			_stop_channel()
+		elif _cast_left <= 0.0:
+			casting = {}
+			channeling = false
+		return
 	if _unit.is_moving() or not _unit.combatant.is_alive():
 		casting = {}
 		failed.emit("Interrupted")
@@ -172,7 +210,7 @@ func _physics_process(delta: float) -> void:
 ## DAMAGE_PUSHBACK interrupt flag sets the cast back 1.0 s, then 0.8, 0.6, 0.4
 ## and 0.2 s for every later hit, never past the start of the cast.
 func _push_back() -> void:
-	if casting.is_empty() or int(casting.get("InterruptFlags", 0)) & INTERRUPT_DAMAGE_PUSHBACK == 0:
+	if casting.is_empty() or channeling or int(casting.get("InterruptFlags", 0)) & INTERRUPT_DAMAGE_PUSHBACK == 0:
 		return
 	var delay := 1.0 - 0.2 * _pushbacks if _pushbacks < 5 else 0.2
 	_pushbacks += 1
@@ -201,9 +239,12 @@ func _pick_target(spell: Dictionary) -> Combatant:
 		SpellDB.TARGET_ENEMY:
 			return _unit.enemy_target()
 		SpellDB.TARGET_ANY:
-			# Radiant Jolt: the enemy targeted, or yourself.
+			# Radiant Jolt and Unweave: the enemy targeted, else the friend, else yourself.
 			var enemy := _unit.enemy_target()
-			return enemy if enemy and enemy.is_alive() else _unit.combatant
+			if enemy and enemy.is_alive():
+				return enemy
+			var friend := _unit.friendly_target()
+			return friend if friend and friend.is_alive() else _unit.combatant
 		SpellDB.TARGET_FRIEND:
 			var friend := _unit.friendly_target()
 			return friend if friend and friend.is_alive() else _unit.combatant
@@ -219,7 +260,7 @@ static func is_resurrection(spell: Dictionary) -> bool:
 func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> String:
 	var me := _unit.combatant
 	if starting:
-		if not casting.is_empty():
+		if not casting.is_empty() and not channeling:
 			return ERR_IN_PROGRESS
 		if SpellDB.global_cooldown(spell) > 0.0 and _gcd_left > 0.0:
 			return ERR_NOT_READY
@@ -233,6 +274,9 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 		return ERR_NO_OATH
 	if SpellDB.is_passive(spell):
 		return ERR_PASSIVE
+	# Shroud of Shadow shuts out Holy spells (Shadowform in classic).
+	if int(spell.get("School", 0)) == SpellDB.School.HOLY and _in_shroud():
+		return ERR_SHAPESHIFTED
 	if me.mana < mana_cost(spell):
 		return ERR_NO_MANA
 	if is_resurrection(spell):
@@ -242,6 +286,9 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_DEAD_TARGET
 	if int(spell.Effect1) == SpellDB.EFFECT_DISPEL and not _has_dispellable(spell, target):
 		return ERR_NOTHING_TO_DISPEL
+	# Sanctified Ward leaves a Spent Soul that keeps another off for a while.
+	if spell.SpellName == "Sanctified Ward" and target and not target.find_aura(func(other: Dictionary) -> bool: return int(other.Id) == SpellDB.WEAKENED_SOUL).is_empty():
+		return ERR_CANT_YET
 	if target and target != me and target.is_player:
 		# Helping another player: in range and in sight, but facing doesn't matter.
 		if me.distance_to(target) > SpellDB.spell_range(spell):
@@ -257,6 +304,12 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 		if spell.SpellName in UNDEAD_OR_DEMON and not _creature_type(target) in [SpellDB.CREATURE_UNDEAD, SpellDB.CREATURE_DEMON]:
 			return ERR_DEAD_TARGET
 		if spell.SpellName in UNDEAD_ONLY and _creature_type(target) != SpellDB.CREATURE_UNDEAD:
+			return ERR_DEAD_TARGET
+		# Creature types the spell takes (Bind the Dead undead, Calm Mind humanoids).
+		var types := int(spell.get("TargetCreatureType", 0))
+		if types != 0 and (_creature_type(target) == 0 or types & (1 << (_creature_type(target) - 1)) == 0):
+			return ERR_DEAD_TARGET
+		if int(spell.Effect1) == SpellDB.EFFECT_POWER_BURN and target.max_mana <= 0:
 			return ERR_DEAD_TARGET
 		if spell.SpellName == "Gavel of Reckoning" and target.health > target.max_health * 0.2:
 			return ERR_TARGET_HEALTH
@@ -277,21 +330,29 @@ static func _creature_type(target: Combatant) -> int:
 
 ## Purify removes poisons and diseases (dispel types in the effects' misc values).
 func _has_dispellable(spell: Dictionary, target: Combatant) -> bool:
+	if target == null:
+		return false
 	var types := []
 	for i in 3:
 		if int(spell["Effect%d" % (i + 1)]) == SpellDB.EFFECT_DISPEL:
 			types.append(int(spell["EffectMiscValue%d" % (i + 1)]))
 	for aura in target.auras:
-		if _is_harmful(aura) and int(aura.spell.get("Dispel", 0)) in types:
+		if _dispellable(aura, target) and int(aura.spell.get("Dispel", 0)) in types:
 			return true
 	return false
 
 
-## Cleansing takes only harmful effects: ones an enemy put on the target, not
-## the Paladin's own Boons and Presences (most are magic effects too).
-func _is_harmful(aura: Dictionary) -> bool:
+## Cleansing a friend takes only harmful effects: ones an enemy put on them,
+## not the Templar's own Boons and Presences (most are magic effects too).
+## Unweave on an enemy takes its own buffs instead.
+func _dispellable(aura: Dictionary, target: Combatant) -> bool:
 	var caster: Combatant = aura.caster
-	return caster == null or not is_instance_valid(caster) or not caster.is_unit
+	var from_creature := caster == null or not is_instance_valid(caster) or not caster.is_player
+	return from_creature if target.is_player else (from_creature and int(aura.spell.get("Dispel", 0)) != 0)
+
+
+func _in_shroud() -> bool:
+	return not _unit.combatant.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == "Shroud of Shadow").is_empty()
 
 
 func _has_line_of_sight(target: Combatant) -> bool:
@@ -304,6 +365,10 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 func _finish(spell: Dictionary, target: Combatant) -> void:
 	var me := _unit.combatant
+	# Stillness is used up by the next spell that costs mana.
+	var stillness := _stillness()
+	var uses_stillness := not stillness.is_empty() and SpellDB.mana_cost(spell, 1) > 0
+	var extra_crit := _extra_crit()
 	# Unlike classic, Last Rite leaves your mana alone.
 	if int(spell.get("AttributesEx", 0)) & SpellDB.ATTR_EX_DRAIN_ALL_POWER and spell.SpellName != "Last Rite":
 		me.spend_mana(int(me.mana))
@@ -312,6 +377,14 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
+	_cleric_spell(spell, target, extra_crit)
+	if uses_stillness:
+		me.remove_aura(int(stillness.spell.Id))
+
+
+## Templar spells, then Cleric ones (spell_caster's second half).
+func _templar_spell(spell: Dictionary, target: Combatant) -> bool:
+	var me := _unit.combatant
 	match spell.SpellName:
 		"Mending Radiance", "Quick Radiance":
 			_holy_light(spell, target)
@@ -332,36 +405,206 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 			_hammer_of_justice(spell, target)
 		"Last Rite":
 			target.heal(me.max_health, false, me)
-		"Revival":
-			var bot := target.body as Bot
-			if bot:
-				bot.resurrect(roundi(SpellDB.effect_value(spell, 0, _unit.profile.level)), int(spell.get("EffectMiscValue1", 0)))
-				Sfx.play_at("heal", _unit.global_position)
 		"Homing Token":
 			_go_home(spell)
 		_:
-			if int(spell.Effect1) == SpellDB.EFFECT_DISPEL:
-				_dispel(spell, target)
-			elif SpellDB.is_seal(spell):
+			if SpellDB.is_seal(spell):
 				_apply_seal(spell)
 			elif SpellDB.is_paladin_aura(spell):
 				_replace_own(spell, me, SpellDB.is_paladin_aura)
 			elif SpellDB.is_blessing(spell):
 				_replace_own(spell, target, SpellDB.is_blessing)
+			else:
+				return false
+	return true
+
+
+## Every other spell, by what its effects do: raising the dead, dispels,
+## heals, damage, and buffs and debuffs, with the Cleric's odd ones by name.
+func _cleric_spell(spell: Dictionary, target: Combatant, extra_crit: float) -> void:
+	if _templar_spell(spell, target):
+		return
+	var me := _unit.combatant
+	match spell.SpellName:
+		"Blessed Burst":
+			_holy_nova(spell, extra_crit)
+		"Communal Mending":
+			for unit in _group_near(SpellDB.effect_radius(spell)):
+				_direct_heal(spell, unit.combatant, extra_crit)
+		"Communal Spirit":
+			for unit in _group_near(SpellDB.effect_radius(spell)):
+				_buff(spell, unit.combatant)
+		"Sanctified Ward":
+			_buff(spell, target)
+			target.add_aura(SpellDB.get_spell(SpellDB.WEAKENED_SOUL), me)
+		"Shroud of Shadow":
+			# Casting it again leaves the form.
+			if _in_shroud():
+				me.remove_aura(int(spell.Id))
+			else:
+				_buff(spell, me)
+		"Mana Scorch":
+			_mana_burn(spell, target, extra_crit)
+		"Dread Wail":
+			_fear_around(spell)
+		"Cleanse Sickness":
+			_buff(spell, target)
+			_dispel(spell, target)
+		_:
+			if is_resurrection(spell):
+				var bot := target.body as Bot
+				if bot:
+					bot.resurrect(roundi(SpellDB.effect_value(spell, 0, _unit.profile.level)), int(spell.get("EffectMiscValue1", 0)))
+					Sfx.play_at("heal", _unit.global_position)
+			elif int(spell.Effect1) == SpellDB.EFFECT_DISPEL:
+				_dispel(spell, target)
+			elif int(spell.Effect1) == SpellDB.EFFECT_HEAL:
+				_direct_heal(spell, target, extra_crit)
+			elif int(spell.Effect1) == SpellDB.EFFECT_SCHOOL_DAMAGE:
+				# Sacred Flame's burn rides on its hit.
+				if _spell_damage(spell, target, 1.0, true, extra_crit) and SpellDB.has_effect(spell, SpellDB.EFFECT_APPLY_AURA):
+					_replace_own(spell, target, func(other: Dictionary) -> bool: return other.SpellName == spell.SpellName, false)
 			elif int(spell.Effect1) == SpellDB.EFFECT_APPLY_AURA:
-				# Divine Protection and other self buffs.
-				target.add_aura(spell, me)
-				Sfx.play_at("buff", _unit.global_position)
+				if SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
+					if _debuff(spell, target) and SpellDB.is_channeled(spell):
+						_start_channel(spell, target)
+				else:
+					# Divine Protection, Litany of Fortitude and other buffs.
+					_buff(spell, target)
+
+
+## A buff replaces the same spell's other ranks from anyone (two Litanies
+## don't stack).
+func _buff(spell: Dictionary, target: Combatant) -> void:
+	for aura in target.auras.duplicate():
+		if aura.spell.SpellName == spell.SpellName:
+			target.remove_aura(int(aura.spell.Id), false)
+	target.add_aura(spell, _unit.combatant)
+	Sfx.play_at("buff", _unit.global_position)
+
+
+## A harmful aura on an enemy: a spell hit roll (Resist on a miss), the
+## creature turning to fight (Calm Mind excepted, which draws no threat), and
+## one of each spell per caster. Stuns hold the target. Returns whether it landed.
+func _debuff(spell: Dictionary, target: Combatant) -> bool:
+	var me := _unit.combatant
+	var quiet: bool = spell.SpellName == "Calm Mind"
+	if not quiet:
+		me.enter_combat()
+	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+		target.avoid("Resist", me)
+		return false
+	_replace_own(spell, target, func(other: Dictionary) -> bool: return other.SpellName == spell.SpellName, false)
+	if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+		target.stun(SpellDB.duration(spell))
+	var enemy := target.body as Enemy
+	if enemy and not quiet:
+		enemy.provoke(me)
+	Sfx.play_at("bolt_hit", target.body.global_position)
+	return true
+
+
+## Holds a channel: the bar runs down while the effect lasts, and moving, a
+## new spell or the target dying ends it early, taking the effect away.
+func _start_channel(spell: Dictionary, target: Combatant) -> void:
+	casting = spell
+	channeling = true
+	_cast_target = target
+	_cast_total = maxf(SpellDB.duration(spell), 0.1)
+	_cast_left = _cast_total
+	_unit.combatant.is_casting = true
+
+
+func _stop_channel() -> void:
+	if channeling and _cast_target and is_instance_valid(_cast_target):
+		for aura in _cast_target.auras.duplicate():
+			if aura.caster == _unit.combatant and int(aura.spell.Id) == int(casting.get("Id", 0)):
+				_cast_target.remove_aura(int(aura.spell.Id))
+	casting = {}
+	channeling = false
+
+
+## The caster's group within a radius: the party for the player and its
+## members, just itself for a bot on its own.
+func _group_near(radius: float) -> Array[PlayerUnit]:
+	var group: Array[PlayerUnit] = []
+	var units: Array[PlayerUnit] = [_unit]
+	if Party.has_unit(_unit.combatant):
+		units = Party.units()
+	for unit in units:
+		if unit.combatant.is_alive() and unit.global_position.distance_to(_unit.global_position) <= radius:
+			group.append(unit)
+	return group
+
+
+## A direct heal from the first effect: its amount plus spell power.
+func _direct_heal(spell: Dictionary, target: Combatant, extra_crit := 0.0) -> void:
+	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+	target.heal_with_spell(amount, _unit.combatant, extra_crit)
+	Sfx.play_at("heal", target.body.global_position)
+
+
+## Blessed Burst: damage to enemies around the caster and its rank's heal on
+## the group around them, neither drawing threat (as classic's Holy Nova).
+func _holy_nova(spell: Dictionary, extra_crit: float) -> void:
+	var me := _unit.combatant
+	var radius := SpellDB.effect_radius(spell)
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and _unit.global_position.distance_to(enemy.global_position) <= radius:
+			var before := enemy.combatant.health
+			_spell_damage(spell, enemy.combatant, 1.0, true, extra_crit)
+			if enemy.threat.has(me):
+				enemy.threat[me] = maxf(enemy.threat[me] - (before - enemy.combatant.health), 0.0)
+	var heal := SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id)))
+	if heal.is_empty():
+		return
+	for unit in _group_near(radius):
+		var crit := CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
+		var amount := SpellDB.effect_value(heal, 0, _unit.profile.level) * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)
+		unit.combatant.heal(roundi(amount * (1.0 + me.aura_total(SpellDB.AURA_MOD_HEALING_DONE_PERCENT) / 100.0)), crit)
+	Sfx.play_at("heal", _unit.global_position)
+
+
+## Mana Scorch: burns the target's mana, and it takes half the burned amount
+## as damage (EffectMultipleValue, Spell::EffectPowerBurn).
+func _mana_burn(spell: Dictionary, target: Combatant, extra_crit: float) -> void:
+	var me := _unit.combatant
+	me.enter_combat()
+	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+		target.avoid("Resist", me)
+		return
+	var burned := minf(SpellDB.effect_value(spell, 0, _unit.profile.level), target.mana)
+	target.mana -= burned
+	var crit := CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
+	var damage := burned * float(spell.get("EffectMultipleValue1", 0.5)) * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)
+	Sfx.play_at("bolt_hit", target.body.global_position)
+	target.take_damage(roundi(damage), me, crit, int(spell.get("School", 0)))
+
+
+## Dread Wail: up to five enemies around the caster flee for its duration.
+func _fear_around(spell: Dictionary) -> void:
+	var radius := SpellDB.effect_radius(spell)
+	var near: Array[Enemy] = []
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and _unit.global_position.distance_to(enemy.global_position) <= radius:
+			near.append(enemy)
+	near.sort_custom(func(a: Enemy, b: Enemy) -> bool:
+		return _unit.global_position.distance_to(a.global_position) < _unit.global_position.distance_to(b.global_position))
+	for enemy in near.slice(0, MAX_FEAR_TARGETS):
+		_debuff(spell, enemy.combatant)
 
 
 ## Puts an aura on the target, replacing any of the same kind from this caster.
-func _replace_own(spell: Dictionary, target: Combatant, same_kind: Callable) -> void:
+func _replace_own(spell: Dictionary, target: Combatant, same_kind: Callable, sound := true) -> void:
 	var me := _unit.combatant
 	for aura in target.auras.duplicate():
 		if aura.caster == me and same_kind.call(aura.spell):
 			target.remove_aura(int(aura.spell.Id))
 	target.add_aura(spell, me)
-	Sfx.play_at("buff", _unit.global_position)
+	if sound:
+		Sfx.play_at("buff", _unit.global_position)
 
 
 ## The active seal that has a judgement, or {}. (The first rank of Oath of
@@ -409,16 +652,17 @@ func _hammer_of_justice(spell: Dictionary, target: Combatant) -> void:
 	target.stun(SpellDB.duration(spell))
 
 
-func _holy_damage(target: Combatant, amount: int, crit: bool) -> void:
-	target.take_damage(amount, _unit.combatant, crit, SpellDB.School.HOLY)
+func _holy_damage(target: Combatant, amount: int, crit: bool, school := SpellDB.School.HOLY) -> void:
+	target.take_damage(amount, _unit.combatant, crit, school)
 
 
 ## Holy Light's script effect heals through spell 19968 (SpellEffects.cpp).
 ## Learns spells from a trainer. A new spell with the same name and rank text
 ## as a known one replaces it (Judgement teaches a second Rank 1 Seal of
 ## Righteousness that can be judged). Other new ranks sit alongside the old
-## ones in the spellbook, but take over their action bar slots. That's a
-## convenience over classic, which left the old rank on the bar.
+## ones in the spellbook, but take over their action bar slots, and a spell
+## new to the player goes in the first empty slot. Those are conveniences over
+## classic, which left the old rank on the bar and new spells in the spellbook.
 ## Uses an item's on-use spell (food and drink so far): checks it, takes one
 ## from the stack and applies the spell. Returns an error or "".
 func use_item(ref: Dictionary) -> String:
@@ -543,12 +787,20 @@ static func learn(ids: Array) -> Array[String]:
 			GameState.known_spells[GameState.known_spells.find(previous)] = id
 		else:
 			GameState.known_spells.append(id)
+		var on_bar_already := false
 		for i in GameState.action_bar.size():
 			var on_bar := SpellDB.get_spell(GameState.action_bar[i])
 			var replaces := previous != 0 and GameState.action_bar[i] == previous
 			var lower_rank: bool = on_bar.get("SpellName") == spell.SpellName and int(on_bar.get("SpellLevel", 0)) < int(spell.SpellLevel)
 			if replaces or lower_rank:
 				GameState.action_bar[i] = id
+			if GameState.action_bar[i] != 0 and SpellDB.get_spell(GameState.action_bar[i]).get("SpellName") == spell.SpellName:
+				on_bar_already = true
+		# A spell new to the player goes in the first empty slot, if there is
+		# one. Passives stay off the bar and Presences have the stance bar.
+		var empty := GameState.action_bar.find(0)
+		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_paladin_aura(spell):
+			GameState.action_bar[empty] = id
 		learned.append(SpellDB.full_name(spell))
 		# Plate Mail teaches wearing plate.
 		var proficiency: String = PROFICIENCY_SPELLS.get(spell.SpellName, "")
@@ -569,26 +821,28 @@ func _holy_light(spell: Dictionary, target: Combatant) -> void:
 	target.heal_with_spell(amount, _unit.combatant)
 
 
-## Holy damage from a spell's first effect: a spell hit roll (Resist on a
-## miss, unless the spell always hits) and a crit roll.
-func _spell_damage(spell: Dictionary, target: Combatant, multiplier := 1.0, can_miss := true) -> void:
+## Damage of the spell's school from its first effect: a spell hit roll
+## (Resist on a miss, unless the spell always hits) and a crit roll. Returns
+## whether it hit.
+func _spell_damage(spell: Dictionary, target: Combatant, multiplier := 1.0, can_miss := true, extra_crit := 0.0) -> bool:
 	var me := _unit.combatant
 	me.enter_combat()
 	if can_miss and CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
 		target.avoid("Resist", me)
-		return
+		return false
 	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
-	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me) == CombatRules.Outcome.CRIT
+	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
 	Sfx.play_at("bolt_hit", _unit.global_position)
-	_holy_damage(target, roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
+	_holy_damage(target, roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit, int(spell.get("School", SpellDB.School.HOLY)))
+	return true
 
 
-## Radiant Jolt: its rank's damage spell on an enemy, or its heal on yourself.
+## Radiant Jolt: its rank's damage spell on an enemy, or its heal on a friend.
 func _holy_shock(spell: Dictionary, target: Combatant) -> void:
 	var pair := SpellDB.holy_shock_spells(int(spell.Id))
 	if pair.size() < 2:
 		return
-	if target == _unit.combatant:
+	if target.is_player:
 		var heal := SpellDB.get_spell(int(pair[1]))
 		target.heal_with_spell(SpellDB.effect_value(heal, 0, _unit.profile.level), _unit.combatant)
 	else:
@@ -606,28 +860,24 @@ func _holy_wrath(spell: Dictionary) -> void:
 			_spell_damage(spell, enemy.combatant)
 
 
-## Rebuke the Dead: classic's fear makes the undead run; here it holds them in
-## place for the duration instead (there's no fleeing yet).
+## Rebuke the Dead: the undead flee in fear for the duration.
 func _turn_undead(spell: Dictionary, target: Combatant) -> void:
-	var me := _unit.combatant
-	me.enter_combat()
-	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
-		target.avoid("Resist", me)
-		return
-	target.add_aura(spell, me)
-	target.stun(SpellDB.duration(spell))
+	_debuff(spell, target)
 
 
-## Cleansing: removes one harmful effect of each dispel type the spell names.
+## Cleansing: removes one harmful effect of each dispel type the spell names
+## (from an enemy, Unweave takes one of its own buffs).
 func _dispel(spell: Dictionary, target: Combatant) -> void:
 	for i in 3:
 		if int(spell["Effect%d" % (i + 1)]) != SpellDB.EFFECT_DISPEL:
 			continue
 		var kind := int(spell["EffectMiscValue%d" % (i + 1)])
 		for aura in target.auras:
-			if _is_harmful(aura) and int(aura.spell.get("Dispel", 0)) == kind:
+			if _dispellable(aura, target) and int(aura.spell.get("Dispel", 0)) == kind:
 				target.remove_aura(int(aura.spell.Id))
 				break
+	if not target.is_player and target.body is Enemy:
+		(target.body as Enemy).provoke(_unit.combatant)
 	Sfx.play_at("heal", _unit.global_position)
 
 

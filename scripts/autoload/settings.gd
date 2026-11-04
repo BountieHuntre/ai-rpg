@@ -48,7 +48,7 @@ const DEFAULTS := {
 	"bot_count": 8,
 	"bot_min_level": 1,
 	"bot_max_level": 10,
-	"bot_classes": "Templars Only",
+	"bot_classes": "Classes With Spells",
 	"bot_quests": true,
 	"bot_chat": "Normal",
 	"bot_accept_invites": "Always",
@@ -136,6 +136,10 @@ func _ready() -> void:
 	_apply_all()
 
 
+## Choices saved under an older name.
+const RENAMED_CHOICES := { "Templars Only": "Classes With Spells" }
+
+
 ## Reads an options file's [options] and [keys] into values and bindings,
 ## keeping only options that exist and have the right type.
 func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
@@ -152,7 +156,7 @@ func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
 			continue
 		var saved = file.get_value("options", key)
 		if (typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int)):
-			values[key] = saved
+			values[key] = RENAMED_CHOICES.get(saved, saved) if saved is String else saved
 
 
 ## The shipped defaults, read over DEFAULTS in every build.
