@@ -140,13 +140,18 @@ func _ready() -> void:
 ## keeping only options that exist and have the right type.
 func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
 	for entry: Array in ACTIONS:
-		var saved = file.get_value("keys", entry[0], null)
+		# Only what the file has: asking for a missing entry logs an error.
+		if not file.has_section_key("keys", entry[0]):
+			continue
+		var saved = file.get_value("keys", entry[0])
 		if saved is Array and saved.size() == 2:
 			# Bindings saved before a key was reserved (/ for walking) let it go.
 			keys[entry[0]] = [_unreserved(int(saved[0])), _unreserved(int(saved[1]))]
 	for key: String in DEFAULTS:
-		var saved = file.get_value("options", key, null)
-		if saved != null and (typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int)):
+		if not file.has_section_key("options", key):
+			continue
+		var saved = file.get_value("options", key)
+		if (typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int)):
 			values[key] = saved
 
 
