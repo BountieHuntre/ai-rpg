@@ -352,6 +352,15 @@ func _build_stance_bar() -> void:
 		_draw_icon(box, id)
 		var cooldown := _rect(box, Vector2.ZERO, Vector2(STANCE_SLOT, 0), Color(0, 0, 0, 0.65))
 		cooldown.name = "Cooldown"
+		# A gold frame marks the stance or Presence you're in.
+		var lit := ReferenceRect.new()
+		lit.name = "Active"
+		lit.border_color = Color(1, 0.85, 0.3)
+		lit.border_width = maxf(2.0 * _ui_scale, 2.0)
+		lit.editor_only = false
+		lit.size = box.size
+		lit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(lit)
 		box.mouse_entered.connect(func() -> void: _tooltip.show_lines(spell_tooltip(id)))
 		box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
 		box.gui_input.connect(func(event: InputEvent) -> void:
@@ -369,6 +378,7 @@ func _update_stance_state(i: int) -> void:
 	var name: String = SpellDB.get_spell(id).SpellName
 	var active := not _player.combatant.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == name).is_empty()
 	box.modulate = Color(1.3, 1.3, 1.1) if active else Color(0.6, 0.6, 0.6)
+	(box.get_node("Active") as Control).visible = active
 	var cooldown: Control = box.get_node("Cooldown")
 	cooldown.size.y = STANCE_SLOT * _ui_scale * _player.spells.cooldown_fraction(id)
 	cooldown.position.y = STANCE_SLOT * _ui_scale - cooldown.size.y
@@ -437,9 +447,9 @@ func _draw_buffs() -> void:
 	var i := 0
 	for aura in _player.combatant.auras:
 		var spell: Dictionary = aura.spell
-		# Stances live on the stance bar, and their passive parts aren't buffs of
-		# their own (classic shows neither).
-		if str(spell.SpellName).ends_with("Stance Passive") or SpellDB.stance_form(spell) in WarriorAbilities.STANCES:
+		# Every buff shows, stances and forms included. Only passive spells'
+		# auras (a stance's hidden passive part) aren't buffs, as in classic.
+		if SpellDB.is_passive(spell):
 			continue
 		var icon := ColorRect.new()
 		icon.position = Vector2(right - (i + 1) * (BUFF + 3), corner.y) * _ui_scale

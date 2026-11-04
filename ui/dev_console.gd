@@ -21,6 +21,8 @@ const COMMANDS := {
 	"god": ["", "Toggle taking no damage."],
 	"kill": ["", "Kill your target."],
 	"learn": ["<id or name>", "Learn a spell (the highest rank for a name)."],
+	"trainall": ["", "Learn every spell your class trainer teaches at your level, for free."],
+	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
 	"tele": ["<x> <z> | spawn", "Teleport to a map point or the start."],
 	"pos": ["", "Show your position."],
@@ -288,6 +290,37 @@ func _cmd_learn(args: PackedStringArray) -> String:
 	if learned.is_empty():
 		return "You already know %s." % SpellDB.full_name(SpellDB.get_spell(id))
 	return "Learned %s (%d)." % [learned[0], id]
+
+
+## Everything the class trainer would teach now, rank by rank, as if trained
+## in order: the trainer's own rules (level, previous rank, race), no cost.
+func _cmd_trainall(_args: PackedStringArray) -> String:
+	var list := SpellDB.class_trainer_list(GameState.char_class, GameState.race)
+	if list.is_empty():
+		return "!Your class has no trainer spells yet."
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.level) < int(b.level))
+	var learned: Array[String] = []
+	# Learning a rank can make the next one available, so go round until nothing changes.
+	var changed := true
+	while changed:
+		changed = false
+		for entry: Dictionary in list:
+			if TrainerWindow.entry_state(entry)[0] == "available":
+				learned.append_array(SpellCaster.learn(entry.spells))
+				changed = true
+	if learned.is_empty():
+		return "Nothing new to learn at level %d." % GameState.level
+	GameState.inventory_changed.emit()
+	return "Learned %d spell%s: %s." % [learned.size(), "" if learned.size() == 1 else "s", ", ".join(learned)]
+
+
+## Starts the character over, as Shift+F12 does. Asks for "confirm" first.
+func _cmd_reset(args: PackedStringArray) -> String:
+	if args.is_empty() or args[0] != "confirm":
+		return "!This starts %s over at level 1: items, money, quests and spells are lost. Type \"reset confirm\" to do it." % GameState.char_name
+	GameState.reset_character()
+	get_tree().reload_current_scene.call_deferred()
+	return "Starting %s over." % GameState.char_name
 
 
 ## The id of the entry whose `field` matches the query: an exact name first,

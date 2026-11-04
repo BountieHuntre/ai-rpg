@@ -118,6 +118,10 @@ func cast(id: int) -> void:
 	var spell := SpellDB.get_spell(id)
 	_item_ref = {}
 	_item_spell = 0
+	# Clicking the stance you're already in does nothing, as in classic.
+	var form := SpellDB.stance_form(spell)
+	if form != 0 and SpellDB.uses_rage(spell) and form == current_form():
+		return
 	var target := _pick_target(spell)
 	var problem := _find_problem(spell, target, true)
 	if not problem.is_empty():

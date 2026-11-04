@@ -76,8 +76,9 @@ TALENT_FIRST_RANKS = {
                 [12294, 40], [23881, 40], [23922, 40]],
 }
 # Spells classic gives from a class quest, sold free at their level: Defensive
-# Stance and Taunt at 10, Berserker Stance at 30.
-QUEST_SPELLS = {"warrior": [[71, 10], [355, 10], [2458, 30]]}
+# Stance and Taunt at 10, Berserker Stance at 30; Redemption's first rank at
+# 12 (the trainer sells the later ranks, which need it).
+QUEST_SPELLS = {"warrior": [[71, 10], [355, 10], [2458, 30]], "paladin": [[7328, 12]]}
 # First ranks of priest racial spells, which classic gives from a quest: sold
 # free at the spell's level to the races that have them. Desperate Prayer
 # (Human, Dwarf), Feedback (Human), Fear Ward (Dwarf), Starshards and Elune's

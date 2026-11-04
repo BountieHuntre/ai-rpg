@@ -93,14 +93,23 @@ const DEV_BUTTONS := [
 	["Heal", "heal"], ["Kill Target", "kill"], ["Repair Gear", "repair"],
 	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
 	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
-	["Reload Game", "reload"],
+	["Reload Game", "reload"], ["Train All Spells", "trainall"],
 ]
 const RESULT := Color(0.6, 0.9, 0.6)
+## The open "Reset Character?" confirmation, or null.
+var _confirm: ColorRect
 const ERROR_COLOR := Color(1, 0.6, 0.4)
 const TAB_SELECTED := Color(1, 0.85, 0.3)
 const TAB_WIDTH := 58.0
 const TAB_OTHER := Color(0.6, 0.6, 0.65)
 const LIST_HEIGHT := 125.0
+## Every tab's page height: down to just above the buttons. Lists that scroll
+## on their own (key bindings, items) grow by EXTRA_PAGE to fill it.
+const PAGE_HEIGHT := 176.0
+const EXTRA_PAGE := PAGE_HEIGHT - (LIST_HEIGHT + 13.0)
+## Room beside a page for its scrollbar, and the result line's two rows.
+const SCROLLBAR_ROOM := 8.0
+const NOTE_HEIGHT := 20.0
 const WAITING := Color(0.4, 1, 0.4)
 
 ## The in-game developer console the Developer tab runs commands through, or
@@ -164,10 +173,16 @@ func okay() -> void:
 	_close()
 
 
-## Drops what wasn't applied.
+## Drops what wasn't applied. Esc first closes the reset confirmation.
 func cancel() -> void:
+	if close_confirm():
+		return
 	_pending.clear()
 	_close()
+
+
+func _exit_tree() -> void:
+	close_confirm()
 
 
 func defaults() -> void:
@@ -250,6 +265,7 @@ func _refresh_keys() -> void:
 
 
 func _close() -> void:
+	close_confirm()
 	_binding = []
 	_item_list = false
 	if _item_tooltip:
@@ -292,14 +308,26 @@ func _build() -> void:
 		if selected:
 			button.add_theme_stylebox_override("normal", button.get_theme_stylebox("pressed"))
 		tabs.add_child(button)
-	# Every tab gets the same space, so the window doesn't jump between tabs.
+	# Every tab gets the same space, so the window is always one size; longer
+	# pages scroll.
+	var page := ScrollContainer.new()
+	page.custom_minimum_size = Vector2(WIDTH + 30 + SCROLLBAR_ROOM, PAGE_HEIGHT) * _ui_scale
+	page.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body.add_child(page)
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", roundi(4 * _ui_scale))
-	content.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT + 13) * _ui_scale
-	body.add_child(content)
+	content.custom_minimum_size.x = (WIDTH + 30) * _ui_scale
+	page.add_child(content)
+	# Results sit between Defaults and Apply: two lines, cut short beyond
+	# that, so they can't stretch the window.
 	_note = _label("", ERROR_COLOR)
+	_note.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
 	_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_note.custom_minimum_size.x = (TAB_WIDTH + WIDTH + 36) * _ui_scale
+	_note.max_lines_visible = 2
+	_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_note.custom_minimum_size = Vector2(10, NOTE_HEIGHT) * _ui_scale
 	if _category == KEY_BINDINGS:
 		_build_keys(content)
 	else:
@@ -307,14 +335,11 @@ func _build() -> void:
 			content.add_child(_row(row))
 	if _category == DEVELOPER:
 		_build_developer(content)
-	box.add_child(_note)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", roundi(4 * _ui_scale))
 	box.add_child(buttons)
 	buttons.add_child(_button("Defaults", defaults))
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buttons.add_child(gap)
+	buttons.add_child(_note)
 	_apply_button = _button("Apply", apply)
 	buttons.add_child(_apply_button)
 	_update_apply()
@@ -410,6 +435,61 @@ func _build_developer(content: VBoxContainer) -> void:
 		_note.text = ""
 		_build()
 	))
+	var reset := _button("Reset Character...", _confirm_reset)
+	reset.add_theme_color_override("font_color", ERROR_COLOR)
+	content.add_child(reset)
+
+
+## Asks before starting the character over (the console's "reset confirm").
+func _confirm_reset() -> void:
+	close_confirm()
+	_confirm = ColorRect.new()
+	# Over the whole screen, dimming it: beside the window rather than in it,
+	# so it doesn't stretch the window's layout.
+	_confirm.color = Color(0, 0, 0, 0.5)
+	_confirm.size = get_viewport_rect().size
+	_confirm.mouse_filter = Control.MOUSE_FILTER_STOP
+	get_parent().add_child(_confirm)
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.12, 0.98)
+	style.border_color = GOLD
+	style.set_border_width_all(maxi(roundi(_ui_scale / 2), 1))
+	style.set_content_margin_all(8 * _ui_scale)
+	panel.add_theme_stylebox_override("panel", style)
+	_confirm.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", roundi(6 * _ui_scale))
+	panel.add_child(box)
+	var title := _label("Reset %s?" % GameState.char_name, GOLD)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var text := _label("%s starts over at level 1, keeping name, race and class. All items, money, quests, spells and experience are lost. This can't be undone." % GameState.char_name, TEXT)
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.custom_minimum_size.x = 150 * _ui_scale
+	box.add_child(text)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", roundi(6 * _ui_scale))
+	var yes := _button("Reset", func() -> void:
+		close_confirm()
+		_show_result(console.run("reset confirm"))
+	)
+	yes.add_theme_color_override("font_color", ERROR_COLOR)
+	buttons.add_child(yes)
+	buttons.add_child(_button("Cancel", close_confirm))
+	box.add_child(buttons)
+	# Centered once its size is known.
+	panel.resized.connect(func() -> void: panel.position = (_confirm.size - panel.size) / 2.0)
+
+
+## Closes the reset confirmation, if open. Returns whether it was.
+func close_confirm() -> bool:
+	if _confirm == null or not is_instance_valid(_confirm):
+		return false
+	_confirm.queue_free()
+	_confirm = null
+	return true
 
 
 ## Every item in the game, searchable by name. Click one to put it in the bags;
@@ -440,7 +520,8 @@ func _build_item_list(content: VBoxContainer) -> void:
 	top.add_child(search)
 	content.add_child(top)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 14) * _ui_scale
+	# Short enough that the page itself needn't scroll as well.
+	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 24 + EXTRA_PAGE) * _ui_scale
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	content.add_child(scroll)
 	var list := VBoxContainer.new()
@@ -522,7 +603,7 @@ func _show_result(result: String) -> void:
 ## Every rebindable action by section, with its two keys.
 func _build_keys(box: VBoxContainer) -> void:
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT) * _ui_scale
+	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT + EXTRA_PAGE) * _ui_scale
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(scroll)
 	var list := VBoxContainer.new()

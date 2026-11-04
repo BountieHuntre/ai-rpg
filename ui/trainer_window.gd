@@ -63,7 +63,7 @@ func _process(_delta: float) -> void:
 
 
 ## Entry state: "used", "available", "unavailable" or "not_in_game", plus why.
-func entry_state(entry: Dictionary) -> Array:
+static func entry_state(entry: Dictionary) -> Array:
 	var main_id: int = entry.spells[0]
 	var spell := SpellDB.get_spell(main_id)
 	if main_id in GameState.known_spells:
@@ -81,7 +81,7 @@ func entry_state(entry: Dictionary) -> Array:
 
 
 ## A previous rank can be "known" through the rank that replaced it.
-func _replaced_rank_known(id: int) -> bool:
+static func _replaced_rank_known(id: int) -> bool:
 	for known: int in GameState.known_spells:
 		if SpellDB.previous_rank(known) == id:
 			return true
