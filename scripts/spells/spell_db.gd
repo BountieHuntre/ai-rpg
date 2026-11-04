@@ -161,10 +161,18 @@ static func full_name(spell: Dictionary) -> String:
 
 ## An effect's value at the caster's level: base points plus a die roll, plus
 ## RealPointsPerLevel for each level past the spell level (up to MaxLevel).
-## As in Unit::CalculateSpellEffectValue.
-static func effect_value(spell: Dictionary, effect: int, caster_level: int) -> float:
+## As in Unit::CalculateSpellEffectValue. A caster's talents that change all
+## of a spell's effects (SpellMods ALL_EFFECTS, and ATTACK_POWER for attack
+## power auras) apply when the caster is given.
+static func effect_value(spell: Dictionary, effect: int, caster_level: int, caster: Combatant = null) -> float:
 	var range_ := effect_range(spell, effect, caster_level)
-	return range_.x if range_.y <= range_.x else float(randi_range(int(range_.x), int(range_.y)))
+	var value := range_.x if range_.y <= range_.x else float(randi_range(int(range_.x), int(range_.y)))
+	if caster == null:
+		return value
+	value = SpellMods.apply(caster, spell, SpellMods.ALL_EFFECTS, value)
+	if int(spell.get("EffectApplyAuraName%d" % (effect + 1), 0)) == AURA_MOD_ATTACK_POWER:
+		value = SpellMods.apply(caster, spell, SpellMods.ATTACK_POWER, value)
+	return value
 
 
 ## The lowest and highest value an effect can roll at a level.
@@ -180,16 +188,25 @@ static func effect_range(spell: Dictionary, effect: int, caster_level: int) -> V
 	return Vector2(floorf(base) + low, floorf(base) + high)
 
 
-static func cast_time(spell: Dictionary) -> float:
-	return CAST_TIMES.get(int(spell.get("CastingTimeIndex", 1)), 0.0)
+## Cast time, duration, range and the rest take an optional caster, whose
+## talents may change them (SpellMods; times in the modifiers are milliseconds).
+static func cast_time(spell: Dictionary, caster: Combatant = null) -> float:
+	var time: float = CAST_TIMES.get(int(spell.get("CastingTimeIndex", 1)), 0.0)
+	if caster == null or time <= 0.0:
+		return time
+	return maxf(SpellMods.apply(caster, spell, SpellMods.CASTING_TIME, time * 1000.0) / 1000.0, 0.0)
 
 
-static func duration(spell: Dictionary) -> float:
-	return DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+static func duration(spell: Dictionary, caster: Combatant = null) -> float:
+	var length: float = DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+	if caster == null or length <= 0.0:
+		return length
+	return maxf(SpellMods.apply(caster, spell, SpellMods.DURATION, length * 1000.0) / 1000.0, 0.0)
 
 
-static func spell_range(spell: Dictionary) -> float:
-	return RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+static func spell_range(spell: Dictionary, caster: Combatant = null) -> float:
+	var reach: float = RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+	return SpellMods.apply(caster, spell, SpellMods.RANGE, reach) if caster and reach > 5.0 else reach
 
 
 static func min_range(spell: Dictionary) -> float:
@@ -218,20 +235,26 @@ static func is_stance_bar_spell(spell: Dictionary) -> bool:
 ## Mana cost, either flat or a percentage of the caster's base mana.
 ## Rage costs come out in whole rage points; health costs (Blood Fury) aren't
 ## a power cost and come out as 0.
-static func mana_cost(spell: Dictionary, base_mana: int) -> int:
+## A caster's talents may lower it (SpellMods COST, applied in tenths of rage
+## for rage abilities, as the data has them).
+static func mana_cost(spell: Dictionary, base_mana: int, caster: Combatant = null) -> int:
 	if int(spell.get("PowerType", POWER_MANA)) == POWER_HEALTH:
 		return 0
-	if uses_rage(spell):
-		return int(spell.get("ManaCost", 0)) / 10
+	var cost := float(spell.get("ManaCost", 0))
 	var percent := int(spell.get("ManaCostPercentage", 0))
-	if percent > 0:
-		return base_mana * percent / 100
-	return int(spell.get("ManaCost", 0))
+	if percent > 0 and not uses_rage(spell):
+		cost = base_mana * percent / 100
+	if caster:
+		cost = maxf(SpellMods.apply(caster, spell, SpellMods.COST, cost), 0.0)
+	return int(cost) / 10 if uses_rage(spell) else int(cost)
 
 
 ## Cooldown in seconds, not counting the global cooldown.
-static func cooldown(spell: Dictionary) -> float:
-	return maxf(int(spell.get("RecoveryTime", 0)), int(spell.get("CategoryRecoveryTime", 0))) / 1000.0
+static func cooldown(spell: Dictionary, caster: Combatant = null) -> float:
+	var ms := maxf(int(spell.get("RecoveryTime", 0)), int(spell.get("CategoryRecoveryTime", 0)))
+	if caster and ms > 0.0:
+		ms = maxf(SpellMods.apply(caster, spell, SpellMods.COOLDOWN, ms), 0.0)
+	return ms / 1000.0
 
 
 static func global_cooldown(spell: Dictionary) -> float:
@@ -281,8 +304,9 @@ static func holy_shock_spells(id: int) -> Array:
 
 
 ## The radius of a spell's effect in yards.
-static func effect_radius(spell: Dictionary, effect := 0) -> float:
-	return RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
+static func effect_radius(spell: Dictionary, effect := 0, caster: Combatant = null) -> float:
+	var radius: float = RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
+	return SpellMods.apply(caster, spell, SpellMods.RADIUS, radius) if caster and radius > 0.0 else radius
 
 
 static func is_channeled(spell: Dictionary) -> bool:

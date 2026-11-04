@@ -160,11 +160,11 @@ func _on_swing(target: Combatant) -> bool:
 	if _combatant.mana < cost:
 		return false
 	_combatant.spend_mana(cost)
-	var bonus := SpellDB.effect_value(spell, 0, _unit.profile.level)
-	_combatant.strike(target, _combatant.roll_weapon_damage() + bonus)
+	var bonus := SpellDB.effect_value(spell, 0, _unit.profile.level, _combatant)
+	_combatant.strike(target, _combatant.roll_weapon_damage() + bonus, true, spell)
 	if spell.SpellName == "Sweeping Cut":
 		for other in _enemies_near(target.body.global_position, _combatant.melee_range + 1.0, 1, target):
-			_combatant.strike(other, _combatant.roll_weapon_damage() + bonus)
+			_combatant.strike(other, _combatant.roll_weapon_damage() + bonus, true, spell)
 	Sfx.play_at("swing", _unit.global_position)
 	return true
 
@@ -201,13 +201,13 @@ func _arrive(spell: Dictionary, target: Combatant) -> void:
 	for i in 3:
 		match int(spell.get("Effect%d" % (i + 1), 0)):
 			SpellDB.EFFECT_ENERGIZE:
-				_combatant.gain_rage(SpellDB.effect_value(spell, i, _unit.profile.level) / 10.0)
+				_combatant.gain_rage(SpellDB.effect_value(spell, i, _unit.profile.level, _combatant) / 10.0)
 			SpellDB.EFFECT_TRIGGER_SPELL:
 				var stun := SpellDB.get_spell(int(spell.get("EffectTriggerSpell%d" % (i + 1), 0)))
 				if not stun.is_empty():
 					_apply_stun(stun, target)
 					if SpellDB.has_effect(stun, SpellDB.EFFECT_SCHOOL_DAMAGE):
-						target.take_damage(roundi(SpellDB.effect_value(stun, 1, _unit.profile.level)), _combatant)
+						target.take_damage(roundi(SpellDB.effect_value(stun, 1, _unit.profile.level, _combatant)), _combatant)
 	_combatant.attack_target = target
 	Sfx.play_at("swing", _unit.global_position)
 
@@ -228,43 +228,43 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 				(target.body as Enemy).provoke(me)
 			_rush = { "spell": spell, "target": target }
 		"Heavy Swing":
-			me.strike(target, me.roll_weapon_damage() + SpellDB.effect_value(spell, 0, level))
+			me.strike(target, me.roll_weapon_damage() + SpellDB.effect_value(spell, 0, level, _combatant), true, spell)
 		"Riposte Strike":
 			_dodged_by.erase(target)
-			me.strike(target, me.roll_normalized_damage(_normal_speed()) + SpellDB.effect_value(spell, 0, level), false)
+			me.strike(target, me.roll_normalized_damage(_normal_speed()) + SpellDB.effect_value(spell, 0, level, _combatant), false, spell)
 		"Retort":
 			_retort_until = 0.0
-			me.strike(target, SpellDB.effect_value(spell, 0, level))
+			me.strike(target, SpellDB.effect_value(spell, 0, level, _combatant), true, spell)
 		"Finishing Blow":
 			# Base damage plus each rage point left after the cost, times the rank's multiplier.
 			var extra := me.mana
 			me.mana = 0.0
-			var damage := SpellDB.effect_value(spell, 0, level) + extra * 10.0 * float(spell.get("DmgMultiplier1", 0.3))
-			me.strike(target, damage)
+			var damage := SpellDB.effect_value(spell, 0, level, _combatant) + extra * 10.0 * float(spell.get("DmgMultiplier1", 0.3))
+			me.strike(target, damage, true, spell)
 		"Bloodlust Strike":
-			me.strike(target, me.attack_power * (SpellDB.effect_value(spell, 0, level)) / 100.0)
+			me.strike(target, me.attack_power * (SpellDB.effect_value(spell, 0, level, _combatant)) / 100.0, true, spell)
 		"Grievous Strike":
-			if me.strike(target, me.roll_normalized_damage(_normal_speed()) + SpellDB.effect_value(spell, 1, level)):
+			if me.strike(target, me.roll_normalized_damage(_normal_speed()) + SpellDB.effect_value(spell, 1, level, _combatant), true, spell):
 				target.add_aura(spell, me)
 		"Shield Crush":
-			if me.strike(target, SpellDB.effect_value(spell, 1, level)):
+			if me.strike(target, SpellDB.effect_value(spell, 1, level, _combatant), true, spell):
 				caster._dispel(spell, target)
 		"Cyclone Strike":
-			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell), MAX_AREA_TARGETS):
-				me.strike(enemy, me.roll_normalized_damage(_normal_speed()))
+			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 0, _combatant), MAX_AREA_TARGETS):
+				me.strike(enemy, me.roll_normalized_damage(_normal_speed()), true, spell)
 		"Ground Slam":
-			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell), MAX_AREA_TARGETS):
+			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 0, _combatant), MAX_AREA_TARGETS):
 				if CombatRules.roll_spell(me, enemy) == CombatRules.Outcome.RESIST:
 					enemy.avoid("Resist", me)
 					continue
-				enemy.take_damage(roundi(SpellDB.effect_value(spell, 0, level)), me)
+				enemy.take_damage(roundi(SpellDB.effect_value(spell, 0, level, _combatant)), me)
 				enemy.add_aura(spell, me)
 			Sfx.play_at("swing", _unit.global_position)
 		"Daunting Roar", "Crippling Howl":
-			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell), 99):
+			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 0, _combatant), 99):
 				caster._debuff(spell, enemy)
 		"Daring Roar":
-			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell), 99):
+			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 0, _combatant), 99):
 				enemy.add_aura(spell, me)
 				(enemy.body as Enemy).taunt(me)
 		"Cowing Roar":
@@ -272,7 +272,7 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 			if not cower.is_empty() and target and target.is_alive():
 				_apply_stun(cower, target)
 			var feared := 0
-			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 1), 99):
+			for enemy in _enemies_near(_unit.global_position, SpellDB.effect_radius(spell, 1, _combatant), 99):
 				if enemy != target and feared < MAX_FEAR_TARGETS:
 					caster._debuff(spell, enemy)
 					feared += 1
@@ -283,17 +283,17 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 				target.add_aura(spell, me)
 				(target.body as Enemy).taunt(me)
 		"Taunting Blow":
-			if me.strike(target, SpellDB.effect_value(spell, 0, level)):
+			if me.strike(target, SpellDB.effect_value(spell, 0, level, _combatant), true, spell):
 				target.add_aura(spell, me)
 				(target.body as Enemy).taunt(me)
 		"Rallying Cry":
-			for unit in caster._group_near(SpellDB.effect_radius(spell)):
+			for unit in caster._group_near(SpellDB.effect_radius(spell, 0, _combatant)):
 				caster._buff(spell, unit.combatant)
 		"Blood Fury":
 			# Costs a fifth of base health (ManaCostPercentage of a health-cost spell).
 			var cost := ClassicData.base_health(_unit.profile.char_class, level) * int(spell.get("ManaCostPercentage", 0)) / 100
 			me.health = maxi(me.health - cost, 1)
-			me.gain_rage(SpellDB.effect_value(spell, 0, level) / 10.0)
+			me.gain_rage(SpellDB.effect_value(spell, 0, level, _combatant) / 10.0)
 			var more := SpellDB.get_spell(int(spell.get("EffectTriggerSpell2", 0)))
 			if not more.is_empty():
 				me.add_aura(more, me)
@@ -315,25 +315,25 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 ## deal flat damage: Gash, Hobble, Rend Armor, Wrest Weapon, Shield Smash, Hilt
 ## Strike, Stunning Blow. Returns false for spells that aren't these.
 func _melee_ability(spell: Dictionary, target: Combatant) -> bool:
-	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY or SpellDB.spell_range(spell) > 5.0 or not SpellDB.uses_rage(spell):
+	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY or SpellDB.spell_range(spell, _combatant) > 5.0 or not SpellDB.uses_rage(spell):
 		return false
 	var me := _combatant
 	var damage := 0.0
 	for i in 3:
 		if int(spell.get("Effect%d" % (i + 1), 0)) == SpellDB.EFFECT_SCHOOL_DAMAGE:
-			damage += SpellDB.effect_value(spell, i, _unit.profile.level)
+			damage += SpellDB.effect_value(spell, i, _unit.profile.level, _combatant)
 	var landed := false
 	if damage > 0.0:
-		landed = me.strike(target, damage)
+		landed = me.strike(target, damage, true, spell)
 	else:
 		landed = _melee_roll(target)
 	# Hilt Strike and Shield Smash cut a cast short and lock its school.
 	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_INTERRUPT_CAST):
-		target.interrupt_cast(SpellDB.duration(spell))
+		target.interrupt_cast(SpellDB.duration(spell, _combatant))
 	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_APPLY_AURA):
 		target.add_aura(spell, me)
 		if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
-			target.stun(SpellDB.duration(spell))
+			target.stun(SpellDB.duration(spell, _combatant))
 	if target.body is Enemy:
 		(target.body as Enemy).provoke(me)
 	return true
@@ -352,7 +352,7 @@ func _melee_roll(target: Combatant) -> bool:
 
 func _apply_stun(stun: Dictionary, target: Combatant) -> void:
 	target.add_aura(stun, _combatant)
-	target.stun(SpellDB.duration(stun))
+	target.stun(SpellDB.duration(stun, _combatant))
 
 
 ## Changing stance: the old stance and its passive go, the new one and its
@@ -367,7 +367,11 @@ func _enter_stance(spell: Dictionary, sound := true) -> void:
 	var passive := SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id)))
 	if not passive.is_empty():
 		me.add_aura(passive, me)
-	me.mana = 0.0
+	# Stance Discipline keeps up to 5 rage per rank (classic Tactical Mastery,
+	# SPELL_AURA_OVERRIDE_CLASS_SCRIPTS 831).
+	var discipline := me.find_aura(func(other: Dictionary) -> bool: return other.SpellName == "Stance Discipline")
+	var kept := 5.0 * maxi(Talents.rank_of_spell(int(discipline.spell.Id)), 1) if not discipline.is_empty() else 0.0
+	me.mana = minf(me.mana, kept)
 	if sound:
 		Sfx.play_at("buff", _unit.global_position)
 

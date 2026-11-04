@@ -60,21 +60,6 @@ SEAL_OF_RIGHTEOUSNESS_PROCS = {
 }
 # Holy Light's script effect heals through this spell (SpellEffects.cpp).
 HOLY_LIGHT_HEAL = 19968
-# First ranks the trainer doesn't sell because classic gives them as talents.
-# There are no talents yet, so the game's trainer sells them at the talent's
-# tier level: Seal of Command, Consecration, Blessing of Kings, Blessing of
-# Sanctuary, Holy Shock and Holy Shield.
-# Priest: Inner Focus, Holy Nova, Mind Flay, Divine Spirit, Silence, Vampiric
-# Embrace, Power Infusion, Shadowform and Lightwell.
-TALENT_FIRST_RANKS = {
-    "paladin": [[20375, 20], [26573, 20], [20217, 20], [20911, 30], [20473, 40], [20925, 40]],
-    "priest": [[14751, 20], [15237, 20], [15407, 20], [14752, 30], [15487, 30], [15286, 30],
-               [10060, 40], [15473, 40], [724, 40]],
-    # Warrior: Last Stand, Piercing Howl, Sweeping Strikes, Concussion Blow,
-    # Death Wish, Mortal Strike, Bloodthirst and Shield Slam.
-    "warrior": [[12975, 20], [12323, 20], [12292, 30], [12809, 30], [12328, 30],
-                [12294, 40], [23881, 40], [23922, 40]],
-}
 # Spells classic gives from a class quest, sold free at their level: Defensive
 # Stance and Taunt at 10, Berserker Stance at 30; Redemption's first rank at
 # 12 (the trainer sells the later ranks, which need it).
@@ -99,6 +84,9 @@ SPELL_LINKS = {
     # Warrior: each stance's passive (threat, damage taken and done, crit),
     # Retaliation's strike and Last Stand's health.
     2457: 21156, 71: 7376, 2458: 7381, 20230: 22858, 12975: 12976,
+    # Talents: Deep Wounds' bleed (its dummy effect casts it), and Blessed
+    # Recovery's heal per rank (UnitAuraProcHandler.cpp).
+    12162: 12721, 27811: 27813, 27815: 27817, 27816: 27818,
 }
 WEAKENED_SOUL = 6788
 # Judgement of Light and Wisdom heal or restore through a spell per rank, picked
@@ -116,7 +104,7 @@ TABLES = {
     "creature_template", "creature_loot_template", "reference_loot_template", "creature",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
     "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template", "spell_proc_event",
-    "creature_ai_scripts", "creature_template_classlevelstats",
+    "creature_ai_scripts", "creature_template_classlevelstats", "spell_affect",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -130,7 +118,8 @@ SPELL_FIELDS = [
     "EffectBasePoints", "EffectMechanic", "EffectImplicitTargetA", "EffectImplicitTargetB",
     "EffectRadiusIndex", "EffectApplyAuraName", "EffectAmplitude", "EffectMiscValue",
     "EffectTriggerSpell", "EffectMultipleValue", "DmgMultiplier",
-)] + ["TargetCreatureType", "Stances"]
+)] + ["TargetCreatureType", "Stances", "EffectItemType1", "EffectItemType2", "EffectItemType3",
+     "EquippedItemClass", "EquippedItemSubClassMask", "EquippedItemInventoryTypeMask"]
 SPELL_EFFECT_LEARN = 36
 SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
@@ -427,9 +416,6 @@ def export_spells(db, item_spells):
             entries = list(trainer_entries(trainer).values())
         for entry in entries:
             wanted.update(entry["spells"])
-        for spell_id, level in TALENT_FIRST_RANKS.get(name, []):
-            entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "talent": True})
-            wanted.add(spell_id)
         for spell_id, level in QUEST_SPELLS.get(name, []):
             entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "quest": True})
             wanted.add(spell_id)
@@ -438,6 +424,18 @@ def export_spells(db, item_spells):
             entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "races": races})
             wanted.add(spell_id)
         trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
+
+    # Talent trees (data/classic/talents.json, from fetch_client_tables.py) of
+    # the classes with spells: every rank's spell, and the trees renamed.
+    with open(os.path.join(OUT_DIR, "talents.json"), encoding="utf8") as f:
+        all_talents = json.load(f)
+    talents = {}
+    for class_id in sorted(SPELL_CLASSES):
+        trees = all_talents.get(str(class_id), [])
+        for tree in trees:
+            for talent in tree["talents"]:
+                wanted.update(talent["ranks"])
+        talents[str(class_id)] = [dict(tree, name=renames.talent_tree(class_id, tree["name"])) for tree in trees]
 
     start = {}
     for r in db["playercreateinfo_spell"]:
@@ -476,21 +474,42 @@ def export_spells(db, item_spells):
                 wanted.add(other)
                 pending.append(other)
 
+    # Spell modifiers with no mask of their own take it from spell_affect
+    # (SpellMgr::LoadSpellAffects in CMaNGOS).
+    affects = {(r["entry"], int(r["effectId"])): int(r["SpellFamilyMask"]) for r in db["spell_affect"]}
     out = {}
     for spell_id in sorted(wanted):
         spell = pick(spells[str(spell_id)], SPELL_FIELDS)
+        for i in range(3):
+            mask = affects.get((str(spell_id), i), 0)
+            if mask and not spell.get(f"EffectItemType{i + 1}"):
+                spell[f"EffectItemType{i + 1}"] = mask
         spell["SpellFamilyFlags"] = int(spells[str(spell_id)]["SpellFamilyFlags"])
         out[str(spell_id)] = spell
+    # A talent's later ranks use its first rank's spell_affect mask.
+    for trees in talents.values():
+        for tree in trees:
+            for talent in tree["talents"]:
+                first = out.get(str(talent["ranks"][0]), {})
+                for rank_id in talent["ranks"][1:]:
+                    spell = out.get(str(rank_id))
+                    for i in range(1, 4):
+                        if spell and not spell.get(f"EffectItemType{i}") and first.get(f"EffectItemType{i}"):
+                            spell[f"EffectItemType{i}"] = first[f"EffectItemType{i}"]
     renames.apply({}, {}, {}, out, classic_names(db))
     chains = {r["spell_id"]: {"prev": int(r["prev_spell"]), "first": int(r["first_spell"]), "rank": int(r["rank"])}
               for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
     bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}
              for r in db["spell_bonus_data"] if int(r["entry"]) in wanted}
     # Proc rates (procs per minute) and cooldowns, by spell, from spell_proc_event.
-    procs = {r["entry"]: {"ppm": float(r["ppmRate"]), "chance": float(r["CustomChance"]), "cooldown": float(r["Cooldown"])}
+    # The spell family mask says which spells' hits set a proc off (Improved
+    # Hamstring only from Hobble), procEx which outcomes (2: crits).
+    procs = {r["entry"]: {"ppm": float(r["ppmRate"]), "chance": float(r["CustomChance"]), "cooldown": float(r["Cooldown"]),
+                          "family": int(r["SpellFamilyName"]), "family_mask": int(r["SpellFamilyMask0"]),
+                          "school": int(r["SchoolMask"]), "flags": int(r["procFlags"]), "ex": int(r["procEx"])}
              for r in db["spell_proc_event"] if int(r["entry"]) in wanted}
     write("spells.json", {"spells": out, "chains": chains, "bonus": bonus, "trainers": trainers,
-                          "start_spells": start, "procs": procs,
+                          "start_spells": start, "procs": procs, "talents": talents,
                           "judgement_procs": {str(k): v for k, v in JUDGEMENT_PROC_SPELLS.items()},
                           "holy_shock": {str(k): v for k, v in HOLY_SHOCK_SPELLS.items()},
                           "links": {str(k): v for k, v in SPELL_LINKS.items()},

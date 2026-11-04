@@ -14,6 +14,9 @@ const RESISTANCE_SCHOOLS := { 4: "Fire", 16: "Frost", 32: "Shadow", 8: "Nature",
 ## numbers that depend on the caster's gear, such as Oath of Valor's damage.
 static func describe(spell: Dictionary, level: int, caster: Node = null) -> String:
 	var name := str(spell.get("SpellName", ""))
+	var talent := TalentText.describe(spell, level)
+	if not talent.is_empty():
+		return talent
 	var t := _Values.new(spell, level)
 	for prefix in ["Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: "]:
 		if name.begins_with(prefix):
@@ -49,6 +52,10 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 			return "Unleashes your active Oath on an enemy within 10 yards, with an effect that depends on the Oath. Your Oath stays active."
 		"Stunning Gavel":
 			return "Stuns an enemy for %s." % t.duration()
+		"Heaven's Favor":
+			return "Your next Mending Radiance, Quick Radiance or Radiant Jolt is sure to be a critical one."
+		"Contrition":
+			return "Puts an enemy into deep contrition for %s: it can't act. Any damage breaks the effect." % t.duration()
 		"Gavel of Reckoning":
 			return "Hurls a hammer at an enemy below 20%% health, dealing %s Holy damage." % t.amount(0)
 		"Banishment":
@@ -149,6 +156,8 @@ static func _presence(name: String, t: _Values) -> String:
 			text = "Enemies that strike party members within 30 yards take %s Holy damage." % t.amount(0)
 		"Focused Presence":
 			text = "Party members within 30 yards have a %s%% chance to keep casting when hit, and resist being silenced or interrupted." % t.amount(0)
+		"Hallowed Presence":
+			text = "Party members within 30 yards deal %s%% more Holy damage." % t.amount(0)
 		_:
 			var school: String = RESISTANCE_SCHOOLS.get(int(t.spell.get("EffectMiscValue1", 0)), "")
 			if school.is_empty():

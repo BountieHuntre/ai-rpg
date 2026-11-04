@@ -15,6 +15,10 @@ from wago.tools' Classic Era (1.15) client exports.
 Starting gear is CharStartOutfit, by race and class (Player::Create in CMaNGOS
 gives each new character these items).
 
+Talents are TalentTab (each class's three trees) and Talent (each talent's
+tier, column, rank spells and prerequisites), into data/classic/talents.json.
+extract.py exports their spells and renames the trees.
+
 Factions are FactionTemplate, for who is hostile to whom (FactionTemplateEntry
 in CMaNGOS), and each race's template from ChrRaces, into
 data/classic/factions.json.
@@ -69,6 +73,35 @@ def main():
     with open(os.path.join(OUT_DIR, "factions.json"), "w", encoding="utf8") as out:
         json.dump({"templates": templates, "races": races}, out, separators=(",", ":"))
     print(f"{len(templates)} faction templates")
+    export_talents()
+
+
+def export_talents():
+    """By class id: the trees in order, each with its talents. A talent's
+    prereq is [talent id, ranks needed]; ranks are the spell of each rank."""
+    by_class = {}
+    tabs = {}
+    for row in fetch("TalentTab"):
+        mask = int(row["ClassMask"])
+        if mask and mask & (mask - 1) == 0:
+            class_id = mask.bit_length()
+            tabs[row["ID"]] = {"id": int(row["ID"]), "name": row["Name_lang"], "order": int(row["OrderIndex"]),
+                               "class": class_id, "talents": []}
+    for row in fetch("Talent"):
+        tab = tabs.get(row["TabID"])
+        if tab is None:
+            continue
+        ranks = [int(row[f"SpellRank_{i}"]) for i in range(9) if int(row[f"SpellRank_{i}"]) > 0]
+        prereq = [[int(row[f"PrereqTalent_{i}"]), int(row[f"PrereqRank_{i}"]) + 1] for i in range(3)
+                  if int(row[f"PrereqTalent_{i}"]) > 0]
+        tab["talents"].append({"id": int(row["ID"]), "tier": int(row["TierID"]), "column": int(row["ColumnIndex"]),
+                               "ranks": ranks, "prereq": prereq})
+    for tab in sorted(tabs.values(), key=lambda t: (t["class"], t["order"])):
+        tab["talents"].sort(key=lambda t: (t["tier"], t["column"]))
+        by_class.setdefault(str(tab.pop("class")), []).append(tab)
+    with open(os.path.join(OUT_DIR, "talents.json"), "w", encoding="utf8") as out:
+        json.dump(by_class, out, separators=(",", ":"))
+    print(f"{sum(len(t['talents']) for c in by_class.values() for t in c)} talents in {len(tabs)} trees")
 
 
 if __name__ == "__main__":

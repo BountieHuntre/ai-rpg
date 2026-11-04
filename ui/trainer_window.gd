@@ -166,6 +166,31 @@ func _build() -> void:
 			train(_selected)
 	)
 	add_child(train_button)
+	# Unlearning talents, at the class's own trainer: a second click confirms.
+	if Talents.spent(GameState) > 0:
+		var cost := Talents.reset_cost(GameState.talent_reset_cost)
+		var unlearn := Button.new()
+		unlearn.text = "Unlearn Talents"
+		unlearn.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+		unlearn.position = Vector2(WIDTH - 102, 18 + LIST_HEIGHT) * _ui_scale
+		unlearn.size = Vector2(60, 12) * _ui_scale
+		unlearn.pressed.connect(func() -> void:
+			if not unlearn.has_meta("confirm"):
+				unlearn.set_meta("confirm", true)
+				unlearn.text = "Pay %s?" % ItemDB.money_text(cost)
+				return
+			if GameState.money < cost:
+				message.emit("Not enough money", true)
+				return
+			GameState.money -= cost
+			GameState.talent_reset_cost = cost
+			Talents.reset(GameState)
+			message.emit("Your talents have been unlearned.", false)
+			Sfx.play("level_up")
+			GameState.inventory_changed.emit()
+			_build.call_deferred()
+		)
+		add_child(unlearn)
 	_select(_selected if _selected < _rows.size() else -1)
 
 

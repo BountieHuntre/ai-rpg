@@ -86,7 +86,7 @@ func _proc_chance(spell: Dictionary, info: Dictionary) -> float:
 ## The effect of a proc spell: a heal or mana for you, a stun or Holy damage
 ## (a share of a weapon hit) for the target.
 func _apply(spell: Dictionary, target: Combatant) -> void:
-	var value := SpellDB.effect_value(spell, 0, _unit.profile.level)
+	var value := SpellDB.effect_value(spell, 0, _unit.profile.level, _combatant)
 	match int(spell.get("Effect1", 0)):
 		SpellDB.EFFECT_HEAL:
 			_combatant.heal(roundi(value), false, _combatant)
@@ -100,7 +100,7 @@ func _apply(spell: Dictionary, target: Combatant) -> void:
 		SpellDB.EFFECT_APPLY_AURA:
 			if int(spell.get("EffectApplyAuraName1", 0)) == SpellDB.AURA_MOD_STUN:
 				target.add_aura(spell, _combatant)
-				target.stun(SpellDB.duration(spell))
+				target.stun(SpellDB.duration(spell, _combatant))
 
 
 ## Struck in melee: Thorned Presence and Boon of Refuge strike back with Holy
@@ -160,7 +160,7 @@ const PROC_TAKEN_MELEE_HIT := 0x8
 ## Withering Touch a debuff that weakens the attacker's blows.
 func _strike_back(strike: Dictionary, attacker: Combatant) -> void:
 	var school := int(strike.get("School", SpellDB.School.SHADOW))
-	attacker.take_damage(roundi(SpellDB.effect_value(strike, 0, _unit.profile.level)), _combatant, false, school)
+	attacker.take_damage(roundi(SpellDB.effect_value(strike, 0, _unit.profile.level, _combatant)), _combatant, false, school)
 	if attacker.is_alive() and SpellDB.has_effect(strike, SpellDB.EFFECT_APPLY_AURA):
 		attacker.add_aura(strike, _combatant)
 
@@ -212,7 +212,7 @@ static func _blocks_only(spell: Dictionary) -> bool:
 ## Hallows the ground at a point: enemies within the radius take the spell's
 ## damage every tick until it fades. A soft golden disc marks it.
 func hallow_ground(spell: Dictionary, center: Vector3) -> void:
-	var radius := SpellDB.effect_radius(spell)
+	var radius := SpellDB.effect_radius(spell, 0, _combatant)
 	var mesh := MeshInstance3D.new()
 	var disc := CylinderMesh.new()
 	disc.top_radius = radius
@@ -230,7 +230,7 @@ func hallow_ground(spell: Dictionary, center: Vector3) -> void:
 	mesh.global_position = center + Vector3.UP * 0.05
 	_grounds.append({
 		"spell": spell, "center": center, "radius": radius,
-		"amount": SpellDB.effect_value(spell, 0, _unit.profile.level),
+		"amount": SpellDB.effect_value(spell, 0, _unit.profile.level, _combatant),
 		"period": maxf(int(spell.get("EffectAmplitude1", 1000)) / 1000.0, 0.1),
 		"left": SpellDB.duration(spell), "tick": 0.0, "mesh": mesh,
 	})

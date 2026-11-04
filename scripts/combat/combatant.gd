@@ -30,6 +30,31 @@ signal attack_avoided(target: Combatant, text: String)
 signal interrupt_requested(lockout: float)
 ## This unit's cast was cut short.
 signal cast_interrupted
+## A combat event for procs, as CMaNGOS ProcFlags (what happened, from this
+## unit's side) and procEx (how it went: PROC_EX_*). `other` is the other
+## unit, `spell` the ability or spell ({} for a plain swing).
+signal proc_event(flags: int, ex: int, other: Combatant, spell: Dictionary, amount: int)
+
+## ProcFlags (SpellDefines.h).
+const PROC_KILL := 0x2
+const PROC_MELEE_HIT := 0x4
+const PROC_TAKEN_MELEE_HIT := 0x8
+const PROC_MELEE_ABILITY := 0x10
+const PROC_TAKEN_MELEE_ABILITY := 0x20
+const PROC_POSITIVE_SPELL := 0x4000
+const PROC_TAKEN_POSITIVE_SPELL := 0x8000
+const PROC_NEGATIVE_SPELL := 0x10000
+const PROC_TAKEN_NEGATIVE_SPELL := 0x20000
+## procEx.
+const PROC_EX_NORMAL := 0x1
+const PROC_EX_CRIT := 0x2
+const PROC_EX_MISS := 0x4
+const PROC_EX_RESIST := 0x8
+const PROC_EX_DODGE := 0x10
+const PROC_EX_PARRY := 0x20
+const PROC_EX_BLOCK := 0x40
+## The school of the last damage this unit took, for threat by school.
+var last_hit_school := 0
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -39,6 +64,15 @@ const CRUSH_MULTIPLIER := 1.5
 const MAX_RAGE := 100
 ## Off-hand swings deal half damage (classic, before talents).
 const OFF_HAND_DAMAGE := 0.5
+const AURA_MOD_ROOT := 26
+const AURA_MOD_SKILL := 98
+const SKILL_DEFENSE := 95
+const AURA_MOD_OFFHAND_DAMAGE_PCT := 122
+## SPELL_AURA_MECHANIC_RESISTANCE (Iron Resolve), and the stun mechanic.
+const AURA_MECHANIC_RESISTANCE := 117
+const MECHANIC_STUN := 12
+## SPELL_AURA_OBS_MOD_HEALTH: heals a percent of max health each tick (Bloodied Resolve).
+const AURA_OBS_MOD_HEALTH := 20
 
 @export var display_name := ""
 @export var level := 1
@@ -79,6 +113,8 @@ var off_swing_interval := 0.0
 ## Called with the target before a main-hand swing; returns true if it made
 ## the attack itself (Mighty Blow and Sweeping Cut replace the swing).
 var swing_replacer: Callable
+## Swings owed right away (Swordsman's Craft, Reckoner's Fury).
+var extra_attacks := 0
 var invulnerable := false
 ## While set, swings at this combatant whenever it is in melee range.
 var attack_target: Combatant
@@ -151,8 +187,9 @@ func weapon_skill() -> int:
 	return max_skill()
 
 
+## Anticipation adds defense skill (SPELL_AURA_MOD_SKILL on Defense, skill 95).
 func defense_skill() -> int:
-	return max_skill()
+	return max_skill() + int(aura_total_exact(AURA_MOD_SKILL, SKILL_DEFENSE))
 
 
 func distance_to(other: Combatant) -> float:
@@ -171,16 +208,22 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 			if int(old.spell.Id) == int(spell.Id) and old.caster == caster:
 				stacks = mini(int(old.get("stacks", 1)) + 1, most)
 	remove_aura(int(spell.Id), false)
-	var length := SpellDB.duration(spell)
+	# The caster's talents may lengthen it or strengthen its effects, and its
+	# damage over time (SpellMods DURATION, ALL_EFFECTS, DOT).
+	var length := SpellDB.duration(spell, caster)
 	var amounts := []
 	for i in 3:
-		amounts.append(SpellDB.effect_value(spell, i, caster.level) * stacks)
+		var amount := SpellDB.effect_value(spell, i, caster.level, caster) * stacks
+		if int(spell.get("EffectApplyAuraName%d" % (i + 1), 0)) in [SpellDB.AURA_PERIODIC_DAMAGE, SpellDB.AURA_PERIODIC_LEECH]:
+			amount = SpellMods.apply(caster, spell, SpellMods.DOT, amount)
+		amounts.append(amount)
 	var aura := { "spell": spell, "caster": caster, "remaining": length, "duration": length, "amounts": amounts }
 	if stacks > 1:
 		aura.stacks = stacks
-	# Auras used up after a number of procs (Radiant Bulwark's blocks).
+	# Auras used up after a number of procs (Radiant Bulwark's blocks); talents
+	# may add more (SpellMods CHARGES: Improved Shield Brace).
 	if int(spell.get("ProcCharges", 0)) > 0:
-		aura.charges = int(spell.ProcCharges)
+		aura.charges = roundi(SpellMods.apply(caster, spell, SpellMods.CHARGES, int(spell.ProcCharges)))
 	auras.append(aura)
 	auras_changed.emit()
 
@@ -251,9 +294,18 @@ func taunted_by() -> Combatant:
 	return null
 
 
-## Threat this unit causes, as a factor (stances, SPELL_AURA_MOD_THREAT).
-func threat_multiplier() -> float:
-	return maxf(1.0 + aura_total(SpellDB.AURA_MOD_THREAT) / 100.0, 0.0)
+## Threat this unit causes with a school, as a factor (stances, Stubborn
+## Defiance, Quiet Resolve: SPELL_AURA_MOD_THREAT by school; Shadow Kinship's
+## threat modifier on Shadow spells).
+func threat_multiplier(school := 0) -> float:
+	var percent := aura_total(SpellDB.AURA_MOD_THREAT, 1 << school)
+	if school == SpellDB.School.SHADOW:
+		for aura in auras:
+			for i in 3:
+				var kind := int(aura.spell.get("EffectApplyAuraName%d" % (i + 1), 0))
+				if kind == SpellMods.AURA_PCT and int(aura.spell.get("EffectMiscValue%d" % (i + 1), -1)) == SpellMods.THREAT:
+					percent += aura.amounts[i]
+	return maxf(1.0 + percent / 100.0, 0.0)
 
 
 ## Armor less any armor debuffs (Rend Armor), and percentage changes (Death
@@ -264,6 +316,11 @@ func effective_armor() -> float:
 		total += aura_total(SpellDB.AURA_MOD_RESISTANCE, 1)
 	total *= 1.0 + aura_total(SpellDB.AURA_MOD_RESISTANCE_PCT, 1) / 100.0
 	return maxf(total, 0.0)
+
+
+## Rooted units can't move (Improved Hobble), but can still fight.
+func is_rooted() -> bool:
+	return has_aura_type(AURA_MOD_ROOT)
 
 
 ## Feared units run from whoever frightened them and can't fight.
@@ -330,16 +387,31 @@ func find_aura(test: Callable) -> Dictionary:
 	return {}
 
 
+## Takes every aura off but passive talents, which belong to the character.
 func clear_auras() -> void:
-	if not auras.is_empty():
-		auras.clear()
+	var before := auras.size()
+	auras = auras.filter(func(aura: Dictionary) -> bool: return aura.get("talent", false))
+	if auras.size() != before:
 		auras_changed.emit()
 
 
-## Death removes every aura but stances, paladin auras and death-persistent ones.
+## A passive talent's aura: permanent, from the unit itself, its amounts at
+## the unit's level. Talents.sync_passives puts these on and takes them off.
+func add_passive_aura(spell: Dictionary) -> void:
+	var amounts := []
+	for i in 3:
+		amounts.append(SpellDB.effect_value(spell, i, level))
+	var aura := { "spell": spell, "caster": self, "remaining": -1.0, "duration": -1.0, "amounts": amounts, "talent": true }
+	if int(spell.get("ProcCharges", 0)) > 0:
+		aura.charges = int(spell.ProcCharges)
+	auras.append(aura)
+
+
+## Death removes every aura but stances, paladin auras, passive talents and
+## death-persistent ones.
 func _clear_auras_on_death() -> void:
 	var before := auras.size()
-	auras = auras.filter(func(aura: Dictionary) -> bool: return SpellDB.persists_through_death(aura.spell))
+	auras = auras.filter(func(aura: Dictionary) -> bool: return aura.get("talent", false) or SpellDB.persists_through_death(aura.spell))
 	if auras.size() != before:
 		auras_changed.emit()
 
@@ -373,11 +445,13 @@ func roll_normalized_damage(speed: float) -> float:
 ## Resolves a melee weapon attack from an ability (Mighty Blow, Riposte
 ## Strike): the yellow table, armor, and no rage. Returns whether it landed.
 ## `dodgeable` false leaves dodge, parry and block out (Riposte Strike).
-func strike(target: Combatant, damage: float, dodgeable := true) -> bool:
-	var outcome := CombatRules.roll_melee_ability(self, target)
+## `spell` is the ability: talents may add to its crit chance (SpellMods).
+func strike(target: Combatant, damage: float, dodgeable := true, spell: Dictionary = {}) -> bool:
+	var extra_crit := SpellMods.flat(self, spell, SpellMods.CRITICAL_CHANCE)
+	var outcome := CombatRules.roll_melee_ability(self, target, extra_crit)
 	if not dodgeable and outcome in [CombatRules.Outcome.DODGE, CombatRules.Outcome.PARRY, CombatRules.Outcome.BLOCK]:
-		outcome = CombatRules.Outcome.CRIT if randf() * 100.0 < CombatRules.melee_crit_chance(self, target) else CombatRules.Outcome.HIT
-	return _resolve_melee(target, damage, outcome)
+		outcome = CombatRules.Outcome.CRIT if randf() * 100.0 < CombatRules.melee_crit_chance(self, target) + extra_crit else CombatRules.Outcome.HIT
+	return _resolve_melee(target, damage, outcome, false, spell)
 
 
 ## Resolves a melee ability against the target. Returns whether it landed.
@@ -394,12 +468,21 @@ func hit_with_spell(target: Combatant, damage: float, school := 0) -> bool:
 		target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
 		return false
 	var crit := outcome == CombatRules.Outcome.CRIT
-	target.take_damage(roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), self, crit, school)
+	var dealt := roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0))
+	target.take_damage(dealt, self, crit, school)
+	var ex := PROC_EX_CRIT if crit else PROC_EX_NORMAL
+	proc_event.emit(PROC_NEGATIVE_SPELL, ex, target, {"School": school}, dealt)
+	target.proc_event.emit(PROC_TAKEN_NEGATIVE_SPELL, ex, self, {"School": school}, dealt)
 	return true
 
 
-func heal_with_spell(amount: float, healer: Combatant = null, extra_crit := 0.0) -> void:
+## `spell` is the heal, for the healer's procs (Hearten, Inner Light).
+func heal_with_spell(amount: float, healer: Combatant = null, extra_crit := 0.0, spell: Dictionary = {}) -> void:
 	var crit := CombatRules.roll_heal(healer if healer else self, extra_crit) == CombatRules.Outcome.CRIT
+	if healer:
+		var ex := PROC_EX_CRIT if crit else PROC_EX_NORMAL
+		healer.proc_event.emit(PROC_POSITIVE_SPELL, ex, self, spell, roundi(amount))
+		proc_event.emit(PROC_TAKEN_POSITIVE_SPELL, ex, healer, spell, roundi(amount))
 	# Kindled Power raises healing done.
 	if healer:
 		amount *= 1.0 + healer.aura_total(SpellDB.AURA_MOD_HEALING_DONE_PERCENT) / 100.0
@@ -425,6 +508,7 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	if amount <= 0:
 		return
 	health = maxi(health - amount, 0)
+	last_hit_school = school
 	reward_rage(amount, false)
 	took_damage.emit(amount, source, crit)
 	if source and is_instance_valid(source) and amount > 0:
@@ -435,6 +519,8 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 		attack_target = null
 		_clear_auras_on_death()
 		died.emit()
+		if source and is_instance_valid(source):
+			source.proc_event.emit(PROC_KILL, PROC_EX_NORMAL, self, {}, amount)
 
 
 ## Absorb shields (Sanctified Ward) soak damage of their schools until used up.
@@ -504,6 +590,10 @@ func interrupt_cast(lockout := 0.0) -> void:
 func stun(duration: float) -> void:
 	if not is_alive() or invulnerable:
 		return
+	# Iron Resolve and Unbending Will: a chance to shrug stuns off.
+	if randf() * 100.0 < aura_total_exact(AURA_MECHANIC_RESISTANCE, MECHANIC_STUN):
+		avoid("Resist", null)
+		return
 	_stun_left = maxf(_stun_left, duration)
 	stunned.emit()
 
@@ -521,7 +611,15 @@ func _physics_process(delta: float) -> void:
 	if attack_target and (not is_instance_valid(attack_target) or not attack_target.is_alive()):
 		attack_target = null
 	var can_swing := attack_target and not is_stunned() and not is_pacified() and not is_feared() and not is_casting
-	if can_swing and faces(attack_target) and distance_to(attack_target) <= melee_range:
+	if can_swing and extra_attacks > 0 and distance_to(attack_target) <= melee_range:
+		extra_attacks -= 1
+		swung.emit(attack_target)
+		var extra_target := attack_target
+		if _resolve_melee(extra_target, roll_weapon_damage(), CombatRules.roll_auto_attack(self, extra_target), true):
+			auto_attack_landed.emit(extra_target)
+	elif not can_swing:
+		extra_attacks = 0
+	if can_swing and attack_target and faces(attack_target) and distance_to(attack_target) <= melee_range:
 		if _swing_left == 0.0:
 			swung.emit(attack_target)
 			var target := attack_target
@@ -532,7 +630,9 @@ func _physics_process(delta: float) -> void:
 		# The off hand swings on its own timer, for half damage.
 		if off_swing_interval > 0.0 and _off_swing_left == 0.0 and attack_target:
 			var target := attack_target
-			var damage := (randf_range(off_min_damage, off_max_damage) + attack_power / 14.0 * off_swing_interval) * OFF_HAND_DAMAGE
+			# Two-Weapon Craft raises the off hand's share (SPELL_AURA_MOD_OFFHAND_DAMAGE_PCT).
+			var share := OFF_HAND_DAMAGE * (1.0 + aura_total(AURA_MOD_OFFHAND_DAMAGE_PCT) / 100.0)
+			var damage := (randf_range(off_min_damage, off_max_damage) + attack_power / 14.0 * off_swing_interval) * share
 			if _resolve_melee(target, damage, CombatRules.roll_auto_attack(self, target), true):
 				auto_attack_landed.emit(target)
 			_off_swing_left = off_swing_interval
@@ -564,7 +664,7 @@ func _tick_auras(delta: float) -> void:
 ## and spells triggered on each tick (Cleanse Sickness).
 const PERIODIC_KINDS := [
 	SpellDB.AURA_PERIODIC_ENERGIZE, SpellDB.AURA_PERIODIC_DAMAGE, SpellDB.AURA_PERIODIC_HEAL,
-	SpellDB.AURA_PERIODIC_LEECH, SpellDB.AURA_PERIODIC_TRIGGER_SPELL,
+	SpellDB.AURA_PERIODIC_LEECH, SpellDB.AURA_PERIODIC_TRIGGER_SPELL, AURA_OBS_MOD_HEALTH,
 ]
 
 
@@ -592,6 +692,8 @@ func _tick_periodic(aura: Dictionary, delta: float) -> void:
 				return
 			elif kind == SpellDB.AURA_PERIODIC_HEAL:
 				heal(roundi(amount), false, caster)
+			elif kind == AURA_OBS_MOD_HEALTH:
+				heal(roundi(max_health * amount / 100.0), false, caster)
 			elif kind == SpellDB.AURA_PERIODIC_TRIGGER_SPELL:
 				_triggered(SpellDB.get_spell(int(spell.get("EffectTriggerSpell%d" % (i + 1), 0))))
 			else:
@@ -625,31 +727,45 @@ func _engage(target: Combatant) -> void:
 
 
 ## `white` marks an auto-attack swing, which earns rage.
-func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outcome, white := false) -> bool:
+func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outcome, white := false, spell: Dictionary = {}) -> bool:
 	_engage(target)
+	# Procs see a plain swing or an ability, and how it went.
+	var dealt := PROC_MELEE_HIT if spell.is_empty() else PROC_MELEE_ABILITY
+	var taken := PROC_TAKEN_MELEE_HIT if spell.is_empty() else PROC_TAKEN_MELEE_ABILITY
 	match outcome:
 		CombatRules.Outcome.MISS, CombatRules.Outcome.DODGE, CombatRules.Outcome.PARRY:
 			target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
 			if outcome != CombatRules.Outcome.MISS:
 				attack_avoided.emit(target, CombatRules.OUTCOME_TEXT[outcome])
+			var avoided_ex: int = {CombatRules.Outcome.MISS: PROC_EX_MISS, CombatRules.Outcome.DODGE: PROC_EX_DODGE}.get(outcome, PROC_EX_PARRY)
+			proc_event.emit(dealt, avoided_ex, target, spell, 0)
+			target.proc_event.emit(taken, avoided_ex, self, spell, 0)
 			return false
 		CombatRules.Outcome.GLANCE:
 			damage *= CombatRules.glance_multiplier(self, target)
 		CombatRules.Outcome.CRIT:
-			damage *= CombatRules.MELEE_CRIT_MULTIPLIER
+			# Deep Thrust raises an ability's crit bonus (SpellMods CRIT_DAMAGE_BONUS).
+			var bonus := (CombatRules.MELEE_CRIT_MULTIPLIER - 1.0) * (1.0 + SpellMods.percent(self, spell, SpellMods.CRIT_DAMAGE_BONUS) / 100.0)
+			damage *= 1.0 + bonus
 		CombatRules.Outcome.CRUSH:
 			damage *= CRUSH_MULTIPLIER
 	damage = CombatRules.reduce_by_armor(damage, target, self)
+	var ex := PROC_EX_CRIT if outcome == CombatRules.Outcome.CRIT else PROC_EX_NORMAL
 	if outcome == CombatRules.Outcome.BLOCK:
 		target.blocked_attack.emit(self)
 		attack_avoided.emit(target, CombatRules.OUTCOME_TEXT[outcome])
 		damage = maxf(damage - target.block_value, 0.0)
+		ex = PROC_EX_BLOCK | (PROC_EX_NORMAL if damage > 0.0 else 0)
 		if damage <= 0.0:
 			target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
+			proc_event.emit(dealt, ex, target, spell, 0)
+			target.proc_event.emit(taken, ex, self, spell, 0)
 			return true
 	if white:
 		reward_rage(roundi(damage), true)
 	target.take_damage(roundi(damage), self, outcome == CombatRules.Outcome.CRIT)
 	if target.is_alive():
 		target.melee_hit_taken.emit(self)
+	proc_event.emit(dealt, ex, target, spell, roundi(damage))
+	target.proc_event.emit(taken, ex, self, spell, roundi(damage))
 	return true

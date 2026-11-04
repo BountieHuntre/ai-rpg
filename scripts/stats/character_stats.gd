@@ -20,6 +20,14 @@ const FOOD_DRINK_PERIOD := 5.0
 const PARRY_SPELL := 3127
 ## Rage lost each tick out of combat.
 const RAGE_DECAY := 3.0
+## Talent aura types read here.
+const AURA_MOD_PARRY_PERCENT := 47
+const AURA_MOD_MANA_PERCENT := 132
+const AURA_MOD_MANA_REGEN_INTERRUPT := 134
+const AURA_MOD_BASE_RESISTANCE_PCT := 142
+const AURA_MOD_BLOCK_VALUE_PCT := 150
+## Spirit's Guidance: spell damage and healing from a percent of Spirit.
+const AURA_MOD_SPELL_DAMAGE_OF_STAT := 174
 
 var race: ClassicData.Race:
 	get:
@@ -36,6 +44,7 @@ var mana_per_tick := 0.0
 var health_per_tick := 0.0
 
 var _tick_left := REGEN_TICK
+var _syncing := false
 ## Fractions of health carried to the next tick, as in CMaNGOS.
 var _health_carry := 0.0
 
@@ -57,16 +66,26 @@ func _ready() -> void:
 ## passives and active auras. Keeps current health and mana, capped to the new
 ## maximums.
 func refresh() -> void:
+	# Passive talents first: their auras feed everything below. (Putting
+	# them on calls refresh again, which mustn't sync again.)
+	if not _syncing:
+		_syncing = true
+		var form := 0
+		var caster := get_parent().get_node_or_null("SpellCaster") as SpellCaster
+		if caster and caster.is_node_ready():
+			form = caster.current_form()
+		Talents.sync_passives(_combatant, _profile, _profile.equipment, form)
+		_syncing = false
 	var level := _profile.level
 	var base := ClassicData.base_stats(race, char_class, level)
 	var gear := Inventory.gear_totals(_profile.equipment)
 	gear_stats = gear.stats
-	# Boon of Sovereigns raises every attribute by a percentage.
-	var stat_scale := 1.0 + _combatant.aura_total(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE) / 100.0
 	# Litany of Fortitude and Uplifted Spirit add to one attribute (misc value
-	# is the stat, -1 all of them).
+	# is the stat, -1 all of them). Boon of Sovereigns raises every attribute by
+	# a percentage, Blessed Strength and Spirit Harvest one of them.
 	for i in stats.size():
 		var bonus := _combatant.aura_total_exact(SpellDB.AURA_MOD_STAT, i) + _combatant.aura_total_exact(SpellDB.AURA_MOD_STAT, -1)
+		var stat_scale := 1.0 + (_combatant.aura_total_exact(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE, i) + _combatant.aura_total_exact(SpellDB.AURA_MOD_TOTAL_STAT_PERCENTAGE, -1)) / 100.0
 		stats[i] = int((int(base[i]) + int(gear_stats[i]) + bonus) * stat_scale)
 	var strength := stats[ClassicData.Stat.STRENGTH]
 	var agility := stats[ClassicData.Stat.AGILITY]
@@ -81,6 +100,8 @@ func refresh() -> void:
 		+ int(c.aura_total(SpellDB.AURA_MOD_INCREASE_HEALTH))
 	var base_mana := ClassicData.base_mana(char_class, level)
 	c.max_mana = base_mana + mana_from_intellect(intellect) + gear.mana if base_mana > 0 else 0
+	# Deep Mind raises maximum mana (SPELL_AURA_MOD_INCREASE_ENERGY_PERCENT).
+	c.max_mana = int(c.max_mana * (1.0 + c.aura_total(AURA_MOD_MANA_PERCENT) / 100.0))
 	# The Man-at-Arms fights on rage instead of mana.
 	if char_class == ClassicData.CharClass.WARRIOR:
 		if c.power_type != SpellDB.POWER_RAGE:
@@ -88,7 +109,9 @@ func refresh() -> void:
 			c.mana = 0.0
 		c.max_mana = Combatant.MAX_RAGE
 	# Devotion Aura adds armor (resistance aura on the physical school).
-	c.armor = gear.armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
+	# Toughness raises armor from items (SPELL_AURA_MOD_BASE_RESISTANCE_PCT).
+	var item_armor := int(gear.armor * (1.0 + c.aura_total(AURA_MOD_BASE_RESISTANCE_PCT, 1) / 100.0))
+	c.armor = item_armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
 	# Blessing of Might and Seal of the Crusader add attack power.
 	c.attack_power = maxi(melee_attack_power(char_class, level, strength, agility), 0) + int(c.aura_total(SpellDB.AURA_MOD_ATTACK_POWER))
 	# Seal of the Crusader speeds up attacks but cuts weapon damage to match,
@@ -113,13 +136,16 @@ func refresh() -> void:
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false) + c.aura_total(SpellDB.AURA_MOD_DODGE_PERCENT)
 	# Parry has to be trained, and players need a melee weapon to parry.
 	var armed: bool = gear.weapon != Inventory.UNARMED_WEAPON
-	c.parry = 5.0 if armed and PARRY_SPELL in _profile.known_spells else 0.0
+	# Deflection adds to it (SPELL_AURA_MOD_PARRY_PERCENT).
+	c.parry = 5.0 + c.aura_total(AURA_MOD_PARRY_PERCENT) if armed and PARRY_SPELL in _profile.known_spells else 0.0
 	# Blocking needs a shield. Block value: shield block + Strength / 20 - 1.
 	c.block = SHIELD_BLOCK_CHANCE if gear.has_shield else 0.0
 	# Radiant Bulwark adds block chance (with a shield).
 	if gear.has_shield:
 		c.block += c.aura_total(SpellDB.AURA_MOD_BLOCK_PERCENT)
 	c.block_value = maxi(gear.block + strength / 20 - 1, 0) if gear.has_shield else 0
+	# Shield Craft raises it (SPELL_AURA_MOD_SHIELD_BLOCKVALUE_PCT).
+	c.block_value = int(c.block_value * (1.0 + c.aura_total(AURA_MOD_BLOCK_VALUE_PCT) / 100.0))
 	c.spell_crit = spell_crit_from_intellect(char_class, level, intellect)
 	mana_per_tick = 0.0 if c.uses_rage() else mana_regen_per_tick(char_class, spirit)
 	health_per_tick = health_regen_per_tick(char_class, spirit)
@@ -127,9 +153,13 @@ func refresh() -> void:
 	c.mana = minf(c.mana, c.max_mana)
 
 
-## Mana regen right now, per tick: zero within five seconds of spending mana.
+## Mana regen right now, per tick: zero within five seconds of spending mana,
+## except the share Contemplation and Spirit Harvest keep going
+## (SPELL_AURA_MOD_MANA_REGEN_INTERRUPT).
 func current_mana_per_tick() -> float:
-	return 0.0 if _combatant.seconds_since_mana_spent() < MANA_REGEN_DELAY else mana_per_tick
+	if _combatant.seconds_since_mana_spent() < MANA_REGEN_DELAY:
+		return mana_per_tick * minf(_combatant.aura_total(AURA_MOD_MANA_REGEN_INTERRUPT), 100.0) / 100.0
+	return mana_per_tick
 
 
 func _physics_process(delta: float) -> void:
@@ -146,9 +176,11 @@ func _physics_process(delta: float) -> void:
 		_health_carry -= gained
 		c.health = mini(c.health + gained, c.max_health)
 	# Rage fades out of combat: 3 a tick (Player::Regenerate in CMaNGOS classic).
+	# Simmering Anger makes some: its amount in tenths of rage per 5 s.
 	if c.uses_rage():
 		if not c.is_in_combat():
 			c.mana = maxf(c.mana - RAGE_DECAY, 0.0)
+		c.gain_rage(c.aura_total_exact(SpellDB.AURA_MOD_POWER_REGEN, SpellDB.POWER_RAGE) / 10.0 / FOOD_DRINK_PERIOD * REGEN_TICK)
 		return
 	c.mana = minf(c.mana + current_mana_per_tick() + drink_per_tick(), c.max_mana)
 

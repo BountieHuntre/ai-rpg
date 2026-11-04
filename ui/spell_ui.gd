@@ -515,12 +515,13 @@ func spell_tooltip(id: int) -> Array:
 		lines.append([SpellText.describe(spell, GameState.level), "", DESCRIPTION])
 		return lines
 	var cost := _player.spells.mana_cost(spell)
-	var reach := SpellDB.spell_range(spell)
+	# Talents change these: the tooltip shows what they come to.
+	var reach := SpellDB.spell_range(spell, _player.combatant)
 	var range_text := "" if reach <= 0.0 or reach >= 50000.0 else "%d yd range" % reach
 	var cost_text := ("%d Rage" if SpellDB.uses_rage(spell) else "%d Mana") % cost
 	lines.append([cost_text if cost > 0 else "", range_text, Color.WHITE])
-	var time := SpellDB.cast_time(spell)
-	var cooldown := SpellDB.cooldown(spell)
+	var time := SpellDB.cast_time(spell, _player.combatant)
+	var cooldown := SpellDB.cooldown(spell, _player.combatant)
 	lines.append(["Instant" if time <= 0.0 else "%s sec cast" % _number(time), "%s cooldown" % _long_time(cooldown) if cooldown > 0.0 else "", Color.WHITE])
 	var description := _describe(spell)
 	if not description.is_empty():

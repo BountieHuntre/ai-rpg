@@ -48,7 +48,8 @@ static func roll_auto_attack(attacker: Combatant, victim: Combatant) -> Outcome:
 
 ## Melee ability ("yellow" attack): one roll for miss, dodge, parry and block,
 ## then a separate crit roll if it lands.
-static func roll_melee_ability(attacker: Combatant, victim: Combatant) -> Outcome:
+## Extra crit chance in percent comes from talents (Improved Riposte Strike).
+static func roll_melee_ability(attacker: Combatant, victim: Combatant, extra_crit := 0.0) -> Outcome:
 	var sides := [
 		[Outcome.MISS, miss_chance(attacker, victim, true)],
 		[Outcome.DODGE, dodge_chance(attacker, victim)],
@@ -56,15 +57,16 @@ static func roll_melee_ability(attacker: Combatant, victim: Combatant) -> Outcom
 		[Outcome.BLOCK, block_chance(attacker, victim)],
 	]
 	var outcome := _roll(sides)
-	if outcome == Outcome.HIT and _chance(melee_crit_chance(attacker, victim)):
+	if outcome == Outcome.HIT and _chance(melee_crit_chance(attacker, victim) + extra_crit):
 		return Outcome.CRIT
 	return outcome
 
 
 ## Harmful spell: a resist roll (spell miss and resist share one side before
 ## WotLK), then a crit roll.
-static func roll_spell(caster: Combatant, victim: Combatant) -> Outcome:
-	if _chance(spell_miss_chance(caster, victim)):
+## `spell` lets talents lower the chance to be resisted (Gloom Focus).
+static func roll_spell(caster: Combatant, victim: Combatant, spell: Dictionary = {}) -> Outcome:
+	if _chance(spell_miss_chance(caster, victim) - SpellMods.flat(caster, spell, SpellMods.RESIST_MISS_CHANCE)):
 		return Outcome.RESIST
 	if _chance(caster.spell_crit):
 		return Outcome.CRIT
@@ -77,6 +79,9 @@ static func roll_heal(caster: Combatant, extra_crit := 0.0) -> Outcome:
 
 
 const DUAL_WIELD_MISS := 19.0
+
+
+const AURA_MOD_HIT_CHANCE := 54
 
 
 static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -> float:
@@ -95,6 +100,8 @@ static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -
 	# Swinging two weapons misses 19% more often with white swings.
 	if not ability and attacker.off_swing_interval > 0.0:
 		chance += DUAL_WIELD_MISS
+	# Precision: melee hit chance (SPELL_AURA_MOD_HIT_CHANCE).
+	chance -= attacker.aura_total(AURA_MOD_HIT_CHANCE)
 	var minimum := 1.0 if difference > 10 else 0.0
 	return clampf(chance, minimum, 100.0)
 

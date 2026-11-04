@@ -186,16 +186,24 @@ func friendly_target() -> Combatant:
 
 
 ## Knows every spell its class trains up to its level, every rank, as a
-## player who kept up with their trainer.
+## player who kept up with their trainer, and spends its talent points
+## (Talents.spend_for_bot). Later ranks of talent abilities need the talent.
 func learn_spells() -> void:
 	var known: Array[int] = [SpellDB.ATTACK]
 	for id in SpellDB.start_spells(profile.race, profile.char_class):
 		known.append(int(id))
+	profile.known_spells = known
+	profile.talents = {}
+	Talents.spend_for_bot(profile, Talents.bot_trees(profile.char_class, in_party and _has_shield_on()))
 	for entry: Dictionary in SpellDB.class_trainer_list(profile.char_class, profile.race):
-		if int(entry.level) <= profile.level:
-			for id in entry.spells:
-				if not int(id) in known:
-					known.append(int(id))
+		if int(entry.level) > profile.level:
+			continue
+		var previous := SpellDB.previous_rank(int(entry.spells[0]))
+		if previous != 0 and not previous in known:
+			continue
+		for id in entry.spells:
+			if not int(id) in known:
+				known.append(int(id))
 	profile.known_spells = known
 	stats.refresh()
 
@@ -921,7 +929,7 @@ func _go_to(point: Vector3) -> void:
 
 func _move(delta: float) -> void:
 	var direction := Vector3.ZERO
-	if _has_destination and not sitting and spells.casting.is_empty() and not combatant.is_stunned():
+	if _has_destination and not sitting and spells.casting.is_empty() and not combatant.is_stunned() and not combatant.is_rooted():
 		var waypoint := _route[0] if not _route.is_empty() else _destination
 		var offset := waypoint - global_position
 		offset.y = 0.0

@@ -193,7 +193,7 @@ func _physics_process(delta: float) -> void:
 				state = State.IDLE
 				_wander_target = _home
 
-	speed *= combatant.speed_multiplier()
+	speed *= combatant.speed_multiplier() if not combatant.is_rooted() else 0.0
 	var offset := destination - global_position
 	offset.y = 0.0
 	var direction := offset.normalized() if state != State.DEAD and not combatant.is_stunned() else Vector3.ZERO
@@ -346,7 +346,7 @@ static func add_heal_threat(healed: Combatant, healer: Combatant, amount: int) -
 		if enemy.state == State.CHASE and enemy.threat.has(healed):
 			fighting.append(enemy)
 	for enemy in fighting:
-		enemy.add_threat(healer, amount * HEAL_THREAT * healer.threat_multiplier() / fighting.size())
+		enemy.add_threat(healer, amount * HEAL_THREAT * healer.threat_multiplier(SpellDB.School.HOLY) / fighting.size())
 
 
 ## Whether someone outside the player's group tapped it: grey to the player.
@@ -372,7 +372,7 @@ func _on_attacked(source: Combatant, damage: int) -> void:
 	if tapped_by == null or not is_instance_valid(tapped_by):
 		tapped_by = source
 	# Stances change how much threat damage causes.
-	add_threat(source, float(damage) * source.threat_multiplier())
+	add_threat(source, float(damage) * source.threat_multiplier(combatant.last_hit_school))
 	if state == State.IDLE:
 		_start_chase()
 

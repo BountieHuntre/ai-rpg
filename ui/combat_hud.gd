@@ -94,6 +94,7 @@ var _next_float_offset := 0
 var _enemy_names: Array[Dictionary] = []
 var _inventory: InventoryUI
 var _spells: SpellUI
+var _talents: TalentWindow
 var _trainer: TrainerWindow
 var _trainer_npc: Node3D
 var _vendor: VendorWindow
@@ -323,6 +324,7 @@ func _process(delta: float) -> void:
 func _build() -> void:
 	var open_windows := _inventory.open_state() if _inventory else {}
 	var book_open := _spells.is_book_open() if _spells else false
+	var talents_open := _talents.is_open() if _talents and is_instance_valid(_talents) else false
 	var log_open := _quest_log.visible if _quest_log else false
 	var social_open := _social.visible if _social else false
 	for child in get_children():
@@ -409,6 +411,10 @@ func _build() -> void:
 	_inventory.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, open_windows)
 	_inventory.message.connect(_on_loot_message)
 	_spells.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, book_open)
+	_talents = TalentWindow.new()
+	add_child(_talents)
+	_talents.setup(_player, _ui_scale, Vector2(_width, _height), _tooltip, talents_open)
+	move_child(_tooltip, -1)
 	_trainer = TrainerWindow.new()
 	_trainer.position = Vector2(130, 50) * _ui_scale
 	_trainer.visible = false
@@ -1050,7 +1056,7 @@ func _on_loot_message(text: String, is_error: bool) -> void:
 ## Esc handling: drops a held item or spell, or closes the bag, character and
 ## spellbook windows.
 func close_inventory_window() -> bool:
-	return _spells.close_one() or _inventory.close_one()
+	return _spells.close_one() or _talents.close_one() or _inventory.close_one()
 
 
 func _on_leveled_up(new_level: int) -> void:

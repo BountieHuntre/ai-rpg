@@ -1,5 +1,18 @@
 [
 	{
+		"version": "0.2.0",
+		"date": "11-04-2026",
+		"notes": [
+			"Talents: from level 10 you earn a talent point each level, to spend in your class's three trees. Press N to open the talent window.",
+			"Men-at-Arms have Blademastery, Ferocity and Bulwark; Templars Grace, Aegis and Zeal; Clerics Devotion, Mercy and Umbra.",
+			"Abilities like Final Stand, Radiant Jolt and Hush now come from talents rather than the trainer. If you bought them before, spend your points to get them back.",
+			"Templars have three new talent abilities: Heaven's Favor, Hallowed Presence and Contrition.",
+			"Your class trainer can unlearn your talents, for a fee that rises each time.",
+			"Playerbots spend their talent points too.",
+			"Roots now hold players, playerbots and creatures in place."
+		]
+	},
+	{
 		"version": "0.1.2",
 		"date": "11-04-2026",
 		"notes": [

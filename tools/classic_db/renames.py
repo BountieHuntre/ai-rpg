@@ -346,6 +346,81 @@ SPELLS = {
     "Redemption": "Revival",
     "Righteous Fury": "Zealous Fervor",
     "Hearthstone": "Homing Token",
+    # Talents and the spells they trigger.
+    "Guardian's Favor": "Warden's Favor",
+    "Anger Management": "Simmering Anger",
+    "Axe Specialization": "Axeman's Craft",
+    "Benediction": "Thrift of Grace",
+    "Berserker Rage Effect": "Unbridled Rage Effect",
+    "Blackout": "Shadow Snare",
+    "Blessed Recovery": "Hallowed Recovery",
+    "Blood Craze": "Bloodied Resolve",
+    "Booming Voice": "Carrying Voice",
+    "Conviction": "Righteous Certainty",
+    "Cruelty": "Merciless Edge",
+    "Darkness": "Deepening Gloom",
+    "Deep Wounds": "Lingering Wounds",
+    "Deep Wound": "Lingering Wound",
+    "Defiance": "Stubborn Defiance",
+    "Divine Favor": "Heaven's Favor",
+    "Divine Fury": "Fervent Prayer",
+    "Divine Intellect": "Blessed Intellect",
+    "Divine Strength": "Blessed Strength",
+    "Dual Wield Specialization": "Two-Weapon Craft",
+    "Enrage": "Rising Wrath",
+    "Eye for an Eye": "Tooth for a Tooth",
+    "Flurry": "Battle Frenzy",
+    "Focused Casting": "Steady Casting",
+    "Force of Will": "Resolute Will",
+    "Healing Focus": "Mending Focus",
+    "Healing Light": "Brighter Radiance",
+    "Holy Power": "Sacred Power",
+    "Holy Reach": "Far Grace",
+    "Holy Specialization": "Sacred Mastery",
+    "Illumination": "Inner Light",
+    "Impale": "Deep Thrust",
+    "Improved Healing": "Thrifty Mending",
+    "Inspiration": "Hearten",
+    "Iron Will": "Iron Resolve",
+    "Lasting Judgement": "Lasting Verdict",
+    "Mace Specialization": "Maceman's Craft",
+    "Mace Stun Effect": "Mace Stun",
+    "Martyrdom": "Martyr's Calm",
+    "Meditation": "Contemplation",
+    "Mental Agility": "Quick Mind",
+    "Mental Strength": "Deep Mind",
+    "One-Handed Weapon Specialization": "One-Handed Craft",
+    "Polearm Specialization": "Polearm Craft",
+    "Pursuit of Justice": "Swift Justice",
+    "Reckoning": "Reckoner's Fury",
+    "Redoubt": "Steadfast Guard",
+    "Repentance": "Contrition",
+    "Revenge Stun": "Reprisal Stun",
+    "Sanctity Aura": "Hallowed Presence",
+    "Searing Light": "Scorching Light",
+    "Shadow Affinity": "Shadow Kinship",
+    "Shadow Focus": "Gloom Focus",
+    "Shadow Reach": "Long Shadows",
+    "Shadow Vulnerability": "Gloom-Touched",
+    "Shadow Weaving": "Gloomweave",
+    "Shield Bash - Silenced": "Shield Smash - Silenced",
+    "Shield Specialization": "Shield Craft",
+    "Silent Resolve": "Quiet Resolve",
+    "Spell Warding": "Spellward",
+    "Spirit Tap": "Spirit Harvest",
+    "Spirit of Redemption": "Lingering Spirit",
+    "Spiritual Focus": "Steady Faith",
+    "Spiritual Guidance": "Spirit's Guidance",
+    "Spiritual Healing": "Spirit Mending",
+    "Sword Specialization": "Swordsman's Craft",
+    "Tactical Mastery": "Stance Discipline",
+    "Two-Handed Weapon Specialization": "Two-Handed Craft",
+    "Unbreakable Will": "Unbending Will",
+    "Unbridled Wrath": "Surging Wrath",
+    "Unyielding Faith": "Steadfast Faith",
+    "Vengeance": "Avenging Zeal",
+    "Vindication": "Righteous Rebuke",
+    "Wand Specialization": "Wandwork",
     # Creature spells.
     "Fireball": "Flame Bolt",
     "Frost Armor": "Rime Shroud",
@@ -353,6 +428,18 @@ SPELLS = {
     "Backstab": "Back Thrust",
     "Rushing Charge": "Headlong Charge",
 }
+
+# Talent trees by class id: the game's own names.
+TALENT_TREES = {
+    1: {"Arms": "Blademastery", "Fury": "Ferocity", "Protection": "Bulwark"},
+    2: {"Holy": "Grace", "Protection": "Aegis", "Retribution": "Zeal"},
+    5: {"Discipline": "Devotion", "Holy": "Mercy", "Shadow": "Umbra"},
+}
+
+
+def talent_tree(class_id, name):
+    return TALENT_TREES[class_id][name]
+
 
 # Plain names that are kept as they are.
 KEEP = {
@@ -371,13 +458,19 @@ KEEP = {
     "Gemmed Copper Gauntlets", "Healing Potion", "Elixir of Minor Agility", "Swiftness Potion", "Enchant Chest - Minor Mana",
     "Carving Knife", "Ceremonial Cloak", "Fire Wand", "Hunting Bow", "Notched Shortsword", "Short Bastard Sword",
     "Severing Axe", "Simple Bands", "Simple Cape", "Simple Cord", "Simple Shoes", "Tangy Clam Meat", "Training Sword",
-    "Chilled",
+    "Chilled", "Toughness", "Precision", "Anticipation", "Deflection", "Dummy Trigger",
 }
 
 
 def _rename(name, table, kind, missing):
     if name in table:
         return table[name]
+    # Talents that improve a spell follow its new name ("Improved Heroic
+    # Strike" is "Improved Mighty Blow").
+    if table is SPELLS and name.startswith("Improved "):
+        base = SPELLS.get(name[9:], ITEMS.get(name[9:]))
+        if base:
+            return "Improved " + base
     # Item spells (recipes, crafting) share their item's name.
     if table is SPELLS:
         return _rename(name, ITEMS, kind, missing)

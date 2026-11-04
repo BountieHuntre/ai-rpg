@@ -49,6 +49,8 @@ const ITEM_SPELL_ON_USE := 0
 
 const WORLD_LAYER := 1
 const EYE_HEIGHT := 1.2
+## SPELL_AURA_MOD_SPELL_CRIT_CHANCE_SCHOOL (Sacred Power).
+const AURA_MOD_SPELL_CRIT_SCHOOL := 71
 
 ## The spell being cast or channeled, or {} when not casting.
 var casting: Dictionary = {}
@@ -86,6 +88,9 @@ func _ready() -> void:
 	add_child(_procs)
 	_warrior.name = "WarriorAbilities"
 	add_child(_warrior)
+	var talent_procs := TalentProcs.new()
+	talent_procs.name = "TalentProcs"
+	add_child(talent_procs)
 	combatant.took_damage.connect(func(amount: int, _source: Combatant, _crit: bool) -> void:
 		if amount > 0:
 			_push_back()
@@ -136,7 +141,7 @@ func cast(id: int) -> void:
 	if gcd > 0.0:
 		_gcd_left = gcd
 		_gcd_total = gcd
-	var time := SpellDB.cast_time(spell)
+	var time := SpellDB.cast_time(spell, me)
 	if time > 0.0:
 		Sfx.play_at("cast", _unit.global_position)
 		casting = spell
@@ -169,7 +174,7 @@ func cooldown_fraction(id: int) -> float:
 	var fraction := 0.0
 	if SpellDB.global_cooldown(spell) > 0.0:
 		fraction = _gcd_left / _gcd_total
-	var total := SpellDB.cooldown(spell)
+	var total := SpellDB.cooldown(spell, _unit.combatant)
 	if total > 0.0:
 		fraction = maxf(fraction, _cooldowns.get(id, 0.0) / total)
 	return fraction
@@ -180,7 +185,7 @@ func mana_cost(spell: Dictionary) -> int:
 	# Spells cast from an item cost nothing (Spell::CalculatePowerCost).
 	if _item_spell != 0 and int(spell.get("Id", 0)) == _item_spell:
 		return 0
-	var cost := SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level))
+	var cost := SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level), _unit.combatant)
 	return 0 if cost > 0 and _stillness() else cost
 
 
@@ -196,11 +201,20 @@ func current_form() -> int:
 
 ## Stillness waiting for the next spell, or {}.
 func _stillness() -> Dictionary:
-	return _unit.combatant.find_aura(func(spell: Dictionary) -> bool: return SpellDB.has_effect(spell, SpellDB.AURA_ADD_PCT_MODIFIER, true))
+	# By name: percentage talents are spell modifiers too.
+	return _unit.combatant.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == "Stillness")
 
 
+## Stillness's extra crit chance for the next spell.
 func _extra_crit() -> float:
 	return STILLNESS_CRIT if not _stillness().is_empty() else 0.0
+
+
+## Talents' extra crit chance for a spell: for the spell itself (SpellMods)
+## and for its school (Sacred Power for Holy).
+func _talent_crit(spell: Dictionary) -> float:
+	var me := _unit.combatant
+	return SpellMods.flat(me, spell, SpellMods.CRITICAL_CHANCE) + me.aura_total(AURA_MOD_SPELL_CRIT_SCHOOL, 1 << int(spell.get("School", 0)))
 
 
 ## Whether the current target is out of the spell's range, for the action bar.
@@ -212,7 +226,7 @@ func out_of_range(id: int) -> bool:
 	if target == null:
 		return false
 	var distance := _unit.combatant.distance_to(target)
-	return distance > SpellDB.spell_range(spell) or distance < SpellDB.min_range(spell)
+	return distance > SpellDB.spell_range(spell, _unit.combatant) or distance < SpellDB.min_range(spell)
 
 
 func _physics_process(delta: float) -> void:
@@ -255,8 +269,14 @@ func _physics_process(delta: float) -> void:
 ## Spell::Delayed in CMaNGOS: each hit taken while casting a spell with the
 ## DAMAGE_PUSHBACK interrupt flag sets the cast back 1.0 s, then 0.8, 0.6, 0.4
 ## and 0.2 s for every later hit, never past the start of the cast.
+## Talents may resist it: Mending Focus (SpellMods NOT_LOSE_CASTING_TIME) and
+## Steady Casting (SPELL_AURA_RESIST_PUSHBACK), as a chance in percent.
 func _push_back() -> void:
 	if casting.is_empty() or channeling or int(casting.get("InterruptFlags", 0)) & INTERRUPT_DAMAGE_PUSHBACK == 0:
+		return
+	var me := _unit.combatant
+	var resist := SpellMods.apply(me, casting, SpellMods.NOT_LOSE_CASTING_TIME, 100.0) - 100.0 + me.aura_total(SpellDB.AURA_RESIST_PUSHBACK)
+	if resist > 0.0 and randf() * 100.0 < resist:
 		return
 	var delay := 1.0 - 0.2 * _pushbacks if _pushbacks < 5 else 0.2
 	_pushbacks += 1
@@ -312,7 +332,7 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_NOT_READY
 		if _cooldowns.get(int(spell.Id), 0.0) > 0.0:
 			return ERR_NOT_READY
-		if SpellDB.cast_time(spell) > 0.0 and _unit.is_moving():
+		if SpellDB.cast_time(spell, _unit.combatant) > 0.0 and _unit.is_moving():
 			return ERR_MOVING
 	# Unlike classic, Verdict without an Oath it can unleash fails before costing
 	# mana, the global cooldown or its own cooldown.
@@ -342,7 +362,7 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 		return ERR_CANT_YET
 	if target and target != me and target.is_player:
 		# Helping another player: in range and in sight, but facing doesn't matter.
-		if me.distance_to(target) > SpellDB.spell_range(spell):
+		if me.distance_to(target) > SpellDB.spell_range(spell, _unit.combatant):
 			return ERR_RANGE
 		if not _has_line_of_sight(target):
 			return ERR_LINE_OF_SIGHT
@@ -364,7 +384,7 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_DEAD_TARGET
 		if spell.SpellName == "Gavel of Reckoning" and target.health > target.max_health * 0.2:
 			return ERR_TARGET_HEALTH
-		if me.distance_to(target) > SpellDB.spell_range(spell):
+		if me.distance_to(target) > SpellDB.spell_range(spell, _unit.combatant):
 			return ERR_RANGE
 		if not _unit.is_facing(target.body.global_position):
 			return ERR_FACING
@@ -428,13 +448,39 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 		me.spend_mana(int(me.mana))
 	else:
 		me.spend_mana(mana_cost(spell))
-	var cooldown := SpellDB.cooldown(spell)
+	var cooldown := SpellDB.cooldown(spell, _unit.combatant)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
 	if not _warrior.cast(spell, target):
 		_cleric_spell(spell, target, extra_crit)
+	# Helpful spells that aren't heals (heals report their own) are events for
+	# procs too (Improved Last Rite, Improved Unbridled Rage).
+	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY and not SpellDB.has_effect(spell, SpellDB.EFFECT_HEAL) and target:
+		me.proc_event.emit(Combatant.PROC_POSITIVE_SPELL, Combatant.PROC_EX_NORMAL, target, spell, 0)
+		if target != me:
+			target.proc_event.emit(Combatant.PROC_TAKEN_POSITIVE_SPELL, Combatant.PROC_EX_NORMAL, me, spell, 0)
 	if uses_stillness:
 		me.remove_aura(int(stillness.spell.Id))
+	_use_modifier_charges(spell)
+
+
+## Buffs that change your next few spells (Heaven's Favor: the next heal is
+## a critical one) lose a charge when a spell they change is cast.
+func _use_modifier_charges(spell: Dictionary) -> void:
+	var me := _unit.combatant
+	for aura in me.auras.duplicate():
+		if aura.get("talent", false) or not aura.has("charges") or aura.spell.SpellName == "Stillness":
+			continue
+		var buff: Dictionary = aura.spell
+		var changes := false
+		for i in 3:
+			var kind := int(buff.get("EffectApplyAuraName%d" % (i + 1), 0))
+			if (kind == SpellMods.AURA_FLAT or kind == SpellMods.AURA_PCT) and int(buff.get("EffectItemType%d" % (i + 1), 0)) & int(spell.get("SpellFamilyFlags", 0)) != 0:
+				changes = int(buff.get("SpellFamilyName", 0)) == int(spell.get("SpellFamilyName", 0))
+		if changes and buff != spell:
+			aura.charges -= 1
+			if aura.charges <= 0:
+				me.remove_aura(int(buff.Id))
 
 
 ## Templar spells, then Cleric ones (spell_caster's second half).
@@ -484,10 +530,10 @@ func _cleric_spell(spell: Dictionary, target: Combatant, extra_crit: float) -> v
 		"Blessed Burst":
 			_holy_nova(spell, extra_crit)
 		"Communal Mending":
-			for unit in _group_near(SpellDB.effect_radius(spell)):
+			for unit in _group_near(SpellDB.effect_radius(spell, 0, _unit.combatant)):
 				_direct_heal(spell, unit.combatant, extra_crit)
 		"Communal Spirit":
-			for unit in _group_near(SpellDB.effect_radius(spell)):
+			for unit in _group_near(SpellDB.effect_radius(spell, 0, _unit.combatant)):
 				_buff(spell, unit.combatant)
 		"Sanctified Ward":
 			_buff(spell, target)
@@ -509,7 +555,7 @@ func _cleric_spell(spell: Dictionary, target: Combatant, extra_crit: float) -> v
 			if is_resurrection(spell):
 				var bot := target.body as Bot
 				if bot:
-					bot.resurrect(roundi(SpellDB.effect_value(spell, 0, _unit.profile.level)), int(spell.get("EffectMiscValue1", 0)))
+					bot.resurrect(roundi(SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant)), int(spell.get("EffectMiscValue1", 0)))
 					Sfx.play_at("heal", _unit.global_position)
 			elif int(spell.Effect1) == SpellDB.EFFECT_DISPEL:
 				_dispel(spell, target)
@@ -546,12 +592,14 @@ func _debuff(spell: Dictionary, target: Combatant) -> bool:
 	var quiet: bool = spell.SpellName == "Calm Mind"
 	if not quiet:
 		me.enter_combat()
-	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+	if CombatRules.roll_spell(me, target, spell) == CombatRules.Outcome.RESIST:
 		target.avoid("Resist", me)
 		return false
 	_replace_own(spell, target, func(other: Dictionary) -> bool: return other.SpellName == spell.SpellName, false)
+	me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, Combatant.PROC_EX_NORMAL, target, spell, 0)
+	target.proc_event.emit(Combatant.PROC_TAKEN_NEGATIVE_SPELL, Combatant.PROC_EX_NORMAL, me, spell, 0)
 	if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
-		target.stun(SpellDB.duration(spell))
+		target.stun(SpellDB.duration(spell, _unit.combatant))
 	var enemy := target.body as Enemy
 	if enemy and not quiet:
 		enemy.provoke(me)
@@ -594,8 +642,8 @@ func _group_near(radius: float) -> Array[PlayerUnit]:
 
 ## A direct heal from the first effect: its amount plus spell power.
 func _direct_heal(spell: Dictionary, target: Combatant, extra_crit := 0.0) -> void:
-	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
-	target.heal_with_spell(amount, _unit.combatant, extra_crit)
+	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+	target.heal_with_spell(amount, _unit.combatant, extra_crit + _talent_crit(spell), spell)
 	Sfx.play_at("heal", target.body.global_position)
 
 
@@ -603,7 +651,7 @@ func _direct_heal(spell: Dictionary, target: Combatant, extra_crit := 0.0) -> vo
 ## the group around them, neither drawing threat (as classic's Holy Nova).
 func _holy_nova(spell: Dictionary, extra_crit: float) -> void:
 	var me := _unit.combatant
-	var radius := SpellDB.effect_radius(spell)
+	var radius := SpellDB.effect_radius(spell, 0, _unit.combatant)
 	for node in get_tree().get_nodes_in_group("enemies"):
 		var enemy := node as Enemy
 		if enemy.combatant.is_alive() and _unit.global_position.distance_to(enemy.global_position) <= radius:
@@ -616,7 +664,7 @@ func _holy_nova(spell: Dictionary, extra_crit: float) -> void:
 		return
 	for unit in _group_near(radius):
 		var crit := CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
-		var amount := SpellDB.effect_value(heal, 0, _unit.profile.level) * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)
+		var amount := SpellDB.effect_value(heal, 0, _unit.profile.level, _unit.combatant) * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)
 		unit.combatant.heal(roundi(amount * (1.0 + me.aura_total(SpellDB.AURA_MOD_HEALING_DONE_PERCENT) / 100.0)), crit)
 	Sfx.play_at("heal", _unit.global_position)
 
@@ -629,7 +677,7 @@ func _mana_burn(spell: Dictionary, target: Combatant, extra_crit: float) -> void
 	if CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
 		target.avoid("Resist", me)
 		return
-	var burned := minf(SpellDB.effect_value(spell, 0, _unit.profile.level), target.mana)
+	var burned := minf(SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant), target.mana)
 	target.mana -= burned
 	var crit := CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
 	var damage := burned * float(spell.get("EffectMultipleValue1", 0.5)) * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)
@@ -639,7 +687,7 @@ func _mana_burn(spell: Dictionary, target: Combatant, extra_crit: float) -> void
 
 ## Dread Wail: up to five enemies around the caster flee for its duration.
 func _fear_around(spell: Dictionary) -> void:
-	var radius := SpellDB.effect_radius(spell)
+	var radius := SpellDB.effect_radius(spell, 0, _unit.combatant)
 	var near: Array[Enemy] = []
 	for node in get_tree().get_nodes_in_group("enemies"):
 		var enemy := node as Enemy
@@ -687,7 +735,7 @@ func _judgement(target: Combatant) -> void:
 		_spell_damage(strike, target, 2.0 if target.is_stunned() else 1.0, false)
 	elif int(judgement.Effect1) == SpellDB.EFFECT_SCHOOL_DAMAGE:
 		# Judgement of Righteousness.
-		var amount := SpellDB.effect_value(judgement, 0, _unit.profile.level)
+		var amount := SpellDB.effect_value(judgement, 0, _unit.profile.level, _unit.combatant)
 		amount += _spell_power() * SpellDB.direct_coefficient(int(judgement.Id))
 		var crit := CombatRules.roll_heal(me) == CombatRules.Outcome.CRIT
 		_holy_damage(target, roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit)
@@ -704,7 +752,7 @@ func _hammer_of_justice(spell: Dictionary, target: Combatant) -> void:
 		target.avoid("Resist", me)
 		return
 	target.add_aura(spell, me)
-	target.stun(SpellDB.duration(spell))
+	target.stun(SpellDB.duration(spell, _unit.combatant))
 
 
 func _holy_damage(target: Combatant, amount: int, crit: bool, school := SpellDB.School.HOLY) -> void:
@@ -896,12 +944,12 @@ static func learn(ids: Array) -> Array[String]:
 ## Mending Radiance and Quick Radiance. Boon of Radiance on the target adds
 ## its bonus: the first amount to Mending Radiance, the second to Quick.
 func _holy_light(spell: Dictionary, target: Combatant) -> void:
-	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level)
+	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant)
 	amount += _spell_power() * SpellDB.direct_coefficient(SpellDB.HOLY_LIGHT_HEAL)
 	var boon := target.find_aura(func(other: Dictionary) -> bool: return str(other.SpellName).ends_with("Boon of Radiance"))
 	if not boon.is_empty():
 		amount += boon.amounts[0 if spell.SpellName == "Mending Radiance" else 1]
-	target.heal_with_spell(amount, _unit.combatant)
+	target.heal_with_spell(amount, _unit.combatant, _talent_crit(spell), spell)
 
 
 ## Damage of the spell's school from its first effect: a spell hit roll
@@ -910,13 +958,20 @@ func _holy_light(spell: Dictionary, target: Combatant) -> void:
 func _spell_damage(spell: Dictionary, target: Combatant, multiplier := 1.0, can_miss := true, extra_crit := 0.0) -> bool:
 	var me := _unit.combatant
 	me.enter_combat()
-	if can_miss and CombatRules.roll_spell(me, target) == CombatRules.Outcome.RESIST:
+	if can_miss and CombatRules.roll_spell(me, target, spell) == CombatRules.Outcome.RESIST:
 		target.avoid("Resist", me)
+		me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, Combatant.PROC_EX_RESIST, target, spell, 0)
 		return false
-	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
-	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me, extra_crit) == CombatRules.Outcome.CRIT
+	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+	# Damage talents for the spell (Scorching Light, Deepening Gloom).
+	amount = SpellMods.apply(me, spell, SpellMods.DAMAGE, amount)
+	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me, extra_crit + _talent_crit(spell)) == CombatRules.Outcome.CRIT
 	Sfx.play_at("bolt_hit", _unit.global_position)
-	_holy_damage(target, roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit, int(spell.get("School", SpellDB.School.HOLY)))
+	var dealt := roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0))
+	_holy_damage(target, dealt, crit, int(spell.get("School", SpellDB.School.HOLY)))
+	var ex := Combatant.PROC_EX_CRIT if crit else Combatant.PROC_EX_NORMAL
+	me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, ex, target, spell, dealt)
+	target.proc_event.emit(Combatant.PROC_TAKEN_NEGATIVE_SPELL, ex, me, spell, dealt)
 	return true
 
 
@@ -927,14 +982,14 @@ func _holy_shock(spell: Dictionary, target: Combatant) -> void:
 		return
 	if target.is_player:
 		var heal := SpellDB.get_spell(int(pair[1]))
-		target.heal_with_spell(SpellDB.effect_value(heal, 0, _unit.profile.level), _unit.combatant)
+		target.heal_with_spell(SpellDB.effect_value(heal, 0, _unit.profile.level, _unit.combatant), _unit.combatant)
 	else:
 		_spell_damage(SpellDB.get_spell(int(pair[0])), target)
 
 
 ## Radiant Fury: Holy damage to every undead and demon within its radius.
 func _holy_wrath(spell: Dictionary) -> void:
-	var radius := SpellDB.effect_radius(spell)
+	var radius := SpellDB.effect_radius(spell, 0, _unit.combatant)
 	for node in get_tree().get_nodes_in_group("enemies"):
 		var enemy := node as Enemy
 		var kind := _creature_type(enemy.combatant)
@@ -988,7 +1043,7 @@ func _on_auto_attack_landed(target: Combatant) -> void:
 
 ## Holy damage per hit for the equipped weapon.
 func seal_of_righteousness_damage(seal: Dictionary) -> int:
-	var amount := SpellDB.effect_value(seal, 0, _unit.profile.level)
+	var amount := SpellDB.effect_value(seal, 0, _unit.profile.level, _unit.combatant)
 	var weapon: Dictionary = _unit.profile.equipment.get(Inventory.Slot.MAIN_HAND, {})
 	var item := {} if weapon.is_empty() else ItemDB.get_item(weapon.id)
 	var speed := 2.0 if item.is_empty() else int(item.delay) / 1000.0
@@ -1005,5 +1060,9 @@ func seal_of_righteousness_damage(seal: Dictionary) -> int:
 
 
 ## Bonus spell damage and healing from gear. Nothing grants it yet.
+## Spell power: gear has none yet; Spirit's Guidance turns Spirit into it.
 func _spell_power() -> float:
-	return 0.0
+	var stats := _unit.get_node_or_null("CharacterStats") as CharacterStats
+	if stats == null:
+		return 0.0
+	return stats.stats[ClassicData.Stat.SPIRIT] * _unit.combatant.aura_total(CharacterStats.AURA_MOD_SPELL_DAMAGE_OF_STAT) / 100.0

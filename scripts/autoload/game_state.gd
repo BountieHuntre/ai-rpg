@@ -38,6 +38,8 @@ const ERR_NAME_LETTERS := "Names can only contain letters."
 const ERR_NAME_TAKEN := "That name is unavailable."
 ## Bump when the save format changes, and convert older saves in _apply_save.
 const SAVE_VERSION := 1
+## What the last unlearning of talents cost, in copper (Talents.reset_cost).
+var talent_reset_cost := 0
 
 ## Name, race, class, level, XP, proficiencies, equipment and known spells
 ## are in CharacterProfile.
@@ -232,6 +234,8 @@ static func shown_slots() -> Array[int]:
 ## Classic starting spells, plus Attack, laid out on the action bar.
 func _start_spells() -> void:
 	known_spells.assign([SpellDB.ATTACK] + SpellDB.start_spells(race, char_class))
+	talents = {}
+	talent_reset_cost = 0
 	action_bar.clear()
 	action_bar.resize(ALL_SLOTS)
 	action_bar.fill(0)
@@ -277,6 +281,8 @@ func save_to_disk() -> bool:
 		"player": player_state,
 		"world": world_state,
 		"spells": known_spells,
+		"talents": talents,
+		"talent_reset_cost": talent_reset_cost,
 		"action_bar": action_bar,
 		"quests": quests,
 		"quests_done": quests_done,
@@ -368,6 +374,13 @@ func _apply_save(data: Dictionary) -> void:
 				action_bar[i] = 0
 	else:
 		_start_spells()
+	# Ranks in each talent; saves from before talents have none.
+	talents = {}
+	var saved_talents: Dictionary = data.get("talents", {})
+	for key: String in saved_talents:
+		talents[key] = int(saved_talents[key])
+	talent_reset_cost = int(data.get("talent_reset_cost", 0))
+	Talents.validate(self)
 
 
 func _read_stack(stack: Dictionary) -> Dictionary:

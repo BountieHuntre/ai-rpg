@@ -59,6 +59,18 @@ Judgement of Light and Wisdom's per-rank heal and mana spells, and Holy
 Shock's damage and heal spells, are mapped in `extract.py` from the CMaNGOS
 proc and effect handlers, since the data doesn't link them.
 
+The proc rows also carry the family mask, school mask, procFlags and procEx
+that say which events set a talent off; a talent's later ranks use its first
+rank's row, as CMaNGOS does. Spell modifiers with no mask of their own
+(EffectItemType 0) take theirs from spell_affect, and talents' later ranks the
+first rank's.
+
+`talents.json` is the client's Talent and TalentTab tables (each class's three
+trees; every talent's tier, column, rank spells and prerequisites), from
+wago.tools' Classic Era exports via `fetch_client_tables.py`. `extract.py`
+exports the rank spells of the classes with spells into `spells.json` as
+`talents`, with the trees renamed.
+
 `factions.json` is the client's FactionTemplate table and each race's template
 (ChrRaces), from wago.tools' Classic Era exports via
 `tools/classic_db/fetch_client_tables.py`. `ClassicData` follows

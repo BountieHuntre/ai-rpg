@@ -22,6 +22,7 @@ const COMMANDS := {
 	"kill": ["", "Kill your target."],
 	"learn": ["<id or name>", "Learn a spell (the highest rank for a name)."],
 	"trainall": ["", "Learn every spell your class trainer teaches at your level, for free."],
+	"resettalents": ["", "Take back every talent point, for free."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
 	"tele": ["<x> <z> | spawn", "Teleport to a map point or the start."],
@@ -312,6 +313,13 @@ func _cmd_trainall(_args: PackedStringArray) -> String:
 		return "Nothing new to learn at level %d." % GameState.level
 	GameState.inventory_changed.emit()
 	return "Learned %d spell%s: %s." % [learned.size(), "" if learned.size() == 1 else "s", ", ".join(learned)]
+
+
+func _cmd_resettalents(_args: PackedStringArray) -> String:
+	var spent := Talents.spent(GameState)
+	Talents.reset(GameState)
+	GameState.inventory_changed.emit()
+	return "Took back %d talent point%s." % [spent, "" if spent == 1 else "s"]
 
 
 ## Starts the character over, as Shift+F12 does. Asks for "confirm" first.
