@@ -12,7 +12,12 @@ https://github.com/cmangos/classic-db):
 
 Also:
 
-- `creatures.json`: `creature_template` rows for the creatures in the game
+- `creatures.json`: `creature_template` rows for the creatures in the game,
+  each with its `creature_ai_scripts` (EventAI) events that cast spells or set
+  ranged mode, as `Events`; the spells they cast are in `spells.json`
+- `creature_class_damage.json`: `BaseDamageExp0` from
+  `creature_template_classlevelstats` by class and level, which scales creature
+  spell damage (WorldObject::CalculateSpellEffectValue in CMaNGOS)
 - `loot_tables.json`: their `creature_loot_template` rows and every
   `reference_loot_template` they use
 - `items.json`: `item_template` rows for everything those tables can drop, plus

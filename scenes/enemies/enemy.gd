@@ -39,6 +39,9 @@ const LOOKS := {
 	80: [Vector3(0.8, 0.8, 0.8), Color(0.62, 0.45, 0.25)],
 	475: [Vector3(0.85, 0.85, 0.85), Color(0.55, 0.38, 0.22)],
 	38: [Vector3(1.0, 1.0, 1.0), Color(0.6, 0.15, 0.15)],
+	476: [Vector3(0.8, 0.8, 0.8), Color(0.75, 0.35, 0.2)],
+	40: [Vector3(0.85, 0.85, 0.85), Color(0.5, 0.42, 0.3)],
+	94: [Vector3(0.95, 0.95, 0.95), Color(0.3, 0.3, 0.35)],
 }
 
 @export var acceleration := 60.0
@@ -72,6 +75,8 @@ var threat: Dictionary = {}
 ## The first player unit to strike it. Its group gets the kill: XP, quest
 ## credit and the loot. Others see the creature grey.
 var tapped_by: Combatant
+## Its classic spellcasting, for creatures whose EventAI casts spells; else null.
+var ai: CreatureAI
 var _victim: Combatant
 ## Seconds to the next look around for players to attack (staggered, so
 ## creatures don't all look on the same frame).
@@ -129,6 +134,12 @@ func _ready() -> void:
 	c.took_damage.connect(func(amount: int, source: Combatant, _crit: bool) -> void: _on_attacked(source, amount))
 	c.avoided.connect(func(_text: String, source: Combatant) -> void: _on_attacked(source, 0))
 	c.died.connect(_on_died)
+	if not _data.get("Events", []).is_empty():
+		ai = CreatureAI.new()
+		ai.name = "CreatureAI"
+		add_child(ai)
+		ai.setup(self, _data)
+		ai.on_spawn()
 
 
 func _physics_process(delta: float) -> void:
@@ -171,7 +182,8 @@ func _physics_process(delta: float) -> void:
 				combatant.attack_target = _victim
 				combatant.enter_combat()
 				_victim.enter_combat()
-				if global_position.distance_to(at) > stop_distance:
+				# Casters stand off to cast, and hold still while casting.
+				if global_position.distance_to(at) > stop_distance and not (ai and ai.holds_ground(_victim)):
 					destination = at
 				_face(at)
 		State.RETURN:
@@ -228,6 +240,10 @@ func _apply_look() -> void:
 	_visual.scale = look[0]
 
 
+func face_toward(point: Vector3) -> void:
+	_face(point)
+
+
 func _face(point: Vector3) -> void:
 	var offset := point - global_position
 	_visual.rotation.y = atan2(-offset.x, -offset.z)
@@ -251,6 +267,8 @@ func _start_return() -> void:
 	threat.clear()
 	tapped_by = null
 	_victim = null
+	if ai:
+		ai.on_leave_combat()
 
 
 ## Adds threat on a player unit, putting it on the threat list.
@@ -396,6 +414,8 @@ func _on_died() -> void:
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
 	threat.clear()
 	_victim = null
+	if ai:
+		ai.on_leave_combat()
 	_sparkle.visible = has_loot()
 	respawn_at = Time.get_unix_time_from_system() + respawn_time
 
@@ -477,6 +497,8 @@ func _respawn() -> void:
 	tapped_by = null
 	_roll_level()
 	state = State.IDLE
+	if ai:
+		ai.on_spawn()
 
 
 ## Gold cubes over a corpse that still has loot, standing in for WoW's sparkles.

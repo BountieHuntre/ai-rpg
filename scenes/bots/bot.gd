@@ -710,6 +710,9 @@ func _use_cleric_spells() -> void:
 			if unit != self and not unit.combatant.is_alive() and _try("Rite of Return", unit.combatant):
 				return
 	if _enemy:
+		# Hush stops a creature's spell and keeps it from casting.
+		if _enemy.is_casting and _try("Hush", _enemy):
+			return
 		if _casts_from_range():
 			if _lacks(_enemy, "Gnawing Shadow", false) and _try("Gnawing Shadow", _enemy):
 				return
@@ -742,7 +745,7 @@ func _lacks(target: Combatant, spell_name: String, anyone := true) -> bool:
 
 
 # Man-at-Arms abilities: a stance (Bastion with a shield in a party, else
-# Vanguard), Rallying Cry in a fight, Rush in, then finishers, reactive
+# Vanguard), Rallying Cry in a fight, Rush in, interrupts, then finishers, reactive
 # strikes, Gash, area attacks when crowded, and Mighty Blow with spare rage.
 
 func _use_man_at_arms_spells() -> void:
@@ -767,6 +770,11 @@ func _use_man_at_arms_spells() -> void:
 		return
 	if fighting and me.mana < 10.0 and me.health > me.max_health * 0.5 and _try("Blood Fury", me):
 		return
+	# Cut a caster's spell short.
+	if _enemy.is_casting:
+		for name in ["Hilt Strike", "Shield Smash"]:
+			if _try(name, _enemy):
+				return
 	for name in ["Finishing Blow", "Riposte Strike", "Retort", "Grievous Strike", "Bloodlust Strike", "Shield Crush"]:
 		if _try(name, _enemy):
 			return
@@ -935,7 +943,7 @@ func _move(delta: float) -> void:
 		# Far from the player: along the ground, no collision.
 		velocity = Vector3.ZERO
 		_stuck_for = 0.0
-		var step := global_position + direction * RUN_SPEED * delta
+		var step := global_position + direction * RUN_SPEED * combatant.speed_multiplier() * delta
 		global_position = Vector3(step.x, manager.ground_height(step.x, step.z), step.z)
 		return
 	# Standing still on the ground: nothing to move, so no collision work.
@@ -944,8 +952,9 @@ func _move(delta: float) -> void:
 		_stuck_for = 0.0
 		return
 	if is_on_floor():
-		velocity.x = direction.x * RUN_SPEED
-		velocity.z = direction.z * RUN_SPEED
+		# Slows (Chilled) and speed-ups change how fast it runs.
+		velocity.x = direction.x * RUN_SPEED * combatant.speed_multiplier()
+		velocity.z = direction.z * RUN_SPEED * combatant.speed_multiplier()
 	else:
 		velocity.y -= GRAVITY * delta
 		if combatant.has_aura_type(SpellDB.AURA_FEATHER_FALL):
@@ -956,7 +965,7 @@ func _move(delta: float) -> void:
 		_stuck_for = 0.0
 		return
 	var moved := Vector2(global_position.x - before.x, global_position.z - before.z).length()
-	_stuck_for = _stuck_for + delta if moved < RUN_SPEED * delta * 0.3 else 0.0
+	_stuck_for = _stuck_for + delta if moved < RUN_SPEED * combatant.speed_multiplier() * delta * 0.3 else 0.0
 	if _stuck_for > STUCK_TIME:
 		_stuck_for = 0.0
 		velocity.y = JUMP_SPEED

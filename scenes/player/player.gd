@@ -133,4 +133,5 @@ func _move_direction(camera: OrbitCamera, delta: float) -> Vector3:
 		speed = WALK_SPEED
 	elif forward < 0.0:
 		speed = BACKPEDAL_SPEED
-	return Basis(Vector3.UP, facing) * local.normalized() * speed * speed_scale
+	# Slows (Chilled) and speed-ups from auras.
+	return Basis(Vector3.UP, facing) * local.normalized() * speed * speed_scale * combatant.speed_multiplier()

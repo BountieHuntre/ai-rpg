@@ -94,6 +94,19 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 			return "Lowers an enemy's armor by %s for %s. They can't stealth or turn invisible while it lasts." % [t.magnitude(0), t.duration()]
 		"Slipping Beads":
 			return "Scatters beads under an enemy, making them %s%% less likely to hit for %s." % [t.magnitude(0), t.duration()]
+		# Creature spells, seen in debuff and target tooltips.
+		"Flame Bolt":
+			return "Hurls a bolt of fire at an enemy for %s Fire damage." % t.amount(0)
+		"Rime Shroud":
+			return "Armor raised by %s. Melee attackers are chilled, slowing their movement and attacks." % t.amount(0)
+		"Chilled":
+			return "Movement slowed by %s%% and attacks by %s%%." % [t.magnitude(1), t.magnitude(0)]
+		"Prying Strike":
+			return "Armor lowered by %s%%." % t.magnitude(0)
+		"Back Thrust":
+			return "Stabs an enemy in the back for %s%% weapon damage plus %s." % [t.amount(1), t.amount(0)]
+		"Headlong Charge":
+			return "Run speed raised by %s%% and melee damage by %s." % [t.amount(0), t.amount(1)]
 		"Homing Token":
 			var wait := roundi(SpellCaster.HOMING_TOKEN_COOLDOWN / 60.0)
 			return "After a %d sec cast, returns you to the priory in Ashford Vale. Moving cancels it. Can be used once every %d min." % [roundi(SpellDB.cast_time(spell)), wait]
@@ -309,7 +322,7 @@ static func _man_at_arms(name: String, spell: Dictionary, t: _Values) -> String:
 		"Wrest Weapon":
 			return "Wrests the weapon from an enemy for %s, halving its melee damage." % lasts
 		"Shield Smash", "Hilt Strike":
-			return "Strikes an enemy for %s damage and interrupts its spellcasting." % t.amount(1 if name == "Shield Smash" else 0)
+			return "Strikes an enemy for %s damage and interrupts its spellcasting, keeping it from casting spells of that school for %s." % [t.amount(1 if name == "Shield Smash" else 0), lasts]
 		"Stunning Blow":
 			return "Stuns an enemy for %s." % lasts
 		"Taunting Blow":

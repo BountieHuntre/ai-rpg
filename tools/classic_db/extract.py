@@ -21,7 +21,11 @@ import renames
 # creature_template entries used in the game.
 # Young Wolf, Kobold Vermin, Timber Wolf, Kobold Worker, Kobold Laborer,
 # Defias Thug, Stonetusk Boar, Kobold Tunneler: classic levels 1 to 6.
-CREATURES = [299, 6, 69, 257, 80, 38, 113, 475]
+# Kobold Geomancer, Kobold Miner and Defias Cutpurse (5 to 8) cast spells.
+CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94]
+# EventAI (creature_ai_scripts) actions the game runs: cast a spell (11) and
+# set ranged mode (57). Talk, emotes and sounds are left out.
+AI_ACTIONS = {11, 57}
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
 VENDORS = [152, 1213]
@@ -111,6 +115,7 @@ TABLES = {
     "creature_template", "creature_loot_template", "reference_loot_template", "creature",
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
     "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template", "spell_proc_event",
+    "creature_ai_scripts", "creature_template_classlevelstats",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -118,7 +123,7 @@ SPELL_FIELDS = [
     "CategoryRecoveryTime", "StartRecoveryCategory", "StartRecoveryTime", "InterruptFlags",
     "AuraInterruptFlags", "ProcFlags", "ProcChance", "ProcCharges", "MaxLevel", "BaseLevel",
     "SpellLevel", "DurationIndex", "PowerType", "ManaCost", "ManaCostPercentage", "RangeIndex",
-    "Speed", "StackAmount", "DmgClass", "SpellFamilyName", "SpellFamilyFlags", "SpellIconID",
+    "Speed", "StackAmount", "DmgClass", "SpellFamilyName", "SpellFamilyFlags", "SpellIconID", "PreventionType",
 ] + [f"{field}{i}" for i in (1, 2, 3) for field in (
     "Effect", "EffectDieSides", "EffectBaseDice", "EffectDicePerLevel", "EffectRealPointsPerLevel",
     "EffectBasePoints", "EffectMechanic", "EffectImplicitTargetA", "EffectImplicitTargetB",
@@ -138,7 +143,7 @@ CREATURE_FIELDS = [
     "Entry", "Name", "SubName", "MinLevel", "MaxLevel", "MinLevelHealth", "MaxLevelHealth",
     "MinLevelMana", "MaxLevelMana", "Armor", "MinMeleeDmg", "MaxMeleeDmg", "MeleeAttackPower",
     "MeleeBaseAttackTime", "Rank", "CreatureType", "Family", "LootId", "MinLootGold", "MaxLootGold",
-    "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags",
+    "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags", "UnitClass",
 ]
 ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",
@@ -249,6 +254,16 @@ def main(path):
         spawns = [s for s in db["creature"] if s["id"] == entry]
         creature["Respawn"] = most_common(int(s["spawntimesecsmin"]) for s in spawns)
         creature["Wander"] = most_common(float(s["spawndist"]) if s["MovementType"] == "1" else 0.0 for s in spawns)
+        creature["Events"] = creature_events(db, entry)
+    # Creature spell damage scales by the class's base damage at the
+    # creature's level over that at the spell's level (Object.cpp,
+    # SPELL_ATTR_SCALES_WITH_CREATURE_LEVEL): BaseDamageExp0 by class, level 1 up.
+    classes = {str(c["UnitClass"]) for c in creatures.values()}
+    class_damage = {}
+    for r in sorted(db["creature_template_classlevelstats"], key=lambda r: int(r["Level"])):
+        if r["Class"] in classes:
+            class_damage.setdefault(r["Class"], []).append(float(r["BaseDamageExp0"]))
+    write("creature_class_damage.json", class_damage)
     loot_rows = {}
     for r in db["creature_loot_template"]:
         loot_rows.setdefault(r["entry"], []).append(r)
@@ -311,7 +326,7 @@ def main(path):
     write("characters.json", starting_characters(db, outfits, items, level_stats))
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
-    export_spells(db, item_spells)
+    export_spells(db, item_spells | creature_spells(db))
 
 
 def export_quests(db):
@@ -480,6 +495,25 @@ def export_spells(db, item_spells):
                           "links": {str(k): v for k, v in SPELL_LINKS.items()},
                           "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
     print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
+
+
+def creature_events(db, entry):
+    """A creature's EventAI events that cast spells or set ranged mode:
+    type, chance, flags, the six event params and [type, p1, p2, p3] actions."""
+    events = []
+    for r in sorted((r for r in db["creature_ai_scripts"] if r["creature_id"] == entry), key=lambda r: int(r["id"])):
+        actions = [[int(r[f"action{i}_{k}"]) for k in ("type", "param1", "param2", "param3")] for i in (1, 2, 3)]
+        actions = [a for a in actions if a[0] in AI_ACTIONS]
+        if actions:
+            events.append({"type": int(r["event_type"]), "chance": int(r["event_chance"]), "flags": int(r["event_flags"]),
+                           "params": [int(r[f"event_param{i}"]) for i in range(1, 7)], "actions": actions})
+    return events
+
+
+def creature_spells(db):
+    """Spells the exported creatures cast."""
+    return {a[1] for entry in CREATURES for event in creature_events(db, str(entry))
+            for a in event["actions"] if a[0] == 11}
 
 
 def classic_names(db):

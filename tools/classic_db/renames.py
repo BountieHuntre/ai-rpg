@@ -225,6 +225,13 @@ ITEMS = {
     "Outfitter Gloves": "Trailwarden's Gloves",
     "Glowing Wax Stick": "Tallow Taper",
     "Bag of Marbles": "Pouch of Glass Beads",
+    "Priest's Mace": "Chaplain's Mace",
+    "Brackwater Bracers": "Fenwater Bracers",
+    "Kobold Excavation Pick": "Burrowling Pick",
+    "Kobold Mining Mallet": "Burrowling Mallet",
+    "Scalping Tomahawk": "Scalping Hatchet",
+    "Veteran Cloak": "Old Soldier's Cloak",
+    "Magic Candle": "Hedge-Witch Candle",
 }
 
 # Gear sets: the first word(s) of the name are replaced. Longest prefixes win.
@@ -245,6 +252,12 @@ SET_PREFIXES = {
     "Primal": "Wildhide",
     "Tribal": "Clan",
     "Worn Leather": "Scuffed Leather",
+    "Barbaric Cloth": "Rough-Spun",
+    "Cadet": "Squire's",
+    "Grizzly": "Bearhide",
+    "Gypsy": "Vagabond's",
+    "Native": "Woodland",
+    "War Torn": "Battle-Worn",
 }
 
 # Recipes are named after what they make: "Pattern: Rugged Leather Pants"
@@ -261,6 +274,9 @@ CREATURES = {
     "Kobold Tunneler": "Burrowling Delver",
     "Defias Thug": "Masked Brigand",
     "Stonetusk Boar": "Ridgetusk Boar",
+    "Kobold Geomancer": "Burrowling Firecaller",
+    "Kobold Miner": "Burrowling Pickman",
+    "Defias Cutpurse": "Brigand Footpad",
 }
 
 # Vendor names and titles, by creature entry.
@@ -330,6 +346,12 @@ SPELLS = {
     "Redemption": "Revival",
     "Righteous Fury": "Zealous Fervor",
     "Hearthstone": "Homing Token",
+    # Creature spells.
+    "Fireball": "Flame Bolt",
+    "Frost Armor": "Rime Shroud",
+    "Pierce Armor": "Prying Strike",
+    "Backstab": "Back Thrust",
+    "Rushing Charge": "Headlong Charge",
 }
 
 # Plain names that are kept as they are.
@@ -347,6 +369,9 @@ KEEP = {
     "Small Wooden Hammer", "Tigerseye", "Withered Staff", "Wood Chopper", "Worn Large Shield",
     "Fine Leather Boots", "Fine Leather Gloves", "Red Linen Robe", "Red Linen Vest", "White Leather Jerkin",
     "Gemmed Copper Gauntlets", "Healing Potion", "Elixir of Minor Agility", "Swiftness Potion", "Enchant Chest - Minor Mana",
+    "Carving Knife", "Ceremonial Cloak", "Fire Wand", "Hunting Bow", "Notched Shortsword", "Short Bastard Sword",
+    "Severing Axe", "Simple Bands", "Simple Cape", "Simple Cord", "Simple Shoes", "Tangy Clam Meat", "Training Sword",
+    "Chilled",
 }
 
 

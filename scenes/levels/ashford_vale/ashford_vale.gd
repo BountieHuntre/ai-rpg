@@ -1,7 +1,7 @@
 class_name AshfordVale
 extends Node3D
 ## The starting area: a forest valley ringed by mountains, about 400 yards
-## across, for levels 1 to 6. Ashford Priory stands in the middle, with
+## across, for levels 1 to 6 (the burrowlings' Firecallers by the mine are 7-8). Ashford Priory stands in the middle, with
 ## wolves in the meadow and woods, burrowlings at their mine to the west,
 ## brigands camped to the southeast and boars in the southwest hills.
 ## Everything but the NPCs, light and sky is built here from the layout below,
@@ -76,9 +76,9 @@ const WOODS := [
 	[Vector2(150, 90), 35.0],
 ]
 ## Creatures that never attack on sight here, whatever their classic faction:
-## every burrowling (Runt, Digger, Hauler, Delver), so the mine is safe to
-## learn on.
-const PASSIVE_CREATURES := [6, 257, 80, 475]
+## every burrowling (Runt, Digger, Hauler, Delver, Pickman, Firecaller), so
+## the mine is safe to learn on.
+const PASSIVE_CREATURES := [6, 257, 80, 475, 40, 476]
 ## Creature spawns: [creature entry, center, radius, count].
 const SPAWNS := [
 	[299, Vector2(35, 50), 22.0, 7],    # Young Wolf, meadow
@@ -92,6 +92,10 @@ const SPAWNS := [
 	[475, Vector2(-106, -2), 6.0, 4],   # Burrowling Delver, by the mine
 	[38, Vector2(105, 135), 15.0, 9],   # Masked Brigand, brigand camp
 	[113, Vector2(-90, 130), 35.0, 8],  # Ridgetusk Boar, southwest hills
+	# New groups go last, so saved corpses keep their names.
+	[40, Vector2(-101, 14), 9.0, 4],    # Burrowling Pickman, mine camp (6-7)
+	[476, Vector2(-108, 0), 6.0, 3],    # Burrowling Firecaller, by the mine (7-8)
+	[94, Vector2(110, 140), 12.0, 5],   # Brigand Footpad, brigand camp (5-6)
 ]
 
 const GRASS := Color(0.36, 0.55, 0.25)

@@ -41,6 +41,10 @@ const NAMEPLATE_RANGE := 40.0
 ## Party frames fade for members further away than this, as in classic.
 const PARTY_RANGE := 40.0
 const PARTY_FRAME_SIZE := Vector2(80, 25)
+## The player and target frames' bar width, and the least gap between a
+## frame's name and its level; frames widen for longer names.
+const FRAME_INNER := 84.0
+const NAME_LEVEL_GAP := 4.0
 const PARTY_XP := Color(0.55, 0.3, 0.85)
 ## Unit menu entries.
 enum MenuItem { WHISPER, INVITE, REMOVE, FOLLOW, STAY, TRADE, CANCEL }
@@ -60,6 +64,10 @@ var _player_level: Label
 var _player_xp: Control
 var _player_xp_text: Label
 var _target_frame: Control
+## The target frame's inner width (bars and name row) in HUD units, which
+## grows with the target's name.
+var _target_inner := FRAME_INNER
+var _player_frame_width := FRAME_INNER + 6.0
 var _target_name: Label
 var _target_level: Label
 var _banner: Label
@@ -73,6 +81,10 @@ var _target_mana_text: Label
 var _cast_frame: Control
 var _cast_fill: Control
 var _cast_name: Label
+## The target's cast, under the target frame, so you can see what to interrupt.
+var _target_cast: Control
+var _target_cast_fill: Control
+var _target_cast_name: Label
 var _message: Label
 var _message_left := 0.0
 var _floats: Array[Dictionary] = []
@@ -171,6 +183,10 @@ func _watch_combatants() -> void:
 		combatant.healed.connect(func(amount: int, crit: bool) -> void:
 			if combatant == _player.combatant:
 				_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
+		)
+		combatant.cast_interrupted.connect(func() -> void:
+			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
+				_add_float(combatant, "Interrupted", Color(1, 0.9, 0.3))
 		)
 		combatant.stunned.connect(func() -> void:
 			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
@@ -276,6 +292,10 @@ func _process(delta: float) -> void:
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
 		_show_target_mana(target)
+
+	if _target_frame.visible:
+		_fit_target_frame()
+	_update_target_cast(target if target else (bot.combatant if bot else null))
 
 	var casting: Dictionary = _player.spells.casting
 	_cast_frame.visible = not casting.is_empty()
@@ -481,14 +501,28 @@ func _update_durability_warning() -> void:
 
 
 func _build_player_frame() -> void:
-	var frame := _frame(Vector2(4, 4), Vector2(90, 35))
+	var name_label := _label(self, Vector2.ZERO, _player.combatant.display_name)
+	var inner := _name_row_width(name_label, "Lv %d" % ClassicData.MAX_LEVEL, FRAME_INNER)
+	name_label.queue_free()
+	_player_frame_width = inner + 6.0
+	var frame := _frame(Vector2(4, 4), Vector2(_player_frame_width, 35))
 	_label(frame, Vector2(3, 0), _player.combatant.display_name)
-	_player_level = _right_label(frame, Vector2(3, 0), 84)
-	_player_health = _bar(frame, Vector2(3, 12), Vector2(84, 10), Color(0.25, 0.7, 0.25))
-	_player_health_text = _bar_text(frame, Vector2(3, 12), Vector2(84, 10))
-	_player_mana = _bar(frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
-	_player_mana_text = _bar_text(frame, Vector2(3, 23), Vector2(84, 9))
+	_player_level = _right_label(frame, Vector2(3, 0), inner)
+	_player_health = _bar(frame, Vector2(3, 12), Vector2(inner, 10), Color(0.25, 0.7, 0.25))
+	_player_health_text = _bar_text(frame, Vector2(3, 12), Vector2(inner, 10))
+	_player_mana = _bar(frame, Vector2(3, 23), Vector2(inner, 9), Color(0.2, 0.4, 0.85))
+	_player_mana_text = _bar_text(frame, Vector2(3, 23), Vector2(inner, 9))
 	_build_xp_bar()
+
+
+## Width in HUD units a frame's top row needs for a name, a gap and a level
+## (or other right-hand text), at least `minimum`: names are never cut off.
+func _name_row_width(name_label: Label, right_text: String, minimum: float) -> float:
+	var font := name_label.get_theme_font("font")
+	var size := name_label.get_theme_font_size("font_size")
+	var needed := font.get_string_size(name_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	needed += font.get_string_size(right_text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	return maxf(minimum, ceilf(needed / _ui_scale) + NAME_LEVEL_GAP)
 
 
 ## The XP bar spans the action bar, just above it, below the stance bar.
@@ -506,7 +540,8 @@ func _build_xp_bar() -> void:
 ## The target frame, with a mana bar under the health bar for targets that
 ## have mana. Right-click it on a playerbot for the bot's menu.
 func _build_target_frame() -> void:
-	_target_frame = _frame(Vector2(100, 4), Vector2(90, 35))
+	_target_frame = _frame(Vector2(4 + _player_frame_width + 6, 4), Vector2(FRAME_INNER + 6, 35))
+	_target_inner = FRAME_INNER
 	_target_frame.mouse_filter = Control.MOUSE_FILTER_STOP
 	_target_frame.gui_input.connect(_on_target_frame_input)
 	_target_name = _label(_target_frame, Vector2(3, 0), "")
@@ -516,6 +551,53 @@ func _build_target_frame() -> void:
 	_target_mana_back = _rect(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.08, 0.1, 0.2))
 	_target_mana = _bar(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
 	_target_mana_text = _bar_text(_target_frame, Vector2(3, 23), Vector2(84, 9))
+	_target_cast = _frame(Vector2(4 + _player_frame_width + 6, 41), Vector2(FRAME_INNER + 6, 10))
+	_target_cast_fill = _bar(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), Color(0.9, 0.65, 0.2))
+	_target_cast_name = _bar_text(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), XP_FONT_SIZE + 1)
+	_target_cast.visible = false
+
+
+## The spell a unit is casting and how far along, or [] when it isn't.
+static func unit_cast(c: Combatant) -> Array:
+	var enemy := c.body as Enemy
+	if enemy and enemy.ai and not enemy.ai.casting.is_empty():
+		return [enemy.ai.casting.SpellName, enemy.ai.cast_fraction()]
+	# The player and playerbots each have a SpellCaster.
+	var caster := c.body.get("spells") as SpellCaster if c.body is PlayerUnit else null
+	if caster and not caster.casting.is_empty():
+		return [caster.casting.SpellName, caster.cast_fraction()]
+	return []
+
+
+## Widens (or narrows back) the target frame and its cast bar so the whole
+## name fits beside the level.
+func _fit_target_frame() -> void:
+	var inner := _name_row_width(_target_name, _target_level.text, FRAME_INNER)
+	if inner == _target_inner:
+		return
+	var scale := inner / _target_inner
+	_target_inner = inner
+	_target_frame.size.x = (inner + 6.0) * _ui_scale
+	_target_level.size.x = inner * _ui_scale
+	_target_mana_back.size.x = inner * _ui_scale
+	_target_health_text.size.x = inner * _ui_scale
+	_target_mana_text.size.x = inner * _ui_scale
+	for fill: Control in [_target_health, _target_mana]:
+		fill.set_meta("full_width", inner * _ui_scale)
+		fill.size.x *= scale
+	# The cast bar under it matches its width.
+	_target_cast.size.x = (inner + 6.0) * _ui_scale
+	_target_cast_name.size.x = (inner + 4.0) * _ui_scale
+	_target_cast_fill.set_meta("full_width", (inner + 4.0) * _ui_scale)
+
+
+func _update_target_cast(c: Combatant) -> void:
+	var cast := unit_cast(c) if c and c.is_alive() else []
+	_target_cast.visible = not cast.is_empty() and _target_frame.visible
+	if _target_cast.visible:
+		_target_cast.position.y = _target_frame.position.y + _target_frame.size.y + 2.0 * _ui_scale
+		_target_cast_name.text = cast[0]
+		_set_bar(_target_cast_fill, cast[1], 1.0)
 
 
 ## Mana bars are blue, rage bars red (classic's power colors).
@@ -606,20 +688,27 @@ func _update_enemy_names() -> void:
 ## mana and XP (no XP bar at the level cap). Click one to target it, right-click for its menu.
 func _build_party_frames() -> void:
 	_party_frames.clear()
+	var inner := PARTY_FRAME_SIZE.x - 6
+	for bot in Party.members:
+		var probe := _label(self, Vector2.ZERO, bot.profile.char_name)
+		probe.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+		inner = _name_row_width(probe, "Lv %d" % ClassicData.MAX_LEVEL, inner)
+		probe.queue_free()
+	var frame_size := Vector2(inner + 6, PARTY_FRAME_SIZE.y)
 	for i in Party.members.size():
 		var bot := Party.members[i]
-		var frame := _frame(Vector2(4, 43 + i * (PARTY_FRAME_SIZE.y + 3)), PARTY_FRAME_SIZE)
+		var frame := _frame(Vector2(4, 43 + i * (PARTY_FRAME_SIZE.y + 3)), frame_size)
 		frame.mouse_filter = Control.MOUSE_FILTER_STOP
 		frame.gui_input.connect(_on_party_frame_input.bind(bot))
 		var name_label := _label(frame, Vector2(3, -1), bot.profile.char_name)
 		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
-		var level := _right_label(frame, Vector2(3, -1), PARTY_FRAME_SIZE.x - 6)
+		var level := _right_label(frame, Vector2(3, -1), inner)
 		level.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
-		_rect(frame, Vector2(3, 10), Vector2(PARTY_FRAME_SIZE.x - 6, 6), Color(0.1, 0.2, 0.1))
-		var health := _bar(frame, Vector2(3, 10), Vector2(PARTY_FRAME_SIZE.x - 6, 6), Color(0.25, 0.7, 0.25))
-		var mana := _bar(frame, Vector2(3, 17), Vector2(PARTY_FRAME_SIZE.x - 6, 3), Color(0.2, 0.4, 0.85))
-		var xp_back := _rect(frame, Vector2(3, 21), Vector2(PARTY_FRAME_SIZE.x - 6, 2), Color(0.15, 0.1, 0.2))
-		var xp := _bar(frame, Vector2(3, 21), Vector2(PARTY_FRAME_SIZE.x - 6, 2), PARTY_XP)
+		_rect(frame, Vector2(3, 10), Vector2(inner, 6), Color(0.1, 0.2, 0.1))
+		var health := _bar(frame, Vector2(3, 10), Vector2(inner, 6), Color(0.25, 0.7, 0.25))
+		var mana := _bar(frame, Vector2(3, 17), Vector2(inner, 3), Color(0.2, 0.4, 0.85))
+		var xp_back := _rect(frame, Vector2(3, 21), Vector2(inner, 2), Color(0.15, 0.1, 0.2))
+		var xp := _bar(frame, Vector2(3, 21), Vector2(inner, 2), PARTY_XP)
 		_party_frames.append({ "bot": bot, "frame": frame, "name": name_label, "level": level, "health": health, "mana": mana, "xp": xp, "xp_back": xp_back })
 
 

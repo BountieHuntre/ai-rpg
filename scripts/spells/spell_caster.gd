@@ -66,6 +66,10 @@ var _gcd_total := 1.5
 var _cooldowns: Dictionary = {}
 ## Item spell category -> seconds left.
 var _item_cooldowns: Dictionary = {}
+## The bag slot of an item being cast that's used up when its spell lands.
+var _item_ref: Dictionary = {}
+## The spell of the item being used, which costs no mana.
+var _item_spell := 0
 ## Combat-driven effects: Oath procs, damage shields, hallowed ground.
 var _procs := SpellProcs.new()
 ## The Man-at-Arms' abilities: stances, next-swing attacks, rushing in.
@@ -86,6 +90,21 @@ func _ready() -> void:
 		if amount > 0:
 			_push_back()
 	)
+	# Stuns and interrupt effects cut a cast short, as they do a creature's.
+	combatant.stunned.connect(_interrupt)
+	combatant.interrupt_requested.connect(func(_lockout: float) -> void: _interrupt())
+
+
+func _interrupt() -> void:
+	if casting.is_empty():
+		return
+	if channeling:
+		_stop_channel()
+	else:
+		casting = {}
+	_unit.combatant.is_casting = false
+	_unit.combatant.cast_interrupted.emit()
+	failed.emit("Interrupted")
 
 
 ## Starts casting a known spell, or reports why it can't.
@@ -97,6 +116,8 @@ func cast(id: int) -> void:
 		_toggle_attack()
 		return
 	var spell := SpellDB.get_spell(id)
+	_item_ref = {}
+	_item_spell = 0
 	var target := _pick_target(spell)
 	var problem := _find_problem(spell, target, true)
 	if not problem.is_empty():
@@ -152,6 +173,9 @@ func cooldown_fraction(id: int) -> float:
 
 ## Stillness makes the next spell free.
 func mana_cost(spell: Dictionary) -> int:
+	# Spells cast from an item cost nothing (Spell::CalculatePowerCost).
+	if _item_spell != 0 and int(spell.get("Id", 0)) == _item_spell:
+		return 0
 	var cost := SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level))
 	return 0 if cost > 0 and _stillness() else cost
 
@@ -219,6 +243,7 @@ func _physics_process(delta: float) -> void:
 		var problem := _find_problem(spell, _cast_target, false)
 		if problem.is_empty():
 			_finish(spell, _cast_target)
+			_use_up_item()
 		else:
 			failed.emit(problem)
 
@@ -710,6 +735,21 @@ func use_item(ref: Dictionary) -> String:
 		return ERR_ITEM_NOT_READY
 	if not casting.is_empty():
 		return ERR_IN_PROGRESS
+	# Items thrown at an enemy (the Hedge-Witch Candle's fire) take your
+	# target and are used up when the spell lands.
+	if SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
+		var target := _unit.enemy_target()
+		_item_spell = int(spell.Id)
+		var problem := _find_problem(spell, target, true)
+		if not problem.is_empty():
+			_item_spell = 0
+			return problem
+		_item_ref = ref if int(item.spellcharges_1) < 0 else {}
+		if SpellDB.cast_time(spell) > 0.0:
+			return _cast_item_spell(spell, target)
+		_finish(spell, target)
+		_use_up_item()
+		return ""
 	# Items whose spell has a cast time and no aura (the Homing Token) cast
 	# like a spell; the spell's own category holds the cooldown.
 	if SpellDB.cast_time(spell) > 0.0 and int(spell.Effect1) != SpellDB.EFFECT_APPLY_AURA:
@@ -729,7 +769,7 @@ func use_item(ref: Dictionary) -> String:
 ## Starts an item's cast-time spell on yourself, checking the spell's category
 ## cooldown (an hour for the Homing Token, from CategoryRecoveryTime) and the
 ## global cooldown. Moving interrupts it, as for any cast.
-func _cast_item_spell(spell: Dictionary) -> String:
+func _cast_item_spell(spell: Dictionary, target: Combatant = null) -> String:
 	if _item_cooldowns.get(_spell_category(spell), 0.0) > 0.0:
 		return ERR_ITEM_NOT_READY
 	if _gcd_left > 0.0:
@@ -747,8 +787,16 @@ func _cast_item_spell(spell: Dictionary) -> String:
 	_pushbacks = 0
 	_cast_left = SpellDB.cast_time(spell)
 	_cast_total = _cast_left
-	_cast_target = _unit.combatant
+	_cast_target = target if target else _unit.combatant
 	return ""
+
+
+## Uses up one of the item whose spell just landed.
+func _use_up_item() -> void:
+	_item_spell = 0
+	if not _item_ref.is_empty():
+		Inventory.remove_one(_item_ref)
+		_item_ref = {}
 
 
 ## Item spells share cooldowns by spell category (so every Homing Token

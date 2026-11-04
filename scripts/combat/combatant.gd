@@ -25,6 +25,11 @@ signal damage_done(target: Combatant, amount: int, school: int)
 ## This unit's melee attack was dodged, parried or blocked ("Dodge"...): Riposte
 ## Strike waits for a dodge.
 signal attack_avoided(target: Combatant, text: String)
+## Something tries to cut this unit's cast short (Hilt Strike, Shield Smash),
+## locking the spell's school for `lockout` seconds if it was casting.
+signal interrupt_requested(lockout: float)
+## This unit's cast was cut short.
+signal cast_interrupted
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
@@ -380,15 +385,16 @@ func strike_with_ability(target: Combatant, damage: float) -> bool:
 	return _resolve_melee(target, damage, CombatRules.roll_melee_ability(self, target))
 
 
-## Resolves a harmful spell against the target. Returns whether it landed.
-func hit_with_spell(target: Combatant, damage: float) -> bool:
+## Resolves a harmful spell of a school (a SpellDB.School) against the
+## target. Returns whether it landed.
+func hit_with_spell(target: Combatant, damage: float, school := 0) -> bool:
 	_engage(target)
 	var outcome := CombatRules.roll_spell(self, target)
 	if outcome == CombatRules.Outcome.RESIST:
 		target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
 		return false
 	var crit := outcome == CombatRules.Outcome.CRIT
-	target.take_damage(roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), self, crit)
+	target.take_damage(roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), self, crit, school)
 	return true
 
 
@@ -486,6 +492,13 @@ func heal(amount: int, crit := false, healer: Combatant = null) -> void:
 	healed.emit(amount, crit)
 	if healer and healer.is_player and is_player and gained > 0:
 		Enemy.add_heal_threat(self, healer, gained)
+
+
+## Interrupts the spell this unit is casting, if any (an effect like Hilt
+## Strike's): its school is locked for `lockout` seconds.
+func interrupt_cast(lockout := 0.0) -> void:
+	if is_alive() and is_casting:
+		interrupt_requested.emit(lockout)
 
 
 func stun(duration: float) -> void:

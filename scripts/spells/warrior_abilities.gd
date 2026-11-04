@@ -327,6 +327,9 @@ func _melee_ability(spell: Dictionary, target: Combatant) -> bool:
 		landed = me.strike(target, damage)
 	else:
 		landed = _melee_roll(target)
+	# Hilt Strike and Shield Smash cut a cast short and lock its school.
+	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_INTERRUPT_CAST):
+		target.interrupt_cast(SpellDB.duration(spell))
 	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_APPLY_AURA):
 		target.add_aura(spell, me)
 		if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
