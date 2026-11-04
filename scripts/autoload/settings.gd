@@ -38,6 +38,12 @@ const DEFAULTS := {
 	"npc_names": true,
 	"enemy_names": true,
 	"quest_tracker": true,
+	# Extra action bars (GameState.EXTRA_BARS): two rows above the XP bar and
+	# two columns down the right side.
+	"bar_bottom_left": false,
+	"bar_bottom_right": false,
+	"bar_right": false,
+	"bar_right_2": false,
 	"loading_tips": true,
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
@@ -86,6 +92,30 @@ const ACTIONS := [
 	["ability_7", "Action Button 7", "Action Bar"], ["ability_8", "Action Button 8", "Action Bar"],
 	["ability_9", "Action Button 9", "Action Bar"], ["ability_10", "Action Button 10", "Action Bar"],
 	["ability_11", "Action Button 11", "Action Bar"], ["ability_12", "Action Button 12", "Action Bar"],
+	["bottom_left_1", "Bottom Left Bar Button 1", "Bottom Left Action Bar"], ["bottom_left_2", "Bottom Left Bar Button 2", "Bottom Left Action Bar"],
+	["bottom_left_3", "Bottom Left Bar Button 3", "Bottom Left Action Bar"], ["bottom_left_4", "Bottom Left Bar Button 4", "Bottom Left Action Bar"],
+	["bottom_left_5", "Bottom Left Bar Button 5", "Bottom Left Action Bar"], ["bottom_left_6", "Bottom Left Bar Button 6", "Bottom Left Action Bar"],
+	["bottom_left_7", "Bottom Left Bar Button 7", "Bottom Left Action Bar"], ["bottom_left_8", "Bottom Left Bar Button 8", "Bottom Left Action Bar"],
+	["bottom_left_9", "Bottom Left Bar Button 9", "Bottom Left Action Bar"], ["bottom_left_10", "Bottom Left Bar Button 10", "Bottom Left Action Bar"],
+	["bottom_left_11", "Bottom Left Bar Button 11", "Bottom Left Action Bar"], ["bottom_left_12", "Bottom Left Bar Button 12", "Bottom Left Action Bar"],
+	["bottom_right_1", "Bottom Right Bar Button 1", "Bottom Right Action Bar"], ["bottom_right_2", "Bottom Right Bar Button 2", "Bottom Right Action Bar"],
+	["bottom_right_3", "Bottom Right Bar Button 3", "Bottom Right Action Bar"], ["bottom_right_4", "Bottom Right Bar Button 4", "Bottom Right Action Bar"],
+	["bottom_right_5", "Bottom Right Bar Button 5", "Bottom Right Action Bar"], ["bottom_right_6", "Bottom Right Bar Button 6", "Bottom Right Action Bar"],
+	["bottom_right_7", "Bottom Right Bar Button 7", "Bottom Right Action Bar"], ["bottom_right_8", "Bottom Right Bar Button 8", "Bottom Right Action Bar"],
+	["bottom_right_9", "Bottom Right Bar Button 9", "Bottom Right Action Bar"], ["bottom_right_10", "Bottom Right Bar Button 10", "Bottom Right Action Bar"],
+	["bottom_right_11", "Bottom Right Bar Button 11", "Bottom Right Action Bar"], ["bottom_right_12", "Bottom Right Bar Button 12", "Bottom Right Action Bar"],
+	["right_1", "Right Bar Button 1", "Right Action Bar"], ["right_2", "Right Bar Button 2", "Right Action Bar"],
+	["right_3", "Right Bar Button 3", "Right Action Bar"], ["right_4", "Right Bar Button 4", "Right Action Bar"],
+	["right_5", "Right Bar Button 5", "Right Action Bar"], ["right_6", "Right Bar Button 6", "Right Action Bar"],
+	["right_7", "Right Bar Button 7", "Right Action Bar"], ["right_8", "Right Bar Button 8", "Right Action Bar"],
+	["right_9", "Right Bar Button 9", "Right Action Bar"], ["right_10", "Right Bar Button 10", "Right Action Bar"],
+	["right_11", "Right Bar Button 11", "Right Action Bar"], ["right_12", "Right Bar Button 12", "Right Action Bar"],
+	["right_2_1", "Right 2 Bar Button 1", "Right 2 Action Bar"], ["right_2_2", "Right 2 Bar Button 2", "Right 2 Action Bar"],
+	["right_2_3", "Right 2 Bar Button 3", "Right 2 Action Bar"], ["right_2_4", "Right 2 Bar Button 4", "Right 2 Action Bar"],
+	["right_2_5", "Right 2 Bar Button 5", "Right 2 Action Bar"], ["right_2_6", "Right 2 Bar Button 6", "Right 2 Action Bar"],
+	["right_2_7", "Right 2 Bar Button 7", "Right 2 Action Bar"], ["right_2_8", "Right 2 Bar Button 8", "Right 2 Action Bar"],
+	["right_2_9", "Right 2 Bar Button 9", "Right 2 Action Bar"], ["right_2_10", "Right 2 Bar Button 10", "Right 2 Action Bar"],
+	["right_2_11", "Right 2 Bar Button 11", "Right 2 Action Bar"], ["right_2_12", "Right 2 Bar Button 12", "Right 2 Action Bar"],
 ]
 const SHORT_KEYS := {
 	KEY_MINUS: "-", KEY_EQUAL: "=", KEY_SLASH: "/", KEY_BACKSLASH: "\\", KEY_COMMA: ",",
@@ -122,6 +152,9 @@ var _default_keys: Dictionary
 func _ready() -> void:
 	_pretend_release = "--pretend-release" in OS.get_cmdline_user_args()
 	for entry: Array in ACTIONS:
+		# The extra action bars' buttons aren't in project.godot: unbound to start.
+		if not InputMap.has_action(entry[0]):
+			InputMap.add_action(entry[0])
 		_default_keys[entry[0]] = _keys_in_map(entry[0])
 	_project_keys = _default_keys.duplicate(true)
 	# The shipped defaults first, then the player's own options over them.

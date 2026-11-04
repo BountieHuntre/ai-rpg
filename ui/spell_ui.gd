@@ -1,9 +1,11 @@
 class_name SpellUI
 extends Control
-## The action bar (keys 1 to 0, -, =), the spellbook (P) and the player's buff
-## bar. Drag spells from the spellbook onto the bar, drag them between slots,
-## or drag them off the bar to remove them. Clicking a slot or right-clicking
-## a spellbook entry casts. Right-click a buff to cancel it.
+## The action bar (keys 1 to 0, -, =), the extra action bars turned on under
+## Interface (two rows above the XP bar, two columns down the right side under
+## the minimap), the spellbook (P) and the player's buff bar. Drag spells from
+## the spellbook onto a bar, drag them between slots, or drag them off a bar to
+## remove them. Clicking a slot or right-clicking a spellbook entry casts.
+## Right-click a buff to cancel it.
 ## Slot boxes are redrawn in place, never freed while handling input.
 ## Sizes are in HUD units (1/270 of the window height), times ui_scale.
 
@@ -30,7 +32,8 @@ var _player: Player
 var _ui_scale := 1.0
 var _screen := Vector2.ZERO
 var _tooltip: ItemTooltip
-var _bar_slots: Array[ColorRect] = []
+## Slot boxes of the bars shown, by GameState.action_bar index.
+var _bar_slots: Dictionary = {}
 ## The stance bar: one fixed button per known aura or stance, highest rank.
 var _stance_bar: Control
 var _stance_slots: Array[ColorRect] = []
@@ -74,7 +77,7 @@ func _on_spells_changed() -> void:
 	_book.queue_free()
 	_build_book()
 	_book.visible = was_open
-	for i in _bar_slots.size():
+	for i: int in _bar_slots:
 		_draw_bar_slot(i)
 	_stance_bar.queue_free()
 	_build_stance_bar()
@@ -103,7 +106,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
-	for i in _bar_slots.size():
+	for i: int in _bar_slots:
 		_update_slot_state(i)
 	for i in _stance_slots.size():
 		_update_stance_state(i)
@@ -118,25 +121,88 @@ func _process(_delta: float) -> void:
 
 # Action bar.
 
+## The main bar along the bottom, the bottom extra bars stacked above the XP
+## bar, and the right ones as columns from the screen's right edge.
 func _build_bar() -> void:
 	var width := GameState.ACTION_SLOTS * (SLOT + GAP) - GAP
 	var left := (_screen.x - width) / 2.0
-	for i in GameState.ACTION_SLOTS:
-		var box := ColorRect.new()
-		box.position = Vector2(left + i * (SLOT + GAP), _screen.y - SLOT - 4) * _ui_scale
-		box.size = Vector2.ONE * SLOT * _ui_scale
-		box.mouse_filter = Control.MOUSE_FILTER_STOP
-		add_child(box)
-		_bar_slots.append(box)
-		var index := i
-		box.gui_input.connect(func(event: InputEvent) -> void: _on_bar_input(event, index))
-		box.mouse_entered.connect(func() -> void: _tooltip.show_lines(spell_tooltip(GameState.action_bar[index])))
-		box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
-		_draw_bar_slot(i)
+	var row := 0
+	var column := 0
+	var right := right_bars_layout(_screen)
+	for bar in 1 + GameState.EXTRA_BARS.size():
+		if not GameState.bar_shown(bar):
+			continue
+		var vertical := bar >= 3
+		for i in GameState.ACTION_SLOTS:
+			var at: Vector2
+			var unit := SLOT
+			if vertical:
+				unit = right.unit
+				at = Vector2(_screen.x - Minimap.MARGIN - (column + 1) * (unit + GAP) + GAP, right.top + i * (unit + GAP))
+			else:
+				at = Vector2(left + i * (SLOT + GAP), bottom_row_y(_screen.y, row))
+			_add_slot(bar * GameState.ACTION_SLOTS + i, at, unit)
+		if vertical:
+			column += 1
+		else:
+			row += 1
+
+
+## The top of a bottom bar row: 0 is the main bar, then rows stack upward from
+## above the XP bar (straight above the main bar at the level cap).
+static func bottom_row_y(screen_height: float, row: int) -> float:
+	var y := screen_height - SLOT - 4
+	if row == 0:
+		return y
+	var xp_room := XP_BAR + GAP if GameState.level < ClassicData.MAX_LEVEL else 0.0
+	return y - xp_room - row * (SLOT + GAP)
+
+
+## The stance bar's top: above the XP bar and any bottom extra bars. The cast
+## bar sits above it.
+static func stance_top(screen_height: float) -> float:
+	var rows := bottom_bars()
+	var top := bottom_row_y(screen_height, rows) if rows > 0 else bottom_row_y(screen_height, 1) + SLOT + GAP
+	return top - GAP - STANCE_SLOT
+
+
+## How many bottom extra bars are shown.
+static func bottom_bars() -> int:
+	return int(GameState.bar_shown(1)) + int(GameState.bar_shown(2))
+
+
+## The right bars: slot size (smaller when twelve don't fit under the
+## minimap), their top, and the width they take from the right edge (0 with
+## none shown). They're centered in the room between the minimap and the
+## bottom bars.
+static func right_bars_layout(screen: Vector2) -> Dictionary:
+	var columns := int(GameState.bar_shown(3)) + int(GameState.bar_shown(4))
+	var top := Minimap.corner(screen.x).y + Minimap.SIZE + 6
+	var room := screen.y - SLOT - 8 - top
+	var unit := minf(SLOT, room / GameState.ACTION_SLOTS - GAP)
+	var height := GameState.ACTION_SLOTS * (unit + GAP) - GAP
+	return {
+		"unit": unit, "top": top + maxf((room - height) / 2.0, 0.0),
+		"width": columns * (unit + GAP) if columns > 0 else 0.0,
+	}
+
+
+func _add_slot(slot: int, at: Vector2, unit: float) -> void:
+	var box := ColorRect.new()
+	box.position = at * _ui_scale
+	box.size = Vector2.ONE * unit * _ui_scale
+	box.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(box)
+	_bar_slots[slot] = box
+	box.gui_input.connect(func(event: InputEvent) -> void: _on_bar_input(event, slot))
+	box.mouse_entered.connect(func() -> void: _tooltip.show_lines(spell_tooltip(GameState.action_bar[slot])))
+	box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+	_draw_bar_slot(slot)
 
 
 func _draw_bar_slot(i: int) -> void:
-	var box := _bar_slots[i]
+	var box: ColorRect = _bar_slots[i]
+	var unit := box.size.x / _ui_scale
 	for child in box.get_children():
 		box.remove_child(child)
 		child.queue_free()
@@ -146,18 +212,18 @@ func _draw_bar_slot(i: int) -> void:
 	else:
 		_draw_icon(box, id)
 	# Overlays, updated every frame: out of mana, cooldown, key label.
-	var no_mana := _rect(box, Vector2.ZERO, Vector2.ONE * SLOT, Color(0.1, 0.1, 0.6, 0.5))
+	var no_mana := _rect(box, Vector2.ZERO, Vector2.ONE * unit, Color(0.1, 0.1, 0.6, 0.5))
 	no_mana.name = "NoMana"
-	var cooldown := _rect(box, Vector2.ZERO, Vector2(SLOT, 0), Color(0, 0, 0, 0.65))
+	var cooldown := _rect(box, Vector2.ZERO, Vector2(unit, 0), Color(0, 0, 0, 0.65))
 	cooldown.name = "Cooldown"
-	var key := _text(box, Vector2(0, -1), Settings.key_label("ability_%d" % (i + 1)), Color(0.9, 0.9, 0.9), 6)
-	key.size.x = (SLOT - 1) * _ui_scale
+	var key := _text(box, Vector2(0, -1), Settings.key_label(GameState.slot_action(i)), Color(0.9, 0.9, 0.9), 6)
+	key.size.x = (unit - 1) * _ui_scale
 	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	key.name = "Key"
 
 
 func _update_slot_state(i: int) -> void:
-	var box := _bar_slots[i]
+	var box: ColorRect = _bar_slots[i]
 	var id := GameState.action_bar[i]
 	var no_mana: Control = box.get_node_or_null("NoMana")
 	var cooldown: Control = box.get_node_or_null("Cooldown")
@@ -168,10 +234,10 @@ func _update_slot_state(i: int) -> void:
 	var spell := SpellDB.get_spell(id) if id != 0 else {}
 	no_mana.visible = not spell.is_empty() and _player.combatant.mana < caster.mana_cost(spell)
 	var fraction := caster.cooldown_fraction(id) if id != 0 else 0.0
-	cooldown.size.y = SLOT * _ui_scale * fraction
-	cooldown.position.y = SLOT * _ui_scale - cooldown.size.y
+	cooldown.size.y = box.size.y * fraction
+	cooldown.position.y = box.size.y - cooldown.size.y
 	# Follows the key bindings. Classic shows it red when the target is out of range.
-	key.text = Settings.key_label("ability_%d" % (i + 1))
+	key.text = Settings.key_label(GameState.slot_action(i))
 	key.add_theme_color_override("font_color", Color(1, 0.2, 0.2) if id != 0 and caster.out_of_range(id) else Color(0.9, 0.9, 0.9))
 	# Attack glows while auto-attacking.
 	box.modulate = Color(1.4, 1.2, 0.7) if id == SpellDB.ATTACK and _player.combatant.attack_target else Color.WHITE
@@ -218,8 +284,8 @@ func _drop_on_slot(i: int) -> void:
 
 
 func _slot_at(point: Vector2) -> int:
-	for i in _bar_slots.size():
-		if _bar_slots[i].get_global_rect().has_point(point):
+	for i: int in _bar_slots:
+		if (_bar_slots[i] as ColorRect).get_global_rect().has_point(point):
 			return i
 	return -1
 
@@ -259,8 +325,9 @@ func stance_spells() -> Array[int]:
 	return ids
 
 
-## Sits just above the left end of the action bar, and only shows when it has
-## something in it. Its buttons cast but can't be dragged.
+## Sits just above the left end of the action bar (and any bottom extra bars),
+## and only shows when it has something in it. Its buttons cast but can't be
+## dragged.
 func _build_stance_bar() -> void:
 	_stance_slots.clear()
 	_stance_ids = stance_spells()
@@ -269,12 +336,13 @@ func _build_stance_bar() -> void:
 	add_child(_stance_bar)
 	_stance_bar.visible = not _stance_ids.is_empty()
 	var bar_left := (_screen.x - (GameState.ACTION_SLOTS * (SLOT + GAP) - GAP)) / 2.0
-	# Above the XP bar, or straight above the action bar at the level cap.
-	var xp_room := XP_BAR + GAP if GameState.level < ClassicData.MAX_LEVEL else 0.0
+	# Above the XP bar and the bottom extra bars (straight above the action
+	# bar at the level cap with none).
+	var top := stance_top(_screen.y)
 	for i in _stance_ids.size():
 		var id := _stance_ids[i]
 		var box := ColorRect.new()
-		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), _screen.y - SLOT - 4 - GAP - xp_room - STANCE_SLOT) * _ui_scale
+		box.position = Vector2(bar_left + i * (STANCE_SLOT + GAP), top) * _ui_scale
 		box.size = Vector2.ONE * STANCE_SLOT * _ui_scale
 		box.mouse_filter = Control.MOUSE_FILTER_STOP
 		_stance_bar.add_child(box)

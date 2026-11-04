@@ -82,8 +82,9 @@ func handle_action(event: InputEvent) -> void:
 		walking = not walking
 	elif event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
 		autorunning = false
-	for i in GameState.ACTION_SLOTS:
-		if event.is_action_pressed("ability_%d" % (i + 1)) and GameState.action_bar[i] != 0:
+	# Buttons of hidden extra bars do nothing.
+	for i in GameState.shown_slots():
+		if event.is_action_pressed(GameState.slot_action(i)) and GameState.action_bar[i] != 0:
 			spells.cast(GameState.action_bar[i])
 
 

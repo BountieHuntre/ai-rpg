@@ -661,8 +661,9 @@ func _holy_damage(target: Combatant, amount: int, crit: bool, school := SpellDB.
 ## as a known one replaces it (Judgement teaches a second Rank 1 Seal of
 ## Righteousness that can be judged). Other new ranks sit alongside the old
 ## ones in the spellbook, but take over their action bar slots, and a spell
-## new to the player goes in the first empty slot. Those are conveniences over
-## classic, which left the old rank on the bar and new spells in the spellbook.
+## new to the player goes in the first empty slot of a shown bar. Those are
+## conveniences over classic, which left the old rank on the bar and new
+## spells in the spellbook.
 ## Uses an item's on-use spell (food and drink so far): checks it, takes one
 ## from the stack and applies the spell. Returns an error or "".
 func use_item(ref: Dictionary) -> String:
@@ -798,7 +799,11 @@ static func learn(ids: Array) -> Array[String]:
 				on_bar_already = true
 		# A spell new to the player goes in the first empty slot, if there is
 		# one. Passives stay off the bar and Presences have the stance bar.
-		var empty := GameState.action_bar.find(0)
+		var empty := -1
+		for slot in GameState.shown_slots():
+			if GameState.action_bar[slot] == 0:
+				empty = slot
+				break
 		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_paladin_aura(spell):
 			GameState.action_bar[empty] = id
 		learned.append(SpellDB.full_name(spell))

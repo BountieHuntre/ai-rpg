@@ -10,6 +10,8 @@ const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
 const TARGET_HEALTH := Color(0.75, 0.2, 0.2)
 ## The cast bar sits above the action bar and the stance bar.
 const CAST_BAR_Y_FROM_BOTTOM := 68.0
+## Gap from the cast bar's top to the stance bar's.
+const CAST_BAR_ABOVE_STANCE := 17.0
 const MESSAGE_TIME := 2.0
 const FLOAT_TIME := 1.0
 const FLOAT_SPEED := 18.0
@@ -121,7 +123,7 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	_build()
 	get_viewport().size_changed.connect(_build)
 	Settings.changed.connect(func(key: String) -> void:
-		if key == "ui_scale" or key.begins_with("chat_"):
+		if key == "ui_scale" or key.begins_with("chat_") or key.begins_with("bar_"):
 			_build()
 	)
 
@@ -337,7 +339,9 @@ func _build() -> void:
 	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Under the minimap, its right edge in line with the minimap's.
 	var map_corner := Minimap.corner(_width)
-	_tracker.position = Vector2(_width - Minimap.MARGIN - TRACKER_WIDTH, map_corner.y + Minimap.SIZE + 4) * _ui_scale
+	# Left of the right action bars, when they're shown.
+	var bars_width: float = SpellUI.right_bars_layout(Vector2(_width, _height)).width
+	_tracker.position = Vector2(_width - Minimap.MARGIN - TRACKER_WIDTH - bars_width - (4.0 if bars_width > 0.0 else 0.0), map_corner.y + Minimap.SIZE + 4) * _ui_scale
 	_tracker.size = Vector2(TRACKER_WIDTH, 0) * _ui_scale
 	_tracker.add_theme_font_size_override("normal_font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
 	_tracker.add_theme_color_override("font_shadow_color", Color.BLACK)
@@ -533,7 +537,9 @@ func _on_target_frame_input(event: InputEvent) -> void:
 
 
 func _build_cast_bar() -> void:
-	_cast_frame = _frame(Vector2((_width - 120) / 2.0, _height - CAST_BAR_Y_FROM_BOTTOM), Vector2(120, 12))
+	# Above the stance bar, which moves up with the bottom extra action bars.
+	var cast_y := minf(_height - CAST_BAR_Y_FROM_BOTTOM, SpellUI.stance_top(_height) - CAST_BAR_ABOVE_STANCE)
+	_cast_frame = _frame(Vector2((_width - 120) / 2.0, cast_y), Vector2(120, 12))
 	_cast_fill = _bar(_cast_frame, Vector2(1, 1), Vector2(118, 10), Color(0.9, 0.65, 0.2))
 	_cast_name = _bar_text(_cast_frame, Vector2(1, 1), Vector2(118, 10))
 	_cast_frame.visible = false

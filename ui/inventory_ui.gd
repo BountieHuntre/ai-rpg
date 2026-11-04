@@ -190,7 +190,8 @@ func _build_bags_window() -> void:
 		if not GameState.containers[i].is_empty():
 			bag_gaps += 1
 	var height := 14.0 + (SLOT + GAP) + 4.0 + rows * (SLOT + GAP) + bag_gaps * 4.0 + 12.0
-	var at := Vector2(_screen.x - width - 4, _screen.y - height - 40)
+	# Left of the right action bars, when they're shown.
+	var at := Vector2(_screen.x - width - 4 - SpellUI.right_bars_layout(_screen).width, _screen.y - height - 40)
 	_bags_window = _panel(at, Vector2(width, height))
 	_text(_bags_window, Vector2(4, 1), "Bags (B)", TITLE, 7)
 	# Bag slots along the top, as on the classic bag bar.

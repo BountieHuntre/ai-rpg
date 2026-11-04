@@ -21,6 +21,11 @@ signal quest_message(text: String)
 const BACKPACK_SLOTS := 16
 const BAG_SLOTS := 4
 const ACTION_SLOTS := 12
+## The extra action bars after the main one, as their options and key binding
+## names say them ("bar_" + name, name + "_1"...). Each has ACTION_SLOTS slots,
+## kept in action_bar after the main bar's, in this order.
+const EXTRA_BARS := ["bottom_left", "bottom_right", "right", "right_2"]
+const ALL_SLOTS := ACTION_SLOTS * (1 + 4)
 ## Where the single save lived before there were several characters.
 const OLD_SAVE_PATH := "user://character.json"
 ## Classic name rules (ObjectMgr::CheckPlayerName in CMaNGOS): 2 to 12 letters.
@@ -201,11 +206,34 @@ func _move_old_save() -> void:
 			DirAccess.remove_absolute(OLD_SAVE_PATH)
 
 
+## The key binding action for an action bar slot: ability_1... for the main
+## bar, bottom_left_1... for the extra ones.
+static func slot_action(slot: int) -> String:
+	var bar := slot / ACTION_SLOTS
+	var name: String = "ability" if bar == 0 else EXTRA_BARS[bar - 1]
+	return "%s_%d" % [name, slot % ACTION_SLOTS + 1]
+
+
+## Whether an action bar is shown: the main one (0) always, the others by option.
+static func bar_shown(bar: int) -> bool:
+	return bar == 0 or bool(Settings.get_value("bar_" + EXTRA_BARS[bar - 1]))
+
+
+## The slots of the bars that are shown, main bar first.
+static func shown_slots() -> Array[int]:
+	var slots: Array[int] = []
+	for bar in 1 + EXTRA_BARS.size():
+		if bar_shown(bar):
+			for i in ACTION_SLOTS:
+				slots.append(bar * ACTION_SLOTS + i)
+	return slots
+
+
 ## Classic starting spells, plus Attack, laid out on the action bar.
 func _start_spells() -> void:
 	known_spells.assign([SpellDB.ATTACK] + SpellDB.start_spells(race, char_class))
 	action_bar.clear()
-	action_bar.resize(ACTION_SLOTS)
+	action_bar.resize(ALL_SLOTS)
 	action_bar.fill(0)
 	for i in known_spells.size():
 		action_bar[i] = known_spells[i]
@@ -328,6 +356,12 @@ func _apply_save(data: Dictionary) -> void:
 	if data.has("spells"):
 		known_spells.assign(data.spells.map(func(id: float) -> int: return int(id)))
 		action_bar.assign(data.action_bar.map(func(id: float) -> int: return int(id)))
+		# Saves from before the extra bars have only the main bar's slots.
+		if action_bar.size() < ALL_SLOTS:
+			var had := action_bar.size()
+			action_bar.resize(ALL_SLOTS)
+			for i in range(had, ALL_SLOTS):
+				action_bar[i] = 0
 	else:
 		_start_spells()
 
