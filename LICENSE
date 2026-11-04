@@ -1,0 +1,18 @@
+Copyright (c) 2026 BountieHuntre. All rights reserved.
+
+This repository's code, scenes, art and text are made available to view
+only. No permission is granted to copy, modify, distribute, sublicense or
+sell any part of it, in source or built form, without the copyright
+holder's written permission. The released builds may be downloaded and
+played for free.
+
+Third-party parts keep their own licenses, which this notice does not
+change:
+
+- shaders/pixelart_stylizer.gdshader: MIT License, by Leo Peltola (see the
+  notice at the top of the file).
+- assets/audio/rpg_sfx/: CC0 (public domain), see its LICENSE.txt.
+- The Godot Engine, which the released builds contain: MIT License, see
+  https://godotengine.org/license.
+- data/classic/: game rules and tables taken from the CMaNGOS and vmangos
+  projects; see data/classic/SOURCE.md for where they come from.
