@@ -11,8 +11,8 @@ const FILE_NAME := "options.cfg"
 
 const DEFAULTS := {
 	# Video
-	"display_mode": "Windowed",
-	"window_size": "1440x810",
+	"display_mode": "Fullscreen",
+	"window_size": "1920x1080",
 	"monitor": 0,
 	"vsync": true,
 	"max_fps": 0,
@@ -47,8 +47,8 @@ const DEFAULTS := {
 	"bots_enabled": true,
 	"bot_count": 8,
 	"bot_min_level": 1,
-	"bot_max_level": 6,
-	"bot_classes": "All Classes",
+	"bot_max_level": 10,
+	"bot_classes": "Templars Only",
 	"bot_quests": true,
 	"bot_chat": "Normal",
 	"bot_accept_invites": "Always",
@@ -59,7 +59,7 @@ const DEFAULTS := {
 	# Chat
 	"chat_font": "Medium",
 	"chat_background": 0.35,
-	"chat_outline": true,
+	"chat_outline": false,
 	# The chat frame's tabs, place and size (saved as you change them), and lock.
 	"chatframe_tabs": [],
 	"chatframe_rect": [],
