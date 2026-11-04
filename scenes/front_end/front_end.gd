@@ -206,8 +206,9 @@ func _build_login() -> void:
 	login.pressed.connect(submit)
 	account.text_submitted.connect(submit)
 	password.text_submitted.connect(submit)
-	var version_number: String = ProjectSettings.get_setting("application/config/version", "")
-	var version := _label("Version %s" % (version_number if not version_number.is_empty() else "0.1"), Color(0.7, 0.7, 0.75))
+	# The game's version (x.y.z) is application/config/version in project.godot;
+	# Windows exports take it too.
+	var version := _label("Version %s" % ProjectSettings.get_setting("application/config/version", ""), Color(0.7, 0.7, 0.75))
 	_place(version, Vector2(4, 258), Vector2(100, 10), Anchor.BOTTOM)
 	var quit := Button.new()
 	quit.text = "Quit"
