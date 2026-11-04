@@ -171,7 +171,7 @@ func defaults() -> void:
 		_keys = Settings.default_keys()
 	else:
 		for row: Array in CATEGORIES[_category]:
-			_set_pending(row[0], Settings.DEFAULTS[row[0]])
+			_set_pending(row[0], Settings.default_value(row[0]))
 	_binding = []
 	_build()
 
@@ -278,7 +278,8 @@ func _build() -> void:
 	tabs.add_theme_constant_override("separation", roundi(2 * _ui_scale))
 	tabs.custom_minimum_size.x = TAB_WIDTH * _ui_scale
 	body.add_child(tabs)
-	for tab: String in TABS:
+	# Release builds have no Developer tab.
+	for tab: String in TABS.filter(func(t: String) -> bool: return t != DEVELOPER or Settings.developer_tools()):
 		var button := _button(tab, show_tab.bind(tab))
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var selected := tab == _category

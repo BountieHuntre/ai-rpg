@@ -319,7 +319,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Up from the moment a drag button goes down, before any hover can happen.
 		_update_drag_shield()
 
-	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed:
+	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed and Settings.developer_tools():
 		GameState.reset_character()
 		get_tree().reload_current_scene()
 	elif event.is_action_pressed("pause"):

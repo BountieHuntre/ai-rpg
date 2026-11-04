@@ -81,7 +81,10 @@ var _created := 0
 
 
 func _init() -> void:
-	for arg in OS.get_cmdline_user_args():
+	# Release builds ignore the test arguments: they always use the player's
+	# own saves.
+	var args := OS.get_cmdline_user_args() if OS.is_debug_build() else PackedStringArray()
+	for arg in args:
 		if arg.begins_with("--save="):
 			save_path = arg.trim_prefix("--save=")
 			single_save = true

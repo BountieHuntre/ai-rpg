@@ -746,7 +746,8 @@ func send(text: String) -> void:
 		"help", "?":
 			Chat.system("Chat: /s say, /y yell, /p party, /1-/4 channels, /w <name> whisper, /r reply, /e emote, /who, /invite <name>, /leave.")
 			Chat.system("Emotes: " + ", ".join(EMOTES.keys().map(func(e: String) -> String: return "/" + e)))
-			Chat.system("Any developer command works after a slash too: /help in the console (`) lists them, e.g. /additem, /level, /tele.")
+			if Settings.developer_tools():
+				Chat.system("Any developer command works after a slash too: /help in the console (`) lists them, e.g. /additem, /level, /tele.")
 		_:
 			if EMOTES.has(command):
 				_emote(command)
@@ -810,7 +811,8 @@ func _target_name() -> String:
 func _developer_command(line: String) -> void:
 	var console := get_tree().get_first_node_in_group("dev_console") as DevConsole
 	var command := line.split(" ", false)[0].to_lower() if not line.strip_edges().is_empty() else ""
-	if console == null or not DevConsole.COMMANDS.has(command):
+	# Release builds have no developer commands.
+	if console == null or not DevConsole.COMMANDS.has(command) or not Settings.developer_tools():
 		Chat.add("error", "Unknown command. Type /help for a list.")
 		return
 	var result := console.run(line)

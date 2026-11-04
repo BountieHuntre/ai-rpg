@@ -104,7 +104,15 @@ const MOUSE_NAMES := {
 ## opens the chat with a slash typed (walking is on Numpad /, as in classic).
 const RESERVED_KEYS := [KEY_ESCAPE, KEY_QUOTELEFT, KEY_SLASH]
 
-var _values := DEFAULTS.duplicate()
+## The defaults this build starts with: DEFAULTS with the shipped file
+## (default_options.cfg) over them. Defaults buttons go back to these.
+var _defaults := DEFAULTS.duplicate(true)
+var _values := DEFAULTS.duplicate(true)
+## The project's own key bindings, before any shipped ones.
+var _project_keys: Dictionary
+## `-- --pretend-release`: an editor run behaves as a release build (no
+## developer tools), to try it out. Test arguments still work.
+var _pretend_release := false
 ## Each action's two keys as physical keycodes, or a mouse button as its
 ## negative index (0 for none), from the project's input map until the player
 ## changes them.
@@ -112,25 +120,95 @@ var _default_keys: Dictionary
 
 
 func _ready() -> void:
+	_pretend_release = "--pretend-release" in OS.get_cmdline_user_args()
 	for entry: Array in ACTIONS:
 		_default_keys[entry[0]] = _keys_in_map(entry[0])
+	_project_keys = _default_keys.duplicate(true)
+	# The shipped defaults first, then the player's own options over them.
+	var shipped := ConfigFile.new()
+	if shipped.load(SHIPPED_PATH) == OK:
+		_read_into(shipped, _defaults, _default_keys)
+	_values = _defaults.duplicate(true)
 	_values.keys = _default_keys.duplicate(true)
 	var file := ConfigFile.new()
 	if file.load(_path()) == OK:
-		for entry: Array in ACTIONS:
-			var saved = file.get_value("keys", entry[0], null)
-			if saved is Array and saved.size() == 2:
-				# Bindings saved before a key was reserved (/ for walking) let it go.
-				_values.keys[entry[0]] = [_unreserved(int(saved[0])), _unreserved(int(saved[1]))]
-		for key: String in DEFAULTS:
-			var saved = file.get_value("options", key, DEFAULTS[key])
-			if typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int):
-				_values[key] = saved
+		_read_into(file, _values, _values.keys)
 	_apply_all()
 
 
+## Reads an options file's [options] and [keys] into values and bindings,
+## keeping only options that exist and have the right type.
+func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
+	for entry: Array in ACTIONS:
+		var saved = file.get_value("keys", entry[0], null)
+		if saved is Array and saved.size() == 2:
+			# Bindings saved before a key was reserved (/ for walking) let it go.
+			keys[entry[0]] = [_unreserved(int(saved[0])), _unreserved(int(saved[1]))]
+	for key: String in DEFAULTS:
+		var saved = file.get_value("options", key, null)
+		if saved != null and (typeof(saved) == typeof(DEFAULTS[key]) or (DEFAULTS[key] is float and saved is int)):
+			values[key] = saved
+
+
+## The shipped defaults, read over DEFAULTS in every build.
+const SHIPPED_PATH := "res://default_options.cfg"
+## Options that belong to one machine, never shipped.
+const NOT_SHIPPED := ["monitor", "chatframe_rect"]
+
+
+## An option's default in this build (the shipped one, if any).
+func default_value(key: String) -> Variant:
+	return _defaults.get(key, DEFAULTS.get(key))
+
+
+## Developer tools (the console, the Developer options, developer chat
+## commands, Shift+F12): in editor runs and debug exports, not in release.
+func developer_tools() -> bool:
+	return OS.is_debug_build() and not _pretend_release
+
+
+## Writes the current options into the shipped defaults file, as the options
+## a release build starts with: every option that differs from the code's
+## DEFAULTS (not the machine's own monitor and chat placement), and the key
+## bindings too if asked. Only from the editor, which can write the project's
+## files. Returns what it did.
+func write_shipped(with_keys: bool) -> String:
+	if not OS.has_feature("editor"):
+		return "!Only from the editor: exported games can't change their own files."
+	var file := ConfigFile.new()
+	var written := 0
+	for key: String in DEFAULTS:
+		if key in NOT_SHIPPED or _values[key] == DEFAULTS[key]:
+			continue
+		file.set_value("options", key, _values[key])
+		written += 1
+	var bindings := 0
+	if with_keys:
+		for action: String in _values.keys:
+			if _values.keys[action] != _project_keys.get(action):
+				file.set_value("keys", action, _values.keys[action])
+				bindings += 1
+	var error := file.save(ProjectSettings.globalize_path(SHIPPED_PATH))
+	if error != OK:
+		return "!Couldn't write %s: %s" % [SHIPPED_PATH, error_string(error)]
+	return "Shipped defaults written to %s: %d option%s%s. Release builds start with these." % [
+		SHIPPED_PATH, written, "" if written == 1 else "s",
+		", %d key binding%s" % [bindings, "" if bindings == 1 else "s"] if with_keys else " (key bindings left as they are)"]
+
+
+## Deletes the shipped defaults file, so builds start from the code's DEFAULTS.
+func clear_shipped() -> String:
+	if not OS.has_feature("editor"):
+		return "!Only from the editor."
+	var path := ProjectSettings.globalize_path(SHIPPED_PATH)
+	if not FileAccess.file_exists(path):
+		return "There are no shipped defaults."
+	DirAccess.remove_absolute(path)
+	return "Shipped defaults removed; builds start from the code's defaults."
+
+
 func get_value(key: String) -> Variant:
-	return _values.get(key, DEFAULTS.get(key))
+	return _values.get(key, default_value(key))
 
 
 ## Changes an option and applies it now. `save()` keeps it.
@@ -155,7 +233,7 @@ func snapshot() -> Dictionary:
 ## Puts back every option from a snapshot (Cancel), or the defaults.
 func restore(values: Dictionary) -> void:
 	for key: String in DEFAULTS:
-		set_value(key, values.get(key, DEFAULTS[key]))
+		set_value(key, values.get(key, default_value(key)))
 	set_value("keys", values.get("keys", _default_keys).duplicate(true))
 
 

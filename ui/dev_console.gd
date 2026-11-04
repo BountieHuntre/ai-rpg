@@ -29,6 +29,7 @@ const COMMANDS := {
 	"save": ["", "Save the game now."],
 	"clear": ["", "Clear the console."],
 	"reload": ["", "Save, restart the game and come back in, picking up any changes."],
+	"shipdefaults": ["[keys | clear]", "Make your current options the defaults release builds start with (editor only); keys includes key bindings."],
 	"bots": ["", "List the playerbots in the world."],
 	"invite": ["[name]", "Invite a playerbot (or your target) to your party."],
 	"uninvite": ["<name>", "Remove a playerbot from your party."],
@@ -103,6 +104,9 @@ func toggle() -> void:
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key and key.pressed and not key.echo and key.physical_keycode == KEY_QUOTELEFT:
+		# No console in release builds.
+		if not Settings.developer_tools():
+			return
 		# The Developer options can turn the console off; it can always close.
 		if visible or Settings.get_value("dev_console"):
 			toggle()
@@ -344,6 +348,12 @@ func _cmd_respawn(_args: PackedStringArray) -> String:
 			enemy.respawn_at = 0.0
 			count += 1
 	return "Respawning %d creatures." % count
+
+
+func _cmd_shipdefaults(args: PackedStringArray) -> String:
+	if "clear" in args:
+		return Settings.clear_shipped()
+	return Settings.write_shipped("keys" in args)
 
 
 func _cmd_bots(_args: PackedStringArray) -> String:
