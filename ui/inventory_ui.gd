@@ -222,7 +222,7 @@ func _character_sheet() -> String:
 	for i in ClassicData.STAT_NAMES.size():
 		var bonus := int(s.gear_stats[i])
 		lines.append("%s: %d%s" % [ClassicData.STAT_NAMES[i], s.stats[i], " (+%d)" % bonus if bonus > 0 else ""])
-	lines.append("Health %d  Mana %d" % [c.max_health, c.max_mana])
+	lines.append("Health %d  %s %d" % [c.max_health, "Rage" if c.uses_rage() else "Mana", c.max_mana])
 	lines.append("Armor %d (%.1f%%)" % [c.armor, CombatRules.armor_reduction(c.armor, c.level) * 100.0])
 	lines.append("Attack Power %d" % c.attack_power)
 	var bonus_damage := c.attack_power / 14.0 * c.swing_interval

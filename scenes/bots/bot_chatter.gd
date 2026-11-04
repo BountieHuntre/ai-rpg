@@ -201,7 +201,7 @@ func _check_mana() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	for bot in Party.members:
 		var c := bot.combatant
-		if c.max_mana > 0 and c.is_alive() and c.is_in_combat() and c.mana < c.max_mana * 0.15:
+		if c.has_mana() and c.is_alive() and c.is_in_combat() and c.mana < c.max_mana * 0.15:
 			if now >= float(_oom_said.get(bot, -OOM_COOLDOWN)) + OOM_COOLDOWN:
 				_oom_said[bot] = now
 				_later(bot, "party", OOM)

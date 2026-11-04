@@ -416,7 +416,7 @@ func _build_create() -> void:
 	var class_text := CLASS_TEXT[_class] as String
 	# Classes with spells in the game so far. The rest can be made, but only attack.
 	if not _class in SpellDB.classes_with_spells():
-		class_text += "\n(No spells yet: only Templars and Clerics have spells so far.)"
+		class_text += "\n(No spells yet: only Men-at-Arms, Templars and Clerics have spells so far.)"
 	var class_label := _label(class_text, Color.WHITE)
 	class_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	classes.add_child(class_label)

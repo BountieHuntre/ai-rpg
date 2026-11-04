@@ -11,7 +11,8 @@ signal hovered(spell_id: int)
 
 ## Classic INTERACTION_DISTANCE, in yards.
 const RANGE := 5.0
-const WIDTH := 170.0
+## Wide enough for "Sergeant Bram Holloway - Man-at-Arms Trainer".
+const WIDTH := 190.0
 const LIST_HEIGHT := 150.0
 const ROW := 12.0
 const FONT_SIZE := 6
@@ -126,7 +127,7 @@ func _build() -> void:
 	)
 
 	if trainer_class != GameState.char_class:
-		var refusal := _text(self, Vector2(6, 20), "I can only train %ss. Seek out a trainer of your own calling." % ClassicData.CLASS_NAMES.get(trainer_class, ""), Color.WHITE, FONT_SIZE)
+		var refusal := _text(self, Vector2(6, 20), "I can only train %s. Seek out a trainer of your own calling." % ClassicData.class_plural(trainer_class), Color.WHITE, FONT_SIZE)
 		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		refusal.custom_minimum_size.x = (WIDTH - 12) * _ui_scale
 		size.y = 50 * _ui_scale
@@ -207,6 +208,8 @@ func _select(index: int) -> void:
 	# First ranks that are talents in classic are taught here for free.
 	if entry.get("talent", false):
 		cost = "Free (a talent in classic)"
+	elif entry.get("quest", false):
+		cost = "Free (a quest reward in classic)"
 	_details.text = cost if str(state[1]).is_empty() else "%s   %s" % [cost, state[1]]
 
 

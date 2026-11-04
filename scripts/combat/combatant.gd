@@ -22,11 +22,18 @@ signal melee_hit_taken(attacker: Combatant)
 signal blocked_attack(attacker: Combatant)
 ## This unit's damage of a school landed on a target (Leeching Embrace heals from shadow).
 signal damage_done(target: Combatant, amount: int, school: int)
+## This unit's melee attack was dodged, parried or blocked ("Dodge"...): Riposte
+## Strike waits for a dodge.
+signal attack_avoided(target: Combatant, text: String)
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
 const COMBAT_TIMEOUT := 5.0
 const CRUSH_MULTIPLIER := 1.5
+## Rage tops out at 100 (classic's 1000 tenths).
+const MAX_RAGE := 100
+## Off-hand swings deal half damage (classic, before talents).
+const OFF_HAND_DAMAGE := 0.5
 
 @export var display_name := ""
 @export var level := 1
@@ -55,7 +62,18 @@ var block := 0.0
 var block_value := 0
 
 var health := 0
+## Mana, or rage for a unit whose power_type is rage (the Man-at-Arms):
+## max_mana is then MAX_RAGE, and it starts empty.
 var mana := 0.0
+var power_type := SpellDB.POWER_MANA
+## Off-hand weapon (Two-Weapon Fighting): its damage range and swing time,
+## 0 for none.
+var off_min_damage := 0.0
+var off_max_damage := 0.0
+var off_swing_interval := 0.0
+## Called with the target before a main-hand swing; returns true if it made
+## the attack itself (Mighty Blow and Sweeping Cut replace the swing).
+var swing_replacer: Callable
 var invulnerable := false
 ## While set, swings at this combatant whenever it is in melee range.
 var attack_target: Combatant
@@ -68,6 +86,7 @@ var auras: Array[Dictionary] = []
 
 var _stun_left := 0.0
 var _swing_left := 0.0
+var _off_swing_left := 0.0
 var _combat_left := 0.0
 var _since_mana_spent := INF
 
@@ -81,7 +100,7 @@ func _ready() -> void:
 
 func reset() -> void:
 	health = max_health
-	mana = max_mana
+	mana = 0.0 if uses_rage() else max_mana
 	attack_target = null
 	invulnerable = false
 	_stun_left = 0.0
@@ -137,13 +156,23 @@ func distance_to(other: Combatant) -> float:
 
 ## Adds or refreshes an aura. The same spell replaces itself. Effect amounts
 ## are rolled once, at the caster's level, when the aura lands.
+## Auras that stack (Rend Armor, up to five) add a stack instead, multiplying
+## their amounts and refreshing the time.
 func add_aura(spell: Dictionary, caster: Combatant) -> void:
+	var stacks := 1
+	var most := int(spell.get("StackAmount", 0))
+	if most > 1:
+		for old in auras:
+			if int(old.spell.Id) == int(spell.Id) and old.caster == caster:
+				stacks = mini(int(old.get("stacks", 1)) + 1, most)
 	remove_aura(int(spell.Id), false)
 	var length := SpellDB.duration(spell)
 	var amounts := []
 	for i in 3:
-		amounts.append(SpellDB.effect_value(spell, i, caster.level))
+		amounts.append(SpellDB.effect_value(spell, i, caster.level) * stacks)
 	var aura := { "spell": spell, "caster": caster, "remaining": length, "duration": length, "amounts": amounts }
+	if stacks > 1:
+		aura.stacks = stacks
 	# Auras used up after a number of procs (Radiant Bulwark's blocks).
 	if int(spell.get("ProcCharges", 0)) > 0:
 		aura.charges = int(spell.ProcCharges)
@@ -184,6 +213,52 @@ func aura_lowest(aura_type: int) -> float:
 			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) == aura_type:
 				lowest = minf(lowest, aura.amounts[i])
 	return lowest
+
+
+func uses_rage() -> bool:
+	return power_type == SpellDB.POWER_RAGE
+
+
+## Whether this unit has mana (not rage) to drink for and run out of.
+func has_mana() -> bool:
+	return max_mana > 0 and not uses_rage()
+
+
+## Rage from a hit dealt (7.5 parts) or taken (2.5 parts) for its damage, as
+## Player::RewardRage in CMaNGOS classic: damage / conversion * parts, the
+## conversion growing with level.
+func reward_rage(damage: int, dealt: bool) -> void:
+	if not uses_rage() or damage <= 0:
+		return
+	var conversion := 0.0091107836 * level * level + 3.225598133 * level + 4.2652911
+	gain_rage(damage / conversion * (7.5 if dealt else 2.5))
+
+
+func gain_rage(amount: float) -> void:
+	mana = clampf(mana + amount, 0.0, max_mana)
+
+
+## Taunted units must attack whoever taunted them (Goad, Daring Roar).
+func taunted_by() -> Combatant:
+	for aura in auras:
+		if SpellDB.has_effect(aura.spell, SpellDB.AURA_MOD_TAUNT, true) and is_instance_valid(aura.caster) and aura.caster.is_alive():
+			return aura.caster
+	return null
+
+
+## Threat this unit causes, as a factor (stances, SPELL_AURA_MOD_THREAT).
+func threat_multiplier() -> float:
+	return maxf(1.0 + aura_total(SpellDB.AURA_MOD_THREAT) / 100.0, 0.0)
+
+
+## Armor less any armor debuffs (Rend Armor), and percentage changes (Death
+## Craving). A player's own armor auras are counted in CharacterStats.
+func effective_armor() -> float:
+	var total := float(armor)
+	if not is_player:
+		total += aura_total(SpellDB.AURA_MOD_RESISTANCE, 1)
+	total *= 1.0 + aura_total(SpellDB.AURA_MOD_RESISTANCE_PCT, 1) / 100.0
+	return maxf(total, 0.0)
 
 
 ## Feared units run from whoever frightened them and can't fight.
@@ -271,10 +346,33 @@ func spend_mana(amount: int) -> void:
 
 
 ## Weapon damage plus the attack power bonus of AP / 14 per second of swing time.
-## Flat physical damage done auras (Feeble Hex and Withering Touch lower it) apply too.
+## Flat physical damage done auras (Feeble Hex and Withering Touch lower it)
+## apply too. A creature's attack power auras (Daunting Roar) count here, and
+## a disarmed creature hits for half.
 func roll_weapon_damage() -> float:
-	var damage := randf_range(min_damage, max_damage) + attack_power / 14.0 * swing_interval
+	var power := float(attack_power) + (0.0 if is_player else aura_total(SpellDB.AURA_MOD_ATTACK_POWER))
+	var damage := randf_range(min_damage, max_damage) + maxf(power, 0.0) / 14.0 * swing_interval
+	if not is_player and has_aura_type(SpellDB.AURA_MOD_DISARM):
+		damage *= 0.5
 	return maxf(damage + aura_total(SpellDB.AURA_MOD_DAMAGE_DONE, 1), 0.0)
+
+
+## Weapon damage with the attack power bonus at a normalized speed (2.4 s for
+## one-handers, 3.3 s for two-handers, 1.7 s for daggers), as abilities with
+## SPELL_EFFECT_NORMALIZED_WEAPON_DMG roll it.
+func roll_normalized_damage(speed: float) -> float:
+	var damage := randf_range(min_damage, max_damage) + attack_power / 14.0 * speed
+	return maxf(damage + aura_total(SpellDB.AURA_MOD_DAMAGE_DONE, 1), 0.0)
+
+
+## Resolves a melee weapon attack from an ability (Mighty Blow, Riposte
+## Strike): the yellow table, armor, and no rage. Returns whether it landed.
+## `dodgeable` false leaves dodge, parry and block out (Riposte Strike).
+func strike(target: Combatant, damage: float, dodgeable := true) -> bool:
+	var outcome := CombatRules.roll_melee_ability(self, target)
+	if not dodgeable and outcome in [CombatRules.Outcome.DODGE, CombatRules.Outcome.PARRY, CombatRules.Outcome.BLOCK]:
+		outcome = CombatRules.Outcome.CRIT if randf() * 100.0 < CombatRules.melee_crit_chance(self, target) else CombatRules.Outcome.HIT
+	return _resolve_melee(target, damage, outcome)
 
 
 ## Resolves a melee ability against the target. Returns whether it landed.
@@ -321,6 +419,7 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	if amount <= 0:
 		return
 	health = maxi(health - amount, 0)
+	reward_rage(amount, false)
 	took_damage.emit(amount, source, crit)
 	if source and is_instance_valid(source) and amount > 0:
 		source.dealt_damage.emit(self)
@@ -402,18 +501,36 @@ func _physics_process(delta: float) -> void:
 	_stun_left = maxf(_stun_left - delta, 0.0)
 	_swing_left = maxf(_swing_left - delta, 0.0)
 	_combat_left = maxf(_combat_left - delta, 0.0)
+	_off_swing_left = maxf(_off_swing_left - delta, 0.0)
 	_since_mana_spent += delta
 	_tick_auras(delta)
 
 	if attack_target and (not is_instance_valid(attack_target) or not attack_target.is_alive()):
 		attack_target = null
-	if attack_target and not is_stunned() and not is_pacified() and not is_feared() and not is_casting and _swing_left == 0.0:
-		if faces(attack_target) and distance_to(attack_target) <= melee_range:
+	var can_swing := attack_target and not is_stunned() and not is_pacified() and not is_feared() and not is_casting
+	if can_swing and faces(attack_target) and distance_to(attack_target) <= melee_range:
+		if _swing_left == 0.0:
 			swung.emit(attack_target)
 			var target := attack_target
-			if _resolve_melee(target, roll_weapon_damage(), CombatRules.roll_auto_attack(self, target)):
+			if not (swing_replacer.is_valid() and swing_replacer.call(target)):
+				if _resolve_melee(target, roll_weapon_damage(), CombatRules.roll_auto_attack(self, target), true):
+					auto_attack_landed.emit(target)
+			_swing_left = swing_interval * _creature_swing_factor()
+		# The off hand swings on its own timer, for half damage.
+		if off_swing_interval > 0.0 and _off_swing_left == 0.0 and attack_target:
+			var target := attack_target
+			var damage := (randf_range(off_min_damage, off_max_damage) + attack_power / 14.0 * off_swing_interval) * OFF_HAND_DAMAGE
+			if _resolve_melee(target, damage, CombatRules.roll_auto_attack(self, target), true):
 				auto_attack_landed.emit(target)
-			_swing_left = swing_interval
+			_off_swing_left = off_swing_interval
+
+
+## Ground Slam slows a creature's swings (players' haste is in CharacterStats).
+func _creature_swing_factor() -> float:
+	if is_player:
+		return 1.0
+	var haste := aura_total(SpellDB.AURA_MOD_MELEE_HASTE)
+	return 1.0 / (1.0 + haste / 100.0) if haste >= 0.0 else 1.0 - haste / 100.0
 
 
 func _tick_auras(delta: float) -> void:
@@ -454,7 +571,10 @@ func _tick_periodic(aura: Dictionary, delta: float) -> void:
 			var amount: float = aura.amounts[i]
 			var caster: Combatant = aura.caster if is_instance_valid(aura.caster) else null
 			if kind == SpellDB.AURA_PERIODIC_ENERGIZE:
-				mana = minf(mana + amount, max_mana)
+				# Rage comes in tenths (Blood Fury's misc value 1 is rage).
+				var rage := int(spell.get("EffectMiscValue%d" % (i + 1), 0)) == SpellDB.POWER_RAGE
+				if rage == uses_rage():
+					mana = minf(mana + (amount / 10.0 if rage else amount), max_mana)
 			elif not is_alive():
 				return
 			elif kind == SpellDB.AURA_PERIODIC_HEAL:
@@ -491,11 +611,14 @@ func _engage(target: Combatant) -> void:
 	target.enter_combat()
 
 
-func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outcome) -> bool:
+## `white` marks an auto-attack swing, which earns rage.
+func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outcome, white := false) -> bool:
 	_engage(target)
 	match outcome:
 		CombatRules.Outcome.MISS, CombatRules.Outcome.DODGE, CombatRules.Outcome.PARRY:
 			target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
+			if outcome != CombatRules.Outcome.MISS:
+				attack_avoided.emit(target, CombatRules.OUTCOME_TEXT[outcome])
 			return false
 		CombatRules.Outcome.GLANCE:
 			damage *= CombatRules.glance_multiplier(self, target)
@@ -506,10 +629,13 @@ func _resolve_melee(target: Combatant, damage: float, outcome: CombatRules.Outco
 	damage = CombatRules.reduce_by_armor(damage, target, self)
 	if outcome == CombatRules.Outcome.BLOCK:
 		target.blocked_attack.emit(self)
+		attack_avoided.emit(target, CombatRules.OUTCOME_TEXT[outcome])
 		damage = maxf(damage - target.block_value, 0.0)
 		if damage <= 0.0:
 			target.avoid(CombatRules.OUTCOME_TEXT[outcome], self)
 			return true
+	if white:
+		reward_rage(roundi(damage), true)
 	target.take_damage(roundi(damage), self, outcome == CombatRules.Outcome.CRIT)
 	if target.is_alive():
 		target.melee_hit_taken.emit(self)

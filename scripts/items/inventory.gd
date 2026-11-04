@@ -23,12 +23,14 @@ const INVTYPE_BAG := 18
 const INVTYPE_TWO_HAND := 17
 const INVTYPE_ONE_HAND := 13
 const INVTYPE_SHIELD := 14
+const INVTYPE_WEAPON := 13
+const DUAL_WIELD_SPELL := 674
 const ARMOR_SUBCLASS_MISC := 0
 const ARMOR_SUBCLASS_PLATE := 4
 const ARMOR_SUBCLASS_SHIELD := 6
 
-## Equipment slots for each InventoryType. One-handers only go in the off hand
-## with Dual Wield, which no class set up here has yet.
+## Equipment slots for each InventoryType. One-handers (13) also go in the off
+## hand with Two-Weapon Fighting (classic's Dual Wield, DUAL_WIELD_SPELL).
 const SLOTS_FOR_TYPE := {
 	1: [Slot.HEAD], 2: [Slot.NECK], 3: [Slot.SHOULDER], 4: [Slot.SHIRT], 5: [Slot.CHEST],
 	6: [Slot.WAIST], 7: [Slot.LEGS], 8: [Slot.FEET], 9: [Slot.WRIST], 10: [Slot.HANDS],
@@ -271,7 +273,8 @@ static func _check_place(stack: Dictionary, place: Dictionary, coming_from: Dict
 	var item := ItemDB.get_item(stack.id)
 	match place.kind:
 		"equip":
-			if not (place.slot in SLOTS_FOR_TYPE.get(int(item.InventoryType), [])):
+			var dual_wield: bool = int(item.InventoryType) == INVTYPE_WEAPON and place.slot == Slot.OFF_HAND and DUAL_WIELD_SPELL in GameState.known_spells
+			if not (place.slot in SLOTS_FOR_TYPE.get(int(item.InventoryType), [])) and not dual_wield:
 				return ERR_WRONG_SLOT
 			var problem := can_use(item)
 			if not problem.is_empty():
@@ -343,6 +346,8 @@ static func gear_totals(equipment: Dictionary) -> Dictionary:
 				totals.mana += int(stat[1])
 		if slot == Slot.MAIN_HAND and int(item.dmg_max1) > 0:
 			totals.weapon = { "min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0 }
+		if slot == Slot.OFF_HAND and int(item.dmg_max1) > 0 and int(item["class"]) == ItemDB.ITEM_CLASS_WEAPON:
+			totals.off_weapon = { "min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0 }
 		if slot == Slot.OFF_HAND and int(item.subclass) == ARMOR_SUBCLASS_SHIELD and int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR:
 			totals.has_shield = true
 			totals.block += int(item.block)

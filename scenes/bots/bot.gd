@@ -172,7 +172,7 @@ func _ready() -> void:
 	progression.leveled_up.connect(func(_level: int) -> void: learn_spells())
 	learn_spells()
 	combatant.health = combatant.max_health
-	combatant.mana = combatant.max_mana
+	combatant.mana = combatant.max_mana if combatant.has_mana() else 0.0
 	_stay_at = global_position
 	_think_left = randf() * THINK_INTERVAL
 
@@ -302,7 +302,7 @@ func _physics_process(delta: float) -> void:
 					enemy.forget(combatant)
 				global_position = AshfordVale.SPAWN + Vector3(randf_range(-3, 3), 0.5, randf_range(-3, 3))
 				velocity = Vector3.ZERO
-			resurrect(combatant.max_health / 2, int(combatant.max_mana / 2.0), false)
+			resurrect(combatant.max_health / 2, int(combatant.max_mana / 2.0) if combatant.has_mana() else 0, false)
 		return
 	_think_left -= delta
 	if _think_left <= 0.0:
@@ -465,7 +465,7 @@ func _needs_rest() -> bool:
 	var c := combatant
 	if c.is_in_combat():
 		return false
-	return c.health < c.max_health * REST_HEALTH or (c.max_mana > 0 and c.mana < c.max_mana * REST_MANA)
+	return c.health < c.max_health * REST_HEALTH or (c.has_mana() and c.mana < c.max_mana * REST_MANA)
 
 
 ## Quest givers with something to hand in or take, then the creatures its
@@ -639,7 +639,7 @@ func _start_rest() -> void:
 	sitting = true
 	_resting = true
 	combatant.add_aura(SpellDB.get_spell(FOOD_SPELL), combatant)
-	if combatant.max_mana > 0:
+	if combatant.has_mana():
 		combatant.add_aura(SpellDB.get_spell(DRINK_SPELL), combatant)
 
 
@@ -648,13 +648,13 @@ func _rest(delta: float) -> void:
 	if not sitting:
 		_resting = false
 		return
-	_rest_carry += Vector2(c.max_health, c.max_mana) * REST_RATE * delta
+	_rest_carry += Vector2(c.max_health, c.max_mana if c.has_mana() else 0) * REST_RATE * delta
 	var health := int(_rest_carry.x)
 	var mana := int(_rest_carry.y)
 	_rest_carry -= Vector2(health, mana)
 	c.health = mini(c.health + health, c.max_health)
 	c.mana = minf(c.mana + mana, c.max_mana)
-	var full_mana := c.max_mana == 0 or c.mana >= c.max_mana * REST_UNTIL
+	var full_mana := not c.has_mana() or c.mana >= c.max_mana * REST_UNTIL
 	if c.health >= c.max_health * REST_UNTIL and full_mana:
 		sitting = false
 		_resting = false
@@ -673,6 +673,8 @@ func _use_spells() -> void:
 			_use_templar_spells()
 		ClassicData.CharClass.PRIEST:
 			_use_cleric_spells()
+		ClassicData.CharClass.WARRIOR:
+			_use_man_at_arms_spells()
 
 
 # Cleric spells: heal the group (a Ward first when someone is in trouble),
@@ -737,6 +739,62 @@ func _lacks(target: Combatant, spell_name: String, anyone := true) -> bool:
 		if aura.spell.SpellName == spell_name and (anyone or aura.caster == combatant):
 			return aura.remaining >= 0.0 and aura.remaining < minf(BOON_REFRESH, aura.duration * 0.25)
 	return true
+
+
+# Man-at-Arms abilities: a stance (Bastion with a shield in a party, else
+# Vanguard), Rallying Cry in a fight, Rush in, then finishers, reactive
+# strikes, Gash, area attacks when crowded, and Mighty Blow with spare rage.
+
+func _use_man_at_arms_spells() -> void:
+	var me := combatant
+	var fighting := me.is_in_combat()
+	var form := spells.current_form()
+	var stance := "Bastion Stance" if in_party and _has_shield_on() and profile.best_rank("Bastion Stance") != 0 else "Vanguard Stance"
+	if form == 0 or (not fighting and SpellDB.stance_form(SpellDB.get_spell(profile.best_rank(stance))) != form):
+		if _try(stance, me):
+			return
+	if fighting and me.health < me.max_health * 0.25 and _try("Final Stand", me):
+		return
+	# Rage only comes in a fight, so the shout does too.
+	if fighting and _lacks(me, "Rallying Cry") and _try("Rallying Cry", me):
+		return
+	if _enemy == null:
+		return
+	var distance := me.distance_to(_enemy)
+	if not fighting and distance >= 8.0 and _try("Rush", _enemy):
+		return
+	if distance > me.melee_range + 1.0:
+		return
+	if fighting and me.mana < 10.0 and me.health > me.max_health * 0.5 and _try("Blood Fury", me):
+		return
+	for name in ["Finishing Blow", "Riposte Strike", "Retort", "Grievous Strike", "Bloodlust Strike", "Shield Crush"]:
+		if _try(name, _enemy):
+			return
+	# Taunt back a creature attacking someone else in the party.
+	if in_party and _enemy.body is Enemy and (_enemy.body as Enemy).current_victim() not in [null, me] and _try("Goad", _enemy):
+		return
+	var crowd := 0
+	for node in _creatures():
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and global_position.distance_to(enemy.global_position) <= 8.0:
+			crowd += 1
+	if crowd >= 2:
+		for name in ["Cyclone Strike", "Ground Slam", "Daunting Roar"]:
+			# Area attacks and shouts center on the bot itself.
+			if (name != "Daunting Roar" or _lacks(_enemy, name, false)) and _try(name, me):
+				return
+	if _enemy.health > _enemy.max_health * 0.5 and _lacks(_enemy, "Gash", false) and _try("Gash", _enemy):
+		return
+	if me.mana >= 30.0 and spells.queued_swing().is_empty():
+		_try("Mighty Blow", _enemy)
+
+
+func _has_shield_on() -> bool:
+	var off: Dictionary = profile.equipment.get(Inventory.Slot.OFF_HAND, {})
+	if off.is_empty():
+		return false
+	var item := ItemDB.get_item(off.id)
+	return int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR and int(item.subclass) == Inventory.ARMOR_SUBCLASS_SHIELD
 
 
 # Templar spells.

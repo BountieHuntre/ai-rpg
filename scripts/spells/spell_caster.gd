@@ -68,6 +68,8 @@ var _cooldowns: Dictionary = {}
 var _item_cooldowns: Dictionary = {}
 ## Combat-driven effects: Oath procs, damage shields, hallowed ground.
 var _procs := SpellProcs.new()
+## The Man-at-Arms' abilities: stances, next-swing attacks, rushing in.
+var _warrior := WarriorAbilities.new()
 
 @onready var _unit: PlayerUnit = get_parent()
 
@@ -78,6 +80,8 @@ func _ready() -> void:
 	combatant.auto_attack_landed.connect(_on_auto_attack_landed)
 	_procs.name = "SpellProcs"
 	add_child(_procs)
+	_warrior.name = "WarriorAbilities"
+	add_child(_warrior)
 	combatant.took_damage.connect(func(amount: int, _source: Combatant, _crit: bool) -> void:
 		if amount > 0:
 			_push_back()
@@ -152,6 +156,16 @@ func mana_cost(spell: Dictionary) -> int:
 	return 0 if cost > 0 and _stillness() else cost
 
 
+## The ability waiting for the next swing (Mighty Blow), or {}: its button glows.
+func queued_swing() -> Dictionary:
+	return _warrior.queued
+
+
+## The Man-at-Arms' stance form (17, 18 or 19), or 0.
+func current_form() -> int:
+	return _warrior.current_form()
+
+
 ## Stillness waiting for the next spell, or {}.
 func _stillness() -> Dictionary:
 	return _unit.combatant.find_aura(func(spell: Dictionary) -> bool: return SpellDB.has_effect(spell, SpellDB.AURA_ADD_PCT_MODIFIER, true))
@@ -167,7 +181,10 @@ func out_of_range(id: int) -> bool:
 	if id == SpellDB.ATTACK or SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY:
 		return false
 	var target := _unit.enemy_target()
-	return target != null and _unit.combatant.distance_to(target) > SpellDB.spell_range(spell)
+	if target == null:
+		return false
+	var distance := _unit.combatant.distance_to(target)
+	return distance > SpellDB.spell_range(spell) or distance < SpellDB.min_range(spell)
 
 
 func _physics_process(delta: float) -> void:
@@ -274,6 +291,10 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 		return ERR_NO_OATH
 	if SpellDB.is_passive(spell):
 		return ERR_PASSIVE
+	# Rage, stances, shields and the moments some abilities wait for.
+	var warrior_problem := _warrior.problem(spell, target)
+	if not warrior_problem.is_empty():
+		return warrior_problem
 	# Shroud of Shadow shuts out Holy spells (Shadowform in classic).
 	if int(spell.get("School", 0)) == SpellDB.School.HOLY and _in_shroud():
 		return ERR_SHAPESHIFTED
@@ -284,7 +305,8 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 			return ERR_NO_TARGET
 		if target.is_alive() or target == me:
 			return ERR_DEAD_TARGET
-	if int(spell.Effect1) == SpellDB.EFFECT_DISPEL and not _has_dispellable(spell, target):
+	# (Shield Crush strikes whether or not there's anything to strip.)
+	if int(spell.Effect1) == SpellDB.EFFECT_DISPEL and not SpellDB.has_effect(spell, SpellDB.EFFECT_SCHOOL_DAMAGE) and not _has_dispellable(spell, target):
 		return ERR_NOTHING_TO_DISPEL
 	# Sanctified Ward leaves a Spent Soul that keeps another off for a while.
 	if spell.SpellName == "Sanctified Ward" and target and not target.find_aura(func(other: Dictionary) -> bool: return int(other.Id) == SpellDB.WEAKENED_SOUL).is_empty():
@@ -365,6 +387,9 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 func _finish(spell: Dictionary, target: Combatant) -> void:
 	var me := _unit.combatant
+	# Mighty Blow and Sweeping Cut wait for the next swing, paying then.
+	if _warrior.queue(spell):
+		return
 	# Stillness is used up by the next spell that costs mana.
 	var stillness := _stillness()
 	var uses_stillness := not stillness.is_empty() and SpellDB.mana_cost(spell, 1) > 0
@@ -377,7 +402,8 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
-	_cleric_spell(spell, target, extra_crit)
+	if not _warrior.cast(spell, target):
+		_cleric_spell(spell, target, extra_crit)
 	if uses_stillness:
 		me.remove_aura(int(stillness.spell.Id))
 
@@ -798,13 +824,13 @@ static func learn(ids: Array) -> Array[String]:
 			if GameState.action_bar[i] != 0 and SpellDB.get_spell(GameState.action_bar[i]).get("SpellName") == spell.SpellName:
 				on_bar_already = true
 		# A spell new to the player goes in the first empty slot, if there is
-		# one. Passives stay off the bar and Presences have the stance bar.
+		# one. Passives stay off the bar; Presences and stances have the stance bar.
 		var empty := -1
 		for slot in GameState.shown_slots():
 			if GameState.action_bar[slot] == 0:
 				empty = slot
 				break
-		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_paladin_aura(spell):
+		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_stance_bar_spell(spell):
 			GameState.action_bar[empty] = id
 		learned.append(SpellDB.full_name(spell))
 		# Plate Mail teaches wearing plate.

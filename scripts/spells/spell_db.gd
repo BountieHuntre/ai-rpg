@@ -30,6 +30,12 @@ const EFFECT_RESURRECT := 113
 ## Aura types (EffectApplyAuraName) used here.
 const AURA_PERIODIC_DAMAGE := 3
 const AURA_DUMMY := 4
+const AURA_MOD_THREAT := 10
+const AURA_MOD_TAUNT := 11
+const AURA_MOD_INCREASE_HEALTH := 34
+const AURA_MOD_CRIT_PERCENT := 52
+const AURA_MOD_DISARM := 67
+const AURA_MOD_RESISTANCE_PCT := 101
 const AURA_MOD_FEAR := 7
 const AURA_PERIODIC_HEAL := 8
 const AURA_MOD_DAMAGE_DONE := 13
@@ -72,12 +78,27 @@ const AURA_MOD_POWER_REGEN := 85
 ## AuraInterruptFlags: the aura ends when the unit stands up.
 const AURA_INTERRUPT_NOT_SEATED := 0x80
 const EFFECT_DISPEL := 38
+## Melee abilities: weapon damage plus a bonus (Mighty Blow), the same with
+## the weapon speed normalized (Riposte Strike), a charge, a taunt, an
+## interrupt and a triggered spell.
+const EFFECT_WEAPON_DAMAGE_NOSCHOOL := 17
+const EFFECT_NORMALIZED_WEAPON_DMG := 121
+const EFFECT_CHARGE := 96
+const EFFECT_ATTACK_ME := 114
+const EFFECT_INTERRUPT_CAST := 68
+const EFFECT_TRIGGER_SPELL := 64
+## Spell power types: mana, rage, and health (Blood Fury costs health).
+const POWER_MANA := 0
+const POWER_RAGE := 1
+const POWER_HEALTH := 4294967294
 const EFFECT_POWER_BURN := 62
 ## AuraInterruptFlags: the aura ends when the unit takes damage.
 const AURA_INTERRUPT_DAMAGE := 0x2
 const EFFECT_HEAL_MAX_HEALTH := 67
 ## Attributes / AttributesEx flags.
 const ATTR_PASSIVE := 0x40
+## Mighty Blow and Sweeping Cut wait for the next melee swing.
+const ATTR_ON_NEXT_SWING := 0x4
 const ATTR_CANT_USE_IN_COMBAT := 0x10000000
 const ATTR_EX_DRAIN_ALL_POWER := 0x2
 ## Channeled spells: the caster holds still while the effect lasts.
@@ -110,15 +131,19 @@ const AURA_MOD_SHAPESHIFT := 36
 ## Cast times and durations in seconds, ranges and radii in yards.
 ## Cleric spells add 14 (3 s: Mending), 19 (2.5 s: Chastise), 22 (3.5 s:
 ## Sacred Flame), and durations 3 (1 min), 4 (2 min), 6 (10 min), 42 (1 hour),
-## 64 (40 s: Bind the Dead rank 2) and 106 (24 s: Ravening Blight).
+## 64 (40 s: Bind the Dead rank 2) and 106 (24 s: Ravening Blight). The
+## Man-at-Arms adds durations 36 (1 s: Rush Stun), 105 (9 s: Gash rank 1) and
+## 305, 467, 468 (14, 22 and 26 s: Ground Slam), and range 95 (8 to 25 yards).
 const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 14: 3.0, 16: 1.5, 19: 2.5, 20: 2.5, 22: 3.5 }
 ## -1 means until cancelled.
 const DURATIONS := {
-	0: 0.0, 1: 10.0, 3: 60.0, 4: 120.0, 5: 300.0, 6: 600.0, 8: 15.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
+	0: 0.0, 1: 10.0, 3: 60.0, 4: 120.0, 5: 300.0, 6: 600.0, 8: 15.0, 36: 1.0, 105: 9.0, 305: 14.0, 467: 22.0, 468: 26.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
 	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 42: 3600.0, 64: 40.0, 85: 18.0,
 	86: 21.0, 106: 24.0, 347: 900.0,
 }
-const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 13: 50000.0 }
+const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 13: 50000.0, 95: 25.0 }
+## Least ranges: Rush needs room to run.
+const MIN_RANGES := { 95: 8.0 }
 const RADII := { 0: 0.0, 7: 2.0, 9: 20.0, 10: 30.0, 12: 100.0, 13: 10.0, 14: 8.0 }
 
 static var _data: Dictionary
@@ -167,8 +192,37 @@ static func spell_range(spell: Dictionary) -> float:
 	return RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
 
 
+static func min_range(spell: Dictionary) -> float:
+	return MIN_RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+
+
+## Whether a spell costs rage (its ManaCost is in tenths of a rage point).
+static func uses_rage(spell: Dictionary) -> bool:
+	return int(spell.get("PowerType", POWER_MANA)) == POWER_RAGE
+
+
+## The stance (shapeshift form) a spell puts you in, or 0: 17 Vanguard, 18
+## Bastion, 19 Fury, 28 Shroud of Shadow.
+static func stance_form(spell: Dictionary) -> int:
+	for i in 3:
+		if int(spell.get("EffectApplyAuraName%d" % (i + 1), 0)) == AURA_MOD_SHAPESHIFT:
+			return int(spell.get("EffectMiscValue%d" % (i + 1), 0))
+	return 0
+
+
+## Spells on the stance bar: Presences, stances and forms.
+static func is_stance_bar_spell(spell: Dictionary) -> bool:
+	return is_paladin_aura(spell) or stance_form(spell) != 0
+
+
 ## Mana cost, either flat or a percentage of the caster's base mana.
+## Rage costs come out in whole rage points; health costs (Blood Fury) aren't
+## a power cost and come out as 0.
 static func mana_cost(spell: Dictionary, base_mana: int) -> int:
+	if int(spell.get("PowerType", POWER_MANA)) == POWER_HEALTH:
+		return 0
+	if uses_rage(spell):
+		return int(spell.get("ManaCost", 0)) / 10
 	var percent := int(spell.get("ManaCostPercentage", 0))
 	if percent > 0:
 		return base_mana * percent / 100
@@ -266,6 +320,8 @@ static func persists_through_death(spell: Dictionary) -> bool:
 		is_paladin_aura(spell)
 		or has_attribute_ex3(spell, ATTR_EX3_DEATH_PERSISTENT)
 		or int(spell.get("EffectApplyAuraName1", 0)) == AURA_MOD_SHAPESHIFT
+		# A stance's passive stays with it.
+		or str(spell.get("SpellName", "")).ends_with("Stance Passive")
 	)
 
 
@@ -288,6 +344,7 @@ static func start_spells(race: int, char_class: int) -> Array:
 
 ## The class each trainer list teaches (code keeps classic's class names).
 const TRAINER_CLASSES := {
+	"warrior": ClassicData.CharClass.WARRIOR,
 	"paladin": ClassicData.CharClass.PALADIN,
 	"priest": ClassicData.CharClass.PRIEST,
 }

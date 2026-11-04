@@ -238,7 +238,8 @@ func _cmd_level(args: PackedStringArray) -> String:
 	GameState.xp = 0
 	_player.stats.refresh()
 	_player.combatant.health = _player.combatant.max_health
-	_player.combatant.mana = _player.combatant.max_mana
+	if _player.combatant.has_mana():
+		_player.combatant.mana = _player.combatant.max_mana
 	_player.progression.leveled_up.emit(level)
 	return "You are now level %d." % level
 

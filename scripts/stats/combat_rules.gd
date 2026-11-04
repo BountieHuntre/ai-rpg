@@ -25,7 +25,7 @@ static func armor_reduction(armor: int, attacker_level: int) -> float:
 
 
 static func reduce_by_armor(damage: float, victim: Combatant, attacker: Combatant) -> float:
-	return maxf(damage * (1.0 - armor_reduction(victim.armor, attacker.level)), 1.0)
+	return maxf(damage * (1.0 - armor_reduction(int(victim.effective_armor()), attacker.level)), 1.0)
 
 
 ## White melee swing: one roll over miss, dodge, parry, block, glance, crit,
@@ -76,6 +76,9 @@ static func roll_heal(caster: Combatant, extra_crit := 0.0) -> Outcome:
 	return Outcome.CRIT if _chance(caster.spell_crit + extra_crit) else Outcome.HIT
 
 
+const DUAL_WIELD_MISS := 19.0
+
+
 static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -> float:
 	var chance := BASE_MELEE_MISS
 	var difference := victim.defense_skill() - attacker.weapon_skill()
@@ -89,6 +92,9 @@ static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -
 		else:
 			factor = 0.1
 	chance += difference * factor
+	# Swinging two weapons misses 19% more often with white swings.
+	if not ability and attacker.off_swing_interval > 0.0:
+		chance += DUAL_WIELD_MISS
 	var minimum := 1.0 if difference > 10 else 0.0
 	return clampf(chance, minimum, 100.0)
 

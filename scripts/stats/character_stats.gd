@@ -18,6 +18,8 @@ const SITTING_REGEN := 1.5
 const FOOD_DRINK_PERIOD := 5.0
 ## The Parry passive, trained at level 8 by Paladins.
 const PARRY_SPELL := 3127
+## Rage lost each tick out of combat.
+const RAGE_DECAY := 3.0
 
 var race: ClassicData.Race:
 	get:
@@ -74,9 +76,17 @@ func refresh() -> void:
 
 	var c := _combatant
 	c.level = level
-	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina) + gear.health
+	# Final Stand adds health for a while (SPELL_AURA_MOD_INCREASE_HEALTH).
+	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina) + gear.health \
+		+ int(c.aura_total(SpellDB.AURA_MOD_INCREASE_HEALTH))
 	var base_mana := ClassicData.base_mana(char_class, level)
 	c.max_mana = base_mana + mana_from_intellect(intellect) + gear.mana if base_mana > 0 else 0
+	# The Man-at-Arms fights on rage instead of mana.
+	if char_class == ClassicData.CharClass.WARRIOR:
+		if c.power_type != SpellDB.POWER_RAGE:
+			c.power_type = SpellDB.POWER_RAGE
+			c.mana = 0.0
+		c.max_mana = Combatant.MAX_RAGE
 	# Devotion Aura adds armor (resistance aura on the physical school).
 	c.armor = gear.armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
 	# Blessing of Might and Seal of the Crusader add attack power.
@@ -90,8 +100,15 @@ func refresh() -> void:
 	c.swing_interval = gear.weapon.speed / (1.0 + haste / 100.0)
 	# Melee haste auras: Hallowed Aegis slows attacks (-100% doubles the swing time).
 	var melee_haste := c.aura_total(SpellDB.AURA_MOD_MELEE_HASTE)
-	c.swing_interval *= 1.0 / (1.0 + melee_haste / 100.0) if melee_haste >= 0.0 else 1.0 - melee_haste / 100.0
-	c.melee_crit = agility / _agility_rate(char_class, level, true)
+	var haste_factor := 1.0 / (1.0 + melee_haste / 100.0) if melee_haste >= 0.0 else 1.0 - melee_haste / 100.0
+	c.swing_interval *= haste_factor
+	# A weapon in the off hand (Two-Weapon Fighting) swings on its own.
+	var off: Dictionary = gear.get("off_weapon", {})
+	c.off_min_damage = float(off.get("min", 0.0))
+	c.off_max_damage = float(off.get("max", 0.0))
+	c.off_swing_interval = float(off.get("speed", 0.0)) / (1.0 + haste / 100.0) * haste_factor
+	# Fury Stance and Abandon add crit (SPELL_AURA_MOD_CRIT_PERCENT).
+	c.melee_crit = agility / _agility_rate(char_class, level, true) + c.aura_total(SpellDB.AURA_MOD_CRIT_PERCENT)
 	# Moon's Grace adds dodge.
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false) + c.aura_total(SpellDB.AURA_MOD_DODGE_PERCENT)
 	# Parry has to be trained, and players need a melee weapon to parry.
@@ -104,7 +121,7 @@ func refresh() -> void:
 		c.block += c.aura_total(SpellDB.AURA_MOD_BLOCK_PERCENT)
 	c.block_value = maxi(gear.block + strength / 20 - 1, 0) if gear.has_shield else 0
 	c.spell_crit = spell_crit_from_intellect(char_class, level, intellect)
-	mana_per_tick = mana_regen_per_tick(char_class, spirit)
+	mana_per_tick = 0.0 if c.uses_rage() else mana_regen_per_tick(char_class, spirit)
 	health_per_tick = health_regen_per_tick(char_class, spirit)
 	c.health = mini(c.health, c.max_health)
 	c.mana = minf(c.mana, c.max_mana)
@@ -128,6 +145,11 @@ func _physics_process(delta: float) -> void:
 		var gained := int(_health_carry)
 		_health_carry -= gained
 		c.health = mini(c.health + gained, c.max_health)
+	# Rage fades out of combat: 3 a tick (Player::Regenerate in CMaNGOS classic).
+	if c.uses_rage():
+		if not c.is_in_combat():
+			c.mana = maxf(c.mana - RAGE_DECAY, 0.0)
+		return
 	c.mana = minf(c.mana + current_mana_per_tick() + drink_per_tick(), c.max_mana)
 
 

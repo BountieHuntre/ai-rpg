@@ -271,6 +271,10 @@ func _pick_victim() -> Combatant:
 		_victim = null
 	if threat.is_empty():
 		return null
+	# A taunt holds it on the taunter while it lasts.
+	var taunter := combatant.taunted_by()
+	if taunter and threat.has(taunter):
+		return taunter
 	var best: Combatant = null
 	for unit: Combatant in threat:
 		if best == null or _threat_of(unit) > _threat_of(best):
@@ -282,10 +286,27 @@ func _pick_victim() -> Combatant:
 	return best
 
 
+## Goad: the taunter's threat rises to the top of the list (Spell::EffectTaunt),
+## and it attacks them.
+func taunt(unit: Combatant) -> void:
+	_on_attacked(unit, 0)
+	var top := 0.0
+	for other: Combatant in threat:
+		if is_instance_valid(other):
+			top = maxf(top, threat[other])
+	threat[unit] = maxf(threat.get(unit, 0.0), top)
+	_victim = unit
+
+
 ## Threat on a unit, less what Veil of Humility hides for as long as it lasts
 ## (SPELL_AURA_MOD_TOTAL_THREAT).
 func _threat_of(unit: Combatant) -> float:
 	return threat[unit] + unit.aura_total(SpellDB.AURA_MOD_TOTAL_THREAT)
+
+
+## Who it's fighting now, or null.
+func current_victim() -> Combatant:
+	return _victim if is_instance_valid(_victim) else null
 
 
 ## A player unit left the world (a playerbot removed): off the threat list.
@@ -307,7 +328,7 @@ static func add_heal_threat(healed: Combatant, healer: Combatant, amount: int) -
 		if enemy.state == State.CHASE and enemy.threat.has(healed):
 			fighting.append(enemy)
 	for enemy in fighting:
-		enemy.add_threat(healer, amount * HEAL_THREAT / fighting.size())
+		enemy.add_threat(healer, amount * HEAL_THREAT * healer.threat_multiplier() / fighting.size())
 
 
 ## Whether someone outside the player's group tapped it: grey to the player.
@@ -332,7 +353,8 @@ func _on_attacked(source: Combatant, damage: int) -> void:
 		return
 	if tapped_by == null or not is_instance_valid(tapped_by):
 		tapped_by = source
-	add_threat(source, float(damage))
+	# Stances change how much threat damage causes.
+	add_threat(source, float(damage) * source.threat_multiplier())
 	if state == State.IDLE:
 		_start_chase()
 

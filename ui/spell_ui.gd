@@ -239,8 +239,9 @@ func _update_slot_state(i: int) -> void:
 	# Follows the key bindings. Classic shows it red when the target is out of range.
 	key.text = Settings.key_label(GameState.slot_action(i))
 	key.add_theme_color_override("font_color", Color(1, 0.2, 0.2) if id != 0 and caster.out_of_range(id) else Color(0.9, 0.9, 0.9))
-	# Attack glows while auto-attacking.
-	box.modulate = Color(1.4, 1.2, 0.7) if id == SpellDB.ATTACK and _player.combatant.attack_target else Color.WHITE
+	# Attack glows while auto-attacking, Mighty Blow while it waits for the swing.
+	var glowing := (id == SpellDB.ATTACK and _player.combatant.attack_target) or (id != 0 and int(caster.queued_swing().get("Id", 0)) == id)
+	box.modulate = Color(1.4, 1.2, 0.7) if glowing else Color.WHITE
 
 
 func _on_bar_input(event: InputEvent, i: int) -> void:
@@ -306,13 +307,14 @@ func _set_held(id: int) -> void:
 
 # Stance bar.
 
-## Spells that live on the stance bar instead of the action bar: Paladin auras
-## (and later, other classes' stances). Only the highest known rank of each.
+## Spells that live on the stance bar instead of the action bar: Templar
+## Presences, Man-at-Arms stances and Shroud of Shadow. Only the highest known
+## rank of each.
 func stance_spells() -> Array[int]:
 	var best := {}
 	for id: int in GameState.known_spells:
 		var spell := SpellDB.get_spell(id)
-		if id == SpellDB.ATTACK or not SpellDB.is_paladin_aura(spell):
+		if id == SpellDB.ATTACK or not SpellDB.is_stance_bar_spell(spell):
 			continue
 		var name: String = spell.SpellName
 		if not best.has(name) or int(spell.SpellLevel) > int(SpellDB.get_spell(best[name]).SpellLevel):
@@ -435,6 +437,10 @@ func _draw_buffs() -> void:
 	var i := 0
 	for aura in _player.combatant.auras:
 		var spell: Dictionary = aura.spell
+		# Stances live on the stance bar, and their passive parts aren't buffs of
+		# their own (classic shows neither).
+		if str(spell.SpellName).ends_with("Stance Passive") or SpellDB.stance_form(spell) in WarriorAbilities.STANCES:
+			continue
 		var icon := ColorRect.new()
 		icon.position = Vector2(right - (i + 1) * (BUFF + 3), corner.y) * _ui_scale
 		icon.size = Vector2.ONE * BUFF * _ui_scale
@@ -501,7 +507,8 @@ func spell_tooltip(id: int) -> Array:
 	var cost := _player.spells.mana_cost(spell)
 	var reach := SpellDB.spell_range(spell)
 	var range_text := "" if reach <= 0.0 or reach >= 50000.0 else "%d yd range" % reach
-	lines.append(["%d Mana" % cost if cost > 0 else "", range_text, Color.WHITE])
+	var cost_text := ("%d Rage" if SpellDB.uses_rage(spell) else "%d Mana") % cost
+	lines.append([cost_text if cost > 0 else "", range_text, Color.WHITE])
 	var time := SpellDB.cast_time(spell)
 	var cooldown := SpellDB.cooldown(spell)
 	lines.append(["Instant" if time <= 0.0 else "%s sec cast" % _number(time), "%s cooldown" % _long_time(cooldown) if cooldown > 0.0 else "", Color.WHITE])

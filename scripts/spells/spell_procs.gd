@@ -18,6 +18,8 @@ var _combatant: Combatant
 var _proc_ready_at: Dictionary = {}
 ## Hallowed ground: [{ spell, center, radius, amount, period, left, tick, mesh }].
 var _grounds: Array[Dictionary] = []
+## Set while Wide Swings carries a hit on, so that hit doesn't carry on again.
+var _sweeping := false
 
 
 func _ready() -> void:
@@ -120,10 +122,34 @@ func _on_hit_taken(attacker: Combatant) -> void:
 		var struck_back := not strike.is_empty() and SpellDB.has_effect(spell, SpellDB.AURA_PROC_TRIGGER_SPELL, true)
 		if struck_back and attacker.is_alive():
 			_strike_back(strike, attacker)
+		# Reprisal answers each blow from in front with a weapon strike.
+		if spell.SpellName == "Reprisal" and attacker.is_alive() and _combatant.faces(attacker):
+			_combatant.strike(attacker, _combatant.roll_weapon_damage())
 		if aura.has("charges") and (struck_back or int(spell.get("ProcFlags", 0)) & PROC_TAKEN_MELEE_HIT):
 			aura.charges -= 1
 			if aura.charges <= 0:
 				_combatant.remove_aura(int(spell.Id))
+
+
+## Wide Swings: each of its charges carries a physical hit on to another enemy
+## beside you, for the same damage.
+func _sweep(target: Combatant, amount: int) -> void:
+	if _sweeping:
+		return
+	var aura := _combatant.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == "Wide Swings")
+	if aura.is_empty():
+		return
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		var other := enemy.combatant
+		if other != target and other.is_alive() and enemy.state != Enemy.State.RETURN and _combatant.distance_to(other) <= _combatant.melee_range + 1.0:
+			_sweeping = true
+			other.take_damage(amount, _combatant)
+			_sweeping = false
+			aura.charges = int(aura.get("charges", 1)) - 1
+			if aura.charges <= 0:
+				_combatant.remove_aura(int(aura.spell.Id))
+			return
 
 
 ## ProcFlags: struck by a melee swing (Inner Flame's charges).
@@ -142,6 +168,8 @@ func _strike_back(strike: Dictionary, attacker: Combatant) -> void:
 ## Leeching Embrace: Shadow damage to its target heals the caster's group for
 ## a fifth of it.
 func _on_damage_done(target: Combatant, amount: int, school: int) -> void:
+	if school == SpellDB.School.PHYSICAL:
+		_sweep(target, amount)
 	if school != SpellDB.School.SHADOW:
 		return
 	var embrace := target.find_aura(func(spell: Dictionary) -> bool: return spell.SpellName == "Leeching Embrace")

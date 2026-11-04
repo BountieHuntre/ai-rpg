@@ -17,6 +17,16 @@ const CLASS_NAMES := {
 	CharClass.ROGUE: "Cutpurse", CharClass.PRIEST: "Cleric", CharClass.SHAMAN: "Seer",
 	CharClass.MAGE: "Magus", CharClass.WARLOCK: "Hexer", CharClass.DRUID: "Wildwarden",
 }
+
+
+## A class's name for many of them: Men-at-Arms, Magi, Templars.
+static func class_plural(char_class: int) -> String:
+	match char_class:
+		CharClass.WARRIOR:
+			return "Men-at-Arms"
+		CharClass.MAGE:
+			return "Magi"
+	return CLASS_NAMES.get(char_class, "") + "s"
 const RACE_NAMES := {
 	Race.HUMAN: "Human", Race.ORC: "Orc", Race.DWARF: "Dwarf", Race.NIGHT_ELF: "Wood Elf",
 	Race.UNDEAD: "Undead", Race.TAUREN: "Hornkin", Race.GNOME: "Gnome", Race.TROLL: "Troll",

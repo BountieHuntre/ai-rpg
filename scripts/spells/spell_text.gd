@@ -31,6 +31,9 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 	var cleric := _cleric(name, spell, t)
 	if not cleric.is_empty():
 		return cleric
+	var man_at_arms := _man_at_arms(name, spell, t)
+	if not man_at_arms.is_empty():
+		return man_at_arms
 	match name:
 		"Attack":
 			return "Toggles melee attack on your target."
@@ -263,6 +266,95 @@ static func _cleric(name: String, spell: Dictionary, t: _Values) -> String:
 		"Font of Light":
 			return "Raises a font of light that party members can use to heal. (Not in the game yet.)"
 	return ""
+
+
+## Man-at-Arms abilities, or "" for other names.
+static func _man_at_arms(name: String, spell: Dictionary, t: _Values) -> String:
+	var lasts := t.duration()
+	match name:
+		"Vanguard Stance":
+			return "A balanced fighting stance that draws less threat. Changing stance loses your rage."
+		"Bastion Stance":
+			return "A guarded stance: you take 10% less damage and deal 10% less, and draw 30% more threat. Changing stance loses your rage."
+		"Fury Stance":
+			return "A reckless stance: 3% more chance to crit, but you take 10% more damage and draw less threat. Changing stance loses your rage."
+		"Mighty Blow":
+			return "Your next melee swing deals %s more damage." % t.amount(0)
+		"Sweeping Cut":
+			return "Your next melee swing hits the target and an enemy beside it, each for weapon damage plus %s." % t.amount(0)
+		"Heavy Swing":
+			return "Winds up a heavy swing for weapon damage plus %s." % t.amount(0)
+		"Riposte Strike":
+			return "Usable for 5 sec after the target dodges: strikes for weapon damage plus %s. Can't be dodged, parried or blocked." % t.amount(0)
+		"Retort":
+			return "Usable for 5 sec after you block, dodge or parry: strikes back for %s damage." % t.amount(0)
+		"Finishing Blow":
+			return "Finishes off an enemy below 20%% health for %s damage, plus %s for each point of rage left after the cost. Uses all your rage." % [t.amount(0), _number(float(spell.get("DmgMultiplier1", 0.3)) * 10.0)]
+		"Grievous Strike":
+			return "A grievous strike for weapon damage plus %s. The target receives 50%% less healing for %s." % [t.amount(1), lasts]
+		"Bloodlust Strike":
+			return "Strikes for damage equal to %s%% of your attack power." % t.amount(0)
+		"Shield Crush":
+			return "Smashes an enemy with your shield for %s damage, and strips a magic effect from it." % t.amount(1)
+		"Cyclone Strike":
+			return "Spins, striking up to %d enemies within 8 yards with your weapon." % WarriorAbilities.MAX_AREA_TARGETS
+		"Ground Slam":
+			return "Slams the ground, dealing %s damage to up to %d enemies within 8 yards and slowing their attacks by %s%% for %s." % [t.amount(0), WarriorAbilities.MAX_AREA_TARGETS, t.magnitude(1), lasts]
+		"Gash":
+			return "Wounds an enemy for %s damage over %s." % [t.over_time(0), lasts]
+		"Hobble":
+			return "Strikes an enemy for %s damage and slows its movement by %s%% for %s." % [t.amount(0), t.magnitude(1), lasts]
+		"Rend Armor":
+			return "Lowers an enemy's armor by %s for %s. Stacks up to %d times." % [t.magnitude(0), lasts, int(spell.get("StackAmount", 1))]
+		"Wrest Weapon":
+			return "Wrests the weapon from an enemy for %s, halving its melee damage." % lasts
+		"Shield Smash", "Hilt Strike":
+			return "Strikes an enemy for %s damage and interrupts its spellcasting." % t.amount(1 if name == "Shield Smash" else 0)
+		"Stunning Blow":
+			return "Stuns an enemy for %s." % lasts
+		"Taunting Blow":
+			return "A taunting strike for %s damage that makes the enemy attack you for %s." % [t.amount(0), lasts]
+		"Goad":
+			return "Goads an enemy into attacking you for %s, putting you at the top of its threat." % lasts
+		"Daring Roar":
+			return "Dares every enemy within 10 yards to attack you for %s." % lasts
+		"Rush":
+			return "Rushes an enemy 8 to 25 yards away, stunning it for 1 sec and gaining %d rage. Can't be used in combat." % roundi(t.low(1) / 10.0)
+		"Cut Off":
+			return "Rushes an enemy 8 to 25 yards away even in combat, stunning it for 3 sec."
+		"Rallying Cry":
+			return "Raises the attack power of party members within 20 yards by %s for %s." % [t.amount(0), lasts]
+		"Daunting Roar":
+			return "Lowers the attack power of enemies within 10 yards by %s for %s." % [t.magnitude(0), lasts]
+		"Crippling Howl":
+			return "Slows every enemy within 10 yards by %s%% for %s." % [t.magnitude(0), lasts]
+		"Cowing Roar":
+			return "Your target cowers in place, and up to %d enemies nearby flee in fear, for %s." % [WarriorAbilities.MAX_FEAR_TARGETS, lasts]
+		"Blood Fury":
+			return "Gains %d rage at the cost of some health, then 10 more over 10 sec." % roundi(t.low(0) / 10.0)
+		"Shield Brace":
+			return "Raises your chance to block by %s%% for %s or one block." % [t.amount(0), lasts]
+		"Wall of Steel":
+			return "Reduces all damage you take by %s%% for %s." % [t.magnitude(0), lasts]
+		"Reprisal":
+			return "For %s, strikes back at each melee attack from in front of you, up to %d times." % [lasts, int(spell.get("ProcCharges", 0))]
+		"Unbridled Rage":
+			return "You can't be frightened for %s." % lasts
+		"Abandon":
+			return "For %s your attacks are far more likely to crit, but you take %s%% more damage. You can't be frightened." % [lasts, t.amount(1)]
+		"Death Craving":
+			return "For %s your physical damage rises by %s%% and you can't be frightened, but your armor falls by %s%%." % [lasts, t.amount(0), t.magnitude(2)]
+		"Final Stand":
+			return "Raises your maximum health by %d%% for 20 sec." % roundi(WarriorAbilities.FINAL_STAND_SHARE * 100.0)
+		"Wide Swings":
+			return "Your next %d melee hits also strike another enemy beside you." % int(spell.get("ProcCharges", 0))
+		"Two-Weapon Fighting":
+			return "Lets you fight with a one-handed weapon in each hand. The off hand hits for half damage."
+	return ""
+
+
+static func _number(value: float) -> String:
+	return str(int(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value
 
 
 ## For spells with no written description: what their effects do.

@@ -39,13 +39,16 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
 # (race id: trainer): Brother Joshua (Human), Maxan Anvol (Dwarf), Astarii
 # Starseeker (Night Elf), Father Cobb (Undead) and Tai'jin (Troll). Entries that
 # not every one of them teaches get a "races" list.
-CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}}
+# 913 is Lyria Du Lac, Warrior Trainer.
+CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913}
 # Classes whose starting spells are exported: the ones with spell code in the game.
-SPELL_CLASSES = {2, 5}  # Paladin, Priest
+SPELL_CLASSES = {1, 2, 5}  # Warrior, Paladin, Priest
 # Each class's SpellFamilyName: start spells of other families (racials) are left out.
-CLASS_SPELL_FAMILIES = {2: 10, 5: 6}
+CLASS_SPELL_FAMILIES = {1: 4, 2: 10, 5: 6}
+# Junk trainer rows: Lyria Du Lac lists Elemental Fury, a creature spell.
+SKIP_TRAINER_SPELLS = {877}
 # Starting spells worth keeping (the rest are passives and internals).
-START_SPELL_EFFECTS = {2, 6, 10, 35, 77}
+START_SPELL_EFFECTS = {2, 6, 10, 17, 35, 77}
 # Seal of Righteousness procs by rank, from UnitAuraProcHandler.cpp in CMaNGOS.
 SEAL_OF_RIGHTEOUSNESS_PROCS = {
     20154: 25742, 21084: 25741, 20287: 25740, 20288: 25739, 20289: 25738,
@@ -63,7 +66,14 @@ TALENT_FIRST_RANKS = {
     "paladin": [[20375, 20], [26573, 20], [20217, 20], [20911, 30], [20473, 40], [20925, 40]],
     "priest": [[14751, 20], [15237, 20], [15407, 20], [14752, 30], [15487, 30], [15286, 30],
                [10060, 40], [15473, 40], [724, 40]],
+    # Warrior: Last Stand, Piercing Howl, Sweeping Strikes, Concussion Blow,
+    # Death Wish, Mortal Strike, Bloodthirst and Shield Slam.
+    "warrior": [[12975, 20], [12323, 20], [12292, 30], [12809, 30], [12328, 30],
+                [12294, 40], [23881, 40], [23922, 40]],
 }
+# Spells classic gives from a class quest, sold free at their level: Defensive
+# Stance and Taunt at 10, Berserker Stance at 30.
+QUEST_SPELLS = {"warrior": [[71, 10], [355, 10], [2458, 30]]}
 # First ranks of priest racial spells, which classic gives from a quest: sold
 # free at the spell's level to the races that have them. Desperate Prayer
 # (Human, Dwarf), Feedback (Human), Fear Ward (Dwarf), Starshards and Elune's
@@ -81,6 +91,9 @@ SPELL_LINKS = {
     2652: 2943, 19261: 19249, 19262: 19251, 19264: 19252, 19265: 19253, 19266: 19254,
     18137: 28377, 19308: 28378, 19309: 28379, 19310: 28380, 19311: 28381, 19312: 28382,
     15286: 15290,
+    # Warrior: each stance's passive (threat, damage taken and done, crit),
+    # Retaliation's strike and Last Stand's health.
+    2457: 21156, 71: 7376, 2458: 7381, 20230: 22858, 12975: 12976,
 }
 WEAKENED_SOUL = 6788
 # Judgement of Light and Wisdom heal or restore through a spell per rank, picked
@@ -110,8 +123,8 @@ SPELL_FIELDS = [
     "Effect", "EffectDieSides", "EffectBaseDice", "EffectDicePerLevel", "EffectRealPointsPerLevel",
     "EffectBasePoints", "EffectMechanic", "EffectImplicitTargetA", "EffectImplicitTargetB",
     "EffectRadiusIndex", "EffectApplyAuraName", "EffectAmplitude", "EffectMiscValue",
-    "EffectTriggerSpell", "EffectMultipleValue",
-)] + ["TargetCreatureType"]
+    "EffectTriggerSpell", "EffectMultipleValue", "DmgMultiplier",
+)] + ["TargetCreatureType", "Stances"]
 SPELL_EFFECT_LEARN = 36
 SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
@@ -377,7 +390,7 @@ def export_spells(db, item_spells):
                 continue
             learned = taught_by(r["spell"])
             # Skip junk rows that point at unrelated, retired spells.
-            if any(spells[str(s)]["SpellName"].startswith("zzOLD") for s in learned):
+            if any(spells[str(s)]["SpellName"].startswith("zzOLD") or s in SKIP_TRAINER_SPELLS for s in learned):
                 continue
             entries[int(r["spell"])] = {"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]),
                                         "level": int(r["reqlevel"])}
@@ -400,6 +413,9 @@ def export_spells(db, item_spells):
             wanted.update(entry["spells"])
         for spell_id, level in TALENT_FIRST_RANKS.get(name, []):
             entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "talent": True})
+            wanted.add(spell_id)
+        for spell_id, level in QUEST_SPELLS.get(name, []):
+            entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "quest": True})
             wanted.add(spell_id)
         for spell_id, races in RACIAL_FIRST_RANKS.get(name, []):
             level = int(spells[str(spell_id)]["SpellLevel"])

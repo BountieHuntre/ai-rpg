@@ -235,8 +235,12 @@ func _start_spells() -> void:
 	action_bar.clear()
 	action_bar.resize(ALL_SLOTS)
 	action_bar.fill(0)
-	for i in known_spells.size():
-		action_bar[i] = known_spells[i]
+	# Stances have the stance bar.
+	var slot := 0
+	for id in known_spells:
+		if not SpellDB.is_stance_bar_spell(SpellDB.get_spell(id)):
+			action_bar[slot] = id
+			slot += 1
 
 
 func add_item(id: int, count: int, bound := false) -> int:

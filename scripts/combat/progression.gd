@@ -38,7 +38,8 @@ func add_xp(amount: int) -> void:
 		_profile.level += 1
 		_stats.refresh()
 		_combatant.health = _combatant.max_health
-		_combatant.mana = _combatant.max_mana
+		if _combatant.has_mana():
+			_combatant.mana = _combatant.max_mana
 		leveled_up.emit(level)
 	if level >= mini(level_cap, ClassicData.MAX_LEVEL):
 		_profile.xp = 0

@@ -231,6 +231,7 @@ func _process(delta: float) -> void:
 	var me := _player.combatant
 	_set_bar(_player_health, me.health, me.max_health)
 	_player_health_text.text = "%d/%d" % [me.health, me.max_health]
+	(_player_mana as ColorRect).color = power_color(me)
 	_set_bar(_player_mana, me.mana, me.max_mana)
 	_player_mana_text.text = "%d/%d" % [int(me.mana), me.max_mana]
 	_player_level.text = "Lv %d" % me.level
@@ -517,6 +518,11 @@ func _build_target_frame() -> void:
 	_target_mana_text = _bar_text(_target_frame, Vector2(3, 23), Vector2(84, 9))
 
 
+## Mana bars are blue, rage bars red (classic's power colors).
+static func power_color(c: Combatant) -> Color:
+	return Color(0.8, 0.15, 0.15) if c.uses_rage() else Color(0.2, 0.4, 0.85)
+
+
 ## Shows the target's mana, shrinking the frame when it has none.
 func _show_target_mana(c: Combatant) -> void:
 	var has_mana := c != null and c.max_mana > 0
@@ -525,6 +531,7 @@ func _show_target_mana(c: Combatant) -> void:
 	_target_mana_text.visible = has_mana
 	_target_frame.size.y = (35 if has_mana else 24) * _ui_scale
 	if has_mana:
+		(_target_mana as ColorRect).color = power_color(c)
 		_set_bar(_target_mana, c.mana, c.max_mana)
 		_target_mana_text.text = "%d/%d" % [int(c.mana), c.max_mana]
 
@@ -626,6 +633,7 @@ func _update_party_frames() -> void:
 		entry.level.text = "Lv %d" % c.level if alive else "Dead"
 		entry.name.add_theme_color_override("font_color", Color.WHITE if alive else GREY)
 		_set_bar(entry.health, c.health, c.max_health)
+		(entry.mana as ColorRect).color = power_color(c)
 		_set_bar(entry.mana, c.mana, c.max_mana)
 		entry.mana.visible = c.max_mana > 0
 		var capped := bot.profile.level >= ClassicData.MAX_LEVEL
