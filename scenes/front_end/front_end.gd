@@ -9,6 +9,9 @@ const GAME_SCENE := "res://scenes/main/main.tscn"
 ## Classic allows 10 characters per realm.
 const MAX_CHARACTERS := 10
 const REALM := "Greywater"
+## Patch notes, newest first; the login screen shows the newest.
+const PATCH_NOTES_PATH := "res://data/patch_notes.json"
+const PATCH_NOTES_WIDTH := 140.0
 const FONT_SIZE := 8
 const TITLE_SIZE := 28
 const GOLD := Color("ffd100")
@@ -215,8 +218,38 @@ func _build_login() -> void:
 	quit.pressed.connect(get_tree().quit)
 	_place(quit, Vector2(_width() - 54, 252), Vector2(50, 14), Anchor.BOTTOM)
 	_add_options_button(Vector2(_width() - 54, 234))
+	_add_patch_notes()
 	var focus: Control = account if _account.is_empty() else login if not password.text.is_empty() else password
 	focus.grab_focus.call_deferred()
+
+
+## The latest patch's notes on the login screen's left: the first entry of
+## data/patch_notes.json (newest first; every push adds one).
+func _add_patch_notes() -> void:
+	var entries: Variant = JSON.parse_string(FileAccess.get_file_as_string(PATCH_NOTES_PATH))
+	if not entries is Array or entries.is_empty():
+		return
+	var latest: Dictionary = entries[0]
+	var panel := _panel()
+	_place(panel, Vector2(8, 70), Vector2(PATCH_NOTES_WIDTH, 160), Anchor.STRETCH)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	panel.add_child(box)
+	box.add_child(_label("Patch Notes", GOLD))
+	box.add_child(_label("Version %s, %s" % [latest.get("version", ""), latest.get("date", "")], Color(0.7, 0.7, 0.75), FONT_SIZE - 2))
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(scroll)
+	var notes := VBoxContainer.new()
+	notes.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(notes)
+	for note: String in latest.get("notes", []):
+		var line := _label("- " + note, Color(0.92, 0.9, 0.84), FONT_SIZE - 1)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.custom_minimum_size.x = (PATCH_NOTES_WIDTH - 16) * _ui_scale
+		notes.add_child(line)
 
 
 ## There's no server: any account and password get in, after the usual steps.

@@ -1,0 +1,21 @@
+[
+	{
+		"version": "0.1.1",
+		"date": "2026-11-04",
+		"notes": [
+			"The login screen now shows the notes for the latest patch."
+		]
+	},
+	{
+		"version": "0.1.0",
+		"date": "2026-11-04",
+		"notes": [
+			"The game now has a version number, shown on the login screen.",
+			"Creatures cast spells: Burrowling Firecallers throw Flame Bolts from range, Pickmen pry at your armor, Brigand Footpads stab from behind and Ridgetusk Boars charge.",
+			"Interrupt a casting creature with Hilt Strike, Shield Smash, Hush, stuns or fear. The target frame shows what your target is casting.",
+			"Stances show in your buffs, the active one is framed in gold, and clicking it again no longer gives an error.",
+			"Templars learn Revival's first rank free at level 12, so its higher ranks can be trained.",
+			"The Options window is one size, and long pages scroll."
+		]
+	}
+]
