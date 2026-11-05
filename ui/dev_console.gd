@@ -30,6 +30,7 @@ const COMMANDS := {
 	"pos": ["", "Show your position."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
+	"spawn": ["[level] [normal | elite | boss]", "Spawn a random creature ahead of you, just outside its aggro range (your level and normal if left out)."],
 	"save": ["", "Save the game now."],
 	"clear": ["", "Clear the console."],
 	"reload": ["", "Save, restart the game and come back in, picking up any changes."],
@@ -43,6 +44,9 @@ const COMMANDS := {
 
 var _player: Player
 var _world: AshfordVale
+## Creatures made by "spawn", for their names.
+var _spawned := 0
+const SPAWN_RANKS := { "normal": Enemy.RANK_NORMAL, "elite": Enemy.RANK_ELITE, "boss": Enemy.RANK_BOSS }
 var _save: Callable
 var _bots: BotManager
 var _ui_scale := 1.0
@@ -392,6 +396,49 @@ func _cmd_tele(args: PackedStringArray) -> String:
 	_player.global_position = at
 	_player.velocity = Vector3.ZERO
 	return "Teleported to %.1f, %.1f." % [at.x, at.z]
+
+
+## A random creature of the zone's kinds at a level and rank, straight ahead
+## and 8 yards beyond the range it would attack from. It stands still, and its
+## corpse is gone for good after 5 minutes (it isn't saved).
+func _cmd_spawn(args: PackedStringArray) -> String:
+	var level := GameState.level
+	var rank := Enemy.RANK_NORMAL
+	for arg in args:
+		var word := arg.to_lower()
+		if word.is_valid_int():
+			level = clampi(int(word), 1, ClassicData.MAX_LEVEL + 3)
+		elif SPAWN_RANKS.has(word):
+			rank = SPAWN_RANKS[word]
+		else:
+			return "!Usage: spawn [level] [normal | elite | boss]"
+	var entries := Enemy.creature_entries()
+	if entries.is_empty() or _world == null:
+		return "!No creatures to spawn here."
+	var enemy: Enemy = AshfordVale.ENEMY_SCENE.instantiate()
+	enemy.creature_entry = entries.pick_random()
+	enemy.level_override = level
+	enemy.rank_override = rank
+	enemy.temporary = true
+	enemy.respawn_override = 300.0
+	enemy.wander_override = 0.0
+	_spawned += 1
+	enemy.name = "Spawned_%d" % _spawned
+	# Classic aggro range: 20 yards at the same level, a yard less per level
+	# you're above it, a yard more per level below (Enemy.aggro_radius).
+	var reach := maxf(20.0 - maxi(GameState.level - level, -25), 5.0) + 8.0
+	var at := _player.global_position
+	for turn in 8:
+		var angle := _player.facing + turn * TAU / 8.0
+		var point := _player.global_position + Basis(Vector3.UP, angle) * Vector3.FORWARD * reach
+		if _world.height_at(point.x, point.z) > AshfordVale.WATER_LEVEL + 0.3:
+			at = Vector3(point.x, _world.height_at(point.x, point.z) + 0.1, point.z)
+			break
+	enemy.position = at
+	var creatures := _world.get_node_or_null("Creatures")
+	(creatures if creatures else _world).add_child(enemy)
+	var kind := "" if rank == Enemy.RANK_NORMAL else (" boss" if rank == Enemy.RANK_BOSS else " elite")
+	return "Spawned a level %d%s %s %d yards away." % [enemy.level, kind, enemy.combatant.display_name, roundi(_player.global_position.distance_to(at))]
 
 
 func _cmd_pos(_args: PackedStringArray) -> String:

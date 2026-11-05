@@ -241,14 +241,27 @@ func _add_patch_notes() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(scroll)
+	# A scroll bar when the notes run past the panel: gold on dark, with room
+	# between it and the text.
+	var bar := scroll.get_v_scroll_bar()
+	bar.custom_minimum_size.x = 5 * _ui_scale
+	bar.add_theme_stylebox_override("scroll", _box(Color(0, 0, 0, 0.45), Color(0, 0, 0, 0), 0))
+	for state: String in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		var grab := _box(GOLD.darkened(0.45 if state == "grabber" else 0.2), Color(0, 0, 0, 0), 0)
+		grab.set_corner_radius_all(roundi(2 * _ui_scale))
+		bar.add_theme_stylebox_override(state, grab)
 	var notes := VBoxContainer.new()
 	notes.add_theme_constant_override("separation", roundi(3 * _ui_scale))
 	notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(notes)
+	var gap := MarginContainer.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.add_theme_constant_override("margin_right", roundi(6 * _ui_scale))
+	scroll.add_child(gap)
+	gap.add_child(notes)
 	for note: String in latest.get("notes", []):
 		var line := _label("- " + note, Color(0.92, 0.9, 0.84), FONT_SIZE - 1)
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		line.custom_minimum_size.x = (PATCH_NOTES_WIDTH - 16) * _ui_scale
+		line.custom_minimum_size.x = (PATCH_NOTES_WIDTH - 22) * _ui_scale
 		notes.add_child(line)
 
 

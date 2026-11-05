@@ -60,10 +60,32 @@ var respawn_time := 180.0
 @export var creature_entry := 299
 
 static var _creatures: Dictionary
+static var _class_stats: Dictionary
+
+const CLASS_STATS_PATH := "res://data/classic/creature_class_stats.json"
+## creature_template Rank: 0 normal, 1 elite, 2 rare elite, 3 boss, 4 rare.
+const RANK_NORMAL := 0
+const RANK_ELITE := 1
+const RANK_BOSS := 3
+## What a rank made by "spawn" multiplies a normal creature's health and
+## damage by, and its size. The game's own numbers: classic's elite and boss
+## templates carry their own stats instead.
+const RANK_HEALTH := { RANK_ELITE: 3.0, RANK_BOSS: 15.0 }
+const RANK_DAMAGE := { RANK_ELITE: 1.5, RANK_BOSS: 2.5 }
+const RANK_SIZE := { RANK_ELITE: 1.2, RANK_BOSS: 1.6 }
 
 var state := State.IDLE
 var level := 1
 var elite := false
+## A boss (classic rank 3, a world boss): its level shows as "??".
+var boss := false
+## Set before it's added (the dev console's "spawn"): a level to scale the
+## creature to (0 keeps the template's), a rank (-1 keeps the template's;
+## RANK_NORMAL, RANK_ELITE, RANK_BOSS), and whether it's gone for good once
+## its corpse would respawn (and isn't saved).
+var level_override := 0
+var rank_override := -1
+var temporary := false
 ## What's left on the corpse: { "id", "count" } entries, and copper.
 var loot: Array[Dictionary] = []
 var loot_money := 0
@@ -119,6 +141,15 @@ static func creature_data(entry: int) -> Dictionary:
 	return _creatures.get(str(entry), {})
 
 
+## Every creature entry in the data (the dev console's "spawn" picks one).
+static func creature_entries() -> Array[int]:
+	creature_data(0)
+	var entries: Array[int] = []
+	for key: String in _creatures:
+		entries.append(int(key))
+	return entries
+
+
 func _ready() -> void:
 	_home = global_position
 	_data = creature_data(creature_entry)
@@ -132,12 +163,16 @@ func _ready() -> void:
 	c.melee_crit = CombatRules.NPC_CRIT
 	c.dodge = CombatRules.NPC_AVOIDANCE
 	c.parry = CombatRules.NPC_AVOIDANCE if int(_data.CreatureType) == CREATURE_TYPE_HUMANOID else 0.0
-	elite = int(_data.Rank) > 0
+	var rank := rank_override if rank_override >= 0 else int(_data.Rank)
+	elite = rank > 0
+	boss = rank == RANK_BOSS
 	respawn_time = respawn_override if respawn_override >= 0.0 else float(_data.get("Respawn", 180))
 	_wander_distance = wander_override if wander_override >= 0.0 else float(_data.get("Wander", 0))
 	_wander_target = _home
 	_wander_wait = randf_range(WANDER_PAUSE_MIN, WANDER_PAUSE_MAX)
 	_apply_look()
+	if rank_override > 0:
+		_visual.scale *= float(RANK_SIZE.get(rank_override, 1.0))
 	c.faces_point = _is_facing
 	_roll_level()
 	c.took_damage.connect(func(amount: int, source: Combatant, _crit: bool) -> void: _on_attacked(source, amount))
@@ -494,6 +529,9 @@ func has_loot() -> bool:
 ## Level is rolled between the template's min and max, with health scaled
 ## linearly between the min-level and max-level values.
 func _roll_level() -> void:
+	if level_override > 0 or rank_override > 0:
+		_scale_to_level(level_override if level_override > 0 else int(_data.MinLevel))
+		return
 	var min_level := int(_data.MinLevel)
 	var max_level := int(_data.MaxLevel)
 	level = randi_range(min_level, max_level)
@@ -502,6 +540,31 @@ func _roll_level() -> void:
 	combatant.max_health = roundi(lerpf(_data.MinLevelHealth, _data.MaxLevelHealth, t))
 	combatant.max_mana = roundi(lerpf(_data.get("MinLevelMana", 0), _data.get("MaxLevelMana", 0), t))
 	combatant.reset()
+
+
+## A creature made at any level: its class's base stats at that level, as
+## CMaNGOS's Creature::SelectLevel works them out from
+## creature_template_classlevelstats with every multiplier 1 (health, mana,
+## armor; damage from base damage to 1.5 times it, plus attack power / 14 per
+## second of swing, added in Combatant), then a spawned rank's multipliers.
+## The template still gives its class, look, spells, speed and faction.
+func _scale_to_level(new_level: int) -> void:
+	if _class_stats.is_empty():
+		_class_stats = JSON.parse_string(FileAccess.get_file_as_string(CLASS_STATS_PATH))
+	var table: Array = _class_stats.get(str(int(_data.get("UnitClass", 1))), _class_stats.get("1"))
+	level = clampi(new_level, 1, table.size())
+	var row: Array = table[level - 1]
+	var health_mod: float = RANK_HEALTH.get(rank_override, 1.0)
+	var damage_mod: float = RANK_DAMAGE.get(rank_override, 1.0)
+	var c := combatant
+	c.level = level
+	c.max_health = maxi(roundi(float(row[0]) * health_mod), 1)
+	c.max_mana = int(row[1])
+	c.min_damage = float(row[2]) * damage_mod
+	c.max_damage = float(row[2]) * 1.5 * damage_mod
+	c.attack_power = roundi(float(row[3]) * damage_mod)
+	c.armor = int(row[4])
+	c.reset()
 
 
 func _on_died() -> void:
@@ -525,7 +588,7 @@ func _on_died() -> void:
 
 ## Saved state for a dead enemy, or {} while it's alive.
 func corpse_state() -> Dictionary:
-	if state != State.DEAD:
+	if state != State.DEAD or temporary:
 		return {}
 	var p := global_position
 	return {
@@ -579,6 +642,9 @@ func _fit_corpse_shape() -> void:
 
 func _process(delta: float) -> void:
 	if state == State.DEAD and Time.get_unix_time_from_system() >= respawn_at:
+		if temporary:
+			queue_free()
+			return
 		_respawn()
 	_sparkle.visible = has_loot()
 	if _sparkle.visible:

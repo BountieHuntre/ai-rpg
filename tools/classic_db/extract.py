@@ -260,6 +260,16 @@ def main(path):
         if r["Class"] in classes:
             class_damage.setdefault(r["Class"], []).append(float(r["BaseDamageExp0"]))
     write("creature_class_damage.json", class_damage)
+    # A creature's base stats by class and level, level 1 up: health, mana,
+    # damage, melee attack power, armor (creature_template_classlevelstats).
+    # The dev console's "spawn" scales a creature to any level by these.
+    class_stats = {}
+    for r in sorted(db["creature_template_classlevelstats"], key=lambda r: int(r["Level"])):
+        class_stats.setdefault(r["Class"], []).append([
+            int(r["BaseHealthExp0"]), int(r["BaseMana"]), float(r["BaseDamageExp0"]),
+            float(r["BaseMeleeAttackPower"]), int(r["BaseArmor"]),
+        ])
+    write("creature_class_stats.json", class_stats)
     loot_rows = {}
     for r in db["creature_loot_template"]:
         loot_rows.setdefault(r["entry"], []).append(r)

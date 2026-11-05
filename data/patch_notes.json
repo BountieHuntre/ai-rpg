@@ -1,5 +1,24 @@
 [
 	{
+		"version": "0.3.0",
+		"date": "11-05-2026",
+		"notes": [
+			"Creatures call for help: pull a brigand and its friends close by join in a moment later, and their pulls can bring more.",
+			"Some creatures now speak when they attack you. Their words show in the chat under Creature Speech.",
+			"Trainers have a Train All button that teaches everything you can afford.",
+			"The spellbook is laid out as in the old days: pages of twelve spells, with tabs down its right side for General and each talent tree. It opens under your portrait.",
+			"The spellbook has a Hide old ranks box, to show only the highest rank of each spell.",
+			"Your target's buffs and debuffs show under its frame. Hover over one to see what it does.",
+			"Templars: Boons and Greater Boons buttons in the spellbook open a menu of every boon you know. Put them on your action bar.",
+			"Class buffs that lasted 5 minutes or more now last an hour: Boons, Greater Boons, Litany of Fortitude, Uplifted Spirit, Inner Flame, Shadow Warding and more.",
+			"Boon icons show the boon's own name, so Boon of Strength and Boon of Shelter look different.",
+			"Playerbots treat grey items as junk: they won't try to sell them to you, and they sell them to vendors they pass.",
+			"Fixed talent rank numbers drawing over the talent tooltip.",
+			"Fixed tooltips getting in the way of the right action bars.",
+			"Long patch notes on the login screen now have a scroll bar."
+		]
+	},
+	{
 		"version": "0.2.0",
 		"date": "11-04-2026",
 		"notes": [

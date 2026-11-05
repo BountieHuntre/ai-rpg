@@ -294,8 +294,10 @@ func _process(delta: float) -> void:
 		_target_health.color = Targeting.TAPPED_COLOR.darkened(0.3) if (target.body as Enemy).is_tapped_by_others() else TARGET_HEALTH
 		_target_name.text = target.display_name
 		_target_name.add_theme_color_override("font_color", Targeting.name_color(target.body))
-		_target_level.text = "Lv %d" % target.level
-		_target_level.add_theme_color_override("font_color", CombatRules.level_color(me.level, target.level))
+		# Bosses show "??" in red, elites a "+", as classic's frames do.
+		var creature := target.body as Enemy
+		_target_level.text = "Lv ??" if creature.boss else "Lv %d%s" % [target.level, "+" if creature.elite else ""]
+		_target_level.add_theme_color_override("font_color", Color(1, 0.1, 0.1) if creature.boss else CombatRules.level_color(me.level, target.level))
 		_set_bar(_target_health, target.health, target.max_health)
 		_target_health_text.text = "%d/%d" % [target.health, target.max_health]
 		_show_target_mana(target)
@@ -1050,7 +1052,7 @@ func unit_tooltip(unit: Node3D) -> Array:
 	var alive := enemy.combatant.is_alive()
 	var lines := [[enemy.combatant.display_name, "", Targeting.name_color(enemy) if alive else GREY]]
 	var kind: String = CREATURE_TYPES.get(int(data.get("CreatureType", 0)), "")
-	var level := "Level %d%s %s" % [enemy.level, " (Elite)" if enemy.elite else "", kind]
+	var level := "Level ?? (Boss) %s" % kind if enemy.boss else "Level %d%s %s" % [enemy.level, " (Elite)" if enemy.elite else "", kind]
 	lines.append([level.strip_edges(), "", CombatRules.level_color(_player.combatant.level, enemy.level) if alive else GREY])
 	if not alive:
 		lines.append(["Corpse", "", GREY])
