@@ -32,6 +32,7 @@ var _screen := Vector2.ZERO
 var _tooltip: ItemTooltip
 var _panel: Control
 var _hovered := 0
+var _rebuild_queued := false
 
 
 func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemTooltip, open: bool) -> void:
@@ -42,11 +43,12 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build()
 	_panel.visible = open
-	GameState.spells_changed.connect(_rebuild)
+	# Many changes at once (a whole build learned) rebuild once.
+	GameState.spells_changed.connect(_queue_rebuild)
 	if _player.has_node("Progression"):
 		var progression := _player.get_node("Progression")
 		if progression.has_signal("leveled_up"):
-			progression.leveled_up.connect(func(_level: int) -> void: _rebuild())
+			progression.leveled_up.connect(func(_level: int) -> void: _queue_rebuild())
 
 
 func is_open() -> bool:
@@ -73,7 +75,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _queue_rebuild() -> void:
+	if not _rebuild_queued:
+		_rebuild_queued = true
+		_rebuild.call_deferred()
+
+
 func _rebuild() -> void:
+	_rebuild_queued = false
 	if _panel == null:
 		return
 	var was_open := _panel.visible
@@ -177,7 +186,6 @@ func _draw_talent(talent: Dictionary, at: Vector2) -> void:
 	if rank == 0 and not learnable:
 		box.modulate = Color(0.5, 0.5, 0.5)
 	var rank_label := _text(_panel, at + Vector2(ICON - 5, ICON - 5), "%d/%d" % [rank, most], MAXED if rank >= most else CAN_LEARN if rank > 0 or learnable else LOCKED, 5)
-	rank_label.z_index = 1
 	box.mouse_entered.connect(func() -> void:
 		_hovered = id
 		_show_tooltip(id))
@@ -203,7 +211,7 @@ func _learn(id: int) -> void:
 	Sfx.play("level_up")
 	Chat.system("You have learned %s." % learned)
 	GameState.inventory_changed.emit()
-	_rebuild.call_deferred()
+	_queue_rebuild()
 
 
 ## The tooltip: name, rank, what the current rank does, what the next would,

@@ -197,6 +197,7 @@ func _spawn(entry: Dictionary, at: Vector3) -> Bot:
 	profile.level = clampi(int(entry.level), 1, ClassicData.MAX_LEVEL)
 	profile.xp = int(entry.xp)
 	_equip_starting_gear(profile)
+	_restore_equipment(profile, entry.get("equipment", {}))
 	var bot: Bot = BOT_SCENE.instantiate()
 	bot.name = "Bot_%s" % entry.name
 	bot.profile = profile
@@ -233,6 +234,28 @@ static func _equip_starting_gear(profile: CharacterProfile) -> void:
 				break
 
 
+## Gear a bot was wearing when saved (from the "bis" command, say) goes back
+## on over its starting gear.
+static func _restore_equipment(profile: CharacterProfile, saved: Dictionary) -> void:
+	if saved.is_empty():
+		return
+	profile.equipment.clear()
+	for key: String in saved:
+		var stack: Dictionary = saved[key]
+		var id := int(stack.get("id", 0))
+		if not ItemDB.get_item(id).is_empty():
+			profile.equipment[int(key)] = { "id": id, "count": maxi(int(stack.get("count", 1)), 1), "bound": bool(stack.get("bound", false)) }
+
+
+static func _saved_equipment(profile: CharacterProfile) -> Dictionary:
+	var saved := {}
+	for slot: int in profile.equipment:
+		var stack: Dictionary = profile.equipment[slot]
+		if not stack.is_empty():
+			saved[str(slot)] = { "id": int(stack.id), "count": int(stack.get("count", 1)), "bound": bool(stack.get("bound", false)) }
+	return saved
+
+
 func _despawn(bot_name: String) -> void:
 	var bot: Bot = _bots.get(bot_name)
 	_bots.erase(bot_name)
@@ -256,6 +279,7 @@ func _store(bot: Bot) -> void:
 		entry.state = bot.saved_state()
 		entry.quests = bot.quests.to_dict()
 		entry.bag = bot.bag.to_dict()
+		entry.equipment = _saved_equipment(bot.profile)
 
 
 func _number_party() -> void:
@@ -486,6 +510,7 @@ func _load_roster() -> void:
 				"state": entry.get("state", {}),
 				"quests": entry.get("quests", {}),
 				"bag": entry.get("bag", {}),
+				"equipment": entry.get("equipment", {}),
 			})
 
 

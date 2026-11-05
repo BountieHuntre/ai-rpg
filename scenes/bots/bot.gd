@@ -130,6 +130,8 @@ var _friend: Combatant
 var _think_left := 0.0
 var _dead_for := 0.0
 var _resting := false
+## How close a bot must pass a vendor to sell its trash.
+const VENDOR_REACH := 15.0
 var _rest_carry := Vector2.ZERO
 var _destination := Vector3.ZERO
 var _has_destination := false
@@ -341,6 +343,7 @@ func _think() -> void:
 	_quest_check_left -= THINK_INTERVAL
 	if _quest_check_left <= 0.0:
 		_quest_check_left = QUEST_CHECK
+		_sell_trash_nearby()
 		var questing: bool = manager != null and not in_party and Settings.get_value("bot_quests")
 		_wanted = quests.wanted_creatures(manager.spawn_entries()) if questing else ([] as Array[int])
 		_business = _quest_npc() if questing else null
@@ -531,6 +534,17 @@ func _come_closer() -> void:
 
 func _quest_business() -> bool:
 	return _business != null and not in_party
+
+
+## Passing a vendor (within VENDOR_REACH), it sells its trash.
+func _sell_trash_nearby() -> void:
+	if not bag.has_trash() or combatant.is_in_combat():
+		return
+	for node in get_tree().get_nodes_in_group("npcs"):
+		var npc := node as Npc
+		if npc.vendor != 0 and global_position.distance_to(npc.global_position) <= VENDOR_REACH:
+			bag.sell_trash()
+			return
 
 
 ## The nearest quest giver it has business with: one to hand a finished

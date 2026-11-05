@@ -105,6 +105,39 @@ func train(index: int) -> void:
 	_build.call_deferred()
 
 
+## Trains everything available, cheapest level first, as long as the money
+## lasts. Learning a rank can make the next one available, so it goes round
+## until nothing more can be trained.
+func train_all() -> void:
+	var learned := 0
+	var spent := 0
+	var short := false
+	var changed := true
+	while changed:
+		changed = false
+		for row: Dictionary in _rows:
+			var entry: Dictionary = row.entry
+			if entry_state(entry)[0] != "available":
+				continue
+			if GameState.money < int(entry.cost):
+				short = true
+				continue
+			GameState.money -= int(entry.cost)
+			spent += int(entry.cost)
+			for name in SpellCaster.learn(entry.spells):
+				message.emit("You have learned a new spell: %s." % name, false)
+				learned += 1
+			changed = true
+	if learned == 0:
+		message.emit("Not enough money" if short else "There's nothing new to train.", true)
+		return
+	if short:
+		message.emit("Not enough money for the rest.", true)
+	Sfx.play("level_up")
+	GameState.inventory_changed.emit()
+	_build.call_deferred()
+
+
 func _build() -> void:
 	for child in get_children():
 		child.queue_free()
@@ -166,14 +199,23 @@ func _build() -> void:
 			train(_selected)
 	)
 	add_child(train_button)
+	var all_button := Button.new()
+	all_button.text = "Train All"
+	all_button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	all_button.position = Vector2(WIDTH - 82, 18 + LIST_HEIGHT) * _ui_scale
+	all_button.size = Vector2(40, 12) * _ui_scale
+	all_button.disabled = not _rows.any(func(row: Dictionary) -> bool: return entry_state(row.entry)[0] == "available")
+	all_button.pressed.connect(train_all)
+	add_child(all_button)
 	# Unlearning talents, at the class's own trainer: a second click confirms.
 	if Talents.spent(GameState) > 0:
 		var cost := Talents.reset_cost(GameState.talent_reset_cost)
 		var unlearn := Button.new()
 		unlearn.text = "Unlearn Talents"
 		unlearn.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
-		unlearn.position = Vector2(WIDTH - 102, 18 + LIST_HEIGHT) * _ui_scale
-		unlearn.size = Vector2(60, 12) * _ui_scale
+		# Under Train All and Train.
+		unlearn.position = Vector2(WIDTH - 82, 31 + LIST_HEIGHT) * _ui_scale
+		unlearn.size = Vector2(78, 11) * _ui_scale
 		unlearn.pressed.connect(func() -> void:
 			if not unlearn.has_meta("confirm"):
 				unlearn.set_meta("confirm", true)

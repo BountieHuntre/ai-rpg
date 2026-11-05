@@ -8,6 +8,18 @@ const SPELLS_PATH := "res://data/classic/spells.json"
 
 ## Spell ids with special meaning.
 const ATTACK := 6603
+## Menus of spells on one button (see is_flyout).
+const BOONS := 1000001
+const GREATER_BOONS := 1000002
+const FLYOUTS := {
+	BOONS: { "name": "Boons", "prefix": "Boon of" },
+	GREATER_BOONS: { "name": "Greater Boons", "prefix": "Greater Boon of" },
+}
+## SpellFamilyName of the classes' own spells (mage to paladin and shaman).
+const CLASS_SPELL_FAMILIES := [3, 4, 5, 6, 7, 8, 9, 10, 11]
+const LONG_BUFF_FROM := 300.0
+const LONG_BUFF := 3600.0
+const LONG_BUFF_DURATION_INDEX := 42
 const HOLY_LIGHT_HEAL := 19968
 ## Spent Soul, which Sanctified Ward leaves on its target.
 const WEAKENED_SOUL := 6788
@@ -152,6 +164,8 @@ static var _data: Dictionary
 static func get_spell(id: int) -> Dictionary:
 	if id == ATTACK:
 		return { "Id": ATTACK, "SpellName": "Attack", "Rank1": "", "School": 0 }
+	if FLYOUTS.has(id):
+		return { "Id": id, "SpellName": FLYOUTS[id].name, "Rank1": "", "School": School.HOLY, "Flyout": true }
 	return _get_data().spells.get(str(id), {})
 
 
@@ -409,7 +423,50 @@ static func first_rank(id: int) -> int:
 	return int(_get_data().chains.get(str(id), {}).get("first", id))
 
 
+## The spellbook tab a spell goes in for a class: its talent tree's index
+## (by its skill line), or -1 for General.
+static func book_tab(char_class: int, id: int) -> int:
+	return int(_get_data().get("book_tabs", {}).get(str(char_class), {}).get(str(id), -1))
+
+
 static func _get_data() -> Dictionary:
 	if _data.is_empty():
 		_data = JSON.parse_string(FileAccess.get_file_as_string(SPELLS_PATH))
+		_lengthen_buffs()
 	return _data
+
+
+## The game's own rule (unlike classic): class buffs that last 5 minutes or
+## more (Boons, Greater Boons, Litany of Fortitude, Uplifted Spirit, Inner
+## Flame...) last an hour. Short ones (Boon of Shelter, shouts) are left be.
+## The classic duration stays as ClassicDurationIndex.
+static func _lengthen_buffs() -> void:
+	for spell: Dictionary in _data.spells.values():
+		var length: float = DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+		if int(spell.get("SpellFamilyName", 0)) in CLASS_SPELL_FAMILIES and length >= LONG_BUFF_FROM and length < LONG_BUFF 				and int(spell.get("Effect1", 0)) == EFFECT_APPLY_AURA and target_type(spell) != TARGET_ENEMY:
+			spell.ClassicDurationIndex = spell.DurationIndex
+			spell.DurationIndex = LONG_BUFF_DURATION_INDEX
+
+
+## Spells that open a menu of others instead of casting (the action bar's
+## and spellbook's "Boons" and "Greater Boons"): their own ids, which no
+## classic spell uses, and the name each holds spells beginning with.
+static func is_flyout(id: int) -> bool:
+	return FLYOUTS.has(id)
+
+
+## The spells in a flyout a character knows: the highest rank of each, by
+## name.
+static func flyout_spells(id: int, who: CharacterProfile) -> Array[int]:
+	var found: Array[int] = []
+	if not FLYOUTS.has(id):
+		return found
+	var names: Array[String] = []
+	for known in who.known_spells:
+		var spell_name := str(get_spell(known).get("SpellName", ""))
+		if spell_name.begins_with(FLYOUTS[id].prefix) and not spell_name in names:
+			names.append(spell_name)
+	names.sort()
+	for spell_name in names:
+		found.append(who.best_rank(spell_name))
+	return found

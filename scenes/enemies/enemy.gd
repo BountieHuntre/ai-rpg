@@ -83,6 +83,15 @@ var _victim: Combatant
 var _aggro_left := randf() * AGGRO_CHECK
 const AGGRO_CHECK := 0.2
 
+## Seconds left fleeing in a panic (flee), or 0.
+var panic_left := 0.0
+## Call for help on a pull: who it noted, against whom, and when they come.
+const ASSIST_RADIUS := 5.0
+const ASSIST_DELAY := 2.0
+var _assist_left := -1.0
+var _assist_receivers: Array[Enemy] = []
+var _assist_enemy: Combatant
+
 var _home := Vector3.ZERO
 var _data: Dictionary
 var _wander_distance := 0.0
@@ -159,15 +168,25 @@ func _physics_process(delta: float) -> void:
 					var unit := node as PlayerUnit
 					if unit.combatant.is_alive() and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):
 						add_threat(unit.combatant, 0.0)
-						_start_chase()
+						_start_chase(unit.combatant)
 						break
 			if state == State.IDLE:
 				destination = _wander(delta)
 				speed = _data.SpeedWalk * BASE_WALK_SPEED
 		State.CHASE:
 			_victim = _pick_victim()
+			_update_assistance(delta)
 			var feared := combatant.fear_source()
-			if feared:
+			if panic_left > 0.0 and _victim:
+				# Fleeing in a panic: away from its victim, without fighting.
+				panic_left -= delta
+				combatant.attack_target = null
+				combatant.enter_combat()
+				var flight := global_position - _victim.body.global_position
+				flight.y = 0.0
+				destination = global_position + (flight.normalized() if flight.length() > 0.1 else Vector3.FORWARD) * 5.0
+				_face(destination)
+			elif feared:
 				# Runs from whoever frightened it, without fighting.
 				combatant.attack_target = null
 				combatant.enter_combat()
@@ -255,9 +274,89 @@ func _is_facing(point: Vector3) -> bool:
 	return Vector2(forward.x, forward.z).dot(Vector2(offset.x, offset.z)) >= 0.0
 
 
-func _start_chase() -> void:
+## Pulled: it chases, and creatures of its faction close by may join in.
+func _start_chase(enemy: Combatant = null) -> void:
 	Sfx.play_at("aggro", global_position)
+	var pulled := state == State.IDLE
 	state = State.CHASE
+	if pulled and enemy:
+		_mark_assistance(enemy)
+
+
+func _update_assistance(delta: float) -> void:
+	if _assist_left < 0.0:
+		return
+	_assist_left -= delta
+	if _assist_left > 0.0:
+		return
+	_assist_left = -1.0
+	if is_instance_valid(_assist_enemy) and _assist_enemy.is_alive():
+		for other in _assist_receivers:
+			if is_instance_valid(other):
+				other._join(_assist_enemy)
+	_assist_receivers.clear()
+
+
+## Calling for help on a pull (Creature::MarkCallAssistanceOnPull and
+## Unit::TriggerAggroLinkingEvent in CMaNGOS): creatures of the same faction
+## within its call-for-help radius (5 yards unless the data gives one) that
+## see it, aren't fighting and attack on sight are noted now, and join the
+## fight 2 s later if it's still going. Their own pulls can bring in more.
+func _mark_assistance(enemy: Combatant) -> void:
+	_assist_enemy = enemy
+	_assist_receivers = _helpers(_assist_radius())
+	_assist_left = ASSIST_DELAY if not _assist_receivers.is_empty() else -1.0
+
+
+func _assist_radius() -> float:
+	var radius := float(_data.get("CallForHelp", 0))
+	return radius if radius > 0.0 else ASSIST_RADIUS
+
+
+## Creatures that would come to its aid: same faction, alive, not fighting,
+## not passive, within the radius and in sight.
+func _helpers(radius: float) -> Array[Enemy]:
+	var found: Array[Enemy] = []
+	var faction := int(_data.get("Faction", 0))
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var other := node as Enemy
+		if other == self or other.state != State.IDLE or not other.combatant.is_alive() or not other.is_aggressive():
+			continue
+		if int(other._data.get("Faction", -1)) != faction or global_position.distance_to(other.global_position) > radius:
+			continue
+		var eye := Vector3.UP * 1.0
+		var query := PhysicsRayQueryParameters3D.create(global_position + eye, other.global_position + eye, 1)
+		if get_world_3d().direct_space_state.intersect_ray(query).is_empty():
+			found.append(other)
+	return found
+
+
+## Called for help (EventAI ACTION_T_CALL_FOR_HELP, Creature::CallForHelp):
+## creatures of its faction within the radius join the fight now.
+func call_for_help(radius: float) -> void:
+	var victim := current_victim()
+	if victim == null:
+		return
+	for other in _helpers(radius if radius > 0.0 else _assist_radius()):
+		other._join(victim)
+
+
+func _join(enemy: Combatant) -> void:
+	if state != State.IDLE or not combatant.is_alive() or not is_instance_valid(enemy) or not enemy.is_alive():
+		return
+	add_threat(enemy, 0.0)
+	_start_chase(enemy)
+
+
+## Runs off in a panic for a while (EventAI ACTION_T_FLEE_FOR_ASSIST, at low
+## health for creatures the data scripts that way): it doesn't fight, then
+## comes back. Returns whether it could.
+func flee(duration: float) -> bool:
+	if state != State.CHASE or combatant.is_stunned() or combatant.is_rooted():
+		return false
+	panic_left = duration
+	Chat.monster(combatant.display_name, "tries to run away in fear!", global_position, true)
+	return true
 
 
 func _start_return() -> void:
@@ -267,6 +366,8 @@ func _start_return() -> void:
 	threat.clear()
 	tapped_by = null
 	_victim = null
+	panic_left = 0.0
+	_assist_left = -1.0
 	if ai:
 		ai.on_leave_combat()
 
@@ -374,7 +475,7 @@ func _on_attacked(source: Combatant, damage: int) -> void:
 	# Stances change how much threat damage causes.
 	add_threat(source, float(damage) * source.threat_multiplier(combatant.last_hit_school))
 	if state == State.IDLE:
-		_start_chase()
+		_start_chase(source)
 
 
 ## Classic aggro radius: about 20 yards at equal level, one yard less per level
@@ -414,6 +515,8 @@ func _on_died() -> void:
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
 	threat.clear()
 	_victim = null
+	panic_left = 0.0
+	_assist_left = -1.0
 	if ai:
 		ai.on_leave_combat()
 	_sparkle.visible = has_loot()

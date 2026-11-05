@@ -13,7 +13,13 @@ signal message(text: String, is_error: bool)
 
 const SLOT := 20.0
 const GAP := 2.0
-const BOOK_ROW := 16.0
+## The spellbook: where it sits, its size, a spell's row height, spells per
+## page (two columns), and the size of a tab.
+const BOOK_AT := Vector2(4, 43)
+const BOOK_SIZE := Vector2(190, 132)
+const BOOK_ENTRY := 17.0
+const BOOK_PER_PAGE := 12
+const BOOK_TAB := Vector2(44, 11)
 const BUFF := 14.0
 const STANCE_SLOT := 16.0
 ## The XP bar sits between the action bar and the stance bar (drawn by the HUD).
@@ -46,9 +52,16 @@ var _hovered_aura: Dictionary = {}
 var _buff_tooltip_text := ""
 ## The spell on the cursor, or 0.
 var _held := 0
+## The spellbook's open tab (0 General, then each talent tree) and page.
+var _book_tab := 0
+var _book_page := 0
+var _spells_redraw_queued := false
 var _held_icon: Control
 var _press_slot := -1
 var _press_position := Vector2.ZERO
+## An open flyout menu (Boons, Greater Boons) and the button it came from.
+var _flyout: Control
+var _flyout_anchor: Control
 
 
 func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemTooltip, book_open: bool) -> void:
@@ -67,12 +80,20 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	add_child(_buffs)
 	_player.combatant.auras_changed.connect(_draw_buffs)
 	_draw_buffs()
-	GameState.spells_changed.connect(_on_spells_changed)
+	_player.flyout_pressed.connect(func(slot: int) -> void: _toggle_flyout(GameState.action_bar[slot], _bar_slots[slot]))
+	# Many changes at once (a whole build learned) redraw once.
+	GameState.spells_changed.connect(func() -> void:
+		if not _spells_redraw_queued:
+			_spells_redraw_queued = true
+			_on_spells_changed.call_deferred())
 
 
 ## New spells: the spellbook is rebuilt and bar slots redrawn (training can
 ## swap a slot to a replacing rank).
 func _on_spells_changed() -> void:
+	_spells_redraw_queued = false
+	if not is_instance_valid(_book):
+		return
 	var was_open := _book.visible
 	_book.queue_free()
 	_build_book()
@@ -87,8 +108,12 @@ func is_book_open() -> bool:
 	return _book.visible
 
 
-## Esc: drops a held spell or closes the spellbook. Returns whether it did anything.
+## Esc: closes a flyout, drops a held spell or closes the spellbook. Returns
+## whether it did anything.
 func close_one() -> bool:
+	if _flyout:
+		_close_flyout()
+		return true
 	if _held != 0:
 		_set_held(0)
 		return true
@@ -97,6 +122,16 @@ func close_one() -> bool:
 		_tooltip.show_lines([])
 		return true
 	return false
+
+
+## A click anywhere but the open flyout (or its button) closes it.
+func _input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if _flyout and click and click.pressed:
+		var inside := _flyout.get_global_rect().has_point(click.global_position)
+		var on_anchor := is_instance_valid(_flyout_anchor) and _flyout_anchor.get_global_rect().has_point(click.global_position)
+		if not inside and not on_anchor:
+			_close_flyout()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -231,6 +266,13 @@ func _update_slot_state(i: int) -> void:
 	if no_mana == null:
 		return
 	var caster := _player.spells
+	if SpellDB.is_flyout(id):
+		no_mana.visible = false
+		cooldown.size.y = 0.0
+		key.text = Settings.key_label(GameState.slot_action(i))
+		key.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+		box.modulate = Color.WHITE
+		return
 	var spell := SpellDB.get_spell(id) if id != 0 else {}
 	no_mana.visible = not spell.is_empty() and _player.combatant.mana < caster.mana_cost(spell)
 	var fraction := caster.cooldown_fraction(id) if id != 0 else 0.0
@@ -261,6 +303,8 @@ func _on_bar_input(event: InputEvent, i: int) -> void:
 					_drop_on_slot(target)
 				else:
 					_set_held(0)  # Dragged off the bar: removed.
+			elif _press_slot == i and SpellDB.is_flyout(GameState.action_bar[i]):
+				_toggle_flyout(GameState.action_bar[i], _bar_slots[i])
 			elif _press_slot == i and GameState.action_bar[i] != 0:
 				_player.spells.cast(GameState.action_bar[i])
 			_press_slot = -1
@@ -386,42 +430,152 @@ func _update_stance_state(i: int) -> void:
 
 # Spellbook.
 
+## The spellbook, as classic's: a page of twelve spells in two columns,
+## with tabs down its right edge, General first and then one per talent tree
+## (a spell's tab is its skill line's tree, SpellDB.book_tab), and page
+## arrows when a tab has more.
 func _build_book() -> void:
-	var known := GameState.known_spells
-	var height := 14.0 + known.size() * BOOK_ROW + 4.0
-	_book = _panel(Vector2(130, 50), Vector2(130, height))
-	_text(_book, Vector2(4, 1), "Spellbook (P)", TITLE, 7)
-	for i in known.size():
-		var id := known[i]
-		var spell := SpellDB.get_spell(id)
-		var row := ColorRect.new()
-		row.color = Color.TRANSPARENT
-		row.position = Vector2(2, 14 + i * BOOK_ROW) * _ui_scale
-		row.size = Vector2(126, BOOK_ROW - 1) * _ui_scale
-		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		_book.add_child(row)
-		var icon := ColorRect.new()
-		icon.size = Vector2.ONE * (BOOK_ROW - 2) * _ui_scale
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(icon)
-		_draw_icon(icon, id)
-		_text(row, Vector2(BOOK_ROW + 2, 0), spell.SpellName, Color.WHITE, 6)
-		_text(row, Vector2(BOOK_ROW + 2, 7), str(spell.Rank1), Color(0.6, 0.6, 0.6), 5)
-		row.mouse_entered.connect(func() -> void:
-			row.color = Color(1, 1, 1, 0.08)
-			_tooltip.show_lines(spell_tooltip(id))
-		)
-		row.mouse_exited.connect(func() -> void:
-			row.color = Color.TRANSPARENT
-			_tooltip.show_lines([])
-		)
-		row.gui_input.connect(func(event: InputEvent) -> void: _on_book_input(event, id))
+	var trees := Talents.trees(GameState.char_class)
+	_book_tab = clampi(_book_tab, 0, trees.size())
+	var hide_old := bool(Settings.get_value("spellbook_hide_old_ranks"))
+	var spells: Array[int] = []
+	for id in GameState.known_spells:
+		if SpellDB.book_tab(GameState.char_class, id) + 1 != _book_tab:
+			continue
+		if hide_old and GameState.best_rank(str(SpellDB.get_spell(id).get("SpellName", ""))) != id:
+			continue
+		spells.append(id)
+	spells.sort_custom(func(a: int, b: int) -> bool:
+		var sa := SpellDB.get_spell(a)
+		var sb := SpellDB.get_spell(b)
+		if int(sa.get("SpellLevel", 0)) != int(sb.get("SpellLevel", 0)):
+			return int(sa.get("SpellLevel", 0)) < int(sb.get("SpellLevel", 0))
+		return str(sa.get("SpellName", "")) < str(sb.get("SpellName", "")))
+	# Flyouts (Boons, Greater Boons) lead the tab their spells are in.
+	for flyout: int in [SpellDB.GREATER_BOONS, SpellDB.BOONS]:
+		var inside := SpellDB.flyout_spells(flyout, GameState)
+		if not inside.is_empty() and SpellDB.book_tab(GameState.char_class, inside[0]) + 1 == _book_tab:
+			spells.push_front(flyout)
+	var pages := maxi(ceili(spells.size() / float(BOOK_PER_PAGE)), 1)
+	_book_page = clampi(_book_page, 0, pages - 1)
+	_book = _panel(BOOK_AT, BOOK_SIZE)
+	var tab_name := "General" if _book_tab == 0 else str(trees[_book_tab - 1].name)
+	_text(_book, Vector2(4, 1), "Spellbook (P) - %s" % tab_name, TITLE, 7)
+	var close := _text(_book, Vector2(BOOK_SIZE.x - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
+	close.mouse_filter = Control.MOUSE_FILTER_STOP
+	close.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_book.visible = false
+			_tooltip.show_lines([]))
+	var column_width := (BOOK_SIZE.x - 6) / 2.0
+	for i in range(_book_page * BOOK_PER_PAGE, mini((_book_page + 1) * BOOK_PER_PAGE, spells.size())):
+		var place := i - _book_page * BOOK_PER_PAGE
+		var at := Vector2(3 + (place % 2) * column_width, 16 + (place / 2) * BOOK_ENTRY)
+		_book_entry(spells[i], at, column_width - 2)
+	if spells.is_empty():
+		_text(_book, Vector2(6, 18), "No spells here yet.", Color(0.6, 0.6, 0.6), 6)
+	# Page arrows.
+	if pages > 1:
+		_text(_book, Vector2(BOOK_SIZE.x / 2.0 - 14, BOOK_SIZE.y - 11), "Page %d/%d" % [_book_page + 1, pages], Color(0.75, 0.75, 0.75), 6)
+		for step: int in [-1, 1]:
+			var enabled: bool = _book_page + step >= 0 and _book_page + step < pages
+			var arrow := _text(_book, Vector2(BOOK_SIZE.x / 2.0 + (24 if step > 0 else -30), BOOK_SIZE.y - 12), ">" if step > 0 else "<", TITLE if enabled else Color(0.4, 0.4, 0.4), 8)
+			if enabled:
+				arrow.mouse_filter = Control.MOUSE_FILTER_STOP
+				arrow.gui_input.connect(func(event: InputEvent) -> void:
+					if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+						_book_page += step
+						_redraw_book())
+	# "Hide old ranks": only each spell's highest known rank (saved).
+	var box := ColorRect.new()
+	box.color = Color(0.1, 0.1, 0.12)
+	box.position = Vector2(4, BOOK_SIZE.y - 10) * _ui_scale
+	box.size = Vector2.ONE * 7 * _ui_scale
+	box.mouse_filter = Control.MOUSE_FILTER_STOP
+	_book.add_child(box)
+	var box_border := ReferenceRect.new()
+	box_border.border_color = Color(0.7, 0.65, 0.45)
+	box_border.border_width = maxf(_ui_scale, 1.0)
+	box_border.editor_only = false
+	box_border.size = box.size
+	box_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(box_border)
+	if hide_old:
+		_text(box, Vector2(1.2, -1.5), "x", TITLE, 7)
+	var box_label := _text(_book, Vector2(13, BOOK_SIZE.y - 11), "Hide old ranks", Color(0.8, 0.8, 0.8), 6)
+	box_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	for clickable: Control in [box, box_label]:
+		clickable.gui_input.connect(func(event: InputEvent) -> void:
+			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				Settings.set_value("spellbook_hide_old_ranks", not hide_old)
+				Settings.save()
+				_redraw_book())
+	# Tabs down the right edge, outside the page.
+	var names: Array[String] = ["General"]
+	for tree: Dictionary in trees:
+		names.append(str(tree.name))
+	for i in names.size():
+		var tab := ColorRect.new()
+		tab.color = Color(0.2, 0.18, 0.12, 0.95) if i == _book_tab else Color(0.1, 0.1, 0.13, 0.92)
+		tab.position = Vector2(BOOK_SIZE.x + 1, 8 + i * (BOOK_TAB.y + 2)) * _ui_scale
+		tab.size = BOOK_TAB * _ui_scale
+		tab.mouse_filter = Control.MOUSE_FILTER_STOP
+		_book.add_child(tab)
+		_text(tab, Vector2(3, 1), names[i], TITLE if i == _book_tab else Color(0.8, 0.8, 0.8), 6)
+		var index := i
+		tab.gui_input.connect(func(event: InputEvent) -> void:
+			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				_book_tab = index
+				_book_page = 0
+				_redraw_book())
 	_book.visible = false
 
 
-func _on_book_input(event: InputEvent, id: int) -> void:
+## One spell on the page: icon, name and rank. Hover for its tooltip,
+## right-click to cast, drag onto a bar.
+func _book_entry(id: int, at: Vector2, width: float) -> void:
+	var spell := SpellDB.get_spell(id)
+	var row := ColorRect.new()
+	row.color = Color.TRANSPARENT
+	row.position = at * _ui_scale
+	row.size = Vector2(width, BOOK_ENTRY - 1) * _ui_scale
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	_book.add_child(row)
+	var icon := ColorRect.new()
+	icon.size = Vector2.ONE * (BOOK_ENTRY - 3) * _ui_scale
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	_draw_icon(icon, id)
+	var name := _text(row, Vector2(BOOK_ENTRY, 1), spell.SpellName, Color.WHITE, 6)
+	name.clip_text = true
+	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name.size.x = (width - BOOK_ENTRY) * _ui_scale
+	_text(row, Vector2(BOOK_ENTRY, 8), "Choose one" if SpellDB.is_flyout(id) else str(spell.Rank1), Color(0.6, 0.6, 0.6), 5)
+	row.mouse_entered.connect(func() -> void:
+		row.color = Color(1, 1, 1, 0.08)
+		_tooltip.show_lines(spell_tooltip(id))
+	)
+	row.mouse_exited.connect(func() -> void:
+		row.color = Color.TRANSPARENT
+		_tooltip.show_lines([])
+	)
+	row.gui_input.connect(func(event: InputEvent) -> void: _on_book_input(event, id, row))
+
+
+## Rebuilds the book in place (a new tab or page), keeping it open.
+func _redraw_book() -> void:
+	var was_open := _book.visible
+	_book.queue_free()
+	_build_book()
+	_book.visible = was_open
+	_tooltip.show_lines([])
+
+
+func _on_book_input(event: InputEvent, id: int, row: Control = null) -> void:
 	var button := event as InputEventMouseButton
-	if button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT:
+	if button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT and SpellDB.is_flyout(id):
+		_toggle_flyout(id, row)
+	elif button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT:
 		_player.spells.cast(id)
 	elif button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
 		_set_held(id)
@@ -434,6 +588,69 @@ func _on_book_input(event: InputEvent, id: int) -> void:
 	else:
 		return
 	get_viewport().set_input_as_handled()
+
+
+# Flyouts.
+
+## Opens a flyout's menu by its button (or closes it if it's open there):
+## a row of its spells, upward from a bottom bar, leftward from a right one,
+## rightward from the spellbook. Click one to cast it.
+func _toggle_flyout(id: int, anchor: Control) -> void:
+	var same := _flyout != null and _flyout_anchor == anchor
+	_close_flyout()
+	if same or anchor == null:
+		return
+	var spells := SpellDB.flyout_spells(id, GameState)
+	if spells.is_empty():
+		message.emit("You don't know any %s yet." % str(SpellDB.FLYOUTS[id].name).to_lower(), true)
+		return
+	var unit := SLOT * _ui_scale
+	var gap := GAP * _ui_scale
+	var at := anchor.get_global_rect()
+	var view := get_viewport_rect().size
+	var step := Vector2(0, -(unit + gap))
+	var start := Vector2(at.position.x + (at.size.x - unit) / 2.0, at.position.y - unit - gap)
+	if _book.is_ancestor_of(anchor):
+		step = Vector2(unit + gap, 0)
+		start = Vector2(_book.get_global_rect().end.x + gap + BOOK_TAB.x * _ui_scale, at.position.y)
+	elif at.end.x > view.x * 0.8 and at.position.y < view.y * 0.7:
+		step = Vector2(-(unit + gap), 0)
+		start = Vector2(at.position.x - unit - gap, at.position.y + (at.size.y - unit) / 2.0)
+	_flyout = Control.new()
+	_flyout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flyout_anchor = anchor
+	add_child(_flyout)
+	var first := start
+	for spell_id in spells:
+		var box := ColorRect.new()
+		box.position = start
+		box.size = Vector2.ONE * unit
+		box.mouse_filter = Control.MOUSE_FILTER_STOP
+		_flyout.add_child(box)
+		_draw_icon(box, spell_id)
+		box.mouse_entered.connect(func() -> void: _tooltip.show_lines(spell_tooltip(spell_id)))
+		box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+		box.gui_input.connect(func(event: InputEvent) -> void:
+			var click := event as InputEventMouseButton
+			if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+				_tooltip.show_lines([])
+				_close_flyout()
+				_player.spells.cast(spell_id)
+				get_viewport().set_input_as_handled())
+		start += step
+	# The menu's control spans its buttons, for telling clicks outside it.
+	var last := start - step
+	_flyout.position = Vector2(minf(first.x, last.x), minf(first.y, last.y))
+	_flyout.size = Vector2(absf(last.x - first.x), absf(last.y - first.y)) + Vector2.ONE * unit
+	for box in _flyout.get_children():
+		(box as Control).position -= _flyout.position
+
+
+func _close_flyout() -> void:
+	if _flyout:
+		_flyout.queue_free()
+	_flyout = null
+	_flyout_anchor = null
 
 
 # Buffs.
@@ -511,6 +728,14 @@ func spell_tooltip(id: int) -> Array:
 		return []
 	var spell := SpellDB.get_spell(id)
 	var lines: Array = [[spell.SpellName, str(spell.Rank1), Color.WHITE]]
+	if SpellDB.is_flyout(id):
+		var names: Array[String] = []
+		for inside in SpellDB.flyout_spells(id, GameState):
+			names.append(str(SpellDB.get_spell(inside).SpellName))
+		lines.append(["Click to choose one to cast.", "", DESCRIPTION])
+		if not names.is_empty():
+			lines.append([", ".join(names), "", Color(0.75, 0.75, 0.75)])
+		return lines
 	if id == SpellDB.ATTACK:
 		lines.append([SpellText.describe(spell, GameState.level), "", DESCRIPTION])
 		return lines
@@ -547,9 +772,16 @@ func _draw_icon(box: ColorRect, id: int) -> void:
 	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(border)
 	var letters := ""
-	for word in str(spell.SpellName).split(" ", false):
-		if word[0] == word[0].to_upper():
-			letters += word[0]
+	var spell_name := str(spell.SpellName)
+	# Boons by their own word, so a flyout's buttons differ (Str, She; GSt).
+	var boon := spell_name.find("Boon of ")
+	if boon >= 0 and not spell_name.begins_with("Improved"):
+		var word := spell_name.substr(boon + 8).replace("the ", "")
+		letters = ("G" + word.substr(0, 2)) if spell_name.begins_with("Greater") else word.substr(0, 3)
+	else:
+		for word in spell_name.split(" ", false):
+			if word[0] == word[0].to_upper():
+				letters += word[0]
 	_text(box, Vector2(1, 1), letters.substr(0, 3), Color.WHITE, 6)
 
 

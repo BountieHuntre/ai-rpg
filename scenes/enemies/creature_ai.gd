@@ -15,14 +15,30 @@ extends Node
 ## EventAI event types (CreatureEventAI.h).
 const EVENT_TIMER_IN_COMBAT := 0
 const EVENT_TIMER_OOC := 1
+## Health between two percentages (params: max %, min %, repeat min/max).
+const EVENT_HP := 2
 const EVENT_AGGRO := 4
 const EVENT_RANGE := 9
 const EVENT_SPAWNED := 11
 const EVENT_FRIENDLY_MISSING_BUFF := 27
 const EVENT_FACING_TARGET := 33
 ## Action types: cast a spell, set ranged mode.
+const ACTION_TEXT := 1
 const ACTION_CAST := 11
+const ACTION_FLEE_FOR_ASSIST := 25
+const ACTION_CALL_FOR_HELP := 39
+const ACTION_CHANCED_TEXT := 44
+const ACTION_TEXT_NEW := 54
 const ACTION_SET_RANGED_MODE := 57
+## How long a creature flees (CreatureFamilyFleeDelay in CMaNGOS).
+const FLEE_TIME := 10.0
+## What creatures say when the data has them speak (classic's lines aren't
+## used): by the start of their name.
+const SAYINGS := {
+	"Burrowling": ["No take the candles!", "Ours! This dig is ours!", "You go away from tunnel!", "Candle stays with us!"],
+	"Brigand": ["Your purse or your life!", "Wrong road, traveller.", "Should've kept walking.", "Fresh pickings!"],
+	"Masked Brigand": ["Your purse or your life!", "Wrong road, traveller.", "Should've kept walking.", "Fresh pickings!"],
+}
 ## Event flags.
 const EFLAG_REPEATABLE := 0x01
 ## The event's first action must succeed, or it tries again next update.
@@ -162,6 +178,8 @@ func cast_fraction() -> float:
 ## Whether the creature should hold its ground rather than close in on its
 ## victim: while casting, and in ranged mode within chase distance and sight.
 func holds_ground(victim: Combatant) -> bool:
+	if _enemy.panic_left > 0.0:
+		return false
 	if not casting.is_empty():
 		return true
 	return ranged_now and _me.distance_to(victim) <= chase_distance and _in_sight(victim)
@@ -200,7 +218,7 @@ func _physics_process(delta: float) -> void:
 		var kind := int(data.type)
 		var active := false
 		match kind:
-			EVENT_TIMER_IN_COMBAT, EVENT_RANGE, EVENT_FACING_TARGET:
+			EVENT_TIMER_IN_COMBAT, EVENT_RANGE, EVENT_FACING_TARGET, EVENT_HP:
 				active = fighting and victim != null
 			EVENT_TIMER_OOC:
 				active = _enemy.state == Enemy.State.IDLE
@@ -228,6 +246,9 @@ func _condition_met(data: Dictionary, victim: Combatant) -> bool:
 		EVENT_RANGE:
 			var distance := _me.distance_to(victim)
 			return distance >= float(params[0]) and distance <= float(params[1])
+		EVENT_HP:
+			var percent := 100.0 * _me.health / maxf(_me.max_health, 1.0)
+			return percent <= float(params[0]) and percent >= float(params[1])
 		EVENT_FACING_TARGET:
 			# 0: behind its target (the target faces away), 1: in front of it.
 			var in_front := victim.faces(_me)
@@ -277,10 +298,30 @@ func _fire(event: Dictionary) -> Fail:
 				ranged = true
 				chase_distance = float(action[2])
 				ranged_now = true
+			ACTION_TEXT, ACTION_TEXT_NEW:
+				_say()
+			ACTION_CHANCED_TEXT:
+				if randi() % 100 < int(action[1]):
+					_say()
+			ACTION_FLEE_FOR_ASSIST:
+				result = Fail.NONE if _enemy.flee(FLEE_TIME) else Fail.PREVENTED
+			ACTION_CALL_FOR_HELP:
+				_enemy.call_for_help(float(action[1]))
 		if index == 0:
 			first = result
 		index += 1
 	return first
+
+
+## A line of the creature's own, said aloud (classic's text ids pick lines
+## the game doesn't use).
+func _say() -> void:
+	var name := _me.display_name
+	for prefix: String in SAYINGS:
+		if name.begins_with(prefix) or name.contains(prefix):
+			var lines: Array = SAYINGS[prefix]
+			Chat.monster(name, lines[randi() % lines.size()], _enemy.global_position)
+			return
 
 
 ## Proximity ranged mode: melee when the victim reaches it, back to casting
@@ -359,7 +400,7 @@ func _try_cast(id: int, target_kind: int, flags: int) -> Fail:
 
 
 func _problem(spell: Dictionary, target: Combatant, flags := 0) -> Fail:
-	if _me.is_stunned() or _me.is_feared():
+	if _me.is_stunned() or _me.is_feared() or _enemy.panic_left > 0.0:
 		return Fail.PREVENTED
 	if _prevented(spell):
 		return Fail.PREVENTED

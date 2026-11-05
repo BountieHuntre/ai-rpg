@@ -1,5 +1,8 @@
 class_name Player
 extends PlayerUnit
+
+## A bar key pressed on a flyout (Boons): the HUD opens its menu.
+signal flyout_pressed(slot: int)
 ## The player's character, with classic WoW movement. World units are yards.
 ## W and S run and backpedal, A and D turn, Q and E strafe, Space jumps,
 ## Num Lock autoruns and / toggles walking. While right-dragging the camera,
@@ -85,7 +88,10 @@ func handle_action(event: InputEvent) -> void:
 	# Buttons of hidden extra bars do nothing.
 	for i in GameState.shown_slots():
 		if event.is_action_pressed(GameState.slot_action(i)) and GameState.action_bar[i] != 0:
-			spells.cast(GameState.action_bar[i])
+			if SpellDB.is_flyout(GameState.action_bar[i]):
+				flyout_pressed.emit(i)
+			else:
+				spells.cast(GameState.action_bar[i])
 
 
 func _physics_process(delta: float) -> void:

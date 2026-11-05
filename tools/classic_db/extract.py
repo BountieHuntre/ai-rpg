@@ -23,9 +23,11 @@ import renames
 # Defias Thug, Stonetusk Boar, Kobold Tunneler: classic levels 1 to 6.
 # Kobold Geomancer, Kobold Miner and Defias Cutpurse (5 to 8) cast spells.
 CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94]
-# EventAI (creature_ai_scripts) actions the game runs: cast a spell (11) and
-# set ranged mode (57). Talk, emotes and sounds are left out.
-AI_ACTIONS = {11, 57}
+# EventAI (creature_ai_scripts) actions the game runs: say something (1, 44,
+# 54: the game writes its own lines), flee for assistance (25), cast a spell
+# (11), call for help (39) and set ranged mode (57). Emotes and sounds are
+# left out.
+AI_ACTIONS = {1, 11, 25, 39, 44, 54, 57}
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
 VENDORS = [152, 1213]
@@ -45,6 +47,10 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
 # not every one of them teaches get a "races" list.
 # 913 is Lyria Du Lac, Warrior Trainer.
 CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913}
+# Each class's skill lines in the order of its talent trees (SkillLine ids):
+# Arms, Fury, Protection; Holy, Protection, Retribution; Discipline, Holy,
+# Shadow Magic.
+CLASS_SKILL_LINES = {1: [26, 256, 257], 2: [594, 267, 184], 5: [613, 56, 78]}
 # Classes whose starting spells are exported: the ones with spell code in the game.
 SPELL_CLASSES = {1, 2, 5}  # Warrior, Paladin, Priest
 # Each class's SpellFamilyName: start spells of other families (racials) are left out.
@@ -133,7 +139,7 @@ CREATURE_FIELDS = [
     "Entry", "Name", "SubName", "MinLevel", "MaxLevel", "MinLevelHealth", "MaxLevelHealth",
     "MinLevelMana", "MaxLevelMana", "Armor", "MinMeleeDmg", "MaxMeleeDmg", "MeleeAttackPower",
     "MeleeBaseAttackTime", "Rank", "CreatureType", "Family", "LootId", "MinLootGold", "MaxLootGold",
-    "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags", "UnitClass",
+    "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags", "UnitClass", "CallForHelp",
 ]
 ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",
@@ -437,6 +443,14 @@ def export_spells(db, item_spells):
                 wanted.update(talent["ranks"])
         talents[str(class_id)] = [dict(tree, name=renames.talent_tree(class_id, tree["name"])) for tree in trees]
 
+    # The spellbook's tabs: each spell's talent tree, by its skill line
+    # (skill_lines.json, from SkillLineAbility); spells in none go in General.
+    with open(os.path.join(OUT_DIR, "skill_lines.json"), encoding="utf8") as f:
+        skill_lines = json.load(f)
+    book_tabs = {}
+    for class_id, lines in CLASS_SKILL_LINES.items():
+        book_tabs[str(class_id)] = {spell: lines.index(line) for spell, line in skill_lines.items() if line in lines}
+
     start = {}
     for r in db["playercreateinfo_spell"]:
         if int(r["class"]) in SPELL_CLASSES:
@@ -509,7 +523,7 @@ def export_spells(db, item_spells):
                           "school": int(r["SchoolMask"]), "flags": int(r["procFlags"]), "ex": int(r["procEx"])}
              for r in db["spell_proc_event"] if int(r["entry"]) in wanted}
     write("spells.json", {"spells": out, "chains": chains, "bonus": bonus, "trainers": trainers,
-                          "start_spells": start, "procs": procs, "talents": talents,
+                          "start_spells": start, "procs": procs, "talents": talents, "book_tabs": book_tabs,
                           "judgement_procs": {str(k): v for k, v in JUDGEMENT_PROC_SPELLS.items()},
                           "holy_shock": {str(k): v for k, v in HOLY_SHOCK_SPELLS.items()},
                           "links": {str(k): v for k, v in SPELL_LINKS.items()},

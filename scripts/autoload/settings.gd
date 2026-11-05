@@ -70,6 +70,8 @@ const DEFAULTS := {
 	"chatframe_tabs": [],
 	"chatframe_rect": [],
 	"chatframe_locked": true,
+	# The spellbook's "Hide old ranks" box: only the highest known rank of each spell.
+	"spellbook_hide_old_ranks": false,
 	# Developer
 	"dev_console": true,
 }

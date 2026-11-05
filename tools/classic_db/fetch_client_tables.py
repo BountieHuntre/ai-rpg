@@ -17,7 +17,9 @@ gives each new character these items).
 
 Talents are TalentTab (each class's three trees) and Talent (each talent's
 tier, column, rank spells and prerequisites), into data/classic/talents.json.
-extract.py exports their spells and renames the trees.
+extract.py exports their spells and renames the trees. Each class spell's
+skill line (SkillLineAbility) goes into skill_lines.json, for the spellbook's
+tabs.
 
 Factions are FactionTemplate, for who is hostile to whom (FactionTemplateEntry
 in CMaNGOS), and each race's template from ChrRaces, into
@@ -74,6 +76,20 @@ def main():
         json.dump({"templates": templates, "races": races}, out, separators=(",", ":"))
     print(f"{len(templates)} faction templates")
     export_talents()
+    export_skill_lines()
+
+
+def export_skill_lines():
+    """Each class spell's skill line (SkillLineAbility, for skill lines of
+    the class category, 7), into skill_lines.json: the spellbook's tabs."""
+    class_lines = {row["ID"] for row in fetch("SkillLine") if row["CategoryID"] == "7"}
+    spells = {}
+    for row in fetch("SkillLineAbility"):
+        if row["SkillLine"] in class_lines:
+            spells[row["Spell"]] = int(row["SkillLine"])
+    with open(os.path.join(OUT_DIR, "skill_lines.json"), "w", encoding="utf8") as out:
+        json.dump(spells, out, separators=(",", ":"))
+    print(f"{len(spells)} class spells' skill lines")
 
 
 def export_talents():

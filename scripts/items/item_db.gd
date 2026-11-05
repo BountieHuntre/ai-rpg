@@ -49,6 +49,12 @@ static func get_item(id: int) -> Dictionary:
 	return _items.get(str(id), {})
 
 
+## Every item id in the game.
+static func all_ids() -> Array:
+	get_item(0)
+	return _items.keys().map(func(key: String) -> int: return int(key))
+
+
 static var _by_name: Dictionary
 
 

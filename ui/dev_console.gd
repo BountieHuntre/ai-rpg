@@ -23,6 +23,7 @@ const COMMANDS := {
 	"learn": ["<id or name>", "Learn a spell (the highest rank for a name)."],
 	"trainall": ["", "Learn every spell your class trainer teaches at your level, for free."],
 	"resettalents": ["", "Take back every talent point, for free."],
+	"bis": ["", "Put on the best gear in the game for your class and level (BiS)."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
 	"tele": ["<x> <z> | spawn", "Teleport to a map point or the start."],
@@ -313,6 +314,29 @@ func _cmd_trainall(_args: PackedStringArray) -> String:
 		return "Nothing new to learn at level %d." % GameState.level
 	GameState.inventory_changed.emit()
 	return "Learned %d spell%s: %s." % [learned.size(), "" if learned.size() == 1 else "s", ", ".join(learned)]
+
+
+func _cmd_bis(_args: PackedStringArray) -> String:
+	var lines: Array[String] = [_bis_line(BestGear.equip_best(), "You're", "You")]
+	# Party bots gear up too, by their own builds.
+	for member: Node in Party.members:
+		var bot := member as Bot
+		if bot == null:
+			continue
+		var result := BestGear.equip_best(bot.profile, bot.bag)
+		bot.stats.refresh()
+		lines.append(_bis_line(result, "%s is" % bot.profile.char_name, bot.profile.char_name))
+	return "
+".join(lines)
+
+
+func _bis_line(result: Dictionary, who_is: String, who: String) -> String:
+	var equipped: Array = result.equipped
+	var note := " (%d left off: no bag room for what they'd replace)" % result.no_room if result.no_room > 0 else ""
+	var build := " for %s" % result.tree if not str(result.tree).is_empty() else ""
+	if equipped.is_empty():
+		return "%s already in the best gear%s%s." % [who_is, build, note]
+	return "%s equipped %d item%s%s: %s%s." % [who, equipped.size(), "" if equipped.size() == 1 else "s", build, ", ".join(equipped), note]
 
 
 func _cmd_resettalents(_args: PackedStringArray) -> String:

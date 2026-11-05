@@ -129,6 +129,8 @@ func _fill(rows: VBoxContainer, lines: Array) -> void:
 		child.free()
 	for line: Array in lines:
 		var row := HBoxContainer.new()
+		# Tooltips never catch the mouse: clicks go to what's under them.
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var left := _label(line[0], line[2])
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if str(line[1]).is_empty():
@@ -145,6 +147,7 @@ func _fill(rows: VBoxContainer, lines: Array) -> void:
 
 func _label(text: String, color: Color) -> Label:
 	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.text = text
 	label.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
 	label.add_theme_color_override("font_color", color)
@@ -171,7 +174,12 @@ func _place() -> void:
 	var extra := 0.0
 	for panel: PanelContainer in shown:
 		extra += panel.size.x
-	var x := clampf(at.x, 0.0, window.x - size.x)
+	# No room to the right of the cursor (the right action bars): to its
+	# left, so it never covers what's being pointed at.
+	var x := at.x
+	if x + size.x > window.x:
+		x = get_viewport().get_mouse_position().x - OFFSET.x * _ui_scale - size.x
+	x = clampf(x, 0.0, window.x - size.x)
 	var compare_x := x + size.x
 	if compare_x + extra > window.x:
 		compare_x = x - extra

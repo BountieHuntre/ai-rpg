@@ -31,6 +31,27 @@ var buy_rate := randf_range(BUY_RATE_MIN, BUY_RATE_MAX)
 var quotes := { "buy": {}, "sell": {} }
 
 
+## Grey (poor quality) items, equipment included: trash, worth only what a
+## vendor pays. Bots sell it to vendors, don't offer it, and won't pay more.
+static func is_trash(id: int) -> bool:
+	return int(ItemDB.get_item(id).get("Quality", 1)) == ItemDB.Quality.POOR
+
+
+func has_trash() -> bool:
+	return stacks.any(func(stack: Dictionary) -> bool: return is_trash(int(stack.id)))
+
+
+## Sells every trash stack to a vendor. Returns the copper it got.
+func sell_trash() -> int:
+	var gained := 0
+	for i in range(stacks.size() - 1, -1, -1):
+		if is_trash(int(stacks[i].id)):
+			gained += _vendor_value(stacks[i])
+			stacks.remove_at(i)
+	money += gained
+	return gained
+
+
 static func can_trade(id: int) -> bool:
 	return not int(ItemDB.get_item(id).get("bonding", 0)) in UNTRADEABLE
 
@@ -77,12 +98,18 @@ func loot(enemy: Enemy) -> void:
 	money += LootTable.roll_money(int(data.get("MinLootGold", 0)), int(data.get("MaxLootGold", 0)))
 
 
-## Full bags: the cheapest stacks go to a vendor for their sell price.
+## Full bags: trash goes to a vendor first, then the cheapest stacks, for
+## their sell price.
 func _make_room() -> void:
 	while stacks.size() > MAX_STACKS:
 		var cheapest := 0
 		for i in stacks.size():
-			if _vendor_value(stacks[i]) < _vendor_value(stacks[cheapest]):
+			var trash := is_trash(int(stacks[i].id))
+			var cheapest_trash := is_trash(int(stacks[cheapest].id))
+			if trash != cheapest_trash:
+				if trash:
+					cheapest = i
+			elif _vendor_value(stacks[i]) < _vendor_value(stacks[cheapest]):
 				cheapest = i
 		money += _vendor_value(stacks[cheapest])
 		stacks.remove_at(cheapest)
@@ -93,11 +120,11 @@ static func _vendor_value(stack: Dictionary) -> int:
 
 
 ## The stacks it would sell: things that can change hands and are worth
-## something.
+## something (not trash).
 func for_sale() -> Array[Dictionary]:
 	var goods: Array[Dictionary] = []
 	for stack in stacks:
-		if can_trade(int(stack.id)) and int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) > 0:
+		if can_trade(int(stack.id)) and int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) > 0 and not is_trash(int(stack.id)):
 			goods.append(stack)
 	return goods
 
@@ -114,13 +141,14 @@ func asking_price(id: int, count: int) -> int:
 func buying_price(id: int, count: int) -> int:
 	if quotes.buy.has(id):
 		return int(quotes.buy[id]) * count
-	return roundi(_vendor(id) * count * buy_rate)
+	# Trash: only what a vendor would give.
+	return roundi(_vendor(id) * count * (1.0 if is_trash(id) else buy_rate))
 
 
 ## The most it would pay, haggled up, and the least it would sell for,
 ## haggled down: copper each.
 func top_bid(id: int) -> int:
-	return roundi(_vendor(id) * BUY_CEILING)
+	return roundi(_vendor(id) * (1.0 if is_trash(id) else BUY_CEILING))
 
 
 func lowest_ask(id: int) -> int:

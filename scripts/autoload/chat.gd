@@ -20,6 +20,8 @@ const COLORS := {
 	"channel": Color("ffc0c0"), "whisper": Color("ff80ff"), "whisper_to": Color("ff80ff"),
 	"emote": Color("ff8040"), "system": Color("ffff00"), "loot": Color("00aa00"),
 	"error": Color("ff2020"), "dev": Color("99ccff"),
+	# Creatures speaking and emoting (classic's monster say and emote).
+	"monster_say": Color("ffff9f"), "monster_emote": Color("ffff9f"),
 }
 ## Yards a /say and a /yell carry (classic's listen ranges).
 const SAY_RANGE := 25.0
@@ -62,6 +64,15 @@ func say(sender: String, text: String, at: Vector3, yell := false, links := {}) 
 	if player and player.global_position.distance_to(at) > (YELL_RANGE if yell else SAY_RANGE):
 		return
 	add("yell" if yell else "say", text, sender, 0, "", links)
+
+
+## A creature's speech or emote ("... tries to run away in fear!"), heard
+## within say range.
+func monster(sender: String, text: String, at: Vector3, emote := false) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player and player.global_position.distance_to(at) > SAY_RANGE:
+		return
+	add("monster_emote" if emote else "monster_say", text, sender)
 
 
 ## Links the items and quests in text: every "[Name]" naming a real item or
@@ -131,6 +142,10 @@ func format(line: Dictionary) -> String:
 			body = "To [url=player:%s][lb]%s][/url]: %s" % [target, target, text]
 		"emote":
 			body = "%s %s" % [sender, text] if not sender.is_empty() else text
+		"monster_say":
+			body = "%s says: %s" % [sender, text]
+		"monster_emote":
+			body = "%s %s" % [sender, text]
 		_:
 			body = text
 	return "[color=#%s]%s[/color]" % [color.to_html(false), body]

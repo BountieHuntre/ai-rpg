@@ -38,6 +38,7 @@ const CATEGORIES := [
 	["whisper", "Whispers"], ["channel1", "1. General"], ["channel2", "2. Trade"],
 	["channel3", "3. LocalDefense"], ["channel4", "4. LookingForGroup"],
 	["system", "System Messages"], ["loot", "Loot"], ["error", "Errors"],
+	["monster", "Creature Speech"],
 ]
 ## Right-click menu entries.
 enum TabMenu { NEW, EDIT, CLOSE, LOCK }
@@ -231,6 +232,8 @@ static func category(line: Dictionary) -> String:
 			return "channel%d" % int(line.channel)
 		"dev":
 			return "system"
+		"monster_say", "monster_emote":
+			return "monster"
 	return str(line.kind)
 
 

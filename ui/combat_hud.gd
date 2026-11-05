@@ -83,6 +83,12 @@ var _cast_fill: Control
 var _cast_name: Label
 ## The target's cast, under the target frame, so you can see what to interrupt.
 var _target_cast: Control
+## The target's buffs and debuffs under its frame, rebuilt when they change.
+var _target_auras: Control
+var _target_auras_key := ""
+var _target_auras_height := 0.0
+const TARGET_AURA := 10.0
+const TARGET_AURAS_PER_ROW := 8
 var _target_cast_fill: Control
 var _target_cast_name: Label
 var _message: Label
@@ -296,6 +302,7 @@ func _process(delta: float) -> void:
 
 	if _target_frame.visible:
 		_fit_target_frame()
+	_update_target_auras(target if target else (bot.combatant if bot else null))
 	_update_target_cast(target if target else (bot.combatant if bot else null))
 
 	var casting: Dictionary = _player.spells.casting
@@ -557,6 +564,10 @@ func _build_target_frame() -> void:
 	_target_mana_back = _rect(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.08, 0.1, 0.2))
 	_target_mana = _bar(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
 	_target_mana_text = _bar_text(_target_frame, Vector2(3, 23), Vector2(84, 9))
+	_target_auras = Control.new()
+	_target_auras.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_target_auras)
+	_target_auras_key = ""
 	_target_cast = _frame(Vector2(4 + _player_frame_width + 6, 41), Vector2(FRAME_INNER + 6, 10))
 	_target_cast_fill = _bar(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), Color(0.9, 0.65, 0.2))
 	_target_cast_name = _bar_text(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), XP_FONT_SIZE + 1)
@@ -601,9 +612,86 @@ func _update_target_cast(c: Combatant) -> void:
 	var cast := unit_cast(c) if c and c.is_alive() else []
 	_target_cast.visible = not cast.is_empty() and _target_frame.visible
 	if _target_cast.visible:
-		_target_cast.position.y = _target_frame.position.y + _target_frame.size.y + 2.0 * _ui_scale
+		# Under the target's buffs and debuffs.
+		_target_cast.position.y = _target_frame.position.y + _target_frame.size.y + (2.0 + _target_auras_height) * _ui_scale
 		_target_cast_name.text = cast[0]
 		_set_bar(_target_cast_fill, cast[1], 1.0)
+
+
+## The target's buffs (first row) and debuffs (second) under its frame, as
+## in classic: what enemies of the target put on it are debuffs, and the
+## player's own debuffs are framed gold. Hover one for what it does and the
+## time left. Passive effects aren't shown.
+func _update_target_auras(c: Combatant) -> void:
+	var shown: Array = []
+	if c and is_instance_valid(c) and c.is_alive() and _target_frame.visible:
+		for aura in c.auras:
+			if aura.get("talent", false) or SpellDB.is_passive(aura.spell):
+				continue
+			shown.append(aura)
+	var key := str(c.get_instance_id() if c else 0) + ":" + ",".join(shown.map(func(aura: Dictionary) -> String: return str(int(aura.spell.Id))))
+	if key != _target_auras_key:
+		_target_auras_key = key
+		_build_target_auras(c, shown)
+	_target_auras.position = Vector2(_target_frame.position.x, _target_frame.position.y + _target_frame.size.y + 2.0 * _ui_scale)
+	for icon in _target_auras.get_children():
+		if icon.has_meta("aura") and icon.has_meta("time"):
+			var aura: Dictionary = icon.get_meta("aura")
+			var remaining: float = aura.remaining
+			(icon.get_meta("time") as Label).text = "" if remaining < 0.0 else ("%dm" % ceili(remaining / 60.0) if remaining >= 60.0 else "%d" % ceili(remaining))
+
+
+func _build_target_auras(c: Combatant, shown: Array) -> void:
+	for child in _target_auras.get_children():
+		child.free()
+	_target_auras_height = 0.0
+	if shown.is_empty():
+		return
+	var buffs: Array = []
+	var debuffs: Array = []
+	for aura: Dictionary in shown:
+		var caster: Combatant = aura.caster if is_instance_valid(aura.caster) else null
+		# Harmful: from the other side (a player unit on a creature, or a
+		# creature on a player unit).
+		var harmful := caster != null and caster.is_player != c.is_player
+		(debuffs if harmful else buffs).append(aura)
+	var row := 0
+	for list: Array in [buffs, debuffs]:
+		if list.is_empty():
+			continue
+		for i in list.size():
+			var aura: Dictionary = list[i]
+			var box := ColorRect.new()
+			box.position = Vector2((i % TARGET_AURAS_PER_ROW) * (TARGET_AURA + 1), (row + i / TARGET_AURAS_PER_ROW) * (TARGET_AURA + 6)) * _ui_scale
+			box.size = Vector2.ONE * TARGET_AURA * _ui_scale
+			box.mouse_filter = Control.MOUSE_FILTER_STOP
+			_target_auras.add_child(box)
+			_spells._draw_icon(box, int(aura.spell.Id))
+			if aura.caster == _player.combatant and list == debuffs:
+				var mine := ReferenceRect.new()
+				mine.border_color = Color(1, 0.82, 0.25)
+				mine.border_width = maxf(_ui_scale, 1.0)
+				mine.editor_only = false
+				mine.size = box.size
+				mine.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				box.add_child(mine)
+			var time := _label(box, Vector2(0, TARGET_AURA - 1), "")
+			time.add_theme_font_size_override("font_size", roundi(5 * _ui_scale))
+			box.set_meta("aura", aura)
+			box.set_meta("time", time)
+			var spell: Dictionary = aura.spell
+			var level := c.level
+			box.mouse_entered.connect(func() -> void:
+				var lines: Array = [[str(spell.SpellName), "", Color.WHITE]]
+				var text := SpellText.describe(spell, level)
+				if not text.is_empty():
+					lines.append([text, "", SpellUI.DESCRIPTION])
+				if aura.remaining >= 0.0:
+					lines.append(["%d sec remaining" % ceili(aura.remaining), "", SpellUI.DESCRIPTION])
+				_tooltip.show_lines(lines))
+			box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+		row += ceili(list.size() / float(TARGET_AURAS_PER_ROW))
+	_target_auras_height = row * (TARGET_AURA + 6)
 
 
 ## Mana bars are blue, rage bars red (classic's power colors).
