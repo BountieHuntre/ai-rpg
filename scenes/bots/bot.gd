@@ -25,6 +25,8 @@ const FAR := 45.0
 const QUEST_CHECK := 2.0
 ## Yards a bot on its own looks around for creatures to hunt.
 const HUNT_RANGE := 30.0
+## How far away a creature attacking it can be: past its leash it gives up.
+const LEASH_REACH := 70.0
 ## A bot on its own leaves creatures this many levels above it alone.
 const HUNT_LEVELS_ABOVE := 2
 ## Party bots fight creatures within this many yards of the leader.
@@ -152,6 +154,8 @@ var _wanted: Array[int] = []
 var _business: Npc
 var _quest_check_left := 0.0
 var _far := false
+## When the BotManager last ticked it while far (BotManager.far_schedule).
+var far_clock := 0.0
 
 
 @onready var stats: CharacterStats = $CharacterStats
@@ -425,7 +429,7 @@ func _fights_group(enemy: Enemy) -> bool:
 ## then the nearest creature worth hunting, unless it needs a rest.
 func _solo_enemy() -> Combatant:
 	var attacker: Combatant = null
-	for node in _creatures():
+	for node in _creatures_near(LEASH_REACH):
 		var enemy := node as Enemy
 		if enemy.state == Enemy.State.CHASE and enemy.combatant.is_alive() and enemy.threat.has(combatant):
 			if attacker == null or combatant.distance_to(enemy.combatant) < combatant.distance_to(attacker):
@@ -442,7 +446,7 @@ func _solo_enemy() -> Combatant:
 	# Creatures its quests need come first, then anything worth hunting.
 	var best: Combatant = null
 	var best_wanted := false
-	for node in _creatures():
+	for node in _creatures_near(HUNT_RANGE):
 		var enemy := node as Enemy
 		if not _can_hunt(enemy, false) or global_position.distance_to(enemy.global_position) > HUNT_RANGE:
 			continue
@@ -473,6 +477,11 @@ func _can_hunt(enemy: Enemy, already_fighting: bool) -> bool:
 ## the tree).
 func _creatures() -> Array:
 	return manager.creatures() if manager else get_tree().get_nodes_in_group("enemies")
+
+
+## The creatures within about `radius` yards (BotManager.creatures_near).
+func _creatures_near(radius: float) -> Array:
+	return manager.creatures_near(global_position, radius) if manager else _creatures()
 
 
 func _leader() -> Player:
@@ -559,10 +568,21 @@ func _sell_trash_nearby() -> void:
 ## The nearest quest giver it has business with: one to hand a finished
 ## quest to, or one with a quest it can take.
 func _quest_npc() -> Npc:
+	# Who it has business with, from its quests, then the nearest of them.
+	var business := {}
+	for id: int in QuestDB.all_ids():
+		var quest := QuestDB.get_quest(id)
+		if quests.active.has(id):
+			if quests.is_complete(id):
+				business[quest.get("ender")] = true
+		elif quests.can_take(id, profile.level):
+			business[quest.get("giver")] = true
+	if business.is_empty():
+		return null
 	var best: Npc = null
 	for node in get_tree().get_nodes_in_group("npcs"):
 		var npc := node as Npc
-		if not _has_business(npc.npc_id()):
+		if not business.has(npc.npc_id()):
 			continue
 		if best == null or global_position.distance_to(npc.global_position) < global_position.distance_to(best.global_position):
 			best = npc
@@ -813,7 +833,7 @@ func _use_man_at_arms_spells() -> void:
 	if in_party and _enemy.body is Enemy and (_enemy.body as Enemy).current_victim() not in [null, me] and _try("Goad", _enemy):
 		return
 	var crowd := 0
-	for node in _creatures():
+	for node in _creatures_near(8.0):
 		var enemy := node as Enemy
 		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and global_position.distance_to(enemy.global_position) <= 8.0:
 			crowd += 1

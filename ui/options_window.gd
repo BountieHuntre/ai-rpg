@@ -59,8 +59,8 @@ const CATEGORIES := {
 	# Numbers are [lowest, highest, step, unit].
 	"Playerbots": [
 		["bots_enabled", "Enable Playerbots", "check", null],
-		# 250 holds about 60 fps; beyond 300 the physics can't keep up.
-		["bot_count", "Random Bots in the World", "number", [0, 250, 5, ""]],
+		# 400 holds about 70 fps with both zones (BotManager.far_schedule).
+		["bot_count", "Random Bots in the World", "number", [0, 400, 5, ""]],
 		["bot_min_level", "Random Bot Lowest Level", "number", [1, 60, 1, ""]],
 		["bot_max_level", "Random Bot Highest Level", "number", [1, 60, 1, ""]],
 		["bot_classes", "Bot Classes", "choice", ["All Classes", "Classes With Spells"]],

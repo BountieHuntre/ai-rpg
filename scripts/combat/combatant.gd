@@ -646,6 +646,9 @@ func _creature_swing_factor() -> float:
 	return 1.0 / (1.0 + haste / 100.0) if haste >= 0.0 else 1.0 - haste / 100.0
 
 
+const TICK_KEYS := ["tick0", "tick1", "tick2"]
+
+
 func _tick_auras(delta: float) -> void:
 	var expired := false
 	for aura in auras.duplicate():
@@ -668,16 +671,32 @@ const PERIODIC_KINDS := [
 ]
 
 
-func _tick_periodic(aura: Dictionary, delta: float) -> void:
-	var spell: Dictionary = aura.spell
+## Each spell's periodic effects, [index, aura kind, period], worked out once.
+static var _periodic_of: Dictionary = {}
+
+
+static func _periodic_effects(spell: Dictionary) -> Array:
+	var id := int(spell.get("Id", 0))
+	if _periodic_of.has(id):
+		return _periodic_of[id]
+	var effects := []
 	for i in 3:
 		var kind := int(spell.get("EffectApplyAuraName%d" % (i + 1), 0))
-		if not kind in PERIODIC_KINDS:
-			continue
 		var period := int(spell.get("EffectAmplitude%d" % (i + 1), 0)) / 1000.0
-		if period <= 0.0:
-			continue
-		var key := "tick%d" % i
+		if kind in PERIODIC_KINDS and period > 0.0:
+			effects.append([i, kind, period])
+	if id != 0:
+		_periodic_of[id] = effects
+	return effects
+
+
+func _tick_periodic(aura: Dictionary, delta: float) -> void:
+	var spell: Dictionary = aura.spell
+	for effect: Array in _periodic_effects(spell):
+		var i: int = effect[0]
+		var kind: int = effect[1]
+		var period: float = effect[2]
+		var key: String = TICK_KEYS[i]
 		aura[key] = aura.get(key, 0.0) + delta
 		while aura[key] >= period:
 			aura[key] -= period

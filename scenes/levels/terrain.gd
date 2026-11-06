@@ -16,6 +16,12 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 			var x := center.x - half + column * step
 			var z := center.y - half + row * step
 			points[row * (cells + 1) + column] = Vector3(x, height.call(x, z), z)
+	_cells = cells
+	_step = step
+	_origin = center - Vector2(half, half)
+	_heights.resize(points.size())
+	for i in points.size():
+		_heights[i] = points[i].y
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for row in cells + 1:
@@ -45,6 +51,37 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 	var shape := CollisionShape3D.new()
 	shape.shape = mesh.create_trimesh_shape()
 	add_child(shape)
+
+
+var _heights := PackedFloat32Array()
+var _cells := 0
+var _step := 1.0
+var _origin := Vector2.ZERO
+
+
+## The height of the built ground at a point, from its own grid and on its
+## triangles, so it is exactly the collision surface (and much cheaper than
+## the height function). Points off the ground take its nearest edge.
+func sample(x: float, z: float) -> float:
+	var fx := clampf((x - _origin.x) / _step, 0.0, _cells - 0.0001)
+	var fz := clampf((z - _origin.y) / _step, 0.0, _cells - 0.0001)
+	var column := int(fx)
+	var row := int(fz)
+	fx -= column
+	fz -= row
+	var width := _cells + 1
+	var a := _heights[row * width + column]
+	var b := _heights[row * width + column + 1]
+	var c := _heights[(row + 1) * width + column]
+	var d := _heights[(row + 1) * width + column + 1]
+	# The quad's two triangles: a b c, and b d c.
+	if fx + fz <= 1.0:
+		return a + (b - a) * fx + (c - a) * fz
+	return d + (c - d) * (1.0 - fx) + (b - d) * (1.0 - fz)
+
+
+func is_built() -> bool:
+	return _cells > 0
 
 
 ## Smooth normal from the neighboring heights.

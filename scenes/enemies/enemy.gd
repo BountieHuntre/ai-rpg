@@ -125,6 +125,18 @@ var _victim: Combatant
 ## creatures don't all look on the same frame).
 var _aggro_left := randf() * AGGRO_CHECK
 const AGGRO_CHECK := 0.2
+## Player units by square of the world, GRID yards on a side, made once a
+## physics frame, so a creature looking for someone to attack only checks
+## the squares around it. Classic's widest aggro radius is 45 yards.
+const GRID := 50.0
+static var _grid: Dictionary = {}
+static var _grid_frame := -1
+static var _player_at := Vector3.ZERO
+## Far from the player (Bot.FAR), the BotManager ticks the creature itself
+## within its time budget (BotManager.far_schedule), in bigger steps, with its
+## nodes' own per-frame work switched off; far_clock is when it last did.
+var _far := false
+var far_clock := 0.0
 
 ## Seconds left fleeing in a panic (flee), or 0.
 var panic_left := 0.0
@@ -208,6 +220,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_refresh_frame()
 	# Corpses stay where they fell: no gravity or sliding with the corpse shape.
 	if state == State.DEAD:
 		velocity = Vector3.ZERO
@@ -220,8 +233,7 @@ func _physics_process(delta: float) -> void:
 			_aggro_left -= delta
 			if _aggro_left <= 0.0 and is_aggressive():
 				_aggro_left = AGGRO_CHECK
-				for node in get_tree().get_nodes_in_group("player_units"):
-					var unit := node as PlayerUnit
+				for unit: PlayerUnit in _units_near():
 					if unit.combatant.is_alive() and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):
 						add_threat(unit.combatant, 0.0)
 						_start_chase(unit.combatant)
@@ -277,9 +289,70 @@ func _physics_process(delta: float) -> void:
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(direction * speed, acceleration * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
+	if _far and World.current:
+		# Far from the player: along the ground, no collision (as far bots),
+		# its long steps stopping where it's going rather than overshooting.
+		var reach := minf(Vector2(velocity.x, velocity.z).length() * delta, Vector2(offset.x, offset.z).length())
+		var step := global_position + Vector3(velocity.x, 0.0, velocity.z).normalized() * reach
+		global_position = Vector3(step.x, World.current.height_at(step.x, step.z), step.z)
+		velocity.y = 0.0
+		return
+	# Standing still on the ground: nothing to move, so no collision work.
+	if horizontal == Vector3.ZERO and is_on_floor() and velocity.y <= 0.0:
+		velocity.y = 0.0
+		return
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	move_and_slide()
+
+
+func set_far(far: bool) -> void:
+	if far == _far:
+		return
+	_far = far
+	for node: Node in [self, combatant, ai]:
+		if node:
+			node.set_physics_process(not far)
+	_feedback.set_process(not far)
+
+
+## One slow tick for a far creature: what its nodes would do over `delta`.
+func far_tick(delta: float) -> void:
+	combatant._physics_process(delta)
+	if ai:
+		ai._physics_process(delta)
+	_physics_process(delta)
+
+
+func is_far() -> bool:
+	return _far
+
+
+## Once a physics frame, for every creature: where the player is, and the
+## player units by square.
+func _refresh_frame() -> void:
+	var frame := Engine.get_physics_frames()
+	if frame == _grid_frame:
+		return
+	_grid_frame = frame
+	_grid.clear()
+	for node in get_tree().get_nodes_in_group("player_units"):
+		if node.is_in_group("player"):
+			_player_at = node.global_position
+		var key := Vector2i(floori(node.global_position.x / GRID), floori(node.global_position.z / GRID))
+		if not _grid.has(key):
+			_grid[key] = []
+		_grid[key].append(node)
+
+
+## The living and dead player units in the squares around this creature.
+func _units_near() -> Array:
+	var near := []
+	var cell := Vector2i(floori(global_position.x / GRID), floori(global_position.z / GRID))
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			near.append_array(_grid.get(cell + Vector2i(dx, dz), []))
+	return near
 
 
 ## Idle wandering: walk to a random point near home, pause, pick another.

@@ -96,11 +96,26 @@ func wanted_creatures(spawn_entries: Array) -> Array[int]:
 		for i in quest.items.size():
 			if int(progress.items[i]) >= int(quest.items[i][1]):
 				continue
-			for entry: int in spawn_entries:
-				var loot_id := int(Enemy.creature_data(entry).get("LootId", 0))
-				if not entry in wanted and LootTable.drop_chance(loot_id, int(quest.items[i][0])) > 0.0:
+			for entry: int in droppers(int(quest.items[i][0]), spawn_entries):
+				if not entry in wanted:
 					wanted.append(entry)
 	return wanted
+
+
+## The creatures, of those spawned in the world, that can drop an item
+## (worked out once per item: the loot tables don't change).
+static var _droppers: Dictionary = {}
+
+
+static func droppers(item_id: int, spawn_entries: Array) -> Array:
+	if not _droppers.has(item_id):
+		var entries := []
+		for entry: int in spawn_entries:
+			var loot_id := int(Enemy.creature_data(entry).get("LootId", 0))
+			if LootTable.drop_chance(loot_id, item_id) > 0.0:
+				entries.append(entry)
+		_droppers[item_id] = entries
+	return _droppers[item_id]
 
 
 ## How far along a quest is, 0 to 1, over all its objectives.

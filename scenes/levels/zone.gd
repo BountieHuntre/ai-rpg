@@ -137,6 +137,16 @@ func build_ground(step: float, color: Callable) -> void:
 	material.vertex_color_use_as_albedo = true
 	material.vertex_color_is_srgb = true
 	ground.build(size, step, height_at, color, material, center)
+	_ground = ground
+
+
+var _ground: Terrain
+
+
+## The height of the ground as built (Terrain.sample), once it is; before
+## that, the height function.
+func ground_height(x: float, z: float) -> float:
+	return _ground.sample(x, z) if _ground else height_at(x, z)
 
 
 ## Water at a height over the zone's square.

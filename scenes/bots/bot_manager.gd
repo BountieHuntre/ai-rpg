@@ -398,30 +398,83 @@ func creatures() -> Array:
 	return _creatures
 
 
-## Far bots are ticked by the manager instead of every frame: each frame
-## one slice of them, with the time since their last tick.
-const FAR_SLICES := 6
-var _far_slice := 0
-var _far_delta: Array[float] = []
+## Far bots and creatures (more than Bot.FAR from the player, bots not in
+## the party or a trade) are ticked here instead of every frame: in turn,
+## each at most FAR_RATE times a second, until FAR_BUDGET microseconds of
+## the frame are used. However many there are, they cost about the same
+## frame time; with more of them each is ticked less often (its step is
+## capped at FAR_MAX_STEP seconds, so a crowded world's far side runs slow).
+const FAR_BUDGET := 3000
+const FAR_RATE := 10.0
+const FAR_MAX_STEP := 0.5
+var _clock := 0.0
+var _far_units: Array[Node] = []
+var _far_cursor := 0
 
 
 func _physics_process(delta: float) -> void:
 	if _player:
 		_player_at = _player.global_position
-	if _far_delta.size() != FAR_SLICES:
-		_far_delta.resize(FAR_SLICES)
-		_far_delta.fill(0.0)
-	for i in FAR_SLICES:
-		_far_delta[i] += delta
-	var slice := _far_slice
-	_far_slice = (_far_slice + 1) % FAR_SLICES
-	var i := 0
+	_clock += delta
+	_far_units.clear()
 	for bot: Bot in _bots.values():
+		var was_far := bot._far
 		bot.set_far(far_from_player(bot.global_position) and not Party.is_member(bot) and not bot.trading)
-		if bot._far and i % FAR_SLICES == slice:
-			bot.far_tick(_far_delta[slice])
-		i += 1
-	_far_delta[slice] = 0.0
+		if bot._far:
+			if not was_far:
+				bot.far_clock = _clock
+			_far_units.append(bot)
+	_creature_grid.clear()
+	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+		var key := Vector2i(floori(enemy.global_position.x / GRID), floori(enemy.global_position.z / GRID))
+		if not _creature_grid.has(key):
+			_creature_grid[key] = []
+		_creature_grid[key].append(enemy)
+		var was_far := enemy.is_far()
+		enemy.set_far(far_from_player(enemy.global_position))
+		if enemy.is_far():
+			if not was_far:
+				enemy.far_clock = _clock
+			if enemy.state != Enemy.State.DEAD:
+				_far_units.append(enemy)
+	far_schedule()
+
+
+## Creatures by square of the world, GRID yards on a side, made once a
+## physics frame, for bots looking for something to fight.
+const GRID := 50.0
+var _creature_grid: Dictionary = {}
+
+
+## The creatures in the squares within `radius` of a point (some further).
+func creatures_near(point: Vector3, radius: float) -> Array:
+	var near := []
+	var low := Vector2i(floori((point.x - radius) / GRID), floori((point.z - radius) / GRID))
+	var high := Vector2i(floori((point.x + radius) / GRID), floori((point.z + radius) / GRID))
+	for x in range(low.x, high.x + 1):
+		for z in range(low.y, high.y + 1):
+			for enemy in _creature_grid.get(Vector2i(x, z), []):
+				if is_instance_valid(enemy):
+					near.append(enemy)
+	return near
+
+
+## Ticks far units in turn within the frame's budget.
+func far_schedule() -> void:
+	var count := _far_units.size()
+	if count == 0:
+		return
+	var start := Time.get_ticks_usec()
+	for k in count:
+		if Time.get_ticks_usec() - start > FAR_BUDGET:
+			break
+		_far_cursor = (_far_cursor + 1) % count
+		var unit: Node = _far_units[_far_cursor]
+		var waited: float = _clock - unit.far_clock
+		if waited < 1.0 / FAR_RATE:
+			continue
+		unit.far_clock = _clock
+		unit.far_tick(minf(waited, FAR_MAX_STEP))
 
 
 func far_from_player(point: Vector3) -> bool:
@@ -479,11 +532,14 @@ func _places() -> Array:
 
 ## Creature entries the zone spawns.
 func spawn_entries() -> Array:
-	var entries := []
-	for spawn: Array in _spawns():
-		if not int(spawn[0]) in entries:
-			entries.append(int(spawn[0]))
-	return entries
+	if _spawn_entries.is_empty():
+		for spawn: Array in _spawns():
+			if not int(spawn[0]) in _spawn_entries:
+				_spawn_entries.append(int(spawn[0]))
+	return _spawn_entries
+
+
+var _spawn_entries := []
 
 
 func _spawns() -> Array:

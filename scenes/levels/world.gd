@@ -7,6 +7,17 @@ extends Node3D
 ## from all of them together.
 
 var zones: Array[Zone] = []
+## The world in play, for what needs the ground's height without a path to it.
+static var current: World
+
+
+func _enter_tree() -> void:
+	current = self
+
+
+func _exit_tree() -> void:
+	if current == self:
+		current = null
 
 
 func _init() -> void:
@@ -39,7 +50,7 @@ func zone_named(zone_name: String) -> Zone:
 
 
 func height_at(x: float, z: float) -> float:
-	return zone_at(Vector3(x, 0, z)).height_at(x, z)
+	return zone_at(Vector3(x, 0, z)).ground_height(x, z)
 
 
 func set_clutter(level: String) -> void:
