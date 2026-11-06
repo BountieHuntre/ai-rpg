@@ -36,7 +36,11 @@ Names are replaced with the game's own by `tools/classic_db/renames.py`;
 the numbers stay classic.
 
 Regenerate everything with `tools/classic_db/extract.py`. To add creatures, add
-their entries to `CREATURES` in that script and rerun it.
+their entries to `CREATURES` in that script and rerun it. Creatures the dump
+spawns only through spawn groups (Harrowfield's gnolls, Mirefin Lurkers and
+Foragers) have no plain spawn rows to take a respawn time and wander distance
+from, so they get classic's usual 5 minutes and 5 yards (`DEFAULT_RESPAWN`,
+`DEFAULT_WANDER`).
 
 Race ids: 1 Human, 2 Orc, 3 Dwarf, 4 Night Elf, 5 Undead, 6 Tauren, 7 Gnome, 8 Troll.
 Class ids: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman, 8 Mage,

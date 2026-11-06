@@ -26,7 +26,7 @@ const COMMANDS := {
 	"bis": ["", "Put on the best gear in the game for your class and level (BiS)."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
-	"tele": ["<x> <z> | spawn", "Teleport to a map point or the start."],
+	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, the start, or a zone's graveyard (ashford, harrowfield)."],
 	"pos": ["", "Show your position."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
@@ -43,7 +43,7 @@ const COMMANDS := {
 }
 
 var _player: Player
-var _world: AshfordVale
+var _world: World
 ## Creatures made by "spawn", for their names.
 var _spawned := 0
 const SPAWN_RANKS := { "normal": Enemy.RANK_NORMAL, "elite": Enemy.RANK_ELITE, "boss": Enemy.RANK_BOSS }
@@ -56,7 +56,7 @@ var _history: Array[String] = []
 var _history_index := 0
 
 
-func setup(player: Player, world: AshfordVale, save: Callable, bots: BotManager = null) -> void:
+func setup(player: Player, world: World, save: Callable, bots: BotManager = null) -> void:
 	_player = player
 	_world = world
 	_save = save
@@ -391,8 +391,17 @@ func _cmd_tele(args: PackedStringArray) -> String:
 		var x := float(args[0])
 		var z := float(args[1])
 		at = Vector3(x, _world.height_at(x, z) + 0.5, z)
-	elif args.size() != 1 or args[0].to_lower() != "spawn":
-		return "!Usage: tele <x> <z>, or tele spawn"
+	elif args.size() >= 1 and args[0].to_lower() != "spawn":
+		var wanted := " ".join(args).to_lower()
+		var found: Zone = null
+		for zone in _world.zones:
+			if zone.zone_name.to_lower().begins_with(wanted):
+				found = zone
+		if found == null:
+			return "!Usage: tele <x> <z>, tele spawn, or tele <zone>"
+		at = found.graveyard + Vector3.UP * 0.5
+	elif args.size() != 1:
+		return "!Usage: tele <x> <z>, tele spawn, or tele <zone>"
 	_player.global_position = at
 	_player.velocity = Vector3.ZERO
 	return "Teleported to %.1f, %.1f." % [at.x, at.z]
@@ -435,7 +444,8 @@ func _cmd_spawn(args: PackedStringArray) -> String:
 			at = Vector3(point.x, _world.height_at(point.x, point.z) + 0.1, point.z)
 			break
 	enemy.position = at
-	var creatures := _world.get_node_or_null("Creatures")
+	var zone := _world.zone_at(at)
+	var creatures := zone.get_node_or_null("Creatures") if zone else null
 	(creatures if creatures else _world).add_child(enemy)
 	var kind := "" if rank == Enemy.RANK_NORMAL else (" boss" if rank == Enemy.RANK_BOSS else " elite")
 	return "Spawned a level %d%s %s %d yards away." % [enemy.level, kind, enemy.combatant.display_name, roundi(_player.global_position.distance_to(at))]

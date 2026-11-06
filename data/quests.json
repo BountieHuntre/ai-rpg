@@ -79,5 +79,158 @@
 		"objectives": "Bring 10 Gold Dust to Hugh Stannard.",
 		"progress": "Any gold dust? The delvers carry it about in little pouches.",
 		"completion": "That's fine dust, that is. Here, your coin, and a little something I took off a traveller who couldn't pay for his repairs."
+	},
+	"2158": {
+		"title": "A Night at the Harrow",
+		"giver": "PriorAnselm",
+		"ender": "HildeBarrow",
+		"details": "You've done the priory a great deal of good, and I'd not keep you here longer than the vale needs you.\n\nSouth over the mountains, through the pass past the bridge, lies Harrowfield and the village of Wexford. The Harrow Inn there keeps a warm hearth and a soft bed. Hilde Barrow runs it, and she owes this house a kindness or two.\n\nGo and rest there a while. Tell her I sent you.",
+		"objectives": "Speak with Hilde Barrow at the Harrow Inn in Wexford, south through the pass.",
+		"progress": "",
+		"completion": "Prior Anselm sent you? Then you're welcome twice over. Sit, warm yourself, and take something for the road. A full belly makes the miles shorter."
+	},
+	"40": {
+		"title": "Word for the Marshal",
+		"giver": "WardenHale",
+		"ender": "MarshalThorne",
+		"details": "A rider came up from Harrowfield with bad news. The marshal at Wexford has his hands full: gnolls in the southern hills, fish-men fouling the mere, brigands squatting in a burned farmstead. Sounds like our troubles, only more of them.\n\nYou've proved yourself here. Go south through the pass and offer Marshal Edric Thorne your sword. He'll be on the green in Wexford.",
+		"objectives": "Report to Marshal Edric Thorne in Wexford.",
+		"progress": "",
+		"completion": "The warden sent you? Good man, Hale. He knows I'd not ask for help unless I needed it.\n\nAnd I need it. Look around you. Harrowfield is good land, and it's being picked to the bone."
+	},
+	"11": {
+		"title": "Ditchjaw Bounty",
+		"giver": "DeputyGarrow",
+		"ender": "DeputyGarrow",
+		"details": "The Ditchjaw gnolls have come down out of the southern hills, bold as you please. They've raided the outlying farms twice this month and killed a shepherd at the ford.\n\nThe marshal has put a bounty on them. The runts and outriders wear painted armbands; bring me eight of them and I'll see you're paid from the watch's purse.",
+		"objectives": "Bring 8 Painted Ditchjaw Armbands to Deputy Nell Garrow at the south watch.",
+		"progress": "Any luck in the hills? The gnolls aren't getting fewer on their own.",
+		"completion": "Eight armbands. That's eight fewer gnolls raiding our farms. Here, take your pick. You've earned it."
+	},
+	"46": {
+		"title": "Fins for the Watch",
+		"giver": "WatchmanAshby",
+		"ender": "WatchmanAshby",
+		"details": "The fish-men are spreading down the stream from the mere. Mirefins, the fishermen call them. The lurkers and foragers below the mere are the worst, bigger and meaner than the ones on the shore, and they've started taking nets and traps.\n\nThe watch pays for every torn fin brought in. Eight of them should prove you've thinned them out.",
+		"objectives": "Bring 8 Torn Mirefin Fins to Watchman Colm Ashby by the Mirrow Mere.",
+		"progress": "The stream won't clear itself. How many fins have you got?",
+		"completion": "That'll keep them off the fords for a while. Choose something from the watch's stores. Good steel, most of it."
+	},
+	"52": {
+		"title": "Thinning the Woods",
+		"giver": "WatchmanAshby",
+		"ender": "WatchmanAshby",
+		"details": "Something's driven the beasts out of the deep woods to the southeast. Prowlers and young bears have been coming right up to the mere, and a woodcutter was mauled last week.\n\nI can't leave my post. Go into the southeast woods and kill 8 prowlers and 5 young forest bears. That should push the rest back where they belong.",
+		"objectives": "Kill 8 Prowlers and 5 Young Forest Bears in the southeast woods, then return to Watchman Colm Ashby.",
+		"progress": "Still hearing the prowlers at night. Keep at it.",
+		"completion": "Quieter out there already. You've done the woodcutters a kindness. Take these, and a little coin for your trouble."
+	},
+	"83": {
+		"title": "Red Kerchiefs",
+		"giver": "WennaLisle",
+		"ender": "WennaLisle",
+		"details": "Those brigands holed up in the old Ashe farmstead to the southwest wear red linen kerchiefs over their faces. Good linen, mind you, and I'd wager it was stolen from my own shop.\n\nBring me back six of those kerchiefs and I'll turn them into something more honest. I'll make you something for your trouble.",
+		"objectives": "Bring 6 Red Linen Bandanas to Wenna Lisle in Wexford.",
+		"progress": "Have you got my linen back from those thieves?",
+		"completion": "My own weave, I'd know it anywhere. Thank you. Here, I made these up while you were away. They should fit you well enough."
+	},
+	"88": {
+		"title": "The Old Duchess",
+		"giver": "GoodwifeCoombe",
+		"ender": "GoodwifeCoombe",
+		"details": "You see that sow out in the pumpkin patch? That's the Old Duchess. She's been eating our harvest all autumn, and she and her litter have trampled what they haven't eaten.\n\nShe's too big and too mean for my husband to handle, and she bit the dog. She wears a brass collar from when she won a prize at the fair, years back. Put an end to her and bring me the collar, so I know it's done.",
+		"objectives": "Bring the Brass Collar from the Old Duchess to Goodwife Joan Coombe at the Coombe farm.",
+		"progress": "Is that old sow still in my pumpkins?",
+		"completion": "That's her collar, right enough. First prize at the Wexford fair, she was. Well, she's had her last pumpkin. Thank you, truly. Take one of these."
+	},
+	"85": {
+		"title": "The Lost Necklace",
+		"giver": "AuntBess",
+		"ender": "HobWainwright",
+		"details": "Oh, I've lost my necklace! My mother's, it was, and I wore it every day. I think I lost it walking past the Old Delve, before the burrowlings moved in there.\n\nThe Wainwright boy, Hob, was out that way the same day. He's always poking around where he shouldn't. Would you ask him if he saw anything? He's at his family's cottage on the road to the mere.",
+		"objectives": "Speak with Hob Wainwright at the cottage on the road to the Mirrow Mere.",
+		"progress": "",
+		"completion": "Aunt Bess's necklace? Maybe I saw it, and maybe I didn't. I'm awful hungry, though. A body can't remember things on an empty stomach."
+	},
+	"86": {
+		"title": "Pie for Hob",
+		"giver": "HobWainwright",
+		"ender": "AuntBess",
+		"details": "Aunt Bess makes the best pork belly pie in Harrowfield, and she never makes it for me. If she made me a pie, I'd remember all sorts of things.\n\nShe'll need meat for it, though. The flintback boars in the west meadow are good eating. Bring her four chunks of boar meat and ask her to make me a pie.",
+		"objectives": "Bring 4 Chunks of Boar Meat to Aunt Bess Coombe at the Coombe farm.",
+		"progress": "Did Hob send you for boar meat? That boy and his stomach.",
+		"completion": "Four good chunks. Well, if pie is what it takes to loosen his tongue, pie he shall have. It'll be done in no time."
+	},
+	"84": {
+		"title": "Back to Hob",
+		"giver": "AuntBess",
+		"ender": "HobWainwright",
+		"details": "Here's the pie, still warm. Take it to Hob, and make sure he tells you what he knows about my necklace before he eats it all.",
+		"objectives": "Bring the Pork Belly Pie to Hob Wainwright.",
+		"progress": "Is that pie for me?",
+		"completion": "Ooh, pork belly pie! All right, all right. I saw a burrowling with something shiny round its neck, by the Old Delve. A big one with a brass tooth. The others call him Brasstooth."
+	},
+	"87": {
+		"title": "Brasstooth",
+		"giver": "HobWainwright",
+		"ender": "AuntBess",
+		"details": "The burrowling with the brass tooth had Aunt Bess's necklace, I'm sure of it. He's down at the Old Delve, in the northwest hills. He's the biggest one there, deep by the mine mouth.\n\nI'd get it myself, but they've got spiders down there. Big ones.",
+		"objectives": "Bring Bess's Necklace to Aunt Bess Coombe at the Coombe farm.",
+		"progress": "Did you find my necklace, dear?",
+		"completion": "My mother's necklace! I never thought I'd see it again. You are a treasure. Here, these gloves were my husband's. He'd want someone brave to have them."
+	},
+	"106": {
+		"title": "Young Hearts",
+		"giver": "ElsieWainwright",
+		"ender": "TamCoombe",
+		"details": "Can you keep a secret? Tam Coombe and I are... well, we're sweet on each other. But his family and mine haven't spoken since the quarrel over the boundary stones, and my father would lock me in the cellar if he knew.\n\nWould you take this letter to Tam? He works on the Coombe farm, west of Wexford. Please don't let anyone else see it.",
+		"objectives": "Take Elsie's Love Letter to Tam Coombe at the Coombe farm.",
+		"progress": "Have you seen Elsie? Is she all right?",
+		"completion": "A letter from Elsie? Thank you, friend. She says... she says she wants to leave Harrowfield with me. I'd go tonight if I could."
+	},
+	"111": {
+		"title": "Speak with Granny",
+		"giver": "TamCoombe",
+		"ender": "GrannyCoombe",
+		"details": "If Elsie and I are going to run off together, we'll need help. Granny is the only one in my family who'll listen. She was young once too, she always says.\n\nWould you speak to her for me? She's by the farmhouse. Tell her about Elsie and me.",
+		"objectives": "Speak with Granny Coombe at the Coombe farm.",
+		"progress": "",
+		"completion": "Tam and the Wainwright girl? Ha! I knew it. I've seen the way he looks toward that cottage.\n\nWell, I'm not one to stand in the way of young hearts. I have an idea."
+	},
+	"107": {
+		"title": "A Note for the Herbalist",
+		"giver": "GrannyCoombe",
+		"ender": "AlderQuill",
+		"details": "Alder Quill, the herbalist in Wexford, owes me a favor from long ago. He knows how to brew a draught that hides a body from sight. With it, Elsie could slip out of her father's house and no one the wiser.\n\nTake him this note. He'll know what to do.",
+		"objectives": "Take Granny Coombe's Note to Alder Quill in Wexford.",
+		"progress": "A note for me?",
+		"completion": "From Granny Coombe? It has been a long time. Hmm. She wants a draught of hiding, for a pair of young lovers. That woman never changes.\n\nVery well. But I'll need something for it."
+	},
+	"112": {
+		"title": "Kelp from the Mere",
+		"giver": "AlderQuill",
+		"ender": "AlderQuill",
+		"details": "The draught needs crystal kelp, which grows only in the Mirrow Mere. The mirefins gather it and carry it about with them, the odd creatures. I'm too old to go wading after them.\n\nBring me four crystal kelp fronds from the mirefins on the mere's shores and I'll brew the draught.",
+		"objectives": "Bring 4 Crystal Kelp Fronds to Alder Quill in Wexford.",
+		"progress": "Do you have the kelp?",
+		"completion": "That's the stuff. Give me a moment. A pinch of this, a drop of that, and a little patience."
+	},
+	"114": {
+		"title": "The Escape",
+		"giver": "AlderQuill",
+		"ender": "ElsieWainwright",
+		"details": "It's ready. Take this draught to Elsie Wainwright. She's to drink it the night she and young Tam mean to leave. It will hide her long enough to get clear of the village.\n\nAnd tell her to be careful. The roads aren't safe these days.",
+		"objectives": "Take the Invisibility Liquor to Elsie Wainwright at the cottage on the road to the Mirrow Mere.",
+		"progress": "Do you have something for me?",
+		"completion": "From Alder Quill? Oh, thank you! Tam and I will be gone by the next new moon. I'll never forget what you've done for us. Here, take these. You'll need them more than I will."
+	},
+	"176": {
+		"title": "Wanted: Grunmaw",
+		"giver": "MarshalThorne",
+		"ender": "MarshalThorne",
+		"details": "There's a gnoll the Ditchjaws follow, a great brute called Grunmaw. He's bigger than any gnoll I've seen and twice as savage. Three of my watchmen have gone up against him and none came back.\n\nHe holds a camp in the southern hills, west of the gnoll runs. Bring me his claw and the bounty is yours. And don't go alone. Grunmaw has killed better fighters than either of us.",
+		"objectives": "Bring Grunmaw's Claw to Marshal Edric Thorne in Wexford.",
+		"progress": "Grunmaw is still out there, then.",
+		"completion": "His claw. I'd not have believed it if I weren't holding it. You've done Harrowfield a great service. Take your pick from the armory, with my thanks."
 	}
 }

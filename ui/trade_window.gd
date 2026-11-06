@@ -8,7 +8,9 @@ extends Control
 ## have accepted. Soulbound items can't be traded, and the trade ends past
 ## 11 yards (TRADE_DISTANCE in CMaNGOS) or when either side is attacked.
 ##
-## The bot's side starts empty. A panel to the right lists what it sells
+## The bot's side starts with the item it was last trading about in chat
+## (its ad, a quote, an agreed price), and your side with that item from your
+## bags when it's the one buying. A panel to the right lists what it sells
 ## (from its BotBag) at its asking price: click one to have it put that in the
 ## trade, and click it in the trade to put it back. It buys what you offer at
 ## its own rate, puts in the difference when you offer more than you take,
@@ -57,6 +59,9 @@ var _i_accept := false
 var _they_accept := false
 ## Item ids you picked from its goods, in the order picked.
 var _picked: Array[int] = []
+## How many of a picked item go in, when fewer than it has (the number talked
+## about in chat); otherwise all of them.
+var _counts: Dictionary = {}
 var _money_field: LineEdit
 var _rebuild_queued := false
 
@@ -108,9 +113,11 @@ func open(with_bot: Bot, greet := true) -> void:
 	_i_accept = false
 	_they_accept = false
 	_picked.clear()
+	_counts.clear()
 	visible = true
 	_inventory.trading = true
 	_inventory.open_bags()
+	_put_in_topic()
 	_bot_offers()
 	if greet:
 		_greet()
@@ -199,6 +206,34 @@ func accept() -> void:
 		_queue_rebuild()
 
 
+## The item the trade was talked about for goes in: on the bot's side when
+## it's selling, from your bags (as many as were talked about) when it's
+## buying.
+func _put_in_topic() -> void:
+	var talk := BotChatter.trade_topic(bot)
+	if talk.is_empty():
+		return
+	var id := int(talk.id)
+	if not bool(talk.buying):
+		if bot.bag.count_of(id) > 0:
+			_picked.append(id)
+			if int(talk.count) > 0:
+				_counts[id] = int(talk.count)
+		return
+	var wanted := maxi(int(talk.count), 1)
+	for b in GameState.containers.size():
+		var container: Array = GameState.containers[b]
+		for i in container.size():
+			var stack: Dictionary = container[i]
+			if wanted <= 0 or stack.is_empty() or int(stack.id) != id:
+				continue
+			var free := _mine.find({})
+			if free < 0 or stack.get("bound", false) or not BotBag.can_trade(id):
+				return
+			_mine[free] = { "ref": Inventory.bag_ref(b, i), "id": id, "count": int(stack.count) }
+			wanted -= int(stack.count)
+
+
 # The bot's side.
 
 ## Puts the goods you picked on its side, up to six stacks, at its prices.
@@ -207,7 +242,7 @@ func _bot_offers() -> void:
 		_theirs[i] = {}
 	var i := 0
 	for id in _picked:
-		var count := bot.bag.count_of(id)
+		var count := mini(bot.bag.count_of(id), int(_counts.get(id, 1 << 30)))
 		if i >= SLOTS or count <= 0:
 			continue
 		_theirs[i] = { "id": id, "count": count, "price": bot.bag.asking_price(id, count) }
@@ -236,7 +271,11 @@ func _bot_thinks() -> void:
 func _greet() -> void:
 	var goods := bot.bag.for_sale()
 	var bot_name := bot.profile.char_name
-	if goods.is_empty():
+	if not _picked.is_empty():
+		Chat.add("whisper", "put the [%s] in, anything else from my list?" % ItemDB.get_item(_picked[0]).name, bot_name)
+	elif _mine.any(func(slot: Dictionary) -> bool: return not slot.is_empty()):
+		Chat.add("whisper", "got your [%s] in there, see what i'm paying" % ItemDB.get_item(int(_mine[_mine.find_custom(func(slot: Dictionary) -> bool: return not slot.is_empty())].id)).name, bot_name)
+	elif goods.is_empty():
 		Chat.add("whisper", "not much to sell, but i'll buy stuff", bot_name)
 	else:
 		Chat.add("whisper", "pick anything you want from my list", bot_name)
@@ -260,6 +299,7 @@ func _put_back(slot: int) -> void:
 	if stack.is_empty():
 		return
 	_picked.erase(int(stack.id))
+	_counts.erase(int(stack.id))
 	_bot_offers()
 	_i_accept = false
 	_queue_rebuild()

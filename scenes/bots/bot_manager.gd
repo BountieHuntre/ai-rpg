@@ -22,7 +22,7 @@ const SYNC_DELAY := 0.4
 const WORLD_OPTIONS := ["bots_enabled", "bot_count", "bot_min_level", "bot_max_level", "bot_classes"]
 
 var _player: Player
-var _world: Node3D
+var _world: World
 ## Saved bots: { "name", "race", "class", "level", "xp", "state" }, the
 ## state from Bot.saved_state().
 var _roster: Array[Dictionary] = []
@@ -35,7 +35,7 @@ var _creatures: Array = []
 var _player_at := Vector3.ZERO
 
 
-func setup(player: Player, world: Node3D) -> void:
+func setup(player: Player, world: World) -> void:
 	_player = player
 	_world = world
 	_load_roster()
@@ -293,13 +293,44 @@ func _near_player() -> Vector3:
 	return _player.global_position + Basis(Vector3.UP, angle) * Vector3.FORWARD * 2.5 + Vector3.UP * 0.3
 
 
-## Waypoints from one point to another: through the gate of any walled
-## place (the zone's ENCLOSURES) that one end is inside and the other isn't,
-## then the point itself.
+## Waypoints from one point to another: through the pass when they're in
+## different zones, through the gate of any walled place (the zones'
+## enclosures) that one end is inside and the other isn't, then the point
+## itself.
 func route(from: Vector3, to: Vector3) -> Array[Vector3]:
+	var from_zone := _world.zone_at(from)
+	var to_zone := _world.zone_at(to)
+	if from_zone != to_zone:
+		var pass_points := _world.pass_between(from_zone, to_zone)
+		if not pass_points.is_empty():
+			# Already partway along the pass: join it where it's nearest,
+			# rather than going back to its start.
+			var flat_from := Vector2(from.x, from.z)
+			var nearest := 0
+			var nearest_distance := INF
+			for i in pass_points.size() - 1:
+				var a: Vector2 = pass_points[i]
+				var b: Vector2 = pass_points[i + 1]
+				var t := clampf((flat_from - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+				var distance := flat_from.distance_to(a + (b - a) * t)
+				if distance < nearest_distance:
+					nearest_distance = distance
+					nearest = i
+			if nearest_distance < Zone.PASS_FLOOR + Zone.PASS_SIDES:
+				pass_points = pass_points.slice(nearest + 1)
+			var path: Array[Vector3] = []
+			for point in pass_points:
+				path.append(Vector3(point.x, _world.height_at(point.x, point.y), point.y))
+			var points := _route_in_zone(from, path[0])
+			points.append_array(path.slice(1))
+			points.append_array(_route_in_zone(path[path.size() - 1], to))
+			return points
+	return _route_in_zone(from, to)
+
+
+func _route_in_zone(from: Vector3, to: Vector3) -> Array[Vector3]:
 	var points: Array[Vector3] = []
-	var enclosures: Array = _world.get("ENCLOSURES") if _world.get("ENCLOSURES") != null else []
-	for walls: Array in enclosures:
+	for walls: Array in _world.enclosures():
 		var inside_from := _within(walls, from)
 		if inside_from == _within(walls, to):
 			continue
@@ -410,11 +441,13 @@ func place_at(point: Vector3) -> String:
 	return ""
 
 
-## Where a named place is, from the priory: "west", "southeast"...
+## Where a named place is, from the middle of its zone's settlement (the
+## priory, Wexford): "west", "southeast"...
 func direction_of(place_name: String) -> String:
 	for place: Array in _places():
 		if place[0] == place_name:
-			var offset: Vector2 = place[1] - AshfordVale.PRIORY
+			var zone := _world.zone_at(Vector3(place[1].x, 0, place[1].y))
+			var offset: Vector2 = place[1] - zone.hub
 			# -Z is north.
 			var angle := fposmod(rad_to_deg(atan2(offset.x, -offset.y)), 360.0)
 			return ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"][roundi(angle / 45.0) % 8]
@@ -441,7 +474,7 @@ func spawn_place(entry: int, near: Vector3) -> String:
 
 
 func _places() -> Array:
-	return _world.get("PLACES") if _world.get("PLACES") != null else []
+	return _world.places()
 
 
 ## Creature entries the zone spawns.
@@ -454,7 +487,26 @@ func spawn_entries() -> Array:
 
 
 func _spawns() -> Array:
-	return _world.get("SPAWNS") if _world.get("SPAWNS") != null else []
+	return _world.spawns()
+
+
+## The name of the zone a point is in.
+func zone_name_at(point: Vector3) -> String:
+	return _world.zone_at(point).zone_name
+
+
+func has_zone(zone_name: String) -> bool:
+	return _world.zone_named(zone_name) != null
+
+
+## The zone the player is in.
+func player_zone() -> String:
+	return _world.zone_at(_player.global_position).zone_name if _player else ""
+
+
+## Where the dead come back in the zone a point is in.
+func graveyard_at(point: Vector3) -> Vector3:
+	return _world.zone_at(point).graveyard
 
 
 ## Somewhere in a creature spawn area: one of the creatures a quest wants if

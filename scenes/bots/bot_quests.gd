@@ -32,6 +32,10 @@ func accept(id: int) -> void:
 	var items := []
 	items.resize(quest.items.size())
 	items.fill(0)
+	# What the giver hands over to deliver (a letter, a pie) is had already.
+	for i in quest.items.size():
+		if int(quest.items[i][0]) == int(quest.get("source_item", 0)):
+			items[i] = int(quest.items[i][1])
 	active[id] = { "kills": kills, "items": items }
 
 

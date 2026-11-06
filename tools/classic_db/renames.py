@@ -232,6 +232,36 @@ ITEMS = {
     "Scalping Tomahawk": "Scalping Hatchet",
     "Veteran Cloak": "Old Soldier's Cloak",
     "Magic Candle": "Hedge-Witch Candle",
+    'Cadet Boots': "Squire's Marching Boots",
+    "Bernice's Necklace": "Bess's Necklace",
+    "Gramma Stonefield's Note": "Granny Coombe's Note",
+    "Maybell's Love Letter": "Elsie's Love Letter",
+    "Rolf and Malakai's Medallions": "Fallen Wardens' Medallions",
+    'Huge Gnoll Claw': "Grunmaw's Claw",
+    'Painted Gnoll Armband': 'Painted Ditchjaw Armband',
+    'Gnoll Paw': 'Ditchjaw Paw',
+    'Stone Gnoll Hammer': 'Ditchjaw Stone Hammer',
+    'Murloc Eye': 'Mirefin Eye',
+    'Murloc Fin': 'Mirefin Fin',
+    'Torn Murloc Fin': 'Torn Mirefin Fin',
+    'Defias Script': 'Brigand Cipher',
+    'Westfall Deed': 'Farmstead Deed',
+    'Gold Pickup Schedule': 'Coin Collection Ledger',
+    'Stormwind Brie': 'Kingsport Brie',
+    'Stormwind Guard Leggings': "Watchman's Leggings",
+    'Dalaran Sharp': 'Mage-Town Sharp',
+    'Alterac Swiss': 'Highland Swiss',
+    'Dwarven Mild': 'Hill-Folk Mild',
+    'Longjaw Mud Snapper': 'Mudflat Snapper',
+    'Raw Slitherskin Mackerel': 'Raw Slick Mackerel',
+    'Small Seaforium Charge': 'Small Blasting Charge',
+    'EZ-Thro Dynamite': 'Easy-Toss Powder Keg',
+    'Moonberry Juice': 'Duskberry Juice',
+    'Morning Glory Dew': 'Dawnpetal Dew',
+    'Bruiseweed': 'Bruisewort',
+    'Swiftthistle': 'Quickthistle',
+    'Lion-stamped Gloves': 'Stag-stamped Gloves',
+    'Dwarven Hatchet': 'Hill-Folk Hatchet',
 }
 
 # Gear sets: the first word(s) of the name are replaced. Longest prefixes win.
@@ -258,6 +288,9 @@ SET_PREFIXES = {
     "Gypsy": "Vagabond's",
     "Native": "Woodland",
     "War Torn": "Battle-Worn",
+    'Brackwater': 'Fenwater',
+    'Spellbinder': 'Hexbound',
+    'Aboriginal': 'Hillfolk',
 }
 
 # Recipes are named after what they make: "Pattern: Rugged Leather Pants"
@@ -265,7 +298,9 @@ SET_PREFIXES = {
 RECIPE_PREFIXES = ("Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: ")
 
 # Item flavor text, replaced whole.
-DESCRIPTIONS = {}
+DESCRIPTIONS = {
+    "Princess - First Prize": "Duchess - First Prize",
+}
 
 CREATURES = {
     "Kobold Vermin": "Burrowling Runt",
@@ -277,12 +312,29 @@ CREATURES = {
     "Kobold Geomancer": "Burrowling Firecaller",
     "Kobold Miner": "Burrowling Pickman",
     "Defias Cutpurse": "Brigand Footpad",
+    # Harrowfield.
+    "Murloc": "Mirefin",
+    "Murloc Streamrunner": "Mirefin Wader",
+    "Murloc Lurker": "Mirefin Lurker",
+    "Murloc Forager": "Mirefin Forager",
+    "Rockhide Boar": "Flintback Boar",
+    "Princess": "Old Duchess",
+    "Porcine Entourage": "Fattened Hog",
+    "Defias Bandit": "Brigand Cutthroat",
+    "Defias Rogue Wizard": "Brigand Hedge-Mage",
+    "Goldtooth": "Brasstooth",
+    "Riverpaw Runt": "Ditchjaw Runt",
+    "Riverpaw Outrunner": "Ditchjaw Outrider",
+    "Riverpaw Gnoll": "Ditchjaw Brute",
+    "Hogger": "Grunmaw",
 }
 
 # Vendor names and titles, by creature entry.
 VENDORS = {
     "152": ("Friar Osric", "Provisioner"),
     "1213": ("Hugh Stannard", "Armorer"),
+    "295": ("Hilde Barrow", "Innkeeper"),
+    "74": ("Piers Tanner", "Clothier & Tanner"),
 }
 
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
@@ -427,6 +479,7 @@ SPELLS = {
     "Pierce Armor": "Prying Strike",
     "Backstab": "Back Thrust",
     "Rushing Charge": "Headlong Charge",
+    'Frostbolt': 'Rime Bolt',
 }
 
 # Talent trees by class id: the game's own names.
@@ -462,6 +515,10 @@ KEEP = {
     "Carving Knife", "Ceremonial Cloak", "Fire Wand", "Hunting Bow", "Notched Shortsword", "Short Bastard Sword",
     "Severing Axe", "Simple Bands", "Simple Cape", "Simple Cord", "Simple Shoes", "Tangy Clam Meat", "Training Sword",
     "Chilled", "Toughness", "Precision", "Anticipation", "Deflection", "Dummy Trigger",
+    # Harrowfield's plain creature names.
+    "Mangy Wolf", "Forest Spider", "Gray Forest Wolf", "Young Forest Bear", "Mine Spider", "Prowler",
+    'A small message of affection...', "Bard's Belt", "Bard's Bracers", "Bard's Cloak", "Commoner's Sword", "Farmer's Boots", "Hillman's Leather Vest", "Mystic's Cape", "Rabbit's Foot", "Soldier's Cloak", "Soldier's Wristguards", "Urchin's Pants", 'A Gold Tooth', 'Balanced Fighting Stick', 'Bear Meat', 'Birchwood Maul', 'Bloodspattered Cloak', 'Bloodspattered Gloves', 'Bloodspattered Sash', 'Bloodspattered Wristbands', 'Blue Leather Bag', 'Brass Collar', 'Brass-studded Bracers', 'Calico Belt', 'Calico Bracers', 'Calico Cloak', 'Calico Gloves', 'Calico Pants', 'Calico Shoes', 'Calico Tunic', 'Ceremonial Buckler', 'Ceremonial Leather Belt', 'Ceremonial Leather Bracers', 'Ceremonial Leather Gloves', 'Cheap Blunderbuss', 'Chicken Egg', 'Chipped Bear Tooth', 'Cologne Bottle', 'Compact Shotgun', 'Cooked Crab Claw', 'Crude Battle Axe', 'Crystal Kelp Frond', 'Curved Dagger', 'Dark Leather Tunic', 'Enchant Bracer - Minor Spirit', 'Enchant Bracer - Minor Strength', 'Enchant Weapon - Minor Beastslayer', 'Feeble Shortbow', 'Feral Cloak', 'Fine Aged Cheddar', 'Fisherman Knife', 'Footman Tunic', 'Forest Spider Webbing', 'Fractured Canine', 'Greater Healing Potion', 'Green Leather Bag', 'Green Woolen Bag', 'Haunch of Meat', 'Heavy Hammer', 'Heavy Shortbow', 'Heavy Woolen Cloak', 'Hunting Belt', 'Hunting Boots', 'Hunting Bracers', 'Hunting Buckler', 'Hunting Cloak', 'Hunting Gloves', 'Ice Cold Milk', 'Invisibility Liquor', 'Knitted Belt', 'Knitted Bracers', 'Knitted Gloves', 'Knitted Pants', 'Knitted Sandals', 'Knitted Tunic', 'Large Bear Tooth', 'Lesser Healing Potion', 'Long Bayonet', 'Love Token', 'Lupine Cloak', 'Lupine Cord', 'Lupine Cuffs', 'Melon Juice', 'Militia Buckler', 'Minor Mana Potion', 'Old Greatsword', 'Perfume Bottle', 'Pork Belly Pie', 'Prowler Teeth', 'Red Leather Bag', 'Red Linen Bandana', 'Red Linen Sash', 'Red Linen Shirt', 'Red Woolen Boots', 'Red-speckled Mushroom', 'Rough Leather Belt', 'Rough Leather Boots', 'Rough Leather Bracers', 'Rough Leather Gloves', 'Rough Leather Pants', 'Rough Leather Vest', 'Rough Wooden Staff', 'Runed Copper Breastplate', 'Rusty Warhammer', 'Scroll of Agility', 'Scroll of Intellect', 'Scroll of Protection', 'Scroll of Spirit', 'Scroll of Stamina', 'Scroll of Strength', 'Shadow Wand', 'Shiny Seashell', 'Simple Blouse', 'Simple Branch', 'Simple Britches', 'Simple Gloves', 'Simple Robe', 'Small Pumpkin', 'Small Spider Leg', 'Snapped Spider Limb', 'Solid Metal Club', 'Spiked Club', 'Staunch Hammer', 'Stringy Wolf Meat', 'Sturdy Quarterstaff', 'Sweet Nectar', 'Veteran Boots', 'Veteran Bracers', 'Veteran Girdle', 'Veteran Gloves', 'Veteran Leggings', 'Veteran Shield', 'Warped Cloak', 'Warped Leather Belt', 'Warped Leather Boots', 'Warped Leather Bracers', 'Warped Leather Gloves', 'Warped Leather Pants', 'Warped Leather Vest', 'Weather-worn Boots', 'Well-used Sword', 'White Leather Bag', 'Willow Boots', 'Willow Bracers', 'Willow Cape', 'Wooden Buckler', 'Wooden Shield', 'Worn Cloak', 'Worn Hatchet', 'Worn Mail Belt', 'Worn Mail Boots', 'Worn Mail Bracers', 'Worn Mail Gloves', 'Worn Mail Pants', 'Worn Mail Vest',
+    'Agility', 'Armor', 'Cologne', 'Drink Minor Potion', 'Enchant Weapon - Beastslayer', 'Head Butt', 'Intellect', 'Perfume', 'Poison Proc', 'Poison', 'Restore Mana', 'Snap Kick', 'Spirit', 'Stamina', 'Strength', 'Summon Farm Chicken', 'Thrash',
 }
 
 

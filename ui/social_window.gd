@@ -92,8 +92,10 @@ func _process(delta: float) -> void:
 ## Everything the list shows, as text, to tell when it has changed.
 func _snapshot() -> String:
 	var parts := PackedStringArray([_tab, _selected, _filter, ",".join(GameState.friends)])
+	var manager := _manager()
 	for bot in _online():
-		parts.append("%s %d" % [bot.profile.char_name, bot.profile.level])
+		parts.append("%s %d %s" % [bot.profile.char_name, bot.profile.level, manager.zone_name_at(bot.global_position) if manager else ""])
+	parts.append(manager.player_zone() if manager else "")
 	return "|".join(parts)
 
 
@@ -167,7 +169,7 @@ func _build_friends(rows: VBoxContainer) -> void:
 	for friend_name in GameState.friends:
 		var bot: Bot = online.get(friend_name)
 		if bot:
-			_row(rows, friend_name, [friend_name, str(bot.profile.level), ClassicData.CLASS_NAMES[bot.profile.char_class], AshfordVale.ZONE_NAME], TEXT)
+			_row(rows, friend_name, [friend_name, str(bot.profile.level), ClassicData.CLASS_NAMES[bot.profile.char_class], _manager().zone_name_at(bot.global_position)], TEXT)
 		else:
 			var entry := _manager().entry(friend_name) if _manager() else {}
 			var known := not entry.is_empty()
@@ -247,7 +249,11 @@ func _invite_selected() -> void:
 func _build_who(rows: VBoxContainer) -> void:
 	_columns(["Name", "Level", "Race", "Class"])
 	var shown := 0
+	var manager := _manager()
+	var zone_name := manager.player_zone() if manager else ""
 	for bot in _online():
+		if manager and manager.zone_name_at(bot.global_position) != zone_name:
+			continue
 		var p := bot.profile
 		var columns: Array = [p.char_name, str(p.level), ClassicData.RACE_NAMES[p.race], ClassicData.CLASS_NAMES[p.char_class]]
 		if not _filter.is_empty() and not " ".join(columns).to_lower().contains(_filter.to_lower()):
@@ -255,7 +261,7 @@ func _build_who(rows: VBoxContainer) -> void:
 		_row(rows, p.char_name, columns, TEXT)
 		shown += 1
 	var bottom := 30 + LIST_HEIGHT
-	_text(self, Vector2(4, bottom - 9), "%d player%s found in %s" % [shown, "" if shown == 1 else "s", AshfordVale.ZONE_NAME], GREY, FONT_SIZE)
+	_text(self, Vector2(4, bottom - 9), "%d player%s found in %s" % [shown, "" if shown == 1 else "s", zone_name], GREY, FONT_SIZE)
 	var field := LineEdit.new()
 	field.placeholder_text = "Search name, level, race or class"
 	field.text = _filter

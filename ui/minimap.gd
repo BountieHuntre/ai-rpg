@@ -1,8 +1,9 @@
 class_name Minimap
 extends Control
 ## Round minimap in the top right corner, north up, centred on the player with
-## an arrow for their facing. The zone is rendered once from above (with the
-## creatures and characters hidden) into a texture the map scrolls over.
+## an arrow for their facing. The zone the player is in is rendered once from
+## above (with the creatures and characters hidden) into a texture the map
+## scrolls over, and swapped for the next zone's when they cross into it.
 ## Quest givers show their "!" or "?", and the spawn areas of creatures a
 ## quest underway still needs are shaded; ones out of range sit on the rim.
 ## The mouse wheel over it zooms; hovering a quest area or giver shows what
@@ -30,7 +31,10 @@ static var _maps: Dictionary
 static var _zoom := 1
 
 var _player: Player
-var _world: Node3D
+var _world: World
+## The zone shown, and its name over the map.
+var _zone: Zone
+var _zone_label := Label.new()
 var _ui_scale := 1.0
 ## Draws a circle that clips the map and markers to it.
 var _mask := Control.new()
@@ -52,7 +56,7 @@ static func corner(screen_width: float) -> Vector2:
 	return Vector2(screen_width - SIZE - MARGIN, MARGIN + TITLE)
 
 
-func setup(player: Player, world: Node3D, ui_scale: float, screen_width: float) -> void:
+func setup(player: Player, world: World, ui_scale: float, screen_width: float) -> void:
 	_player = player
 	_world = world
 	_ui_scale = ui_scale
@@ -80,8 +84,7 @@ func setup(player: Player, world: Node3D, ui_scale: float, screen_width: float) 
 	rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rim.draw.connect(_draw_rim.bind(rim))
 	add_child(rim)
-	var zone := Label.new()
-	zone.text = str(_zone_constant("ZONE_NAME", ""))
+	var zone := _zone_label
 	zone.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	zone.add_theme_font_size_override("font_size", roundi(6 * ui_scale))
 	zone.add_theme_color_override("font_color", Color("ffd100"))
@@ -95,20 +98,31 @@ func setup(player: Player, world: Node3D, ui_scale: float, screen_width: float) 
 	GameState.quests_changed.connect(_update_areas)
 	GameState.inventory_changed.connect(_update_areas)
 	_update_areas()
-	var map: Texture2D = _maps.get(zone.text)
+	_show_zone()
+
+
+## Puts up the map and name of the zone the player is in, rendering the map
+## the first time.
+func _show_zone() -> void:
+	_zone = _world.zone_at(_player.global_position)
+	_zone_label.text = _zone.zone_name
+	var material := _map_rect.material as ShaderMaterial
+	var map: Texture2D = _maps.get(_zone.zone_name)
 	if map:
 		material.set_shader_parameter("map", map)
-	else:
-		_capture(zone.text, material)
+	elif not _capturing:
+		_capture(_zone, material)
 
 
 func _process(_delta: float) -> void:
 	if not _player:
 		return
+	if not _zone.contains(Vector2(_player.global_position.x, _player.global_position.z)) and not _capturing:
+		_show_zone()
 	var material := _map_rect.material as ShaderMaterial
-	var zone_size := _zone_size()
+	var zone_size := _zone.size
 	var p := _player.global_position
-	material.set_shader_parameter("center", Vector2(p.x / zone_size + 0.5, p.z / zone_size + 0.5))
+	material.set_shader_parameter("center", Vector2((p.x - _zone.center.x) / zone_size + 0.5, (p.z - _zone.center.y) / zone_size + 0.5))
 	material.set_shader_parameter("radius", ZOOMS[_zoom] / zone_size)
 	_overlay.queue_redraw()
 	_update_hover()
@@ -223,7 +237,7 @@ func _draw_overlay() -> void:
 ## ones that drop a quest item still wanted.
 func _update_areas() -> void:
 	_areas = []
-	var spawns: Array = _zone_constant("SPAWNS", [])
+	var spawns: Array = _world.spawns()
 	var wanted := {}
 	for id: int in GameState.quests:
 		var quest := QuestDB.get_quest(id)
@@ -268,27 +282,22 @@ func _npc_lines(npc: Npc) -> Array:
 	return lines
 
 
-func _zone_size() -> float:
-	return float(_zone_constant("SIZE", 400.0))
-
-
-## A constant of the zone's script (ZONE_NAME, SIZE, SPAWNS), or a default.
-func _zone_constant(constant: String, default: Variant) -> Variant:
-	var script := _world.get_script() as Script
-	return script.get_script_constant_map().get(constant, default) if script else default
+## Whether a zone's map is being rendered.
+var _capturing := false
 
 
 ## Renders the zone from straight above once, with every creature, character
 ## and the camera's effects hidden, and keeps the picture.
-func _capture(zone: String, material: ShaderMaterial) -> void:
+func _capture(zone: Zone, material: ShaderMaterial) -> void:
+	_capturing = true
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(MAP_PIXELS, MAP_PIXELS)
 	viewport.world_3d = _world.get_world_3d()
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var camera := Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = _zone_size()
-	camera.position = Vector3(0, 150, 0)
+	camera.size = zone.size
+	camera.position = Vector3(zone.center.x, 150, zone.center.y)
 	camera.rotation.x = -PI / 2.0
 	camera.far = 400.0
 	var environment := Environment.new()
@@ -317,8 +326,9 @@ func _capture(zone: String, material: ShaderMaterial) -> void:
 			node.visible = true
 	viewport.queue_free()
 	var map := ImageTexture.create_from_image(image)
-	_maps[zone] = map
-	if is_instance_valid(material):
+	_maps[zone.zone_name] = map
+	_capturing = false
+	if is_instance_valid(material) and zone == _zone:
 		material.set_shader_parameter("map", map)
 
 

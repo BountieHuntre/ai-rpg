@@ -397,7 +397,10 @@ func _trade_whisper(bot: Bot, text: String, lower: String) -> bool:
 	if not items.is_empty():
 		var id: int = items[0]
 		var count := _count_in(lower, id)
-		var buying_from_me := bot.bag.count_of(id) <= 0 or _has_any(lower, ["pay", "give", "buy", "offer", "worth"]) and not _has_any(lower, ["your", "sell me"])
+		# It buys when it has none, or when the player is the one selling
+		# ("what would you pay for", "want to sell you"); "I want to buy",
+		# "how much for" and "sell me" are the player buying from it.
+		var buying_from_me := bot.bag.count_of(id) <= 0 or (_player_selling(lower) and not _player_buying(lower))
 		_set_topic(bot, id, buying_from_me, count)
 		if amount > 0:
 			_haggle(bot, amount, lower)
@@ -405,6 +408,8 @@ func _trade_whisper(bot: Bot, text: String, lower: String) -> bool:
 			var price := bot.bag.buying_price(id, 1)
 			if price <= 0:
 				_later_text(bot, "whisper", "not much use to me, sorry")
+			elif bot.bag.money < price * count:
+				_later_text(bot, "whisper", "can't afford that right now, sorry")
 			else:
 				bot.bag.quotes.buy[id] = price
 				_offer_to_come(bot, "i'd pay %s for [%s]%s" % [ItemDB.money_text(price * count), ItemDB.get_item(id).name, " x%d" % count if count > 1 else ""])
@@ -426,6 +431,31 @@ func _trade_whisper(bot: Bot, text: String, lower: String) -> bool:
 	if amount > 0:
 		_later_text(bot, "whisper", "for what? link the item")
 		return true
+	# "I'll buy it", "how much?", "still have it?" without a link: about the
+	# item it advertised or was last talking about.
+	var talk := _topic(bot)
+	if not talk.is_empty() and (_player_buying(lower) or _asks_price(lower)):
+		var id := int(talk.id)
+		var have := bot.bag.count_of(id)
+		if not talk.buying or _player_buying(lower):
+			if have <= 0:
+				_later_text(bot, "whisper", "sorry, [%s] is gone already" % ItemDB.get_item(id).name)
+				return true
+			talk.buying = false
+			talk.count = clampi(int(talk.count), 1, have)
+			var price := bot.bag.asking_price(id, 1)
+			bot.bag.quotes.sell[id] = price
+			var count := int(talk.count)
+			_offer_to_come(bot, "[%s]%s is %s%s" % [ItemDB.get_item(id).name, " x%d" % count if count > 1 else "", ItemDB.money_text(price), " each (%s)" % ItemDB.money_text(price * count) if count > 1 else ""])
+		else:
+			var price := bot.bag.buying_price(id, 1)
+			if bot.bag.money < price * maxi(int(talk.count), 1):
+				_later_text(bot, "whisper", "can't afford that right now, sorry")
+				return true
+			bot.bag.quotes.buy[id] = price
+			_offer_to_come(bot, "i'd pay %s for [%s]" % [ItemDB.money_text(price), ItemDB.get_item(id).name])
+		_refresh_trade(bot)
+		return true
 	# "yes", "sure", "come over": a bot that offered to come, buying or
 	# selling, comes to you.
 	if bot.get_meta("offered_to_come", false) and _has_any(lower, YES):
@@ -437,6 +467,25 @@ func _trade_whisper(bot: Bot, text: String, lower: String) -> bool:
 			bot.come_to_player()
 		return true
 	return false
+
+
+## Words of a player wanting to buy from the bot.
+static func _player_buying(lower: String) -> bool:
+	return "sell me" in lower or "i'll take" in lower or "ill take" in lower or _has_any(lower, ["buy", "purchase", "wtb", "take", "want", "need", "interested"]) and not _player_selling_to_it(lower)
+
+
+## Words of a player wanting to sell to the bot.
+static func _player_selling(lower: String) -> bool:
+	return _player_selling_to_it(lower) or _has_any(lower, ["pay", "give", "offer", "worth", "wts"]) or (_has_any(lower, ["sell"]) and not "sell me" in lower)
+
+
+static func _player_selling_to_it(lower: String) -> bool:
+	return _has_any(lower, ["sell you", "buy mine", "buy my", "buy this", "want mine"])
+
+
+## Asking what it costs, or whether it's still for sale.
+static func _asks_price(lower: String) -> bool:
+	return _has_any(lower, ["how much", "price", "cost", "still have", "available", "wtb"])
 
 
 ## Seconds a trade topic stays live for a whispered price without an item.
@@ -451,8 +500,15 @@ func _set_topic(bot: Bot, id: int, buying: bool, count: int) -> void:
 
 ## The live topic, or {} once it's gone stale.
 func _topic(bot: Bot) -> Dictionary:
+	return trade_topic(bot)
+
+
+## What a bot was last trading about (advertised, quoted or agreed), while
+## it's fresh: { "id", "buying", "count" }, or {}. The trade window fills in
+## that item when a trade opens.
+static func trade_topic(bot: Bot) -> Dictionary:
 	var talk: Dictionary = bot.get_meta("haggling", {})
-	if talk.is_empty() or _now() - float(talk.get("time", 0.0)) > TOPIC_TIME:
+	if talk.is_empty() or Time.get_ticks_msec() / 1000.0 - float(talk.get("time", 0.0)) > TOPIC_TIME:
 		return {}
 	return talk
 
@@ -510,7 +566,10 @@ func _haggle(bot: Bot, amount: int, lower := "") -> void:
 		else:
 			var best := mini(limit, bot.bag.money / count)
 			bot.bag.quotes.buy[id] = best
-			_later_text(bot, "whisper", "too rich for me, %s each is the most i can do" % ItemDB.money_text(best))
+			if best <= 0:
+				_later_text(bot, "whisper", "can't afford that right now, sorry")
+			else:
+				_later_text(bot, "whisper", "too rich for me, %s each is the most i can do" % ItemDB.money_text(best))
 	else:
 		if each >= limit:
 			bot.bag.quotes.sell[id] = each

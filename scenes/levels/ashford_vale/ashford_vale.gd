@@ -1,5 +1,5 @@
 class_name AshfordVale
-extends Node3D
+extends Zone
 ## The starting area: a forest valley ringed by mountains, about 400 yards
 ## across, for levels 1 to 6 (the burrowlings' Firecallers by the mine are 7-8). Ashford Priory stands in the middle, with
 ## wolves in the meadow and woods, burrowlings at their mine to the west,
@@ -111,28 +111,26 @@ const WOOD := Color(0.45, 0.31, 0.2)
 const DARK_WOOD := Color(0.3, 0.2, 0.13)
 const CANVAS := Color(0.62, 0.55, 0.42)
 
-var _noise := FastNoiseLite.new()
 var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
-	_noise.seed = SEED
-	_noise.frequency = 0.008
-	_noise.fractal_octaves = 4
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
+	zone_name = ZONE_NAME
+	size = SIZE
+	graveyard = SPAWN
+	graveyard_facing = SPAWN_FACING
+	hub = PRIORY
+	places = PLACES
+	spawns = SPAWNS
+	enclosures = ENCLOSURES
 
 
 func _ready() -> void:
-	var ground := Terrain.new()
-	ground.name = "Ground"
-	add_child(ground)
-	var ground_material := StandardMaterial3D.new()
-	ground_material.vertex_color_use_as_albedo = true
-	ground_material.vertex_color_is_srgb = true
-	ground.build(SIZE, STEP, height_at, _ground_color, ground_material)
-	_build_water()
-	_build_edges()
+	build_ground(STEP, _ground_color)
+	build_water(WATER_LEVEL)
+	build_edges()
 	_build_priory()
 	_build_mine()
 	_build_brigand_camp()
@@ -140,29 +138,25 @@ func _ready() -> void:
 	_build_trees()
 	_build_rocks()
 	_build_clutter()
-	_spawn_creatures()
+	spawn_creatures(SEED + 3, "Creature", PASSIVE_CREATURES, WATER_LEVEL)
 
 
 # Shape of the land.
 
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
-	var height := _noise.get_noise_2d(x, z) * 3.0 + 4.5
+	var height := base_height(x, z)
 	# Mountains all around the valley.
-	var ring := smoothstep(0.78, 1.05, point.length() / 185.0)
-	height += ring * (38.0 + _noise.get_noise_2d(x * 3.1, z * 3.1) * 14.0)
+	height += mountain_height(x, z, smoothstep(0.78, 1.05, point.length() / 185.0))
 	for hill: Array in HILLS:
 		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
 	height = lerpf(PRIORY_HEIGHT, height, smoothstep(PRIORY_FLAT, PRIORY_FLAT + 16.0, point.distance_to(PRIORY)))
 	for flat: Array in FLATS:
 		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 16.0, point.distance_to(flat[0])))
-	var stream := _distance_to_line(point, STREAM)
-	return minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
-
-
-## 1 at the middle, easing to 0 at t = 1.
-func _bump(t: float) -> float:
-	return (cos(t * PI) + 1.0) / 2.0 if t < 1.0 else 0.0
+	var stream := distance_to_line(point, STREAM)
+	height = minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
+	# The pass south to Harrowfield.
+	return carve_passes(x, z, height)
 
 
 func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
@@ -174,9 +168,10 @@ func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
 		color = color.lerp(DIRT, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
 	var road := INF
 	for line: Array in ROADS:
-		road = minf(road, _distance_to_line(point, line))
+		road = minf(road, distance_to_line(point, line))
+	road = minf(road, distance_to_pass(point))
 	color = color.lerp(DIRT, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, road))
-	color = color.lerp(MUD, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, _distance_to_line(point, STREAM)))
+	color = color.lerp(MUD, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM)))
 	color = color.lerp(ROCK, smoothstep(0.82, 0.68, normal.y))
 	color = color.lerp(ROCK, smoothstep(24.0, 34.0, y))
 	return Color(color.r + shade, color.g + shade, color.b + shade)
@@ -193,52 +188,6 @@ func _woods_density(point: Vector2) -> float:
 func _priory_distance(point: Vector2) -> float:
 	var outside := Vector2(maxf(absf(point.x) - 24.0, 0.0), maxf(absf(point.y - 1.0) - 21.0, 0.0))
 	return outside.length() + 24.0
-
-
-func _distance_to_line(point: Vector2, line: Array) -> float:
-	var best := INF
-	for i in line.size() - 1:
-		var a: Vector2 = line[i]
-		var b: Vector2 = line[i + 1]
-		var t := clampf((point - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
-		best = minf(best, point.distance_to(a + (b - a) * t))
-	return best
-
-
-func _ground_point(x: float, z: float) -> Vector3:
-	return Vector3(x, height_at(x, z), z)
-
-
-# Water and the edge of the world.
-
-func _build_water() -> void:
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(SIZE, SIZE)
-	var water := StandardMaterial3D.new()
-	water.albedo_color = Color(0.22, 0.42, 0.62, 0.75)
-	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	water.roughness = 0.2
-	plane.material = water
-	var view := MeshInstance3D.new()
-	view.name = "Water"
-	view.mesh = plane
-	view.position.y = WATER_LEVEL
-	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(view)
-
-
-func _build_edges() -> void:
-	var walls := StaticBody3D.new()
-	walls.name = "Edges"
-	add_child(walls)
-	for side in 4:
-		var shape := CollisionShape3D.new()
-		var box := BoxShape3D.new()
-		box.size = Vector3(SIZE, 200.0, 2.0)
-		shape.shape = box
-		shape.rotation.y = side * PI / 2
-		shape.position = Basis(Vector3.UP, side * PI / 2) * Vector3(0, 50, EDGE + 1.0)
-		walls.add_child(shape)
 
 
 # Ashford Priory: a walled courtyard with a chapel, a hall, a smithy and a well.
@@ -306,7 +255,7 @@ func _build_mine() -> void:
 	for pile in [Vector2(-107, 12), Vector2(-90, -4)]:
 		Props.cylinder(mine, Vector3(pile.x, y, pile.y), 1.6, 1.4, ROCK, true, 0.3)
 	for torch in [Vector2(x + 0.4, 1.8), Vector2(x + 0.4, 8.2)]:
-		_torch(mine, Vector3(torch.x, y + 2.8, torch.y))
+		torch(mine, Vector3(torch.x, y + 2.8, torch.y))
 
 
 # The brigands' camp: tents around a campfire.
@@ -322,27 +271,9 @@ func _build_brigand_camp() -> void:
 		var at := center + Vector2(cos(angle), sin(angle)) * 8.0
 		Props.roof(camp, Vector3(at.x, y, at.y), Vector3(4, 2.6, 3.4), Color(0.45, 0.18, 0.15), -angle)
 	Props.cylinder(camp, Vector3(center.x, y, center.y), 1.0, 0.3, DARK_STONE, false)
-	_torch(camp, Vector3(center.x, y + 0.6, center.y), 6.0)
+	torch(camp, Vector3(center.x, y + 0.6, center.y), 6.0)
 	for crate in [Vector2(5, -3), Vector2(6, -2), Vector2(-4, 5)]:
 		Props.box(camp, Vector3(center.x + crate.x, y, center.y + crate.y), Vector3(1, 1, 1), WOOD)
-
-
-func _torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:
-	var flame := MeshInstance3D.new()
-	flame.mesh = Props.blob(0.25, 5, 3)
-	var glow := StandardMaterial3D.new()
-	glow.albedo_color = Color(1.0, 0.6, 0.2)
-	glow.emission_enabled = true
-	glow.emission = Color(1.0, 0.5, 0.15)
-	glow.emission_energy_multiplier = 2.0
-	flame.material_override = glow
-	flame.position = at
-	parent.add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.65, 0.35)
-	light.omni_range = light_range
-	light.position = at + Vector3(0, 0.3, 0)
-	parent.add_child(light)
 
 
 # A wooden bridge where the south road crosses the stream, with sloped ends
@@ -363,38 +294,13 @@ func _build_bridge() -> void:
 	var far := Vector3(BRIDGE_X, deck, BRIDGE_END)
 	# The ramps start a little underground, so their ends are buried.
 	var sink := Vector3(0, -0.5, 0)
-	_plank(bridge, _ground_point(BRIDGE_X, BRIDGE_START - BRIDGE_RAMP) + sink, near)
-	_plank(bridge, near, far)
-	_plank(bridge, far, _ground_point(BRIDGE_X, BRIDGE_END + BRIDGE_RAMP) + sink)
+	plank(bridge, ground_point(BRIDGE_X, BRIDGE_START - BRIDGE_RAMP) + sink, near)
+	plank(bridge, near, far)
+	plank(bridge, far, ground_point(BRIDGE_X, BRIDGE_END + BRIDGE_RAMP) + sink)
 	for side in [-1, 1]:
 		Props.box(bridge, Vector3(BRIDGE_X + side * 2.4, deck, (BRIDGE_START + BRIDGE_END) / 2), Vector3(0.25, 1.0, BRIDGE_END - BRIDGE_START), DARK_WOOD)
 		for z in [BRIDGE_START, (BRIDGE_START + BRIDGE_END) / 2, BRIDGE_END]:
 			Props.box(bridge, Vector3(BRIDGE_X + side * 2.4, STREAM_BED - 1.0, z), Vector3(0.5, deck - STREAM_BED + 2.0, 0.5), DARK_WOOD, 0.0, false)
-
-
-## A 5 yard wide walkway whose top runs from one point to the other.
-func _plank(parent: Node3D, from: Vector3, to: Vector3) -> void:
-	var thickness := 0.4
-	var length := from.distance_to(to)
-	var slope := atan2(to.y - from.y, to.z - from.z)
-	var body := StaticBody3D.new()
-	body.position = (from + to) / 2.0
-	# Turning about +X lowers the +Z end, so a rise toward +Z is a negative angle.
-	body.rotation.x = -slope
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(5, thickness, length)
-	var view := MeshInstance3D.new()
-	view.mesh = mesh
-	view.material_override = Props.material(WOOD)
-	view.position.y = -thickness / 2.0
-	body.add_child(view)
-	var shape := BoxShape3D.new()
-	shape.size = mesh.size
-	var collision := CollisionShape3D.new()
-	collision.shape = shape
-	collision.position.y = -thickness / 2.0
-	body.add_child(collision)
-	parent.add_child(body)
 
 
 # Woods and scattered trees, placed by a seeded random walk over the map.
@@ -453,10 +359,12 @@ func _build_trees() -> void:
 func _clear_for_tree(point: Vector2, y: float) -> bool:
 	if y < WATER_LEVEL + 0.6 or y > 34.0:
 		return false
-	if _priory_distance(point) < 32.0 or _distance_to_line(point, STREAM) < STREAM_WIDTH + 4.0:
+	if _priory_distance(point) < 32.0 or distance_to_line(point, STREAM) < STREAM_WIDTH + 4.0:
+		return false
+	if distance_to_pass(point) < PASS_FLOOR + 3.0:
 		return false
 	for line: Array in ROADS:
-		if _distance_to_line(point, line) < ROAD_WIDTH + 2.5:
+		if distance_to_line(point, line) < ROAD_WIDTH + 2.5:
 			return false
 	for flat: Array in FLATS:
 		if point.distance_to(flat[0]) < flat[1] + 3.0:
@@ -489,12 +397,7 @@ func _build_rocks() -> void:
 	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
 
 
-## Ground clutter for the Environment Detail option: share of the tufts and
-## flowers drawn.
-const CLUTTER_SHARE := { "Off": 0.0, "Low": 0.33, "Medium": 0.66, "High": 1.0 }
 const CLUTTER_ATTEMPTS := 16000
-
-var _clutter: Array[MultiMeshInstance3D] = []
 
 
 ## Grass tufts and flowers on open ground: only for looks, so no collision
@@ -524,65 +427,22 @@ func _build_clutter() -> void:
 			tall_grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.2, 1.8), 1)), at + Vector3.UP * 0.2))
 		else:
 			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.2), 1)), at + Vector3.UP * 0.15))
-	_add_clutter(clutter, Props.cone(0.18, 0.3, 4), Color(0.3, 0.52, 0.22), grass)
-	_add_clutter(clutter, Props.cone(0.14, 0.4, 4), Color(0.36, 0.56, 0.24), tall_grass)
-	_add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.95, 0.82, 0.25), yellow)
-	_add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.92, 0.92, 0.88), white)
-
-
-func _add_clutter(parent: Node3D, mesh: Mesh, color: Color, transforms: Array[Transform3D]) -> void:
-	Props.scatter(parent, mesh, color, transforms)
-	var view := parent.get_child(parent.get_child_count() - 1) as MultiMeshInstance3D
-	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_clutter.append(view)
+	add_clutter(clutter, Props.cone(0.18, 0.3, 4), Color(0.3, 0.52, 0.22), grass)
+	add_clutter(clutter, Props.cone(0.14, 0.4, 4), Color(0.36, 0.56, 0.24), tall_grass)
+	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.95, 0.82, 0.25), yellow)
+	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.92, 0.92, 0.88), white)
 
 
 ## Open ground: not on roads, water, paving or camps.
 func _clear_for_clutter(point: Vector2, y: float) -> bool:
-	if y < WATER_LEVEL + 0.4 or _priory_distance(point) < 28.0 or _distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5:
+	if y < WATER_LEVEL + 0.4 or _priory_distance(point) < 28.0 or distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5:
+		return false
+	if distance_to_pass(point) < ROAD_WIDTH + 0.8:
 		return false
 	for line: Array in ROADS:
-		if _distance_to_line(point, line) < ROAD_WIDTH + 0.8:
+		if distance_to_line(point, line) < ROAD_WIDTH + 0.8:
 			return false
 	for flat: Array in FLATS:
 		if point.distance_to(flat[0]) < flat[1]:
 			return false
 	return true
-
-
-## The Environment Detail option: how much of the clutter is drawn.
-func set_clutter(level: String) -> void:
-	var share: float = CLUTTER_SHARE.get(level, 0.66)
-	for view in _clutter:
-		view.visible = share > 0.0
-		view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * share)
-
-
-# Creatures, placed the same way each time so saved corpses match by name.
-
-func _spawn_creatures() -> void:
-	var creatures := Node3D.new()
-	creatures.name = "Creatures"
-	add_child(creatures)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	for group in SPAWNS.size():
-		var spawn: Array = SPAWNS[group]
-		for i in int(spawn[3]):
-			var at := _spawn_point(rng, spawn[1], spawn[2])
-			var enemy: Enemy = ENEMY_SCENE.instantiate()
-			enemy.name = "Creature%02d_%02d" % [group, i]
-			enemy.creature_entry = spawn[0]
-			enemy.passive = spawn[0] in PASSIVE_CREATURES
-			enemy.position = at + Vector3(0, 0.1, 0)
-			creatures.add_child(enemy)
-
-
-func _spawn_point(rng: RandomNumberGenerator, center: Vector2, radius: float) -> Vector3:
-	var point := center
-	for attempt in 20:
-		var angle := rng.randf() * TAU
-		point = center + Vector2(cos(angle), sin(angle)) * sqrt(rng.randf()) * radius
-		if height_at(point.x, point.y) > WATER_LEVEL + 0.3:
-			break
-	return _ground_point(point.x, point.y)

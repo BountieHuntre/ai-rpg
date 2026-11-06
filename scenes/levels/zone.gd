@@ -1,0 +1,288 @@
+class_name Zone
+extends Node3D
+## What every zone shares. Zones sit side by side in one world (World), each
+## a square SIZE yards across around its center, in world coordinates, with
+## mountains along its edges. Where two zones meet, both use the same
+## mountain shape from the same noise, so the ground joins up, and a pass
+## (PASSES) is cut through the mountains on both sides. -Z is north.
+
+## Mountain noise shared by every zone, in world coordinates.
+const LAND_SEED := 1077
+## Passes between zones: lines of points in world coordinates, the first end
+## in one zone and the last in the other. The mountains are cut down along
+## them and the edge walls open where they cross.
+const PASSES := [
+	[Vector2(2, 112), Vector2(-18, 150), Vector2(-30, 200), Vector2(-24, 250), Vector2(-8, 290)],
+]
+## Half the width of a pass's flat floor, and how far its sides run up.
+const PASS_FLOOR := 7.0
+const PASS_SIDES := 13.0
+## How high the pass climbs at the border, over the land around it.
+const PASS_CREST := 7.0
+## Half the width of the gap in the edge walls where a pass crosses them.
+const PASS_GAP := 10.0
+const MOUNTAIN_HEIGHT := 38.0
+const MOUNTAIN_ROUGHNESS := 14.0
+## Players can't walk past this far from the center, along each axis, except
+## through a pass.
+const EDGE_INSET := 4.0
+
+static var _land: FastNoiseLite
+
+## The zone's name, its center (x, z) and width in yards, set by each zone.
+var zone_name := ""
+var center := Vector2.ZERO
+var size := 400.0
+## Where the dead of this zone come back, and the way they face.
+var graveyard := Vector3.ZERO
+var graveyard_facing := 0.0
+## The middle of the zone's main settlement: directions to places are from here.
+var hub := Vector2.ZERO
+## Named places: [name, center, radius], smallest first.
+var places: Array = []
+## Creature spawns: [creature entry, center, radius, count].
+var spawns: Array = []
+## Walled places bots go in and out of by the gate:
+## [x min, z min, x max, z max, outside the gate, inside the gate].
+var enclosures: Array = []
+
+
+static func land_noise() -> FastNoiseLite:
+	if _land == null:
+		_land = FastNoiseLite.new()
+		_land.seed = LAND_SEED
+		_land.frequency = 0.008
+		_land.fractal_octaves = 4
+	return _land
+
+
+## Whether a point (x, z) is in this zone's square.
+func contains(point: Vector2) -> bool:
+	var half := size / 2.0
+	return absf(point.x - center.x) <= half and absf(point.y - center.y) <= half
+
+
+## The ground's height. Each zone gives its own.
+func height_at(_x: float, _z: float) -> float:
+	return 0.0
+
+
+## The land with no features: gentle rolling ground.
+static func base_height(x: float, z: float) -> float:
+	return land_noise().get_noise_2d(x, z) * 3.0 + 4.5
+
+
+## The mountains at a point, `ring` being how far up them it is (0 to 1).
+static func mountain_height(x: float, z: float, ring: float) -> float:
+	return ring * (MOUNTAIN_HEIGHT + land_noise().get_noise_2d(x * 3.1, z * 3.1) * MOUNTAIN_ROUGHNESS)
+
+
+## Cuts the passes into a height: a road-wide floor a little above the land
+## around, its sides easing up into the mountains.
+static func carve_passes(x: float, z: float, height: float) -> float:
+	var point := Vector2(x, z)
+	for line: Array in PASSES:
+		var along := Vector2.ZERO
+		var distance := INF
+		for i in line.size() - 1:
+			var a: Vector2 = line[i]
+			var b: Vector2 = line[i + 1]
+			var t := clampf((point - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+			var d := point.distance_to(a + (b - a) * t)
+			if d < distance:
+				distance = d
+				along = a + (b - a) * t
+		if distance > PASS_FLOOR + PASS_SIDES:
+			continue
+		var crest := PASS_CREST * _bump(absf(along.y - 200.0) / 70.0)
+		var floor_height := base_height(along.x, along.y) + crest
+		var cut := lerpf(floor_height, height, smoothstep(PASS_FLOOR, PASS_FLOOR + PASS_SIDES, distance))
+		height = minf(height, cut)
+	return height
+
+
+## 1 at the middle, easing to 0 at t = 1.
+static func _bump(t: float) -> float:
+	return (cos(t * PI) + 1.0) / 2.0 if t < 1.0 else 0.0
+
+
+static func distance_to_line(point: Vector2, line: Array) -> float:
+	var best := INF
+	for i in line.size() - 1:
+		var a: Vector2 = line[i]
+		var b: Vector2 = line[i + 1]
+		var t := clampf((point - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+		best = minf(best, point.distance_to(a + (b - a) * t))
+	return best
+
+
+## Distance to the nearest pass.
+static func distance_to_pass(point: Vector2) -> float:
+	var best := INF
+	for line: Array in PASSES:
+		best = minf(best, distance_to_line(point, line))
+	return best
+
+
+func ground_point(x: float, z: float) -> Vector3:
+	return Vector3(x, height_at(x, z), z)
+
+
+## Ground over the zone's square, colored by `color` (f(x, z, y, normal)).
+func build_ground(step: float, color: Callable) -> void:
+	var ground := Terrain.new()
+	ground.name = "Ground"
+	add_child(ground)
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.vertex_color_is_srgb = true
+	ground.build(size, step, height_at, color, material, center)
+
+
+## Water at a height over the zone's square.
+func build_water(level: float) -> void:
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(size, size)
+	var water := StandardMaterial3D.new()
+	water.albedo_color = Color(0.22, 0.42, 0.62, 0.75)
+	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	water.roughness = 0.2
+	plane.material = water
+	var view := MeshInstance3D.new()
+	view.name = "Water"
+	view.mesh = plane
+	view.position = Vector3(center.x, level, center.y)
+	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(view)
+
+
+## Invisible walls round the zone's square, open where a pass crosses them.
+func build_edges() -> void:
+	var walls := StaticBody3D.new()
+	walls.name = "Edges"
+	add_child(walls)
+	var half := size / 2.0 - EDGE_INSET
+	# Each side as a line from one corner to the next.
+	var corners := [Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)]
+	for side in 4:
+		var a: Vector2 = center + corners[side]
+		var b: Vector2 = center + corners[(side + 1) % 4]
+		var gaps: Array[float] = []
+		for line: Array in PASSES:
+			for i in line.size() - 1:
+				var hit: Variant = Geometry2D.segment_intersects_segment(a, b, line[i], line[i + 1])
+				if hit != null:
+					gaps.append((hit as Vector2).distance_to(a))
+		gaps.sort()
+		var length := a.distance_to(b)
+		var start := 0.0
+		for gap in gaps + [length + PASS_GAP]:
+			var end: float = gap - PASS_GAP
+			if end > start:
+				_wall(walls, a.lerp(b, (start + end) / 2.0 / length), end - start, b - a)
+			start = gap + PASS_GAP
+
+
+func _wall(parent: StaticBody3D, at: Vector2, length: float, direction: Vector2) -> void:
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(length, 200.0, 2.0)
+	shape.shape = box
+	shape.position = Vector3(at.x, 50.0, at.y)
+	shape.rotation.y = -direction.angle()
+	parent.add_child(shape)
+
+
+## A 5 yard wide walkway whose top runs from one point to the other.
+func plank(parent: Node3D, from: Vector3, to: Vector3) -> void:
+	var thickness := 0.4
+	var length := from.distance_to(to)
+	var slope := atan2(to.y - from.y, to.z - from.z)
+	var body := StaticBody3D.new()
+	body.position = (from + to) / 2.0
+	# Turning about +X lowers the +Z end, so a rise toward +Z is a negative angle.
+	body.rotation.x = -slope
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(5, thickness, length)
+	var view := MeshInstance3D.new()
+	view.mesh = mesh
+	view.material_override = Props.material(Color(0.45, 0.31, 0.2))
+	view.position.y = -thickness / 2.0
+	body.add_child(view)
+	var shape := BoxShape3D.new()
+	shape.size = mesh.size
+	var collision := CollisionShape3D.new()
+	collision.shape = shape
+	collision.position.y = -thickness / 2.0
+	body.add_child(collision)
+	parent.add_child(body)
+
+
+func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:
+	var flame := MeshInstance3D.new()
+	flame.mesh = Props.blob(0.25, 5, 3)
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = Color(1.0, 0.6, 0.2)
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.5, 0.15)
+	glow.emission_energy_multiplier = 2.0
+	flame.material_override = glow
+	flame.position = at
+	parent.add_child(flame)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1.0, 0.65, 0.35)
+	light.omni_range = light_range
+	light.position = at + Vector3(0, 0.3, 0)
+	parent.add_child(light)
+
+
+## Ground clutter for the Environment Detail option: share of the tufts and
+## flowers drawn.
+const CLUTTER_SHARE := { "Off": 0.0, "Low": 0.33, "Medium": 0.66, "High": 1.0 }
+
+var _clutter: Array[MultiMeshInstance3D] = []
+
+
+func add_clutter(parent: Node3D, mesh: Mesh, color: Color, transforms: Array[Transform3D]) -> void:
+	Props.scatter(parent, mesh, color, transforms)
+	var view := parent.get_child(parent.get_child_count() - 1) as MultiMeshInstance3D
+	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_clutter.append(view)
+
+
+## The Environment Detail option: how much of the clutter is drawn.
+func set_clutter(level: String) -> void:
+	var share: float = CLUTTER_SHARE.get(level, 0.66)
+	for view in _clutter:
+		view.visible = share > 0.0
+		view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * share)
+
+
+## Creatures, placed the same way each time so saved corpses match by name:
+## `prefix` keeps names apart between zones.
+func spawn_creatures(rng_seed: int, prefix: String, passive_entries: Array, water_level: float) -> void:
+	var creatures := Node3D.new()
+	creatures.name = "Creatures"
+	add_child(creatures)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	for group in spawns.size():
+		var spawn: Array = spawns[group]
+		for i in int(spawn[3]):
+			var at := _spawn_point(rng, spawn[1], spawn[2], water_level)
+			var enemy: Enemy = AshfordVale.ENEMY_SCENE.instantiate()
+			enemy.name = "%s%02d_%02d" % [prefix, group, i]
+			enemy.creature_entry = spawn[0]
+			enemy.passive = spawn[0] in passive_entries
+			enemy.position = at + Vector3(0, 0.1, 0)
+			creatures.add_child(enemy)
+
+
+func _spawn_point(rng: RandomNumberGenerator, around: Vector2, radius: float, water_level: float) -> Vector3:
+	var point := around
+	for attempt in 20:
+		var angle := rng.randf() * TAU
+		point = around + Vector2(cos(angle), sin(angle)) * sqrt(rng.randf()) * radius
+		if height_at(point.x, point.y) > water_level + 0.3:
+			break
+	return ground_point(point.x, point.y)

@@ -228,15 +228,16 @@ func saved_state() -> Dictionary:
 		if aura.caster == combatant and not ends_on_standing:
 			auras.append({ "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts })
 	return {
-		"zone": AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": facing,
+		"zone": manager.zone_name_at(p) if manager else AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": facing,
 		"health": combatant.health, "mana": combatant.mana, "dead_for": _dead_for,
 		"stay": [_stay_at.x, _stay_at.y, _stay_at.z] if command == Command.STAY else [], "auras": auras,
 	}
 
 
-## Puts back a saved state from this zone (anything else starts afresh).
+## Puts back a saved state from a zone in the world (anything else starts
+## afresh).
 func restore_state(state: Dictionary) -> void:
-	if state.get("zone", "") != AshfordVale.ZONE_NAME:
+	if manager == null or not manager.has_zone(str(state.get("zone", ""))):
 		return
 	var at: Array = state.position
 	global_position = Vector3(at[0], at[1], at[2])
@@ -312,12 +313,13 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 		_dead_for += delta
 		if _dead_for >= REVIVE_TIME and _may_get_up():
-			# Bots on their own come back at the priory, like the player, so
-			# they don't rise among whatever killed them.
+			# Bots on their own come back at the zone's graveyard, like the
+			# player, so they don't rise among whatever killed them.
 			if not in_party:
 				for enemy: Enemy in _creatures():
 					enemy.forget(combatant)
-				global_position = AshfordVale.SPAWN + Vector3(randf_range(-3, 3), 0.5, randf_range(-3, 3))
+				var graveyard: Vector3 = manager.graveyard_at(global_position) if manager else AshfordVale.SPAWN
+				global_position = graveyard + Vector3(randf_range(-3, 3), 0.5, randf_range(-3, 3))
 				velocity = Vector3.ZERO
 			resurrect(combatant.max_health / 2, int(combatant.max_mana / 2.0) if combatant.has_mana() else 0, false)
 		return
@@ -950,10 +952,13 @@ func _go_to(point: Vector3) -> void:
 
 func _move(delta: float) -> void:
 	var direction := Vector3.ZERO
+	# How far the waypoint is, so a long far step stops on it, not past it.
+	var to_waypoint := INF
 	if _has_destination and not sitting and spells.casting.is_empty() and not combatant.is_stunned() and not combatant.is_rooted():
 		var waypoint := _route[0] if not _route.is_empty() else _destination
 		var offset := waypoint - global_position
 		offset.y = 0.0
+		to_waypoint = offset.length()
 		if offset.length() > (0.3 if _route.size() <= 1 else 1.0):
 			direction = offset.normalized()
 		elif _route.size() > 1:
@@ -972,7 +977,7 @@ func _move(delta: float) -> void:
 		# Far from the player: along the ground, no collision.
 		velocity = Vector3.ZERO
 		_stuck_for = 0.0
-		var step := global_position + direction * RUN_SPEED * combatant.speed_multiplier() * delta
+		var step := global_position + direction * minf(RUN_SPEED * combatant.speed_multiplier() * delta, to_waypoint)
 		global_position = Vector3(step.x, manager.ground_height(step.x, step.z), step.z)
 		return
 	# Standing still on the ground: nothing to move, so no collision work.

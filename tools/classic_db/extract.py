@@ -22,23 +22,39 @@ import renames
 # Young Wolf, Kobold Vermin, Timber Wolf, Kobold Worker, Kobold Laborer,
 # Defias Thug, Stonetusk Boar, Kobold Tunneler: classic levels 1 to 6.
 # Kobold Geomancer, Kobold Miner and Defias Cutpurse (5 to 8) cast spells.
-CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94]
+# Then Harrowfield's, from the rest of Elwynn Forest (levels 5 to 12): Mangy
+# Wolf, Forest Spider, Murloc, Murloc Streamrunner, Rockhide Boar, Porcine
+# Entourage, Gray Forest Wolf, Young Forest Bear, Defias Bandit, Goldtooth,
+# Mine Spider, Riverpaw Runt, Defias Rogue Wizard, Princess, Prowler, Murloc
+# Lurker, Murloc Forager, Riverpaw Outrunner, Hogger and Riverpaw Gnoll.
+CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94,
+             525, 30, 285, 735, 524, 390, 1922, 822, 116, 327, 43, 97, 474, 330, 118, 732, 46, 478, 448, 117]
+# Respawn time and wander distance for creatures the dump spawns only through
+# spawn groups (no plain creature rows): classic's usual 5 minutes and 5 yards.
+DEFAULT_RESPAWN = 300
+DEFAULT_WANDER = 5.0
 # EventAI (creature_ai_scripts) actions the game runs: say something (1, 44,
 # 54: the game writes its own lines), flee for assistance (25), cast a spell
 # (11), call for help (39) and set ranged mode (57). Emotes and sounds are
 # left out.
 AI_ACTIONS = {1, 11, 25, 39, 44, 54, 57}
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
-# Godric Rothgar (Armorer & Shieldcrafter) from Northshire.
-VENDORS = [152, 1213]
+# Godric Rothgar (Armorer & Shieldcrafter) from Northshire; Innkeeper Farley
+# and Kurran Steele (Cloth & Leather Armor) from Goldshire.
+VENDORS = [152, 1213, 295, 74]
 
 # Quests whose rules (objectives, level, XP, money, rewards, chain) the game's
 # own quests are built on. Titles, text and quest givers are the game's own,
 # in data/quests.json. From Northshire and Elwynn: A Threat Within, Eagan
 # Peltskinner, Wolves Across the Border, Brotherhood of Thieves, Kobold Camp
 # Cleanup, Investigate Echo Ridge, Skirmish at Echo Ridge, Kobold Candles and
-# Gold Dust Exchange.
-QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
+# Gold Dust Exchange. Then Harrowfield's, from Elwynn Forest: Rest and
+# Relaxation and A Fishy Peril (from the vale), Riverpaw Gnoll Bounty, Bounty
+# on Murlocs, Protect the Frontier, Red Linen Goods, Princess Must Die!, Lost
+# Necklace, Pie for Billy, Back to Billy, Goldtooth, Young Lovers, Speak with
+# Gramma, Note to William, Collecting Kelp, The Escape and Wanted: "Hogger".
+QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
+          2158, 40, 11, 46, 52, 83, 88, 85, 86, 84, 87, 106, 111, 107, 112, 114, 176]
 
 # Class trainers whose spell lists are exported. 927 is Brother Wilhelm, Paladin
 # Trainer. Priests have racial spells, so their list merges one trainer per race
@@ -253,8 +269,8 @@ def main(path):
     # wander from their spawn point (0 stands still).
     for entry, creature in creatures.items():
         spawns = [s for s in db["creature"] if s["id"] == entry]
-        creature["Respawn"] = most_common(int(s["spawntimesecsmin"]) for s in spawns)
-        creature["Wander"] = most_common(float(s["spawndist"]) if s["MovementType"] == "1" else 0.0 for s in spawns)
+        creature["Respawn"] = most_common(int(s["spawntimesecsmin"]) for s in spawns) if spawns else DEFAULT_RESPAWN
+        creature["Wander"] = most_common(float(s["spawndist"]) if s["MovementType"] == "1" else 0.0 for s in spawns) if spawns else DEFAULT_WANDER
         creature["Events"] = creature_events(db, entry)
     # Creature spell damage scales by the class's base damage at the
     # creature's level over that at the spell's level (Object.cpp,

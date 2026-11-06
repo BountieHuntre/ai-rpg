@@ -13,7 +13,7 @@ const RESET_KEY := KEY_F12
 @export var min_game_height := 270
 
 @onready var _game_view: SubViewportContainer = $GameView
-@onready var _world: AshfordVale = $GameView/GameViewport/World
+@onready var _world: World = $GameView/GameViewport/World
 @onready var _player: Player = $GameView/GameViewport/Player
 @onready var _camera: Camera3D = $GameView/GameViewport/GameCamera
 @onready var _hud: CombatHud = $CombatHud
@@ -100,7 +100,7 @@ func save_game() -> void:
 	if c.is_alive():
 		var p := _player.global_position
 		GameState.player_state = {
-			"zone": AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
+			"zone": _world.zone_at(p).zone_name, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
 			"auras": _saved_auras(c),
 			"item_cooldowns": _player.spells.saved_item_cooldowns(),
 		}
@@ -132,18 +132,25 @@ func _notification(what: int) -> void:
 		save_game()
 
 
-## Puts the player back where the save left them.
-## New characters, the dead and saves from another zone start at the priory.
+## Puts the player back where the save left them. The dead come back at the
+## graveyard of the zone they died in; new characters and saves from a zone
+## that isn't there start at the priory.
 func _restore_player() -> void:
 	var state := GameState.player_state
-	if state.get("zone", "") != AshfordVale.ZONE_NAME:
-		_player.global_position = AshfordVale.SPAWN
-		_player.facing = AshfordVale.SPAWN_FACING
-		_hud.show_banner.call_deferred(AshfordVale.ZONE_NAME)
+	var zone := _world.zone_named(str(state.get("zone", "")))
+	if zone == null or not state.has("position"):
+		var graveyard := _world.zone_named(str(state.get("graveyard", "")))
+		if graveyard == null:
+			graveyard = _world.zone_named(AshfordVale.ZONE_NAME)
+		_player.global_position = graveyard.graveyard
+		_player.facing = graveyard.graveyard_facing
 	else:
 		var at: Array = state.position
 		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2])), at[2])
 		_player.facing = float(state.facing)
+	_zone_name = _world.zone_at(_player.global_position).zone_name
+	if zone == null:
+		_hud.show_banner.call_deferred(_zone_name)
 	var c := _player.combatant
 	_player.spells.restore_item_cooldowns(state.get("item_cooldowns", {}))
 	# Buffs come back with the time they had left, as WoW saves auras on logout.
@@ -265,7 +272,10 @@ func _log_out() -> void:
 ## Back to the start point at full health, as when resurrecting at a graveyard.
 func _on_player_died() -> void:
 	# Only the auras that outlast death come back with you, and cooldowns keep running.
-	GameState.player_state = { "auras": _saved_auras(_player.combatant), "item_cooldowns": _player.spells.saved_item_cooldowns() }
+	GameState.player_state = {
+		"auras": _saved_auras(_player.combatant), "item_cooldowns": _player.spells.saved_item_cooldowns(),
+		"graveyard": _world.zone_at(_player.global_position).zone_name,
+	}
 	_store_corpses()
 	_bots.save_roster()
 	GameState.save_to_disk()
@@ -278,6 +288,19 @@ func _on_player_died() -> void:
 ## button release that ends them.
 func _process(_delta: float) -> void:
 	_update_drag_shield()
+	_check_zone()
+
+
+## The zone the player was last in.
+var _zone_name := ""
+
+
+## Crossing into another zone shows its name, as in classic.
+func _check_zone() -> void:
+	var zone := _world.zone_at(_player.global_position)
+	if zone and zone.zone_name != _zone_name:
+		_zone_name = zone.zone_name
+		_hud.show_banner(_zone_name)
 
 
 static func _is_wheel(event: InputEvent) -> bool:

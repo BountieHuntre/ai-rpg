@@ -38,6 +38,9 @@ const SAYINGS := {
 	"Burrowling": ["No take the candles!", "Ours! This dig is ours!", "You go away from tunnel!", "Candle stays with us!"],
 	"Brigand": ["Your purse or your life!", "Wrong road, traveller.", "Should've kept walking.", "Fresh pickings!"],
 	"Masked Brigand": ["Your purse or your life!", "Wrong road, traveller.", "Should've kept walking.", "Fresh pickings!"],
+	"Brasstooth": ["Shiny is mine! You no take!", "Brasstooth keeps it! All of it!", "Go 'way from my dig!"],
+	"Ditchjaw": ["Grah! Meat walks into camp!", "Ditchjaw land! You leave bones here!", "Hrrk! More for the pot!"],
+	"Grunmaw": ["Grunmaw smell you! Grunmaw eat you!", "Who sent little meat to Grunmaw?", "Bones! Bones for the pile!"],
 }
 ## Event flags.
 const EFLAG_REPEATABLE := 0x01
@@ -61,6 +64,9 @@ const PREVENTION_SILENCE := 1
 const PREVENTION_PACIFY := 2
 ## ProcFlags: taken a melee hit, or a melee ability's hit (Rime Shroud).
 const PROC_TAKEN_MELEE := 0x08 | 0x20
+## ProcFlags: its own melee swing or melee ability (Poison Proc, Thrash).
+const PROC_DONE_MELEE := 0x04 | 0x10
+const EFFECT_ADD_EXTRA_ATTACKS := 19
 ## Spell Attributes: damage scales with the creature's level.
 const ATTR_SCALES_WITH_CREATURE_LEVEL := 0x80000
 const DMG_CLASS_MELEE := 2
@@ -127,6 +133,7 @@ func setup(enemy: Enemy, data: Dictionary) -> void:
 			_push_back()
 	)
 	_me.melee_hit_taken.connect(_on_melee_hit_taken)
+	_me.proc_event.connect(_on_proc_event)
 
 
 ## The creature appeared (spawned or respawned): fresh timers and spawn events.
@@ -612,6 +619,28 @@ func _stop_cast() -> void:
 	_cast_total = 0.0
 	if _me:
 		_me.is_casting = false
+
+
+## Auras that fire when its own melee lands (ProcFlags done melee): the
+## spiders' Poison Proc poisons the victim, the Ditchjaw Outrider's Thrash
+## gives it extra swings.
+func _on_proc_event(flags: int, ex: int, other: Combatant, _spell: Dictionary, _amount: int) -> void:
+	if flags & PROC_DONE_MELEE == 0 or ex & (Combatant.PROC_EX_NORMAL | Combatant.PROC_EX_CRIT) == 0:
+		return
+	for aura in _me.auras.duplicate():
+		var spell: Dictionary = aura.spell
+		if int(spell.get("ProcFlags", 0)) & flags == 0 or randf() * 100.0 >= float(spell.get("ProcChance", 100)):
+			continue
+		for i in 3:
+			if int(spell.get("EffectApplyAuraName%d" % (i + 1), 0)) != SpellDB.AURA_PROC_TRIGGER_SPELL:
+				continue
+			var triggered := SpellDB.get_spell(int(spell.get("EffectTriggerSpell%d" % (i + 1), 0)))
+			if triggered.is_empty():
+				continue
+			if int(triggered.get("Effect1", 0)) == EFFECT_ADD_EXTRA_ATTACKS:
+				_me.extra_attacks += maxi(roundi(SpellDB.effect_value(triggered, 0, _enemy.level)), 1)
+			elif other and other.is_alive():
+				other.add_aura(triggered, _me)
 
 
 ## Auras that strike back at melee attackers (Rime Shroud chills them).

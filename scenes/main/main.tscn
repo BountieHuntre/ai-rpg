@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dw2l6lbg86xdw"]
 
 [ext_resource type="Script" uid="uid://dtk3mu0kfyiwp" path="res://scenes/main/main.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://scenes/levels/ashford_vale/ashford_vale.tscn" id="2_level"]
+[ext_resource type="PackedScene" path="res://scenes/levels/world.tscn" id="2_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="4_camera"]
 [ext_resource type="PackedScene" path="res://ui/combat_hud.tscn" id="6_hud"]
