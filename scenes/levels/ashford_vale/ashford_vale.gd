@@ -122,6 +122,7 @@ func _init() -> void:
 	graveyard = SPAWN
 	graveyard_facing = SPAWN_FACING
 	hub = PRIORY
+	hub_name = "the priory"
 	places = PLACES
 	spawns = SPAWNS
 	enclosures = ENCLOSURES

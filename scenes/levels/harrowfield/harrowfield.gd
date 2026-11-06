@@ -246,6 +246,7 @@ func _init() -> void:
 	graveyard = GRAVEYARD
 	graveyard_facing = GRAVEYARD_FACING
 	hub = VILLAGE
+	hub_name = "Wexford"
 	places = PLACES
 	spawns = SPAWNS
 	quest_objects = QUEST_OBJECTS
@@ -819,13 +820,12 @@ func _build_clutter() -> void:
 	var heights := []
 	heights.resize(count)
 	var chunks := 64
-	var task := WorkerThreadPool.add_group_task(func(chunk: int) -> void:
+	Terrain.parallel(chunks, func(chunk: int) -> void:
 		for i in range(chunk * count / chunks, (chunk + 1) * count / chunks):
 			var point: Vector2 = draws[i][0]
 			var y := height_at(point.x, point.y)
 			heights[i] = y if y <= 26.0 and _clear_for_clutter(point, y) else NAN
-	, chunks)
-	WorkerThreadPool.wait_for_group_task_completion(task)
+	)
 	var grass: Array[Transform3D] = []
 	var tall_grass: Array[Transform3D] = []
 	var yellow: Array[Transform3D] = []

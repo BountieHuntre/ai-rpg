@@ -535,6 +535,15 @@ func direction_of(place_name: String) -> String:
 	return ""
 
 
+## The settlement of the zone a named place is in ("the priory", "Wexford"),
+## which direction_of measures from.
+func hub_of(place_name: String) -> String:
+	for place: Array in _places():
+		if place[0] == place_name:
+			return _world.zone_at(Vector3(place[1].x, 0, place[1].y)).hub_name
+	return ""
+
+
 func place_names() -> Array:
 	return _places().map(func(place: Array) -> String: return place[0])
 

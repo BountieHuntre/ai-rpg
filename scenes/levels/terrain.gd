@@ -16,15 +16,14 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 	# copied into lambdas, so the rows are kept in an Array.
 	var height_rows := []
 	height_rows.resize(width)
-	var heights_task := WorkerThreadPool.add_group_task(func(row: int) -> void:
+	parallel(width, func(row: int) -> void:
 		var line := PackedFloat32Array()
 		line.resize(width)
 		var z := origin.y + row * step
 		for column in width:
 			line[column] = height.call(origin.x + column * step, z)
 		height_rows[row] = line
-	, width)
-	WorkerThreadPool.wait_for_group_task_completion(heights_task)
+	)
 	_cells = cells
 	_step = step
 	_origin = origin
@@ -35,7 +34,7 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 	var rows := []
 	rows.resize(width)
 	var heights := _heights
-	var colors_task := WorkerThreadPool.add_group_task(func(row: int) -> void:
+	parallel(width, func(row: int) -> void:
 		var points := PackedVector3Array()
 		var normals := PackedVector3Array()
 		var colors := PackedColorArray()
@@ -55,8 +54,7 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 			normals[column] = normal
 			colors[column] = color.call(x, z, y, normal)
 		rows[row] = [points, normals, colors]
-	, width)
-	WorkerThreadPool.wait_for_group_task_completion(colors_task)
+	)
 	var points := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
@@ -94,6 +92,17 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 	var shape := CollisionShape3D.new()
 	shape.shape = mesh.create_trimesh_shape()
 	add_child(shape)
+
+
+## Runs work(i) for i in 0 to count - 1 on the worker threads and waits for
+## them all.
+static func parallel(count: int, work: Callable) -> void:
+	if OS.has_environment("AI_RPG_SERIAL"):
+		for i in count:
+			work.call(i)
+		return
+	var task := WorkerThreadPool.add_group_task(work, count)
+	WorkerThreadPool.wait_for_group_task_completion(task)
 
 
 var _heights := PackedFloat32Array()

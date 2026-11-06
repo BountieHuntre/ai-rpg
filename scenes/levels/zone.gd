@@ -38,6 +38,8 @@ var graveyard := Vector3.ZERO
 var graveyard_facing := 0.0
 ## The middle of the zone's main settlement: directions to places are from here.
 var hub := Vector2.ZERO
+## What the settlement is called, for directions ("west of Wexford").
+var hub_name := ""
 ## Named places: [name, center, radius], smallest first.
 var places: Array = []
 ## Creature spawns: [creature entry, center, radius, count].

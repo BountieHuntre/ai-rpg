@@ -261,13 +261,15 @@ func _answer(bot: Bot, kind: String, lower: String, channel := 0) -> void:
 func _reply_to_question(bot: Bot, lower: String) -> String:
 	# "trainer", "trains", "train", "training".
 	if "train" in lower:
-		return _trainer_answer(lower)
+		return _trainer_answer(bot, lower)
 	for place_name: String in _manager.place_names():
 		var key := place_name.trim_prefix("the ")
 		if key in lower or key.split(" ")[-1] in lower.split(" "):
 			if place_name == "the priory":
 				return "the priory's in the middle of the vale, follow any road"
-			return "%s is %s of the priory" % [place_name, _manager.direction_of(place_name)]
+			if place_name == "Wexford":
+				return "Wexford's down the pass road south of the vale, can't miss it"
+			return "%s is %s of %s" % [place_name, _manager.direction_of(place_name), _manager.hub_of(place_name)]
 	for entry: int in _manager.spawn_entries():
 		var creature := _creature_name(entry)
 		for word in creature.to_lower().split(" "):
@@ -278,19 +280,31 @@ func _reply_to_question(bot: Bot, lower: String) -> String:
 		var quest := QuestDB.get_quest(id)
 		var title := str(quest.title).to_lower()
 		if title in lower or _shares_words(title, lower):
-			var giver := _npc_name(str(quest.get("giver", "")))
-			return "%s at the priory gives [%s]" % [giver, quest.title] if not giver.is_empty() else "not sure who gives that"
+			var giver_id := str(quest.get("giver", ""))
+			var giver := _npc_name(giver_id)
+			if giver.is_empty():
+				return "not sure who gives that"
+			# Where the giver stands: its named place, else its zone.
+			var npc := _npc_node(giver_id)
+			var where := _manager.place_at(npc.global_position) if npc else ""
+			if where.is_empty() and npc:
+				where = _manager.zone_name_at(npc.global_position)
+			return "%s %s gives [%s]" % [giver, ("in " if where == "Wexford" or not where.begins_with("the ") else "at ") + where, quest.title] if not where.is_empty() else "%s gives [%s]" % [giver, quest.title]
 	return SHRUGS.pick_random()
 
 
 ## Which class's trainer was asked about, and whether there is one: the NPCs
-## titled "<Class> Trainer" are the only trainers there are.
-func _trainer_answer(lower: String) -> String:
+## titled "<Class> Trainer" are the only trainers there are; the nearest one.
+func _trainer_answer(bot: Bot, lower: String) -> String:
+	# Each class's trainer nearest the bot (the priory's or Wexford's).
 	var trainers := {}
 	for node in get_tree().get_nodes_in_group("npcs"):
 		var title := str(node.subname)
 		if title.ends_with(" Trainer"):
-			trainers[title.trim_suffix(" Trainer").to_lower()] = node
+			var kind := title.trim_suffix(" Trainer").to_lower()
+			var known: Node3D = trainers.get(kind)
+			if known == null or bot.global_position.distance_to(node.global_position) < bot.global_position.distance_to(known.global_position):
+				trainers[kind] = node
 	var asked := ""
 	for class_title: String in ClassicData.CLASS_NAMES.values():
 		if class_title.to_lower() in lower:
@@ -308,7 +322,7 @@ func _trainer_answer(lower: String) -> String:
 		return "which class? i know where %s %s" % [" and ".join(kinds), "is" if kinds.size() == 1 else "are"]
 	var npc: Node3D = trainers[wanted]
 	var place := _manager.place_at(npc.global_position)
-	return "%s trains %s%s" % [npc.npc_name, _class_plural(wanted), (", in " if place == "the priory" else ", at ") + place if not place.is_empty() else ""]
+	return "%s trains %s%s" % [npc.npc_name, _class_plural(wanted), (", in " if place == "the priory" or not place.begins_with("the ") else ", at ") + place if not place.is_empty() else ""]
 
 
 ## "templars", "men-at-arms", "magi".
@@ -763,6 +777,13 @@ func _aggressive_name(creature: String) -> bool:
 		if _creature_name(entry) == creature:
 			return _aggressive(entry)
 	return false
+
+
+func _npc_node(npc_id: String) -> Node3D:
+	for node in get_tree().get_nodes_in_group("npcs"):
+		if node.npc_id() == npc_id:
+			return node
+	return null
 
 
 func _npc_name(npc_id: String) -> String:

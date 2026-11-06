@@ -434,6 +434,9 @@ func _set_held(ref: Dictionary) -> void:
 ## An item in a slot: its painted icon (Icons), a thin edge in its quality
 ## color for uncommon and better, and its count.
 func _draw_item(box: ColorRect, item: Dictionary, count: int) -> void:
+	# The box under the icon shows nothing of its own (the item held on the
+	# cursor has no slot frame).
+	box.color = Color.TRANSPARENT
 	UiStyle.icon(box, Icons.texture(Icons.item_key(item)), maxf(roundf(_ui_scale * 1.2), 2.0))
 	if int(item.get("Quality", 1)) >= 2:
 		var border := ReferenceRect.new()
