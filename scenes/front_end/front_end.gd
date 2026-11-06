@@ -2,7 +2,7 @@ class_name FrontEnd
 extends Control
 ## The screens before the game: a pretend account login, character select and
 ## character creation. There's no server: any account name and password log in,
-## and characters are the save files in user://characters/.
+## and characters are the save files in the profile's characters/ folder.
 ## Layout is in units of 1/270 of the window height, like the HUD.
 
 const GAME_SCENE := "res://scenes/main/main.tscn"

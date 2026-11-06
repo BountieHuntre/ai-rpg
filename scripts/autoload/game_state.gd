@@ -80,9 +80,14 @@ var single_save := false
 ## `-- --resume=<name>` skips the login and enters the world as that character,
 ## as the developer console's reload command does after restarting.
 var resume_name := ""
-## Holds characters/ and settings.cfg. Set by `--profile=`.
+## Holds characters/, settings.cfg, options.cfg and playerbots.json: user://
+## for released games, DEV_PROFILE for editor and debug runs, so developing
+## never touches the saves of the game as players get it. Set by `--profile=`.
 var profile_dir := "user://"
 var characters_dir := "user://characters"
+const DEV_PROFILE := "user://dev/"
+## What the developer profile starts with, copied from the release profile.
+const PROFILE_FILES := ["settings.cfg", "options.cfg", "playerbots.json"]
 ## When the current character was created, to keep the character list in order.
 var _created := 0
 
@@ -91,6 +96,8 @@ func _init() -> void:
 	# Release builds ignore the test arguments: they always use the player's
 	# own saves.
 	var args := OS.get_cmdline_user_args() if OS.is_debug_build() else PackedStringArray()
+	if OS.is_debug_build():
+		_use_dev_profile()
 	for arg in args:
 		if arg.begins_with("--save="):
 			save_path = arg.trim_prefix("--save=")
@@ -191,6 +198,23 @@ func delete_character(path: String) -> void:
 
 func _character_path(name: String) -> String:
 	return characters_dir.path_join(name.to_lower() + ".json")
+
+
+## Editor and debug runs keep their own profile. The first time, it starts as
+## a copy of the release profile (characters, options, login and playerbots),
+## after which the two go their own ways.
+func _use_dev_profile() -> void:
+	profile_dir = DEV_PROFILE
+	characters_dir = DEV_PROFILE.path_join("characters")
+	if DirAccess.dir_exists_absolute(DEV_PROFILE):
+		return
+	DirAccess.make_dir_recursive_absolute(characters_dir)
+	for file: String in PROFILE_FILES:
+		if FileAccess.file_exists("user://" + file):
+			DirAccess.copy_absolute("user://" + file, DEV_PROFILE + file)
+	if DirAccess.dir_exists_absolute("user://characters"):
+		for file in DirAccess.get_files_at("user://characters"):
+			DirAccess.copy_absolute("user://characters/" + file, characters_dir.path_join(file))
 
 
 ## The save from before character select becomes a character named Hero.
