@@ -1,5 +1,13 @@
 [
 	{
+		"version": "0.5.3",
+		"date": "11-06-2026",
+		"notes": [
+			"The world map (M) now shows every quest giver with a quest for you, and where to go for the quests you're on: where the creatures you need live, places to explore and chests holding what you need. Hover any of them to see what it is.",
+			"The minimap only shows quests to take when they're close enough to be on it, so it stays tidy. Quests to turn in still point the way from its edge."
+		]
+	},
+	{
 		"version": "0.5.2",
 		"date": "11-06-2026",
 		"notes": [
