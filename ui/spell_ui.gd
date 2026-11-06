@@ -243,7 +243,8 @@ func _draw_bar_slot(i: int) -> void:
 		child.queue_free()
 	var id := GameState.action_bar[i]
 	if id == 0:
-		box.color = EMPTY
+		box.color = Color.TRANSPARENT
+		UiStyle.frame_box(box, _ui_scale)
 	else:
 		_draw_icon(box, id)
 	# Overlays, updated every frame: out of mana, cooldown, key label.
@@ -251,8 +252,10 @@ func _draw_bar_slot(i: int) -> void:
 	no_mana.name = "NoMana"
 	var cooldown := _rect(box, Vector2.ZERO, Vector2(unit, 0), Color(0, 0, 0, 0.65))
 	cooldown.name = "Cooldown"
-	var key := _text(box, Vector2(0, -1), Settings.key_label(GameState.slot_action(i)), Color(0.9, 0.9, 0.9), 6)
-	key.size.x = (unit - 1) * _ui_scale
+	var key := _text(box, Vector2(0, -0.5), Settings.key_label(GameState.slot_action(i)), Color(0.9, 0.9, 0.9), 6)
+	key.add_theme_color_override("font_outline_color", Color.BLACK)
+	key.add_theme_constant_override("outline_size", maxi(roundi(_ui_scale * 1.2), 2))
+	key.size.x = (unit - 1.5) * _ui_scale
 	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	key.name = "Key"
 
@@ -460,13 +463,10 @@ func _build_book() -> void:
 	_book_page = clampi(_book_page, 0, pages - 1)
 	_book = _panel(BOOK_AT, BOOK_SIZE)
 	var tab_name := "General" if _book_tab == 0 else str(trees[_book_tab - 1].name)
-	_text(_book, Vector2(4, 1), "Spellbook (P) - %s" % tab_name, TITLE, 7)
-	var close := _text(_book, Vector2(BOOK_SIZE.x - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close.mouse_filter = Control.MOUSE_FILTER_STOP
-	close.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			_book.visible = false
-			_tooltip.show_lines([]))
+	UiStyle.title(_book, Vector2(5, 1.5), "Spellbook (P) - %s" % tab_name, _ui_scale)
+	UiStyle.close_button(_book, Vector2(BOOK_SIZE.x - 10, 2), _ui_scale, func() -> void:
+		_book.visible = false
+		_tooltip.show_lines([]))
 	var column_width := (BOOK_SIZE.x - 6) / 2.0
 	for i in range(_book_page * BOOK_PER_PAGE, mini((_book_page + 1) * BOOK_PER_PAGE, spells.size())):
 		var place := i - _book_page * BOOK_PER_PAGE
@@ -515,19 +515,11 @@ func _build_book() -> void:
 	for tree: Dictionary in trees:
 		names.append(str(tree.name))
 	for i in names.size():
-		var tab := ColorRect.new()
-		tab.color = Color(0.2, 0.18, 0.12, 0.95) if i == _book_tab else Color(0.1, 0.1, 0.13, 0.92)
-		tab.position = Vector2(BOOK_SIZE.x + 1, 8 + i * (BOOK_TAB.y + 2)) * _ui_scale
-		tab.size = BOOK_TAB * _ui_scale
-		tab.mouse_filter = Control.MOUSE_FILTER_STOP
-		_book.add_child(tab)
-		_text(tab, Vector2(3, 1), names[i], TITLE if i == _book_tab else Color(0.8, 0.8, 0.8), 6)
 		var index := i
-		tab.gui_input.connect(func(event: InputEvent) -> void:
-			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-				_book_tab = index
-				_book_page = 0
-				_redraw_book())
+		UiStyle.tab(_book, Vector2(BOOK_SIZE.x + 1, 8 + i * (BOOK_TAB.y + 2)), BOOK_TAB, names[i], i == _book_tab, _ui_scale, func() -> void:
+			_book_tab = index
+			_book_page = 0
+			_redraw_book())
 	_book.visible = false
 
 
@@ -760,29 +752,23 @@ func _describe(spell: Dictionary) -> String:
 
 # Drawing helpers.
 
+## A spell's painted icon (Icons) in its slot frame. Greater boons get a gold
+## edge, so a flyout's two rows differ.
 func _draw_icon(box: ColorRect, id: int) -> void:
 	var spell := SpellDB.get_spell(id)
-	var color: Color = SCHOOL_COLORS[clampi(int(spell.get("School", 0)), 0, SCHOOL_COLORS.size() - 1)]
-	box.color = color.darkened(0.55)
-	var border := ReferenceRect.new()
-	border.border_color = color
-	border.border_width = maxf(_ui_scale, 1.0)
-	border.editor_only = false
-	border.size = box.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(border)
-	var letters := ""
-	var spell_name := str(spell.SpellName)
-	# Boons by their own word, so a flyout's buttons differ (Str, She; GSt).
-	var boon := spell_name.find("Boon of ")
-	if boon >= 0 and not spell_name.begins_with("Improved"):
-		var word := spell_name.substr(boon + 8).replace("the ", "")
-		letters = ("G" + word.substr(0, 2)) if spell_name.begins_with("Greater") else word.substr(0, 3)
-	else:
-		for word in spell_name.split(" ", false):
-			if word[0] == word[0].to_upper():
-				letters += word[0]
-	_text(box, Vector2(1, 1), letters.substr(0, 3), Color.WHITE, 6)
+	box.color = Color.TRANSPARENT
+	UiStyle.frame_box(box, _ui_scale)
+	var inset := maxf(roundf(_ui_scale * 1.2), 2.0)
+	UiStyle.icon(box, Icons.texture(Icons.spell_key(spell)), inset)
+	if str(spell.get("SpellName", "")).begins_with("Greater"):
+		var border := ReferenceRect.new()
+		border.border_color = UiStyle.GOLD_BRIGHT
+		border.border_width = maxf(_ui_scale * 0.7, 1.0)
+		border.editor_only = false
+		border.position = Vector2.ONE * inset
+		border.size = box.size - border.position * 2.0
+		border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(border)
 
 
 func _short_time(seconds: float) -> String:
@@ -807,13 +793,11 @@ func _number(value: float) -> String:
 	return str(int(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value
 
 
-func _panel(at: Vector2, panel_size: Vector2) -> Control:
-	var panel := ColorRect.new()
-	panel.color = BACK
+## A gilt window (UiStyle), with a title band unless `band` is false.
+func _panel(at: Vector2, panel_size: Vector2, band := true) -> Control:
+	var panel := UiStyle.panel(self, panel_size, _ui_scale, band)
 	panel.position = at * _ui_scale
-	panel.size = panel_size * _ui_scale
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(panel)
+	move_child(panel, -1)
 	return panel
 
 

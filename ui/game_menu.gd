@@ -68,9 +68,10 @@ func _build() -> void:
 	for child in _panel.get_children():
 		child.queue_free()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, 0.95)
-	style.border_color = Color(0.55, 0.55, 0.6)
+	style.bg_color = Color(0.09, 0.082, 0.1, 0.95)
+	style.border_color = UiStyle.GOLD
 	style.set_border_width_all(maxi(roundi(ui_scale / 2), 1))
+	style.set_corner_radius_all(roundi(UiStyle.ROUNDING * ui_scale / 2.0))
 	style.set_content_margin_all(5 * ui_scale)
 	_panel.add_theme_stylebox_override("panel", style)
 	var box := VBoxContainer.new()
@@ -79,7 +80,8 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "Game Menu"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color("ffd100"))
+	title.add_theme_font_override("font", UiStyle.title_font())
+	title.add_theme_color_override("font_color", UiStyle.TITLE)
 	title.add_theme_font_size_override("font_size", roundi(FONT_SIZE * ui_scale))
 	box.add_child(title)
 	var entries := [

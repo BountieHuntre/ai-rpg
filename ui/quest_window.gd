@@ -151,18 +151,9 @@ func _build() -> void:
 	_choice_rows.clear()
 	hovered.emit({})
 	size = Vector2(WIDTH, 14 + BODY_HEIGHT + 20) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(4, 1), npc.npc_name if npc else str(ItemDB.get_item(_item).name), HEADING, 7)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			close()
-	)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), npc.npc_name if npc else str(ItemDB.get_item(_item).name), _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, close)
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(4, 14) * _ui_scale
 	scroll.size = Vector2(WIDTH - 8, BODY_HEIGHT) * _ui_scale
@@ -308,18 +299,7 @@ func _item_row(id: int, count: int, choice := -1, have := -1) -> void:
 	icon.size = Vector2.ONE * ICON * _ui_scale
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
-	var border := ReferenceRect.new()
-	border.border_color = quality
-	border.border_width = maxf(_ui_scale, 1.0)
-	border.editor_only = false
-	border.size = icon.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.add_child(border)
-	var initials := ""
-	for word in str(item.name).split(" ", false):
-		if word[0] == word[0].to_upper() and word[0] != "'":
-			initials += word[0]
-	_text(icon, Vector2(1, 1), initials.substr(0, 2), Color.WHITE, 5)
+	UiStyle.item_icon(icon, item, _ui_scale)
 	var amount := ""
 	if have >= 0:
 		amount = "  %d/%d" % [mini(have, count), count]

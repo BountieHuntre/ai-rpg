@@ -75,19 +75,10 @@ func _build() -> void:
 	var ids := _ids()
 	_selected = clampi(_selected, 0, maxi(ids.size() - 1, 0))
 	size = Vector2(WIDTH, 14 + LIST_HEIGHT + 4 + DETAIL_HEIGHT + 18) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(4, 1), "Quest Log", HEADING, 7)
-	_text(self, Vector2(WIDTH - 40, 2), "%d/%d" % [ids.size(), QuestLog.MAX_QUESTS], GREY, FONT_SIZE)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			toggle.call_deferred()
-	)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), "Quest Log", _ui_scale)
+	_text(self, Vector2(WIDTH - 42, 2), "%d/%d" % [ids.size(), QuestLog.MAX_QUESTS], GREY, FONT_SIZE)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, toggle)
 
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", 0)

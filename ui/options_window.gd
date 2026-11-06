@@ -287,9 +287,10 @@ func _build() -> void:
 	for child in get_children():
 		child.queue_free()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, 0.96)
-	style.border_color = Color(0.55, 0.55, 0.6)
+	style.bg_color = Color(0.09, 0.082, 0.1, 0.96)
+	style.border_color = UiStyle.GOLD
 	style.set_border_width_all(maxi(roundi(_ui_scale / 2), 1))
+	style.set_corner_radius_all(roundi(UiStyle.ROUNDING * _ui_scale / 2.0))
 	style.set_content_margin_all(6 * _ui_scale)
 	add_theme_stylebox_override("panel", style)
 	var box := VBoxContainer.new()
@@ -497,9 +498,10 @@ func _confirm_reset() -> void:
 	get_parent().add_child(_confirm)
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, 0.98)
+	style.bg_color = Color(0.09, 0.082, 0.1, 0.98)
 	style.border_color = GOLD
 	style.set_border_width_all(maxi(roundi(_ui_scale / 2), 1))
+	style.set_corner_radius_all(roundi(UiStyle.ROUNDING * _ui_scale / 2.0))
 	style.set_content_margin_all(8 * _ui_scale)
 	panel.add_theme_stylebox_override("panel", style)
 	_confirm.add_child(panel)
@@ -609,6 +611,7 @@ func _item_row(item: Dictionary) -> Control:
 	icon.size = Vector2.ONE * 9 * _ui_scale
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
+	UiStyle.item_icon(icon, item, _ui_scale)
 	var title := _label(str(item.name), quality)
 	title.position = Vector2(13, -1) * _ui_scale
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE

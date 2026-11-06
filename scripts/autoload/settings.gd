@@ -154,6 +154,10 @@ var _default_keys: Dictionary
 
 func _ready() -> void:
 	_pretend_release = "--pretend-release" in OS.get_cmdline_user_args()
+	# Every window's own controls in the Gothic gilt style (UiStyle): merged
+	# into the default theme every control falls back to, as a theme on the
+	# root window doesn't reach controls under non-Control nodes (CanvasLayers).
+	ThemeDB.get_default_theme().merge_with(UiStyle.theme())
 	for entry: Array in ACTIONS:
 		# The extra action bars' buttons aren't in project.godot: unbound to start.
 		if not InputMap.has_action(entry[0]):

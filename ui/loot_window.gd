@@ -106,18 +106,9 @@ func _rebuild() -> void:
 		child.free()
 	var rows: int = corpse.loot.size() + (1 if corpse.loot_money > 0 else 0)
 	size = Vector2(WIDTH, 14.0 + rows * ROW_HEIGHT + 3.0) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_add_label(self, Vector2(4, 1), "Loot", Color(1, 0.85, 0.4))
-	var close_button := _add_label(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4))
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if _is_click(event):
-			close()
-	)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), "Loot", _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, close)
 
 	var y := 14.0
 	if corpse.loot_money > 0:
@@ -151,13 +142,7 @@ func _add_row(y: float, icon_color: Color, text: String, text_color: Color, coun
 	icon.size = Vector2.ONE * ICON_SIZE * _ui_scale
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
-	var border := ReferenceRect.new()
-	border.border_color = icon_color
-	border.border_width = maxf(_ui_scale, 1.0)
-	border.editor_only = false
-	border.size = icon.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.add_child(border)
+	UiStyle.item_icon(icon, item, _ui_scale)
 	if count > 1:
 		_add_label(icon, Vector2(ICON_SIZE - 7, ICON_SIZE - 10), str(count), Color.WHITE)
 	_add_label(row, Vector2(ICON_SIZE + 4, 2), text, text_color)

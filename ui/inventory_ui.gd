@@ -169,7 +169,7 @@ func _build_character_window() -> void:
 	var rows := LEFT_SLOTS.size()
 	var height := 14.0 + rows * (SLOT + GAP) + SLOT + GAP * 3
 	_character_window = _panel(Vector2(4, 50), Vector2(width, height))
-	_text(_character_window, Vector2(4, 1), "Character (C)", TITLE, 7)
+	UiStyle.title(_character_window, Vector2(5, 1.5), "Character (C)", _ui_scale)
 	for i in rows:
 		var y := 14.0 + i * (SLOT + GAP)
 		_slot(_character_window, Vector2(GAP, y), Inventory.equip_ref(LEFT_SLOTS[i]))
@@ -195,7 +195,7 @@ func _build_bags_window() -> void:
 	# Left of the right action bars, when they're shown.
 	var at := Vector2(_screen.x - width - 4 - SpellUI.right_bars_layout(_screen).width, _screen.y - height - 40)
 	_bags_window = _panel(at, Vector2(width, height))
-	_text(_bags_window, Vector2(4, 1), "Bags (B)", TITLE, 7)
+	UiStyle.title(_bags_window, Vector2(5, 1.5), "Bags (B)", _ui_scale)
 	# Bag slots along the top, as on the classic bag bar.
 	for i in GameState.BAG_SLOTS:
 		_slot(_bags_window, Vector2(GAP + i * (SLOT + GAP), 13), Inventory.bag_slot_ref(i))
@@ -265,8 +265,9 @@ func _draw_view(view: Dictionary) -> void:
 		box.remove_child(child)
 		child.queue_free()
 	var stack := Inventory.stack_at(ref)
+	box.color = Color.TRANSPARENT
+	UiStyle.frame_box(box, _ui_scale)
 	if stack.is_empty():
-		box.color = EMPTY_SLOT
 		if ref.kind == "equip":
 			_text(box, Vector2(1, 4), str(Inventory.SLOT_LABELS[ref.slot]).substr(0, 3), Color(0.45, 0.45, 0.5), 5)
 		elif ref.kind == "bag_slot":
@@ -374,7 +375,7 @@ func drop_held_on_world() -> bool:
 	var item := ItemDB.get_item(stack.id)
 	var what: String = item.name if int(stack.count) <= 1 else "%d %s" % [stack.count, item.name]
 	_tooltip.show_item({})
-	_destroy_prompt = _panel(Vector2.ZERO, Vector2(150, 40))
+	_destroy_prompt = _panel(Vector2.ZERO, Vector2(150, 40), false)
 	_destroy_prompt.name = "DestroyPrompt"
 	_destroy_prompt.position = (get_viewport_rect().size - _destroy_prompt.size) / 2 - Vector2(0, 40) * _ui_scale
 	var question := _text(_destroy_prompt, Vector2(4, 4), "Do you want to destroy %s?" % what, Color.WHITE, FONT_SIZE)
@@ -430,37 +431,28 @@ func _set_held(ref: Dictionary) -> void:
 	_refresh()
 
 
+## An item in a slot: its painted icon (Icons), a thin edge in its quality
+## color for uncommon and better, and its count.
 func _draw_item(box: ColorRect, item: Dictionary, count: int) -> void:
-	var quality := ItemDB.quality_color(item)
-	box.color = quality.darkened(0.6)
-	var border := ReferenceRect.new()
-	border.border_color = quality
-	border.border_width = maxf(_ui_scale, 1.0)
-	border.editor_only = false
-	border.size = box.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(border)
-	_text(box, Vector2(1, 1), _initials(item.name), Color.WHITE, 6)
+	UiStyle.icon(box, Icons.texture(Icons.item_key(item)), maxf(roundf(_ui_scale * 1.2), 2.0))
+	if int(item.get("Quality", 1)) >= 2:
+		var border := ReferenceRect.new()
+		border.border_color = ItemDB.quality_color(item)
+		border.border_width = maxf(_ui_scale * 0.6, 1.0)
+		border.editor_only = false
+		border.position = Vector2.ONE * maxf(roundf(_ui_scale * 1.2), 2.0)
+		border.size = box.size - border.position * 2.0
+		border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(border)
 	if count > 1:
-		_text(box, Vector2(SLOT - 7, SLOT - 9), str(count), Color.WHITE, 6)
+		UiStyle.count_label(box, count, _ui_scale)
 
 
-## "Battleworn Hammer" -> "BH", standing in for an icon.
-func _initials(name: String) -> String:
-	var letters := ""
-	for word in name.split(" ", false):
-		if word[0] == word[0].to_upper() and word[0] != "'":
-			letters += word[0]
-	return letters.substr(0, 2)
-
-
-func _panel(at: Vector2, panel_size: Vector2) -> Control:
-	var panel := ColorRect.new()
-	panel.color = BACK
+## A gilt window (UiStyle), with a title band unless `band` is false.
+func _panel(at: Vector2, panel_size: Vector2, band := true) -> Control:
+	var panel := UiStyle.panel(self, panel_size, _ui_scale, band)
 	panel.position = at * _ui_scale
-	panel.size = panel_size * _ui_scale
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(panel)
+	move_child(panel, -1)
 	return panel
 
 

@@ -10,7 +10,7 @@ extends Control
 ## HUD units, times ui_scale.
 
 const WORLD := "World"
-const TITLE_BAR := 16.0
+const TITLE_BAR := 13.0
 const BORDER := 4.0
 const BACK := Color(0.08, 0.07, 0.06, 0.97)
 const FRAME := Color(0.55, 0.45, 0.25)
@@ -49,21 +49,12 @@ func setup(player: Player, world: World, minimap: Minimap, ui_scale: float, scre
 	_side = floorf(minf(screen.y - TITLE_BAR - BORDER * 2 - 16, screen.x - BORDER * 2 - 16))
 	var panel_size := Vector2(_side + BORDER * 2, _side + TITLE_BAR + BORDER)
 	var at := ((screen - panel_size) / 2.0).floor()
-	var frame := ColorRect.new()
-	frame.color = FRAME
-	frame.position = (at - Vector2.ONE) * ui_scale
-	frame.size = (panel_size + Vector2.ONE * 2) * ui_scale
-	frame.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(frame)
-	var panel := ColorRect.new()
-	panel.color = BACK
-	panel.position = Vector2.ONE * ui_scale
-	panel.size = panel_size * ui_scale
-	frame.add_child(panel)
-	var title := _text(panel, Vector2(BORDER, 2), "World Map", GOLD, 8)
-	title.size.x = 60 * ui_scale
-	_picker.position = Vector2(panel_size.x / 2 - 40, 2) * ui_scale
-	_picker.size = Vector2(80, 12) * ui_scale
+	var panel := UiStyle.panel(self, panel_size, ui_scale)
+	panel.position = at * ui_scale
+	move_child(panel, -1)
+	UiStyle.title(panel, Vector2(BORDER + 1, 1.5), "World Map", ui_scale, 8)
+	_picker.position = Vector2(panel_size.x / 2 - 40, 1.5) * ui_scale
+	_picker.size = Vector2(80, 9) * ui_scale
 	_picker.add_theme_font_size_override("font_size", roundi(6 * ui_scale))
 	_picker.get_popup().add_theme_font_size_override("font_size", roundi(6 * ui_scale))
 	_picker.focus_mode = Control.FOCUS_NONE
@@ -72,12 +63,7 @@ func setup(player: Player, world: World, minimap: Minimap, ui_scale: float, scre
 		_picker.add_item(zone.zone_name)
 	_picker.item_selected.connect(func(index: int) -> void: show_view(_picker.get_item_text(index)))
 	panel.add_child(_picker)
-	var close_button := _text(panel, Vector2(panel_size.x - 10, 1), "x", Color(0.9, 0.4, 0.4), 8)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			close.call_deferred()
-	)
+	UiStyle.close_button(panel, Vector2(panel_size.x - 11, 2), ui_scale, close)
 	_map.position = Vector2(BORDER, TITLE_BAR) * ui_scale
 	_map.size = Vector2.ONE * _side * ui_scale
 	_map.clip_contents = true

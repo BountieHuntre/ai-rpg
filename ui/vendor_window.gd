@@ -78,18 +78,9 @@ func _build() -> void:
 	var rows: Array = GameState.buyback if _showing_buyback else vendor.get("items", [])
 	# Room under the list for the money line and the Sell Junk button.
 	size = Vector2(WIDTH, 26 + maxi(rows.size(), 1) * ROW + 28) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(4, 1), "%s - %s" % [npc.npc_name, npc.subname], Color(1, 0.85, 0.4), 7)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			close()
-	)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), "%s - %s" % [npc.npc_name, npc.subname], _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, close)
 	_tab(Vector2(4, 12), "Merchant", not _showing_buyback, false)
 	_tab(Vector2(50, 12), "Buyback", _showing_buyback, true)
 
@@ -159,13 +150,11 @@ func _add_repair_button(bottom: float) -> void:
 
 
 func _tab(at: Vector2, label: String, active: bool, buyback: bool) -> void:
-	var tab := _text(self, at, label, Color.WHITE if active else Color(0.55, 0.55, 0.55), FONT_SIZE)
-	tab.mouse_filter = Control.MOUSE_FILTER_STOP
-	tab.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed and _showing_buyback != buyback:
+	UiStyle.tab(self, at, Vector2(label.length() * 3.4 + 7, 9), label, active, _ui_scale, func() -> void:
+		if _showing_buyback != buyback:
 			_showing_buyback = buyback
 			_queue_rebuild()
-	)
+	, FONT_SIZE)
 
 
 func _add_row(y: float, id: int, count: int, price: int, index: int) -> void:
@@ -183,13 +172,7 @@ func _add_row(y: float, id: int, count: int, price: int, index: int) -> void:
 	icon.size = Vector2.ONE * ICON * _ui_scale
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
-	var border := ReferenceRect.new()
-	border.border_color = quality
-	border.border_width = maxf(_ui_scale, 1.0)
-	border.editor_only = false
-	border.size = icon.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.add_child(border)
+	UiStyle.item_icon(icon, item, _ui_scale)
 	if count > 1:
 		var count_label := _text(icon, Vector2(0, ICON - 9), str(count), Color.WHITE, 5)
 		count_label.size.x = (ICON - 1) * _ui_scale

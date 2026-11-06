@@ -15,8 +15,8 @@ const PATCH_NOTES_WIDTH := 140.0
 const FONT_SIZE := 8
 const TITLE_SIZE := 28
 const GOLD := Color("ffd100")
-const PANEL_COLOR := Color(0.04, 0.04, 0.12, 0.88)
-const BORDER_COLOR := Color(0.55, 0.55, 0.6)
+const PANEL_COLOR := UiStyle.BACK
+const BORDER_COLOR := UiStyle.GOLD
 ## Pretend server steps after Login, with how long each shows.
 const LOGIN_STEPS := [["Connecting", 0.5], ["Authenticating", 0.6], ["Retrieving character list", 0.4]]
 
@@ -604,9 +604,9 @@ func _box(fill: Color, border: Color, margin: float) -> StyleBoxFlat:
 func _make_theme() -> Theme:
 	var made := Theme.new()
 	made.default_font_size = roundi(FONT_SIZE * _ui_scale)
-	made.set_stylebox("normal", "Button", _box(Color(0.35, 0.08, 0.06), Color(0.75, 0.6, 0.3), 2))
-	made.set_stylebox("hover", "Button", _box(Color(0.5, 0.12, 0.08), Color(1, 0.85, 0.4), 2))
-	made.set_stylebox("pressed", "Button", _box(Color(0.6, 0.45, 0.1), Color(1, 0.85, 0.4), 2))
+	made.set_stylebox("normal", "Button", _box(UiStyle.BUTTON, UiStyle.GOLD, 2))
+	made.set_stylebox("hover", "Button", _box(UiStyle.BUTTON_HOVER, UiStyle.GOLD_BRIGHT, 2))
+	made.set_stylebox("pressed", "Button", _box(UiStyle.BUTTON_PRESSED, UiStyle.GOLD, 2))
 	made.set_stylebox("disabled", "Button", _box(Color(0.15, 0.13, 0.13), Color(0.35, 0.35, 0.35), 2))
 	made.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	made.set_color("font_color", "Button", GOLD)

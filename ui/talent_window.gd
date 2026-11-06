@@ -98,31 +98,26 @@ func _build() -> void:
 	var tree_width := COLUMNS * CELL + 6.0
 	var width := SIDE * 2 + maxf(trees.size(), 1) * tree_width + maxf(trees.size() - 1, 0) * TREE_GAP
 	var height := TOP + TIERS * CELL + 22.0
-	_panel = ColorRect.new()
-	(_panel as ColorRect).color = BACK
+	_panel = UiStyle.panel(self, Vector2(width, height), _ui_scale)
 	_panel.position = Vector2((_screen.x - width) / 2.0, maxf((_screen.y - height) / 2.0 - 20.0, 4.0)) * _ui_scale
-	_panel.size = Vector2(width, height) * _ui_scale
-	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_panel)
-	_text(_panel, Vector2(SIDE, 2), "Talents", TITLE, 8)
-	var close := _text(_panel, Vector2(width - 9, 2), "x", Color(0.9, 0.4, 0.4), 8)
-	close.mouse_filter = Control.MOUSE_FILTER_STOP
-	close.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			toggle())
+	move_child(_panel, -1)
+	UiStyle.title(_panel, Vector2(SIDE + 1, 1.5), "Talents", _ui_scale, 8)
+	UiStyle.close_button(_panel, Vector2(width - 10, 2), _ui_scale, toggle)
 	if trees.is_empty():
 		_text(_panel, Vector2(SIDE, TOP), "Your class has no talents yet.", GREY, 7)
 		return
 	for index in trees.size():
 		var tree: Dictionary = trees[index]
 		var left := SIDE + index * (tree_width + TREE_GAP)
-		var back := ColorRect.new()
-		back.color = TREE_BACK
+		# Each tree on a darker panel with the dark gold line, its name in Cinzel.
+		var back := Panel.new()
+		var line := maxi(roundi(_ui_scale * 0.5), 1)
+		back.add_theme_stylebox_override("panel", UiStyle._box(Color(0.055, 0.05, 0.062), UiStyle.GOLD_DARK, line, roundi(UiStyle.ROUNDING * _ui_scale / 2.0)))
 		back.position = Vector2(left, TOP - 12) * _ui_scale
 		back.size = Vector2(tree_width, TIERS * CELL + 14) * _ui_scale
 		back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_panel.add_child(back)
-		_text(_panel, Vector2(left + 3, TOP - 12), "%s (%d)" % [tree.name, Talents.spent_in(GameState, tree)], TITLE, 6)
+		UiStyle.title(_panel, Vector2(left + 3, TOP - 11.5), "%s (%d)" % [tree.name, Talents.spent_in(GameState, tree)], _ui_scale, 6)
 		_draw_lines(tree, left)
 		for talent: Dictionary in tree.talents:
 			_draw_talent(talent, Vector2(left + 3 + int(talent.column) * CELL, TOP + int(talent.tier) * CELL))
@@ -164,28 +159,41 @@ func _draw_talent(talent: Dictionary, at: Vector2) -> void:
 	var most: int = talent.ranks.size()
 	var spell := SpellDB.get_spell(int(talent.ranks[maxi(rank - 1, 0)]))
 	var learnable := Talents.problem(GameState, id).is_empty()
-	var color: Color = SCHOOL_COLORS[clampi(int(spell.get("School", 0)), 0, SCHOOL_COLORS.size() - 1)]
+	var maxed := rank >= most
+	# A gilt slot like every other button: its painted icon in the frame, a
+	# bright gold edge when a point can go in, solid gold once maxed, and
+	# darkened while it can't be learned.
 	var box := ColorRect.new()
 	box.position = at * _ui_scale
 	box.size = Vector2.ONE * ICON * _ui_scale
-	box.color = color.darkened(0.55)
+	box.color = Color.TRANSPARENT
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.add_child(box)
-	var border := ReferenceRect.new()
-	border.border_color = MAXED if rank >= most else CAN_LEARN if learnable else color
-	border.border_width = maxf(_ui_scale * (1.5 if rank >= most or learnable else 1.0), 1.0)
-	border.editor_only = false
-	border.size = box.size
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(border)
-	var letters := ""
-	for word in str(spell.SpellName).split(" ", false):
-		if word[0] == word[0].to_upper():
-			letters += word[0]
-	_text(box, Vector2(1, 0.5), letters.substr(0, 3), Color.WHITE, 5)
+	UiStyle.frame_box(box, _ui_scale)
+	var inset := maxf(roundf(_ui_scale * 1.2), 2.0)
+	UiStyle.icon(box, Icons.texture(Icons.spell_key(spell)), inset)
+	if maxed or learnable:
+		var edge := ReferenceRect.new()
+		edge.border_color = UiStyle.GOLD if maxed else UiStyle.GOLD_BRIGHT
+		edge.border_width = maxf(_ui_scale * (1.0 if maxed else 1.4), 1.0)
+		edge.editor_only = false
+		edge.size = box.size
+		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(edge)
 	if rank == 0 and not learnable:
-		box.modulate = Color(0.5, 0.5, 0.5)
-	var rank_label := _text(_panel, at + Vector2(ICON - 5, ICON - 5), "%d/%d" % [rank, most], MAXED if rank >= most else CAN_LEARN if rank > 0 or learnable else LOCKED, 5)
+		box.modulate = Color(0.45, 0.45, 0.45)
+	# The rank in a small gilt badge at the corner.
+	var badge := Panel.new()
+	var line := maxi(roundi(_ui_scale * 0.5), 1)
+	badge.add_theme_stylebox_override("panel", UiStyle._box(UiStyle.SLOT, UiStyle.GOLD if maxed or rank > 0 or learnable else UiStyle.GOLD_DARK, line, roundi(_ui_scale)))
+	badge.position = (at + Vector2(ICON - 7, ICON - 4.5)) * _ui_scale
+	badge.size = Vector2(9, 6) * _ui_scale
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(badge)
+	var rank_label := _text(badge, Vector2.ZERO, "%d/%d" % [rank, most], UiStyle.GOLD_BRIGHT if maxed else CAN_LEARN if rank > 0 or learnable else LOCKED, 5)
+	rank_label.size = badge.size
+	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.mouse_entered.connect(func() -> void:
 		_hovered = id
 		_show_tooltip(id))

@@ -377,19 +377,10 @@ func _build() -> void:
 		return
 	var rows_bottom := 24.0 + SLOTS * (ROW + 1)
 	size = Vector2(WIDTH, rows_bottom + 46) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
 	_build_wares()
-	_text(self, Vector2(4, 1), "Trade", GOLD, 7)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			cancel.call_deferred()
-	)
+	UiStyle.title(self, Vector2(5, 1.5), "Trade", _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, cancel)
 	var left := 4.0
 	var right := WIDTH - 4 - COLUMN
 	_column(left, rows_bottom, _i_accept)
@@ -462,8 +453,14 @@ func _slot(at: Vector2, stack: Dictionary, on_input: Callable) -> void:
 	if stack.is_empty():
 		return
 	var item := ItemDB.get_item(int(stack.id))
+	var icon := Control.new()
+	icon.position = Vector2(1, 1) * _ui_scale
+	icon.size = Vector2.ONE * (ROW - 2) * _ui_scale
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	UiStyle.item_icon(icon, item, _ui_scale)
 	var label := "%s%s" % [item.name, " x%d" % int(stack.count) if int(stack.count) > 1 else ""]
-	_text(row, Vector2(2, 2), label, ItemDB.quality_color(item), FONT_SIZE)
+	_text(row, Vector2(ROW + 1, 2), label, ItemDB.quality_color(item), FONT_SIZE)
 	if stack.has("price"):
 		var price := _text(row, Vector2(0, 2), ItemDB.money_text(int(stack.price)), GOLD, FONT_SIZE)
 		price.size.x = (COLUMN - 2) * _ui_scale
@@ -501,13 +498,9 @@ func _build_wares() -> void:
 	var goods := bot.bag.for_sale()
 	var x := WIDTH + WARES_GAP
 	var height := 16.0 + maxf(goods.size(), 1) * (ROW + 1) + 4
-	var back := ColorRect.new()
-	back.color = BACK
+	var back := UiStyle.panel(self, Vector2(WARES_WIDTH, height), _ui_scale)
 	back.position = Vector2(x, 0) * _ui_scale
-	back.size = Vector2(WARES_WIDTH, height) * _ui_scale
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(x + 4, 1), "%s's goods" % bot.profile.char_name, GOLD, FONT_SIZE)
+	UiStyle.title(self, Vector2(x + 5, 2), "%s's goods" % bot.profile.char_name, _ui_scale, FONT_SIZE)
 	if goods.is_empty():
 		_text(self, Vector2(x + 4, 16), "Nothing for sale.", GREY, FONT_SIZE)
 		return

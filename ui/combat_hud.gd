@@ -44,6 +44,9 @@ const PARTY_FRAME_SIZE := Vector2(80, 25)
 ## The player and target frames' bar width, and the least gap between a
 ## frame's name and its level; frames widen for longer names.
 const FRAME_INNER := 84.0
+## Portrait squares in the player and target frames, and in party frames.
+const PORTRAIT := 31.0
+const PARTY_PORTRAIT := 21.0
 const NAME_LEVEL_GAP := 4.0
 const PARTY_XP := Color(0.55, 0.3, 0.85)
 ## Unit menu entries.
@@ -76,7 +79,12 @@ var _banner_left := 0.0
 var _target_health: ColorRect
 var _target_health_text: Label
 var _target_mana: Control
-var _target_mana_back: ColorRect
+var _target_mana_back: Control
+## The unit frames' portraits, and the key the target's shows.
+var _player_portrait: TextureRect
+var _target_portrait: TextureRect
+var _target_portrait_key := ""
+var _target_health_back: Control
 var _target_mana_text: Label
 var _cast_frame: Control
 var _cast_fill: Control
@@ -310,6 +318,11 @@ func _process(delta: float) -> void:
 
 	if _target_frame.visible:
 		_fit_target_frame()
+		var shown: Node = _player.targeting.target
+		var key := Icons.portrait_key(shown) if shown else "token"
+		if key != _target_portrait_key:
+			_target_portrait_key = key
+			_target_portrait.texture = Icons.texture(key)
 	_update_target_auras(target if target else (bot.combatant if bot else null))
 	_update_target_cast(target if target else (bot.combatant if bot else null))
 
@@ -552,14 +565,19 @@ func _build_player_frame() -> void:
 	var name_label := _label(self, Vector2.ZERO, _player.combatant.display_name)
 	var inner := _name_row_width(name_label, "Lv %d" % ClassicData.MAX_LEVEL, FRAME_INNER)
 	name_label.queue_free()
-	_player_frame_width = inner + 6.0
+	# The portrait on the left, the name, level and bars beside it.
+	var x0 := PORTRAIT + 5.0
+	_player_frame_width = x0 + inner + 3.0
 	var frame := _frame(Vector2(4, 4), Vector2(_player_frame_width, 35))
-	_label(frame, Vector2(3, 0), _player.combatant.display_name)
-	_player_level = _right_label(frame, Vector2(3, 0), inner)
-	_player_health = _bar(frame, Vector2(3, 12), Vector2(inner, 10), Color(0.25, 0.7, 0.25))
-	_player_health_text = _bar_text(frame, Vector2(3, 12), Vector2(inner, 10))
-	_player_mana = _bar(frame, Vector2(3, 23), Vector2(inner, 9), Color(0.2, 0.4, 0.85))
-	_player_mana_text = _bar_text(frame, Vector2(3, 23), Vector2(inner, 9))
+	_player_portrait = _portrait(frame, Vector2(2, 2), PORTRAIT, Icons.portrait_key(_player))
+	_label(frame, Vector2(x0, 0), _player.combatant.display_name)
+	_player_level = _right_label(frame, Vector2(x0, 0), inner)
+	_trough(frame, Vector2(x0, 12), Vector2(inner, 10))
+	_player_health = _bar(frame, Vector2(x0, 12), Vector2(inner, 10), Color(0.25, 0.7, 0.25))
+	_player_health_text = _bar_text(frame, Vector2(x0, 12), Vector2(inner, 10))
+	_trough(frame, Vector2(x0, 23), Vector2(inner, 9))
+	_player_mana = _bar(frame, Vector2(x0, 23), Vector2(inner, 9), Color(0.2, 0.4, 0.85))
+	_player_mana_text = _bar_text(frame, Vector2(x0, 23), Vector2(inner, 9))
 	_build_xp_bar()
 
 
@@ -588,24 +606,28 @@ func _build_xp_bar() -> void:
 ## The target frame, with a mana bar under the health bar for targets that
 ## have mana. Right-click it on a playerbot for the bot's menu.
 func _build_target_frame() -> void:
-	_target_frame = _frame(Vector2(4 + _player_frame_width + 6, 4), Vector2(FRAME_INNER + 6, 35))
+	# The portrait on the right, as classic's target frame has it.
+	_target_frame = _frame(Vector2(4 + _player_frame_width + 6, 4), Vector2(FRAME_INNER + 8 + PORTRAIT, 35))
 	_target_inner = FRAME_INNER
+	_target_portrait = _portrait(_target_frame, Vector2(FRAME_INNER + 6, 2), PORTRAIT, "token")
+	_target_portrait_key = ""
 	_target_frame.mouse_filter = Control.MOUSE_FILTER_STOP
 	_target_frame.gui_input.connect(_on_target_frame_input)
 	_target_name = _label(_target_frame, Vector2(3, 0), "")
 	_target_level = _right_label(_target_frame, Vector2(3, 0), 84)
+	_target_health_back = _trough(_target_frame, Vector2(3, 12), Vector2(84, 10))
 	_target_health = _bar(_target_frame, Vector2(3, 12), Vector2(84, 10), TARGET_HEALTH) as ColorRect
 	_target_health_text = _bar_text(_target_frame, Vector2(3, 12), Vector2(84, 10))
-	_target_mana_back = _rect(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.08, 0.1, 0.2))
+	_target_mana_back = _trough(_target_frame, Vector2(3, 23), Vector2(84, 9))
 	_target_mana = _bar(_target_frame, Vector2(3, 23), Vector2(84, 9), Color(0.2, 0.4, 0.85))
 	_target_mana_text = _bar_text(_target_frame, Vector2(3, 23), Vector2(84, 9))
 	_target_auras = Control.new()
 	_target_auras.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_target_auras)
 	_target_auras_key = ""
-	_target_cast = _frame(Vector2(4 + _player_frame_width + 6, 41), Vector2(FRAME_INNER + 6, 10))
-	_target_cast_fill = _bar(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), Color(0.9, 0.65, 0.2))
-	_target_cast_name = _bar_text(_target_cast, Vector2(1, 1), Vector2(FRAME_INNER + 4, 8), XP_FONT_SIZE + 1)
+	_target_cast = _frame(Vector2(4 + _player_frame_width + 6, 41), Vector2(FRAME_INNER + 8 + PORTRAIT, 10))
+	_target_cast_fill = _bar(_target_cast, Vector2(1.5, 1.5), Vector2(FRAME_INNER + 5 + PORTRAIT, 7), Color(0.9, 0.65, 0.2))
+	_target_cast_name = _bar_text(_target_cast, Vector2(1.5, 1.5), Vector2(FRAME_INNER + 5 + PORTRAIT, 7), XP_FONT_SIZE + 1)
 	_target_cast.visible = false
 
 
@@ -629,18 +651,20 @@ func _fit_target_frame() -> void:
 		return
 	var scale := inner / _target_inner
 	_target_inner = inner
-	_target_frame.size.x = (inner + 6.0) * _ui_scale
+	_target_frame.size.x = (inner + 8.0 + PORTRAIT) * _ui_scale
+	_target_portrait.get_parent().position.x = (inner + 6.0) * _ui_scale
 	_target_level.size.x = inner * _ui_scale
-	_target_mana_back.size.x = inner * _ui_scale
+	_target_mana_back.size.x = (inner + 1.2) * _ui_scale
+	_target_health_back.size.x = (inner + 1.2) * _ui_scale
 	_target_health_text.size.x = inner * _ui_scale
 	_target_mana_text.size.x = inner * _ui_scale
 	for fill: Control in [_target_health, _target_mana]:
 		fill.set_meta("full_width", inner * _ui_scale)
 		fill.size.x *= scale
 	# The cast bar under it matches its width.
-	_target_cast.size.x = (inner + 6.0) * _ui_scale
-	_target_cast_name.size.x = (inner + 4.0) * _ui_scale
-	_target_cast_fill.set_meta("full_width", (inner + 4.0) * _ui_scale)
+	_target_cast.size.x = (inner + 8.0 + PORTRAIT) * _ui_scale
+	_target_cast_name.size.x = (inner + 5.0 + PORTRAIT) * _ui_scale
+	_target_cast_fill.set_meta("full_width", (inner + 5.0 + PORTRAIT) * _ui_scale)
 
 
 func _update_target_cast(c: Combatant) -> void:
@@ -740,7 +764,12 @@ func _show_target_mana(c: Combatant) -> void:
 	_target_mana_back.visible = has_mana
 	_target_mana.visible = has_mana
 	_target_mana_text.visible = has_mana
-	_target_frame.size.y = (35 if has_mana else 24) * _ui_scale
+	# The frame keeps its height (its portrait fills it); without mana the
+	# health bar takes the mana bar's room.
+	var health_height := 10.0 if has_mana else 20.0
+	_target_health.size.y = health_height * _ui_scale
+	_target_health_back.size.y = (health_height + 1.2) * _ui_scale
+	_target_health_text.position.y = (12.0 + health_height / 2.0) * _ui_scale - _target_health_text.get_minimum_size().y / 2.0
 	if has_mana:
 		(_target_mana as ColorRect).color = power_color(c)
 		_set_bar(_target_mana, c.mana, c.max_mana)
@@ -826,21 +855,24 @@ func _build_party_frames() -> void:
 		probe.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 		inner = _name_row_width(probe, "Lv %d" % ClassicData.MAX_LEVEL, inner)
 		probe.queue_free()
-	var frame_size := Vector2(inner + 6, PARTY_FRAME_SIZE.y)
+	# Each with a small portrait on the left, like the player's frame.
+	var x0 := PARTY_PORTRAIT + 4.0
+	var frame_size := Vector2(x0 + inner + 3, PARTY_FRAME_SIZE.y)
 	for i in Party.members.size():
 		var bot := Party.members[i]
 		var frame := _frame(Vector2(4, 43 + i * (PARTY_FRAME_SIZE.y + 3)), frame_size)
 		frame.mouse_filter = Control.MOUSE_FILTER_STOP
 		frame.gui_input.connect(_on_party_frame_input.bind(bot))
-		var name_label := _label(frame, Vector2(3, -1), bot.profile.char_name)
+		_portrait(frame, Vector2(2, 2), PARTY_PORTRAIT, Icons.portrait_key(bot))
+		var name_label := _label(frame, Vector2(x0, -1), bot.profile.char_name)
 		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
-		var level := _right_label(frame, Vector2(3, -1), inner)
+		var level := _right_label(frame, Vector2(x0, -1), inner)
 		level.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
-		_rect(frame, Vector2(3, 10), Vector2(inner, 6), Color(0.1, 0.2, 0.1))
-		var health := _bar(frame, Vector2(3, 10), Vector2(inner, 6), Color(0.25, 0.7, 0.25))
-		var mana := _bar(frame, Vector2(3, 17), Vector2(inner, 3), Color(0.2, 0.4, 0.85))
-		var xp_back := _rect(frame, Vector2(3, 21), Vector2(inner, 2), Color(0.15, 0.1, 0.2))
-		var xp := _bar(frame, Vector2(3, 21), Vector2(inner, 2), PARTY_XP)
+		_trough(frame, Vector2(x0, 10), Vector2(inner, 6))
+		var health := _bar(frame, Vector2(x0, 10), Vector2(inner, 6), Color(0.25, 0.7, 0.25))
+		var mana := _bar(frame, Vector2(x0, 17), Vector2(inner, 3), Color(0.2, 0.4, 0.85))
+		var xp_back := _trough(frame, Vector2(x0, 21), Vector2(inner, 2))
+		var xp := _bar(frame, Vector2(x0, 21), Vector2(inner, 2), PARTY_XP)
 		_party_frames.append({ "bot": bot, "frame": frame, "name": name_label, "level": level, "health": health, "mana": mana, "xp": xp, "xp_back": xp_back })
 
 
@@ -966,8 +998,34 @@ func _set_bar(fill: Control, value: float, maximum: float) -> void:
 	fill.size.x = fill.get_meta("full_width") * clampf(value / maximum, 0.0, 1.0) if maximum > 0.0 else 0.0
 
 
+## A unit frame, the cast bar's or the XP bar's: a gilt panel (UiStyle)
+## without a title band.
 func _frame(frame_position: Vector2, frame_size: Vector2) -> Control:
-	return _rect(self, frame_position, frame_size, BAR_BACK)
+	var panel := UiStyle.panel(self, frame_size, _ui_scale, false)
+	panel.position = frame_position * _ui_scale
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	move_child(panel, -1)
+	return panel
+
+
+## A framed portrait (UiStyle slot frame and a painted icon): returns the
+## picture, whose texture the target frame swaps.
+func _portrait(parent: Control, at: Vector2, side: float, key: String) -> TextureRect:
+	var frame := UiStyle.slot_frame(parent, at, side, _ui_scale)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return UiStyle.icon(frame, Icons.texture(key), maxf(roundf(_ui_scale * 1.2), 2.0))
+
+
+## The dark, gold-edged trough a bar fills.
+func _trough(parent: Control, at: Vector2, trough_size: Vector2) -> Control:
+	var back := Panel.new()
+	var line := maxi(roundi(_ui_scale * 0.5), 1)
+	back.add_theme_stylebox_override("panel", UiStyle._box(Color(0.03, 0.025, 0.035), UiStyle.GOLD_DARK, line, roundi(_ui_scale)))
+	back.position = (at - Vector2.ONE * 0.6) * _ui_scale
+	back.size = (trough_size + Vector2.ONE * 1.2) * _ui_scale
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(back)
+	return back
 
 
 func _bar(parent: Node, bar_position: Vector2, bar_size: Vector2, color: Color) -> Control:

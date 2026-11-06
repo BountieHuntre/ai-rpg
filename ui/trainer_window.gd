@@ -151,18 +151,9 @@ func _build() -> void:
 	# every class what it may learn.
 	var trainer_class := int(SpellDB.TRAINER_CLASSES.get(npc.trainer, GameState.char_class if npc.trainer == SpellDB.WEAPON_TRAINER else 0))
 	size = Vector2(WIDTH, 14 + LIST_HEIGHT + 30) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(4, 1), "%s - %s" % [npc.npc_name, npc.subname], Color(1, 0.85, 0.4), 7)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			close()
-	)
+	var back := UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), "%s - %s" % [npc.npc_name, npc.subname], _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, close)
 
 	if npc.trainer == SpellDB.WEAPON_TRAINER and list.is_empty():
 		trainer_class = 0

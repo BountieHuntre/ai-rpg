@@ -45,9 +45,10 @@ func setup(ui_scale: float) -> void:
 
 func _style(panel: PanelContainer) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, 0.95)
-	style.border_color = Color(0.55, 0.55, 0.6)
+	style.bg_color = Color(0.09, 0.082, 0.1, 0.95)
+	style.border_color = UiStyle.GOLD
 	style.set_border_width_all(maxi(roundi(_ui_scale), 1))
+	style.set_corner_radius_all(roundi(UiStyle.ROUNDING * _ui_scale / 2.0))
 	style.set_content_margin_all(4 * _ui_scale)
 	panel.add_theme_stylebox_override("panel", style)
 

@@ -118,18 +118,9 @@ func _build() -> void:
 	for child in get_children():
 		child.queue_free()
 	size = Vector2(WIDTH, 14 + 12 + LIST_HEIGHT + 34) * _ui_scale
-	var back := ColorRect.new()
-	back.color = BACK
-	back.size = size
-	back.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(back)
-	_text(self, Vector2(4, 1), "Social", HEADING, 7)
-	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed:
-			toggle.call_deferred()
-	)
+	UiStyle.panel(self, size / _ui_scale, _ui_scale)
+	UiStyle.title(self, Vector2(5, 1.5), "Social", _ui_scale)
+	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, toggle)
 	var x := 4.0
 	for tab in [FRIENDS, WHO]:
 		var button := _button(tab, Vector2(x, 13), Vector2(40, 10), show_tab.bind(tab))
