@@ -21,6 +21,8 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 	for prefix in ["Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: "]:
 		if name.begins_with(prefix):
 			return "Teaches you how to make %s." % name.trim_prefix(prefix)
+	if SpellDB.is_weapon_skill(int(spell.get("Id", 0))):
+		return "Lets you use %s." % ("thrown weapons" if name == "Thrown" else name.to_lower())
 	if name.begins_with("Greater Boon of "):
 		var single := _boon(name.trim_prefix("Greater "), t)
 		if not single.is_empty():

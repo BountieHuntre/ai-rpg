@@ -389,13 +389,48 @@ const TRAINER_CLASSES := {
 
 
 ## A trainer's whole list. Pass a race to leave out other races' spells
-## (entries with a "races" list, such as the Cleric's racial spells).
-static func trainer_list(trainer: String, race := 0) -> Array:
+## (entries with a "races" list, such as the Cleric's racial spells), and a
+## class to leave out what it can't learn (entries with a "classes" mask: the
+## Weapon Master's skills).
+static func trainer_list(trainer: String, race := 0, char_class := 0) -> Array:
 	var list: Array = _get_data().trainers.get(trainer, [])
-	if race == 0:
+	if race == 0 and char_class == 0:
 		return list
 	return list.filter(func(entry: Dictionary) -> bool:
-		return not entry.has("races") or race in (entry.races as Array).map(func(r: Variant) -> int: return int(r)))
+		if race != 0 and entry.has("races") and not race in (entry.races as Array).map(func(r: Variant) -> int: return int(r)):
+			return false
+		return char_class == 0 or not entry.has("classes") or int(entry.classes) & (1 << (char_class - 1)) != 0)
+
+
+## The Weapon Master's trainer, which teaches every class the weapon skills
+## it may learn (classic's weapon masters joined).
+const WEAPON_TRAINER := "weapons"
+
+
+## A weapon skill (One-Handed Swords...): taught by the Weapon Master, and
+## left out of the spellbook as classic does.
+static func is_weapon_skill(id: int) -> bool:
+	if _weapon_skills.is_empty():
+		for entry: Dictionary in trainer_list(WEAPON_TRAINER):
+			for spell_id in entry.spells:
+				_weapon_skills[int(spell_id)] = true
+	return _weapon_skills.has(id)
+
+static var _weapon_skills: Dictionary
+
+
+## What a proficiency spell (Plate Mail, Two-Handed Swords...) lets you use:
+## "item class:subclass" for each subclass in its mask (SPELL_EFFECT_PROFICIENCY,
+## as Player::learnSpell grants it).
+static func proficiencies_of(spell: Dictionary) -> Array[String]:
+	var found: Array[String] = []
+	for i in range(1, 4):
+		if int(spell.get("Effect%d" % i, 0)) == EFFECT_PROFICIENCY:
+			var mask := int(spell.get("EquippedItemSubClassMask", 0))
+			for bit in 32:
+				if mask & (1 << bit) != 0:
+					found.append("%d:%d" % [int(spell.EquippedItemClass), bit])
+	return found
 
 
 ## The trainer list for a class's own trainer, for one race.

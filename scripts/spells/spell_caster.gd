@@ -933,10 +933,10 @@ static func learn(ids: Array) -> Array[String]:
 		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_stance_bar_spell(spell):
 			GameState.action_bar[empty] = id
 		learned.append(SpellDB.full_name(spell))
-		# Plate Mail teaches wearing plate.
-		var proficiency: String = PROFICIENCY_SPELLS.get(spell.SpellName, "")
-		if not proficiency.is_empty() and not proficiency in GameState.proficiencies:
-			GameState.proficiencies.append(proficiency)
+		# Plate Mail teaches wearing plate, Two-Handed Swords wielding them.
+		for proficiency in SpellDB.proficiencies_of(spell) + ([PROFICIENCY_SPELLS[spell.SpellName]] if PROFICIENCY_SPELLS.has(spell.SpellName) else []):
+			if not proficiency in GameState.proficiencies:
+				GameState.proficiencies.append(proficiency)
 	GameState.spells_changed.emit()
 	return learned
 

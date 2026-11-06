@@ -440,7 +440,7 @@ func _build_book() -> void:
 	var hide_old := bool(Settings.get_value("spellbook_hide_old_ranks"))
 	var spells: Array[int] = []
 	for id in GameState.known_spells:
-		if SpellDB.book_tab(GameState.char_class, id) + 1 != _book_tab:
+		if SpellDB.book_tab(GameState.char_class, id) + 1 != _book_tab or SpellDB.is_weapon_skill(id):
 			continue
 		if hide_old and GameState.best_rank(str(SpellDB.get_spell(id).get("SpellName", ""))) != id:
 			continue

@@ -77,6 +77,7 @@ def main():
     print(f"{len(templates)} faction templates")
     export_talents()
     export_skill_lines()
+    export_weapon_skills()
 
 
 def export_skill_lines():
@@ -90,6 +91,25 @@ def export_skill_lines():
     with open(os.path.join(OUT_DIR, "skill_lines.json"), "w", encoding="utf8") as out:
         json.dump(spells, out, separators=(",", ":"))
     print(f"{len(spells)} class spells' skill lines")
+
+
+def export_weapon_skills():
+    """Which classes can learn each weapon skill: every spell of a skill line
+    in the weapon skills category (6) in SkillLineAbility, with the classes of
+    that skill's SkillRaceClassInfo rows joined (some rows are per race), as a
+    class mask (bit 0 Warrior). Into weapon_skills.json, for the Weapon Master."""
+    weapon_lines = {row["ID"] for row in fetch("SkillLine") if row["CategoryID"] == "6"}
+    masks = {}
+    for row in fetch("SkillRaceClassInfo"):
+        if row["SkillID"] in weapon_lines:
+            masks[row["SkillID"]] = masks.get(row["SkillID"], 0) | int(row["ClassMask"])
+    spells = {}
+    for row in fetch("SkillLineAbility"):
+        if row["SkillLine"] in weapon_lines:
+            spells[row["Spell"]] = masks.get(row["SkillLine"], 0)
+    with open(os.path.join(OUT_DIR, "weapon_skills.json"), "w", encoding="utf8") as out:
+        json.dump(spells, out, separators=(",", ":"))
+    print(f"{len(spells)} weapon skill spells")
 
 
 def export_talents():

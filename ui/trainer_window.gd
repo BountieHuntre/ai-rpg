@@ -68,6 +68,10 @@ static func entry_state(entry: Dictionary) -> Array:
 	var spell := SpellDB.get_spell(main_id)
 	if main_id in GameState.known_spells:
 		return ["used", ""]
+	# Weapon skills you started with are known through the proficiency.
+	var proficiencies := SpellDB.proficiencies_of(spell)
+	if not proficiencies.is_empty() and proficiencies.all(func(p: String) -> bool: return p in GameState.proficiencies):
+		return ["used", ""]
 	if spell.SpellName in NEEDS_PARTY:
 		return ["not_in_game", "Needs a party"]
 	if spell.SpellName in NOT_YET:
@@ -142,9 +146,10 @@ func _build() -> void:
 	for child in get_children():
 		child.queue_free()
 	_rows.clear()
-	var list := SpellDB.trainer_list(npc.trainer, GameState.race)
-	# Classic trainers only teach their own class.
-	var trainer_class := int(SpellDB.TRAINER_CLASSES.get(npc.trainer, 0))
+	var list := SpellDB.trainer_list(npc.trainer, GameState.race, GameState.char_class)
+	# Classic trainers only teach their own class; the Weapon Master teaches
+	# every class what it may learn.
+	var trainer_class := int(SpellDB.TRAINER_CLASSES.get(npc.trainer, GameState.char_class if npc.trainer == SpellDB.WEAPON_TRAINER else 0))
 	size = Vector2(WIDTH, 14 + LIST_HEIGHT + 30) * _ui_scale
 	var back := ColorRect.new()
 	back.color = BACK
@@ -159,6 +164,8 @@ func _build() -> void:
 			close()
 	)
 
+	if npc.trainer == SpellDB.WEAPON_TRAINER and list.is_empty():
+		trainer_class = 0
 	if trainer_class != GameState.char_class:
 		var refusal := _text(self, Vector2(6, 20), "I can only train %s. Seek out a trainer of your own calling." % ClassicData.class_plural(trainer_class), Color.WHITE, FONT_SIZE)
 		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -71,6 +71,17 @@ wago.tools' Classic Era exports via `fetch_client_tables.py`. `extract.py`
 exports the rank spells of the classes with spells into `spells.json` as
 `talents`, with the trees renamed.
 
+`weapon_skills.json` is each weapon skill spell (SkillLineAbility, skill lines
+of the weapon skills category 6) with the classes that may learn it, joined
+from that skill's SkillRaceClassInfo rows as a class mask, via
+`fetch_client_tables.py`. `extract.py` joins classic's weapon masters'
+npc_trainer lists (`WEAPON_MASTERS`) into one trainer, `weapons`, each entry
+with that mask as `classes`. Learning a weapon skill grants its
+SPELL_EFFECT_PROFICIENCY subclasses, as Player::learnSpell does.
+
+`creature_class_stats.json` is creature_template_classlevelstats: each creature
+class's base health, mana, damage, melee attack power and armor by level.
+
 `factions.json` is the client's FactionTemplate table and each race's template
 (ChrRaces), from wago.tools' Classic Era exports via
 `tools/classic_db/fetch_client_tables.py`. `ClassicData` follows

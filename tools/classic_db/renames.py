@@ -443,6 +443,9 @@ def talent_tree(class_id, name):
 
 # Plain names that are kept as they are.
 KEEP = {
+    # Weapon skills, plain words.
+    "One-Handed Swords", "Two-Handed Swords", "One-Handed Axes", "Two-Handed Axes", "One-Handed Maces",
+    "Two-Handed Maces", "Daggers", "Staves", "Polearms", "Fist Weapons", "Bows", "Crossbows", "Guns", "Thrown",
     "Tough Wolf Meat", "Melted Candle", "Small Red Pouch", "Small Blue Pouch", "Small Brown Pouch",
     "Small Black Pouch", "Small Green Pouch", "Large Round Shield", "Small Shield", "Light Mail Bracers",
     "Light Chain Armor", "Copper Chain Vest", "Rough Arrow", "Light Shot", "Copper Ore", "Rough Stone",

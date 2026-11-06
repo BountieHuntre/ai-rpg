@@ -207,6 +207,13 @@ func learn_spells() -> void:
 			if not int(id) in known:
 				known.append(int(id))
 	profile.known_spells = known
+	# Weapon skills its class may learn, as from the Weapon Master.
+	for entry: Dictionary in SpellDB.trainer_list(SpellDB.WEAPON_TRAINER, profile.race, profile.char_class):
+		if int(entry.level) <= profile.level:
+			for id in entry.spells:
+				for proficiency in SpellDB.proficiencies_of(SpellDB.get_spell(int(id))):
+					if not proficiency in profile.proficiencies:
+						profile.proficiencies.append(proficiency)
 	stats.refresh()
 
 

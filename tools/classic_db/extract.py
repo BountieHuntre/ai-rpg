@@ -47,6 +47,11 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47]
 # not every one of them teaches get a "races" list.
 # 913 is Lyria Du Lac, Warrior Trainer.
 CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913}
+# Classic's weapon masters, whose lists the game's one Weapon Master joins
+# ("weapons"): Buliwyf Stonehand, Ilyenia Moonfire, Woo Ping, Sayoc,
+# Ansekhwa, Archibald, Bixi Wobblebonk and Hanashi. Each entry's "classes" is
+# the class mask that may learn it (weapon_skills.json, SkillRaceClassInfo).
+WEAPON_MASTERS = [11865, 11866, 11867, 11868, 11869, 11870, 13084, 2704]
 # Each class's skill lines in the order of its talent trees (SkillLine ids):
 # Arms, Fury, Protection; Holy, Protection, Retribution; Discipline, Holy,
 # Shadow Magic.
@@ -440,6 +445,17 @@ def export_spells(db, item_spells):
             entries.append({"teach": spell_id, "spells": [spell_id], "cost": 0, "level": level, "races": races})
             wanted.add(spell_id)
         trainers[name] = sorted(entries, key=lambda e: (e["level"], e["spells"][0]))
+
+    with open(os.path.join(OUT_DIR, "weapon_skills.json"), encoding="utf8") as f:
+        weapon_classes = json.load(f)
+    weapons = {}
+    for master in WEAPON_MASTERS:
+        for teach, entry in trainer_entries(master).items():
+            entry["classes"] = weapon_classes.get(str(entry["spells"][0]), 0)
+            weapons.setdefault(teach, entry)
+    for entry in weapons.values():
+        wanted.update(entry["spells"])
+    trainers["weapons"] = sorted(weapons.values(), key=lambda e: (e["level"], e["spells"][0]))
 
     # Talent trees (data/classic/talents.json, from fetch_client_tables.py) of
     # the classes with spells: every rank's spell, and the trees renamed.
