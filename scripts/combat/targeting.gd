@@ -149,6 +149,9 @@ func in_combat_with_target() -> bool:
 
 
 func _process(delta: float) -> void:
+	# A target removed from the world (a deleted bot, a spawned creature gone).
+	if target != null and not is_instance_valid(target):
+		target = null
 	if target is Enemy and not (target as Enemy).combatant.is_alive():
 		set_target(null)
 	_ring.visible = target != null

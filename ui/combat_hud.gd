@@ -764,6 +764,9 @@ func _update_floats(delta: float) -> void:
 func _update_enemy_names() -> void:
 	var shown: bool = Settings.get_value("enemy_names")
 	for entry in _enemy_names:
+		if not is_instance_valid(entry.combatant):
+			entry.label.visible = false
+			continue
 		var combatant: Combatant = entry.combatant
 		var label: Label = entry.label
 		var world: Vector3 = combatant.body.global_position + Vector3.UP * NAMEPLATE_HEIGHT
@@ -916,7 +919,7 @@ func _update_npc_names() -> void:
 
 func _build_enemy_names() -> void:
 	for node in get_tree().get_nodes_in_group("combatants"):
-		if node != _player.combatant:
+		if node != _player.combatant and not node.is_queued_for_deletion() and not node.get_parent().is_queued_for_deletion():
 			var combatant := node as Combatant
 			var label := _label(self, Vector2.ZERO, combatant.display_name, Targeting.name_color(combatant.body))
 			label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))

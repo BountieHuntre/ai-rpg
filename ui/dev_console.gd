@@ -40,6 +40,7 @@ const COMMANDS := {
 	"uninvite": ["<name>", "Remove a playerbot from your party."],
 	"disband": ["", "Remove every playerbot from your party."],
 	"summon": ["", "Bring your party's bots to you."],
+	"randomizebots": ["", "Delete every playerbot but your party and friends, and make new random ones."],
 }
 
 var _player: Player
@@ -525,6 +526,14 @@ func _cmd_summon(_args: PackedStringArray) -> String:
 		bot.global_position = _player.global_position + Vector3(randf_range(-2, 2), 0.5, randf_range(-2, 2))
 		bot.velocity = Vector3.ZERO
 	return "Summoned %d bots." % Party.members.size()
+
+
+func _cmd_randomizebots(_args: PackedStringArray) -> String:
+	if _bots == null or not Settings.get_value("bots_enabled"):
+		return "!Playerbots are turned off (Options, Playerbots)."
+	var deleted := _bots.randomize_bots()
+	var made := _bots.bots().filter(func(bot: Bot) -> bool: return not Party.is_member(bot)).size()
+	return "Deleted %d bots; %d random bots in the world now (your party and friends kept)." % [deleted, made]
 
 
 func _cmd_save(_args: PackedStringArray) -> String:

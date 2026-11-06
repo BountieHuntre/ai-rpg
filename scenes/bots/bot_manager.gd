@@ -131,6 +131,24 @@ func sync() -> void:
 	bots_changed.emit()
 
 
+## Replaces the random bots with new ones (developer tool): every bot but
+## the party's and the player's friends is deleted, roster entry and all, and
+## sync makes as many new ones as the options ask for, with new names, races,
+## classes and levels. Returns how many were deleted.
+func randomize_bots() -> int:
+	var keep: Array[String] = []
+	for bot_name in GameState.party + GameState.friends:
+		keep.append(str(bot_name).to_lower())
+	for bot_name: String in _bots.keys():
+		if not bot_name.to_lower() in keep:
+			_despawn(bot_name)
+	var before := _roster.size()
+	_roster.assign(_roster.filter(func(entry: Dictionary) -> bool: return str(entry.name).to_lower() in keep))
+	var deleted := before - _roster.size()
+	sync()
+	return deleted
+
+
 ## Whether a saved bot can be a random bot under the current options. Bots
 ## below the level range move up to it; ones above it wait in the roster.
 func _fits(entry: Dictionary) -> bool:
@@ -267,6 +285,8 @@ func _despawn(bot_name: String) -> void:
 	if Party.is_member(bot):
 		Party.members.erase(bot)
 		Party.changed.emit()
+	if _player and _player.targeting.target == bot:
+		_player.targeting.set_target(null)
 	bot.queue_free()
 
 
