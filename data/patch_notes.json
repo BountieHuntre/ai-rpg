@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.5.0",
+		"date": "11-06-2026",
+		"notes": [
+			"A whole new look: every window, frame, button and tab now shares one dark, gold-trimmed style, with titles in a carved serif.",
+			"Painted icons for every spell and item, on the action bars, in the spellbook, bags, character window, loot, vendors, quest rewards, trades, buffs and talents.",
+			"Your frame, your target's and your party's now show portraits: your class's emblem, or the kind of creature you're facing.",
+			"Health, mana and experience bars sit in gold-edged troughs, and your target's frame keeps its size whether or not it has mana.",
+			"Talents show their icons, glow gold when you can put a point in, and keep their rank in a small badge."
+		]
+	},
+	{
 		"version": "0.4.0",
 		"date": "11-06-2026",
 		"notes": [
