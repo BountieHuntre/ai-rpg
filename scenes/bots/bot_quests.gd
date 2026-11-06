@@ -37,6 +37,8 @@ func accept(id: int) -> void:
 		if int(quest.items[i][0]) == int(quest.get("source_item", 0)):
 			items[i] = int(quest.items[i][1])
 	active[id] = { "kills": kills, "items": items }
+	if not QuestLog.explore_place(id).is_empty():
+		active[id].explored = false
 
 
 func is_complete(id: int) -> bool:
@@ -50,7 +52,43 @@ func is_complete(id: int) -> bool:
 	for i in quest.items.size():
 		if int(progress.items[i]) < int(quest.items[i][1]):
 			return false
-	return true
+	return progress.get("explored", true)
+
+
+## The place an exploration quest underway still sends it to, or "".
+func place_to_explore() -> String:
+	for id: int in active:
+		if not active[id].get("explored", true):
+			return QuestLog.explore_place(id)
+	return ""
+
+
+## It walked into a place: exploration quests sending it there are done.
+func explored(place: String) -> void:
+	for id: int in active:
+		if QuestLog.explore_place(id) == place:
+			active[id].explored = true
+
+
+## Items its quests still need that game objects hold (Bundles of Wood).
+func object_items_needed() -> Array[int]:
+	var items: Array[int] = []
+	for id: int in active:
+		var quest := QuestDB.get_quest(id)
+		for i in quest.items.size():
+			if int(active[id].items[i]) < int(quest.items[i][1]):
+				items.append(int(quest.items[i][0]))
+	return items
+
+
+## It took an item from a game object.
+func took_item(item_id: int) -> void:
+	for id: int in active:
+		var quest := QuestDB.get_quest(id)
+		for i in quest.items.size():
+			if int(quest.items[i][0]) == item_id and int(active[id].items[i]) < int(quest.items[i][1]):
+				active[id].items[i] = int(active[id].items[i]) + 1
+				return
 
 
 ## The first finished quest, or 0.
@@ -169,5 +207,7 @@ static func from_dict(data: Dictionary) -> BotQuests:
 			"kills": saved[key].get("kills", []).map(func(n: Variant) -> int: return int(n)),
 			"items": saved[key].get("items", []).map(func(n: Variant) -> int: return int(n)),
 		}
+		if saved[key].has("explored"):
+			quests.active[int(key)].explored = bool(saved[key].explored)
 	quests.done.assign(data.get("done", []).map(func(id: Variant) -> int: return int(id)))
 	return quests

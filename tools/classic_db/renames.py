@@ -236,7 +236,7 @@ ITEMS = {
     "Bernice's Necklace": "Bess's Necklace",
     "Gramma Stonefield's Note": "Granny Coombe's Note",
     "Maybell's Love Letter": "Elsie's Love Letter",
-    "Rolf and Malakai's Medallions": "Fallen Wardens' Medallions",
+    "Rolf and Malakai's Medallions": "Fallen Watchmen's Medallions",
     'Huge Gnoll Claw': "Grunmaw's Claw",
     'Painted Gnoll Armband': 'Painted Ditchjaw Armband',
     'Gnoll Paw': 'Ditchjaw Paw',
@@ -262,6 +262,13 @@ ITEMS = {
     'Swiftthistle': 'Quickthistle',
     'Lion-stamped Gloves': 'Stag-stamped Gloves',
     'Dwarven Hatchet': 'Hill-Folk Hatchet',
+    "The Collector's Ring": "The Collector's Signet",
+    "The Collector's Schedule": "The Collector's Itinerary",
+    'Elastic Wristguards': 'Supple Wristguards',
+    'Patched Pants': 'Mended Breeches',
+    'Stormwind Armor Marker': 'Wexford Armor Token',
+    'Stormwind Chain Gloves': 'Wexford Chain Gloves',
+    'Well-stitched Robe': 'Finely Stitched Robe',
 }
 
 # Gear sets: the first word(s) of the name are replaced. Longest prefixes win.
@@ -300,6 +307,7 @@ RECIPE_PREFIXES = ("Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: 
 # Item flavor text, replaced whole.
 DESCRIPTIONS = {
     "Princess - First Prize": "Duchess - First Prize",
+    "Engraved with the words 'For years of service: -EVC.'": "Engraved with the words 'For long service: -W.T.'",
 }
 
 CREATURES = {
@@ -327,14 +335,21 @@ CREATURES = {
     "Riverpaw Outrunner": "Ditchjaw Outrider",
     "Riverpaw Gnoll": "Ditchjaw Brute",
     "Hogger": "Grunmaw",
+    'Morgan the Collector': 'Odo the Collector',
 }
 
 # Vendor names and titles, by creature entry.
+# Game objects (gameobject_template names).
+OBJECTS = {
+    "Rolf's corpse": "Aldous's corpse",
+}
+
 VENDORS = {
     "152": ("Friar Osric", "Provisioner"),
     "1213": ("Hugh Stannard", "Armorer"),
     "295": ("Hilde Barrow", "Innkeeper"),
     "74": ("Piers Tanner", "Clothier & Tanner"),
+    "54": ("Hesketh Steele", "Weaponsmith"),
 }
 
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
@@ -480,6 +495,7 @@ SPELLS = {
     "Backstab": "Back Thrust",
     "Rushing Charge": "Headlong Charge",
     'Frostbolt': 'Rime Bolt',
+    'Gouge': 'Low Jab',
 }
 
 # Talent trees by class id: the game's own names.
@@ -496,6 +512,7 @@ def talent_tree(class_id, name):
 
 # Plain names that are kept as they are.
 KEEP = {
+    "A half-eaten body", "Bundle of Wood",
     # Weapon skills, plain words.
     "One-Handed Swords", "Two-Handed Swords", "One-Handed Axes", "Two-Handed Axes", "One-Handed Maces",
     "Two-Handed Maces", "Daggers", "Staves", "Polearms", "Fist Weapons", "Bows", "Crossbows", "Guns", "Thrown",
@@ -519,6 +536,7 @@ KEEP = {
     "Mangy Wolf", "Forest Spider", "Gray Forest Wolf", "Young Forest Bear", "Mine Spider", "Prowler",
     'A small message of affection...', "Bard's Belt", "Bard's Bracers", "Bard's Cloak", "Commoner's Sword", "Farmer's Boots", "Hillman's Leather Vest", "Mystic's Cape", "Rabbit's Foot", "Soldier's Cloak", "Soldier's Wristguards", "Urchin's Pants", 'A Gold Tooth', 'Balanced Fighting Stick', 'Bear Meat', 'Birchwood Maul', 'Bloodspattered Cloak', 'Bloodspattered Gloves', 'Bloodspattered Sash', 'Bloodspattered Wristbands', 'Blue Leather Bag', 'Brass Collar', 'Brass-studded Bracers', 'Calico Belt', 'Calico Bracers', 'Calico Cloak', 'Calico Gloves', 'Calico Pants', 'Calico Shoes', 'Calico Tunic', 'Ceremonial Buckler', 'Ceremonial Leather Belt', 'Ceremonial Leather Bracers', 'Ceremonial Leather Gloves', 'Cheap Blunderbuss', 'Chicken Egg', 'Chipped Bear Tooth', 'Cologne Bottle', 'Compact Shotgun', 'Cooked Crab Claw', 'Crude Battle Axe', 'Crystal Kelp Frond', 'Curved Dagger', 'Dark Leather Tunic', 'Enchant Bracer - Minor Spirit', 'Enchant Bracer - Minor Strength', 'Enchant Weapon - Minor Beastslayer', 'Feeble Shortbow', 'Feral Cloak', 'Fine Aged Cheddar', 'Fisherman Knife', 'Footman Tunic', 'Forest Spider Webbing', 'Fractured Canine', 'Greater Healing Potion', 'Green Leather Bag', 'Green Woolen Bag', 'Haunch of Meat', 'Heavy Hammer', 'Heavy Shortbow', 'Heavy Woolen Cloak', 'Hunting Belt', 'Hunting Boots', 'Hunting Bracers', 'Hunting Buckler', 'Hunting Cloak', 'Hunting Gloves', 'Ice Cold Milk', 'Invisibility Liquor', 'Knitted Belt', 'Knitted Bracers', 'Knitted Gloves', 'Knitted Pants', 'Knitted Sandals', 'Knitted Tunic', 'Large Bear Tooth', 'Lesser Healing Potion', 'Long Bayonet', 'Love Token', 'Lupine Cloak', 'Lupine Cord', 'Lupine Cuffs', 'Melon Juice', 'Militia Buckler', 'Minor Mana Potion', 'Old Greatsword', 'Perfume Bottle', 'Pork Belly Pie', 'Prowler Teeth', 'Red Leather Bag', 'Red Linen Bandana', 'Red Linen Sash', 'Red Linen Shirt', 'Red Woolen Boots', 'Red-speckled Mushroom', 'Rough Leather Belt', 'Rough Leather Boots', 'Rough Leather Bracers', 'Rough Leather Gloves', 'Rough Leather Pants', 'Rough Leather Vest', 'Rough Wooden Staff', 'Runed Copper Breastplate', 'Rusty Warhammer', 'Scroll of Agility', 'Scroll of Intellect', 'Scroll of Protection', 'Scroll of Spirit', 'Scroll of Stamina', 'Scroll of Strength', 'Shadow Wand', 'Shiny Seashell', 'Simple Blouse', 'Simple Branch', 'Simple Britches', 'Simple Gloves', 'Simple Robe', 'Small Pumpkin', 'Small Spider Leg', 'Snapped Spider Limb', 'Solid Metal Club', 'Spiked Club', 'Staunch Hammer', 'Stringy Wolf Meat', 'Sturdy Quarterstaff', 'Sweet Nectar', 'Veteran Boots', 'Veteran Bracers', 'Veteran Girdle', 'Veteran Gloves', 'Veteran Leggings', 'Veteran Shield', 'Warped Cloak', 'Warped Leather Belt', 'Warped Leather Boots', 'Warped Leather Bracers', 'Warped Leather Gloves', 'Warped Leather Pants', 'Warped Leather Vest', 'Weather-worn Boots', 'Well-used Sword', 'White Leather Bag', 'Willow Boots', 'Willow Bracers', 'Willow Cape', 'Wooden Buckler', 'Wooden Shield', 'Worn Cloak', 'Worn Hatchet', 'Worn Mail Belt', 'Worn Mail Boots', 'Worn Mail Bracers', 'Worn Mail Gloves', 'Worn Mail Pants', 'Worn Mail Vest',
     'Agility', 'Armor', 'Cologne', 'Drink Minor Potion', 'Enchant Weapon - Beastslayer', 'Head Butt', 'Intellect', 'Perfume', 'Poison Proc', 'Poison', 'Restore Mana', 'Snap Kick', 'Spirit', 'Stamina', 'Strength', 'Summon Farm Chicken', 'Thrash',
+    'Cudgel', 'Gladius', 'Large Axe', 'Stiletto', 'Tomahawk', 'Two-handed Sword', 'Walking Stick', 'Wooden Mallet',
 }
 
 
@@ -546,7 +564,7 @@ def _rename(name, table, kind, missing):
     return name
 
 
-def apply(items, creatures, vendors, spells, classic_names):
+def apply(items, creatures, vendors, spells, classic_names, objects=None):
     """Renames the exported data in place. Fails listing every name with no
     original name yet, and every new name that is itself a classic name."""
     missing, renamed = [], []
@@ -563,7 +581,9 @@ def apply(items, creatures, vendors, spells, classic_names):
         vendor["name"], vendor["subname"] = VENDORS[entry]
     for spell in spells.values():
         spell["SpellName"] = _rename(spell["SpellName"], SPELLS, "Spell", missing)
-    renamed += list(CREATURES.values()) + list(SPELLS.values()) + [name for name, _ in VENDORS.values()]
+    for game_object in (objects or {}).values():
+        game_object["name"] = _rename(game_object["name"], OBJECTS, "Object", missing)
+    renamed += list(CREATURES.values()) + list(SPELLS.values()) + list(OBJECTS.values()) + [name for name, _ in VENDORS.values()]
     clashes = sorted(set(name for name in renamed if name in classic_names))
     if clashes:
         raise KeyError("These new names are classic names too, change them in tools/classic_db/renames.py:\n"

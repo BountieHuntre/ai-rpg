@@ -88,7 +88,8 @@ const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
 const TABS := ["Video", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, DEVELOPER]
 ## One-click developer commands: [button text, console command]. "level+" is
-## the next level, filled in when pressed.
+## the next level (of the targeted playerbot, else the player's), filled in
+## when pressed.
 const DEV_BUTTONS := [
 	["Heal", "heal"], ["Kill Target", "kill"], ["Repair Gear", "repair"],
 	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
@@ -413,7 +414,9 @@ func _build_developer(content: VBoxContainer) -> void:
 		var button := _button(entry[0], func() -> void:
 			var line := command
 			if command == "level+":
-				line = "level %d" % (GameState.level + 1)
+				# The targeted playerbot's next level, else the player's.
+				var bot := console.player().targeting.target as Bot
+				line = "level %d" % ((bot.profile.level if bot else GameState.level) + 1)
 			_show_result(console.run(line))
 		)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

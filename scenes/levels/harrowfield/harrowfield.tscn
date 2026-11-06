@@ -7,81 +7,115 @@
 script = ExtResource("1_script")
 
 [node name="MarshalThorne" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2, 5, 345.5)
+position = Vector3(-2, 5, 445.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Marshal Edric Thorne"
 subname = "Marshal of Wexford"
 
 [node name="HildeBarrow" parent="." instance=ExtResource("2_npc")]
-position = Vector3(11.5, 5, 332)
+position = Vector3(11.5, 5, 432)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Hilde Barrow"
 subname = "Innkeeper"
 vendor = 295
 
 [node name="PiersTanner" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-9.6, 5, 345)
+position = Vector3(-9.6, 5, 445)
 rotation = Vector3(0, -1.5708, 0)
 npc_name = "Piers Tanner"
 subname = "Clothier & Tanner"
 vendor = 74
 
 [node name="WennaLisle" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-7, 5, 334)
+position = Vector3(-7, 5, 434)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Wenna Lisle"
 subname = "Seamstress"
 
 [node name="AlderQuill" parent="." instance=ExtResource("2_npc")]
-position = Vector3(11.5, 5, 356)
+position = Vector3(11.5, 5, 456)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Alder Quill"
 subname = "Herbalist"
 
 [node name="GoodwifeCoombe" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-71, 5, 347.5)
+position = Vector3(-191, 5, 469.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Goodwife Joan Coombe"
 subname = "Farmwife"
 
 [node name="AuntBess" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-76, 5, 347.5)
+position = Vector3(-196, 5, 469.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Aunt Bess Coombe"
 subname = "Coombe Farm"
 
 [node name="GrannyCoombe" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-80.5, 5, 344)
+position = Vector3(-200.5, 5, 466)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Granny Coombe"
 subname = "Coombe Farm"
 
 [node name="TamCoombe" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-67, 5, 353)
+position = Vector3(-187, 5, 475)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Tam Coombe"
 subname = "Farmhand"
 
 [node name="HobWainwright" parent="." instance=ExtResource("2_npc")]
-position = Vector3(39, 5, 369.5)
+position = Vector3(117, 5, 503.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Hob Wainwright"
 subname = "Wainwright's Son"
 
 [node name="ElsieWainwright" parent="." instance=ExtResource("2_npc")]
-position = Vector3(37, 5, 365)
+position = Vector3(115, 5, 499)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Elsie Wainwright"
 subname = "Wainwright's Daughter"
 
 [node name="WatchmanAshby" parent="." instance=ExtResource("2_npc")]
-position = Vector3(47, 4, 400)
+position = Vector3(205, 4, 582)
 rotation = Vector3(0, -1.5708, 0)
 npc_name = "Watchman Colm Ashby"
 subname = "Wexford Watch"
 
 [node name="DeputyGarrow" parent="." instance=ExtResource("2_npc")]
-position = Vector3(7, 4, 454)
+position = Vector3(21, 4, 737)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Deputy Nell Garrow"
 subname = "Wexford Watch"
+
+[node name="ForemanHarlow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(376, 5, 704)
+rotation = Vector3(0, -0.8, 0)
+npc_name = "Foreman Edda Harlow"
+subname = "Logging Foreman"
+
+[node name="TemplarTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-9, 5, 426.5)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Sir Rowan Ashdown"
+subname = "Templar Trainer"
+trainer = "paladin"
+
+[node name="ClericTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-16.5, 5, 426.5)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Sister Agnes Thorley"
+subname = "Cleric Trainer"
+trainer = "priest"
+
+[node name="ManAtArmsTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(18.5, 5, 453)
+rotation = Vector3(0, 1.5708, 0)
+npc_name = "Sergeant Wulf Barrett"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+
+[node name="HeskethSteele" parent="." instance=ExtResource("2_npc")]
+position = Vector3(20.5, 5, 444.5)
+rotation = Vector3(0, 1.5708, 0)
+npc_name = "Hesketh Steele"
+subname = "Weaponsmith"
+vendor = 54

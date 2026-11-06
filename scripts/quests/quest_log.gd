@@ -14,6 +14,10 @@ const YELLOW := Color("ffd100")
 const GREY := Color(0.6, 0.6, 0.6)
 
 enum Status { UNAVAILABLE, AVAILABLE, ACTIVE, COMPLETE, DONE }
+## QuestFlags: an exploration quest (CMaNGOS QUEST_FLAGS_EXPLORATION). The
+## place to explore is the quest text's "explore", a named place of the zones
+## (Zone.places): classic's area triggers are client data, and the world's
+## places are the game's own.
 
 ## Bag counts of quest items seen last, to report progress as they change.
 static var _item_counts: Dictionary
@@ -56,6 +60,8 @@ static func accept(id: int) -> String:
 	kills.resize(quest.kills.size())
 	kills.fill(0)
 	GameState.quests[id] = { "kills": kills }
+	if not explore_place(id).is_empty():
+		GameState.quests[id].explored = false
 	_remember_item_counts()
 	GameState.quest_message.emit("Quest accepted: %s" % quest.title)
 	GameState.quests_changed.emit()
@@ -78,7 +84,52 @@ static func is_complete(id: int) -> bool:
 	for need: Array in quest.items:
 		if Inventory.count_item(int(need[0])) < int(need[1]):
 			return false
+	if not explore_place(id).is_empty() and not GameState.quests[id].get("explored", false):
+		return false
 	return true
+
+
+## The place an exploration quest sends you to, or "".
+static func explore_place(id: int) -> String:
+	return str(QuestDB.get_quest(id).get("explore", ""))
+
+
+## A place's name as a heading: "The Old Delve", "Copperhollow".
+static func place_title(place: String) -> String:
+	return place[0].to_upper() + place.substr(1) if not place.is_empty() else place
+
+
+## Walking into the place an exploration quest underway sends you to
+## explores it (classic's area trigger). `places` are the world's.
+static func check_exploration(point: Vector3, places: Array) -> void:
+	for id: int in GameState.quests:
+		var place_name := explore_place(id)
+		if place_name.is_empty() or GameState.quests[id].get("explored", false):
+			continue
+		for place: Array in places:
+			if place[0] == place_name and Vector2(point.x, point.z).distance_to(place[1]) <= float(place[2]):
+				GameState.quests[id].explored = true
+				GameState.quest_message.emit("%s explored." % place_title(place_name))
+				_announce_if_complete(id)
+				GameState.quests_changed.emit()
+				break
+
+
+## The quest an item starts when used (item_template.startquest), or 0.
+static func quest_from_item(item_id: int) -> int:
+	return int(ItemDB.get_item(item_id).get("startquest", 0))
+
+
+## Why an item's quest can't be started now, or "" when it can.
+static func item_quest_error(id: int) -> String:
+	match status(id):
+		Status.DONE:
+			return "You have completed that quest."
+		Status.ACTIVE, Status.COMPLETE:
+			return "You are already on that quest."
+		Status.UNAVAILABLE:
+			return "You can't take that quest yet."
+	return ""
 
 
 ## Objective lines for the log and the tracker: [text, done].
@@ -94,6 +145,10 @@ static func objective_lines(id: int) -> Array:
 		var needed := int(need[1])
 		var have := mini(Inventory.count_item(int(need[0])), needed)
 		lines.append(["%s: %d/%d" % [ItemDB.get_item(int(need[0])).name, have, needed], have >= needed])
+	var place := explore_place(id)
+	if not place.is_empty():
+		var explored: bool = GameState.quests.get(id, {}).get("explored", false)
+		lines.append(["%s explored" % place_title(place), explored])
 	return lines
 
 

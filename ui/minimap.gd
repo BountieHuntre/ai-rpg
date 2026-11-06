@@ -16,7 +16,10 @@ const MARGIN := 4.0
 const TITLE := 9.0
 ## Yards from the centre to the rim at each zoom level.
 const ZOOMS := [45.0, 70.0, 110.0]
+## Pixels across a 400-yard zone's map; bigger zones get more, up to
+## MAX_MAP_PIXELS, so every map is as sharp.
 const MAP_PIXELS := 1024
+const MAX_MAP_PIXELS := 4096
 const AREA_COLOR := Color(1, 0.82, 0.2, 0.28)
 const AREA_EDGE := Color(1, 0.82, 0.2, 0.8)
 const BORDER := Color(0.55, 0.5, 0.38)
@@ -110,8 +113,9 @@ func _show_zone() -> void:
 	var map: Texture2D = _maps.get(_zone.zone_name)
 	if map:
 		material.set_shader_parameter("map", map)
-	elif not _capturing:
-		_capture(_zone, material)
+	else:
+		# Rendered now, or after one the world map asked for first.
+		map_texture(_zone)
 
 
 func _process(_delta: float) -> void:
@@ -284,6 +288,30 @@ func _npc_lines(npc: Npc) -> Array:
 
 ## Whether a zone's map is being rendered.
 var _capturing := false
+## Zones waiting for their map to be rendered (the world map asks for them).
+var _queue: Array[Zone] = []
+## A zone's map has been rendered.
+signal map_ready(zone_name: String)
+
+
+## A zone's rendered map, or null while it's being rendered (map_ready says
+## when it's there).
+func map_texture(zone: Zone) -> Texture2D:
+	var map: Texture2D = _maps.get(zone.zone_name)
+	if map == null and not zone in _queue:
+		_queue.append(zone)
+		_next_capture()
+	return map
+
+
+func _next_capture() -> void:
+	if _capturing or _queue.is_empty():
+		return
+	var zone: Zone = _queue.pop_front()
+	if _maps.has(zone.zone_name):
+		_next_capture()
+	else:
+		_capture(zone, _map_rect.material as ShaderMaterial)
 
 
 ## Renders the zone from straight above once, with every creature, character
@@ -291,7 +319,8 @@ var _capturing := false
 func _capture(zone: Zone, material: ShaderMaterial) -> void:
 	_capturing = true
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(MAP_PIXELS, MAP_PIXELS)
+	var pixels := mini(roundi(MAP_PIXELS * zone.size / 400.0), MAX_MAP_PIXELS)
+	viewport.size = Vector2i(pixels, pixels)
 	viewport.world_3d = _world.get_world_3d()
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var camera := Camera3D.new()
@@ -309,7 +338,7 @@ func _capture(zone: Zone, material: ShaderMaterial) -> void:
 	viewport.add_child(camera)
 	add_child(viewport)
 	var hidden: Array[Node3D] = []
-	for group in ["enemies", "npcs", "player"]:
+	for group in ["enemies", "npcs", "player", "bots"]:
 		for node: Node3D in get_tree().get_nodes_in_group(group):
 			if node.visible:
 				node.visible = false
@@ -330,6 +359,8 @@ func _capture(zone: Zone, material: ShaderMaterial) -> void:
 	_capturing = false
 	if is_instance_valid(material) and zone == _zone:
 		material.set_shader_parameter("map", map)
+	map_ready.emit(zone.zone_name)
+	_next_capture()
 
 
 static func _map_shader() -> Shader:

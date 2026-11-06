@@ -108,6 +108,9 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 		lines.append(_line("Soulbound"))
 	elif BONDING.has(int(item.bonding)):
 		lines.append(_line(BONDING[int(item.bonding)]))
+	# Items that start a quest when used, as classic's tooltip says.
+	if int(item.get("startquest", 0)) > 0:
+		lines.append(_line("This Item Begins a Quest"))
 	var item_class := int(item["class"])
 	var slot: String = SLOT_NAMES.get(int(item.InventoryType), "")
 	var kind := ""

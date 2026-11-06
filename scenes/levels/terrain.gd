@@ -5,45 +5,88 @@ extends StaticBody3D
 
 ## Builds the ground over a square `size` yards across, centered on `center`
 ## (x, z), with a vertex every `step` yards. `height` is f(x, z) -> float and
-## `color` is f(x, z, height, normal) -> Color.
+## `color` is f(x, z, height, normal) -> Color; both are called from worker
+## threads, a row at a time on each, so they must only read.
 func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO) -> void:
 	var cells := roundi(size / step)
+	var width := cells + 1
 	var half := size / 2.0
-	var points := PackedVector3Array()
-	points.resize((cells + 1) * (cells + 1))
-	for row in cells + 1:
-		for column in cells + 1:
-			var x := center.x - half + column * step
-			var z := center.y - half + row * step
-			points[row * (cells + 1) + column] = Vector3(x, height.call(x, z), z)
+	var origin := center - Vector2(half, half)
+	# Heights, a row per task. Each task fills its own row: packed arrays are
+	# copied into lambdas, so the rows are kept in an Array.
+	var height_rows := []
+	height_rows.resize(width)
+	var heights_task := WorkerThreadPool.add_group_task(func(row: int) -> void:
+		var line := PackedFloat32Array()
+		line.resize(width)
+		var z := origin.y + row * step
+		for column in width:
+			line[column] = height.call(origin.x + column * step, z)
+		height_rows[row] = line
+	, width)
+	WorkerThreadPool.wait_for_group_task_completion(heights_task)
 	_cells = cells
 	_step = step
-	_origin = center - Vector2(half, half)
-	_heights.resize(points.size())
-	for i in points.size():
-		_heights[i] = points[i].y
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for row in cells + 1:
-		for column in cells + 1:
-			var point := points[row * (cells + 1) + column]
-			var normal := _normal(points, cells, row, column, step)
-			tool.set_color(color.call(point.x, point.z, point.y, normal))
-			tool.set_normal(normal)
-			tool.add_vertex(point)
+	_origin = origin
+	_heights = PackedFloat32Array()
+	for line: PackedFloat32Array in height_rows:
+		_heights.append_array(line)
+	# Points, normals and colors, a row per task.
+	var rows := []
+	rows.resize(width)
+	var heights := _heights
+	var colors_task := WorkerThreadPool.add_group_task(func(row: int) -> void:
+		var points := PackedVector3Array()
+		var normals := PackedVector3Array()
+		var colors := PackedColorArray()
+		points.resize(width)
+		normals.resize(width)
+		colors.resize(width)
+		var z := origin.y + row * step
+		for column in width:
+			var y := heights[row * width + column]
+			var x := origin.x + column * step
+			var left := heights[row * width + maxi(column - 1, 0)]
+			var right := heights[row * width + mini(column + 1, cells)]
+			var up := heights[maxi(row - 1, 0) * width + column]
+			var down := heights[mini(row + 1, cells) * width + column]
+			var normal := Vector3(left - right, 2.0 * step, up - down).normalized()
+			points[column] = Vector3(x, y, z)
+			normals[column] = normal
+			colors[column] = color.call(x, z, y, normal)
+		rows[row] = [points, normals, colors]
+	, width)
+	WorkerThreadPool.wait_for_group_task_completion(colors_task)
+	var points := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	for row: Array in rows:
+		points.append_array(row[0])
+		normals.append_array(row[1])
+		colors.append_array(row[2])
+	# Two triangles a quad: a b c and b d c.
+	var indices := PackedInt32Array()
+	indices.resize(cells * cells * 6)
+	var i := 0
 	for row in cells:
 		for column in cells:
-			var a := row * (cells + 1) + column
-			var b := a + 1
-			var c := a + cells + 1
-			var d := c + 1
-			tool.add_index(a)
-			tool.add_index(b)
-			tool.add_index(c)
-			tool.add_index(b)
-			tool.add_index(d)
-			tool.add_index(c)
-	var mesh := tool.commit()
+			var a := row * width + column
+			var c := a + width
+			indices[i] = a
+			indices[i + 1] = a + 1
+			indices[i + 2] = c
+			indices[i + 3] = a + 1
+			indices[i + 4] = c + 1
+			indices[i + 5] = c
+			i += 6
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = points
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	mesh.surface_set_material(0, material)
 	var view := MeshInstance3D.new()
 	view.mesh = mesh
@@ -82,13 +125,3 @@ func sample(x: float, z: float) -> float:
 
 func is_built() -> bool:
 	return _cells > 0
-
-
-## Smooth normal from the neighboring heights.
-func _normal(points: PackedVector3Array, cells: int, row: int, column: int, step: float) -> Vector3:
-	var width := cells + 1
-	var left := points[row * width + maxi(column - 1, 0)].y
-	var right := points[row * width + mini(column + 1, cells)].y
-	var up := points[maxi(row - 1, 0) * width + column].y
-	var down := points[mini(row + 1, cells) * width + column].y
-	return Vector3(left - right, 2.0 * step, up - down).normalized()

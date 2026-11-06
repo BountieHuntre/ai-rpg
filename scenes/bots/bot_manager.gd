@@ -514,6 +514,14 @@ func place_at(point: Vector3) -> String:
 	return ""
 
 
+## A named place by name: [name, center, radius], or [].
+func place_named(place_name: String) -> Array:
+	for place: Array in _places():
+		if place[0] == place_name:
+			return place
+	return []
+
+
 ## Where a named place is, from the middle of its zone's settlement (the
 ## priory, Wexford): "west", "southeast"...
 func direction_of(place_name: String) -> String:

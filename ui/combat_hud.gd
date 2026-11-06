@@ -110,6 +110,12 @@ var _quest_window: QuestWindow
 var _quest_npc: Npc
 var _quest_log: QuestLogUI
 var _social: SocialWindow
+var _world_map: WorldMap
+var _micro_menu: MicroMenu
+## The Main Menu button opens the game menu, which main.gd holds: it connects
+## this and sets menu_open to say whether the menu is up.
+signal main_menu_requested
+var menu_open := func() -> bool: return false
 var _trade: TradeWindow
 ## Objectives of the quests underway, down the right side.
 var _tracker: RichTextLabel
@@ -118,7 +124,7 @@ var _minimap: Minimap
 var _quest_note: Label
 var _quest_note_left := 0.0
 var _loot_window: LootWindow
-var _loot_corpse: Enemy
+var _loot_corpse: Node3D
 var _tooltip: ItemTooltip
 ## The creature or NPC under the mouse, described in the bottom right corner.
 var _unit_tooltip: ItemTooltip
@@ -336,6 +342,7 @@ func _build() -> void:
 	var talents_open := _talents.is_open() if _talents and is_instance_valid(_talents) else false
 	var log_open := _quest_log.visible if _quest_log else false
 	var social_open := _social.visible if _social else false
+	var map_open := _world_map.visible if _world_map else false
 	for child in get_children():
 		child.free()
 	_floats.clear()
@@ -477,6 +484,13 @@ func _build() -> void:
 	_quest_window.message.connect(_on_loot_message)
 	_quest_window.hovered.connect(_tooltip.show_item)
 	_quest_window.service.connect(_open_service)
+	# Using an item that starts a quest offers the quest.
+	_inventory.quest_item_used.connect(func(item_id: int) -> void:
+		close_vendor()
+		close_trainer()
+		_quest_npc = null
+		_quest_window.open_item(item_id, _player, _ui_scale)
+	)
 	_quest_window.visibility_changed.connect(func() -> void:
 		if not _quest_window.visible:
 			_quest_npc = null
@@ -495,6 +509,25 @@ func _build() -> void:
 	_trade.setup(_player, _inventory, _ui_scale)
 	_trade.message.connect(_on_loot_message)
 	_trade.hovered.connect(_tooltip.show_item)
+	# The menu buttons right of the action bar.
+	_micro_menu = MicroMenu.new()
+	add_child(_micro_menu)
+	_micro_menu.setup(_ui_scale, Vector2(_width, _height), _tooltip, {
+		"character_window": func() -> bool: return _inventory.open_state().get("character", false),
+		"spellbook": func() -> bool: return _spells.is_book_open(),
+		"talents": func() -> bool: return _talents.is_open(),
+		"quest_log": func() -> bool: return _quest_log.visible,
+		"social": func() -> bool: return _social.visible,
+		"world_map": func() -> bool: return _world_map.visible,
+		"main_menu": func() -> bool: return menu_open.call(),
+	})
+	_micro_menu.main_menu_requested.connect(func() -> void: main_menu_requested.emit())
+	# The world map covers the screen, over the other windows.
+	_world_map = WorldMap.new()
+	add_child(_world_map)
+	_world_map.setup(_player, _game_view.get_node("GameViewport/World"), _minimap, _ui_scale, Vector2(_width, _height))
+	if map_open:
+		_world_map.open()
 	_unit_menu = PopupMenu.new()
 	_unit_menu.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 	_unit_menu.id_pressed.connect(_on_unit_menu)
@@ -885,8 +918,10 @@ func _on_unit_menu(id: int) -> void:
 ## Friendly NPC names in green, with their title below, as in classic.
 func _build_npc_names() -> void:
 	for npc: Node in get_tree().get_nodes_in_group("npcs"):
-		var name_label := _label(self, Vector2.ZERO, "%s
-<%s>" % [npc.npc_name, npc.subname], Targeting.FRIENDLY_COLOR)
+		# Quest objects (a body) have no nameplate, only their quest marker.
+		var title := "" if npc is QuestObject else "%s
+<%s>" % [npc.npc_name, npc.subname]
+		var name_label := _label(self, Vector2.ZERO, title, Targeting.FRIENDLY_COLOR)
 		name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var marker := _label(self, Vector2.ZERO, "", QuestLog.YELLOW)
@@ -899,7 +934,7 @@ func _update_npc_names() -> void:
 	for entry in _npc_names:
 		var npc: Node3D = entry.npc
 		var label: Label = entry.label
-		var world := npc.global_position + Vector3.UP * NAMEPLATE_HEIGHT
+		var world := npc.global_position + Vector3.UP * (0.9 if npc is QuestObject else NAMEPLATE_HEIGHT)
 		var on_screen := not _camera.is_position_behind(world) and _camera.global_position.distance_to(world) <= NAMEPLATE_RANGE
 		# With names hidden, quest markers still show, as in classic.
 		label.visible = on_screen
@@ -960,7 +995,7 @@ func _right_label(parent: Node, label_position: Vector2, width: float) -> Label:
 
 ## WoW-style difficulty colors for a level difference (enemy minus player).
 ## Gray enemies give no XP.
-func open_loot(corpse: Enemy, take_all: bool) -> void:
+func open_loot(corpse: Node3D, take_all: bool) -> void:
 	if _player.global_position.distance_to(corpse.global_position) > LootWindow.LOOT_RANGE:
 		_show_message("You are too far away.")
 		Sfx.play("error")
@@ -1028,6 +1063,10 @@ func _open_name_menu(player_name: String) -> void:
 ## for creatures (or the title for NPCs), then any quests underway that the
 ## creature counts toward, with their progress.
 func unit_tooltip(unit: Node3D) -> Array:
+	if unit is QuestObject:
+		return [[(unit as QuestObject).npc_name, "", Color.WHITE]]
+	if unit is GameObject:
+		return [[(unit as GameObject).object_name(), "", Color.WHITE]]
 	if unit is Npc:
 		var npc := unit as Npc
 		return [[npc.npc_name, "", Targeting.FRIENDLY_COLOR], ["<%s>" % npc.subname, "", Color.WHITE]]
@@ -1075,6 +1114,10 @@ func close_trade() -> bool:
 
 func close_social() -> bool:
 	return _social.close()
+
+
+func close_world_map() -> bool:
+	return _world_map.close()
 
 
 ## Esc: closes the quest window, then the quest log.

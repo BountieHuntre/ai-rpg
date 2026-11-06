@@ -88,7 +88,7 @@ const ACTIONS := [
 	["bags", "Open All Bags", "Interface"], ["character_window", "Character Info", "Interface"],
 	["spellbook", "Spellbook", "Interface"], ["talents", "Talents", "Interface"],
 	["quest_log", "Quest Log", "Interface"],
-	["social", "Social", "Interface"],
+	["social", "Social", "Interface"], ["world_map", "World Map", "Interface"],
 	["ability_1", "Action Button 1", "Action Bar"], ["ability_2", "Action Button 2", "Action Bar"],
 	["ability_3", "Action Button 3", "Action Bar"], ["ability_4", "Action Button 4", "Action Bar"],
 	["ability_5", "Action Button 5", "Action Bar"], ["ability_6", "Action Button 6", "Action Bar"],

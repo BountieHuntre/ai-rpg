@@ -42,6 +42,11 @@ var hub := Vector2.ZERO
 var places: Array = []
 ## Creature spawns: [creature entry, center, radius, count].
 var spawns: Array = []
+## Game objects: quest givers and enders that are things [object entry,
+## node name (quests' giver or ender), point (x, z), facing], and chests to
+## loot scattered round a spot [object entry, center, radius, count].
+var quest_objects: Array = []
+var chests: Array = []
 ## Walled places bots go in and out of by the gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 var enclosures: Array = []
@@ -136,6 +141,8 @@ func build_ground(step: float, color: Callable) -> void:
 	var material := StandardMaterial3D.new()
 	material.vertex_color_use_as_albedo = true
 	material.vertex_color_is_srgb = true
+	# The shared noise is made now, before the worker threads read it.
+	land_noise()
 	ground.build(size, step, height_at, color, material, center)
 	_ground = ground
 
@@ -266,6 +273,29 @@ func set_clutter(level: String) -> void:
 	for view in _clutter:
 		view.visible = share > 0.0
 		view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * share)
+
+
+## The zone's game objects (quest_objects, chests), under an Objects node.
+func spawn_objects(rng_seed: int, water_level: float) -> void:
+	var objects := Node3D.new()
+	objects.name = "Objects"
+	add_child(objects)
+	for spec: Array in quest_objects:
+		var thing := QuestObject.new()
+		thing.name = spec[1]
+		thing.entry = spec[0]
+		thing.position = ground_point(spec[2].x, spec[2].y)
+		thing.rotation.y = spec[3]
+		objects.add_child(thing)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	for group: Array in chests:
+		for i in int(group[3]):
+			var chest := GameObject.new()
+			chest.entry = group[0]
+			chest.position = _spawn_point(rng, group[1], group[2], water_level)
+			chest.rotation.y = rng.randf() * TAU
+			objects.add_child(chest)
 
 
 ## Creatures, placed the same way each time so saved corpses match by name:

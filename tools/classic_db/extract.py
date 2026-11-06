@@ -28,7 +28,8 @@ import renames
 # Mine Spider, Riverpaw Runt, Defias Rogue Wizard, Princess, Prowler, Murloc
 # Lurker, Murloc Forager, Riverpaw Outrunner, Hogger and Riverpaw Gnoll.
 CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94,
-             525, 30, 285, 735, 524, 390, 1922, 822, 116, 327, 43, 97, 474, 330, 118, 732, 46, 478, 448, 117]
+             525, 30, 285, 735, 524, 390, 1922, 822, 116, 327, 43, 97, 474, 330, 118, 732, 46, 478, 448, 117,
+             473]
 # Respawn time and wander distance for creatures the dump spawns only through
 # spawn groups (no plain creature rows): classic's usual 5 minutes and 5 yards.
 DEFAULT_RESPAWN = 300
@@ -41,7 +42,7 @@ AI_ACTIONS = {1, 11, 25, 39, 44, 54, 57}
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire; Innkeeper Farley
 # and Kurran Steele (Cloth & Leather Armor) from Goldshire.
-VENDORS = [152, 1213, 295, 74]
+VENDORS = [152, 1213, 295, 74, 54]
 
 # Quests whose rules (objectives, level, XP, money, rewards, chain) the game's
 # own quests are built on. Titles, text and quest givers are the game's own,
@@ -54,7 +55,14 @@ VENDORS = [152, 1213, 295, 74]
 # Necklace, Pie for Billy, Back to Billy, Goldtooth, Young Lovers, Speak with
 # Gramma, Note to William, Collecting Kelp, The Escape and Wanted: "Hogger".
 QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
-          2158, 40, 11, 46, 52, 83, 88, 85, 86, 84, 87, 106, 111, 107, 112, 114, 176]
+          2158, 40, 11, 46, 52, 83, 88, 85, 86, 84, 87, 106, 111, 107, 112, 114, 176,
+          62, 76, 239, 35, 37, 45, 71, 39, 59, 5545, 123, 147]
+# Game objects exported to gameobjects.json (gameobject_template): quest
+# givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
+# loot (type 3: Bundle of Wood), with their loot and usual respawn time.
+GAMEOBJECTS = [55, 56, 176793]
+GO_TYPE_QUESTGIVER = 2
+GO_TYPE_CHEST = 3
 
 # Class trainers whose spell lists are exported. 927 is Brother Wilhelm, Paladin
 # Trainer. Priests have racial spells, so their list merges one trainer per race
@@ -132,6 +140,7 @@ TABLES = {
     "item_template", "spell_template", "npc_trainer", "playercreateinfo_spell", "npc_vendor",
     "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template", "spell_proc_event",
     "creature_ai_scripts", "creature_template_classlevelstats", "spell_affect",
+    "gameobject_template", "gameobject", "gameobject_loot_template", "npc_vendor_template",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -167,7 +176,7 @@ ITEM_FIELDS = [
     "RequiredLevel", "AllowableClass", "stackable", "BuyPrice", "SellPrice", "bonding", "armor",
     "block", "delay", "MaxDurability", "ContainerSlots", "dmg_min1", "dmg_max1", "dmg_type1",
     "dmg_min2", "dmg_max2", "dmg_type2", "BuyCount", "spellid_1", "spelltrigger_1", "spellcharges_1",
-    "spellcooldown_1", "spellcategory_1", "spellcategorycooldown_1",
+    "spellcooldown_1", "spellcategory_1", "spellcategorycooldown_1", "startquest",
 ] + [f"stat_{kind}{i}" for i in range(1, 11) for kind in ("type", "value")]
 
 
@@ -328,17 +337,41 @@ def main(path):
     for entry in VENDORS:
         template = next(r for r in db["creature_template"] if int(r["Entry"]) == entry)
         stock = sorted((r for r in db["npc_vendor"] if int(r["entry"]) == entry), key=lambda r: int(r["slot"]))
+        # Some vendors sell a shared list instead (VendorTemplateId, npc_vendor_template).
+        if not stock and int(template.get("VendorTemplateId", 0)):
+            stock = sorted((r for r in db["npc_vendor_template"] if r["entry"] == template["VendorTemplateId"]), key=lambda r: int(r["slot"]))
         # NpcFlags 0x4000 is UNIT_NPC_FLAG_REPAIR: armorers who repair gear.
         vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"],
                                "repair": int(template["NpcFlags"]) & 0x4000 != 0,
                                "items": [int(r["item"]) for r in stock]}
         item_ids.update(int(r["item"]) for r in stock)
-    write("loot_tables.json", {"creature": creature_loot, "reference": references})
+    # Game objects: chests' loot comes from gameobject_loot_template by their
+    # data1 (the loot id), and their respawn time from their classic spawns.
+    object_loot_rows = {}
+    for r in db["gameobject_loot_template"]:
+        object_loot_rows.setdefault(r["entry"], []).append(r)
+    gameobjects, object_loot = {}, {}
+    for r in db["gameobject_template"]:
+        if int(r["entry"]) not in GAMEOBJECTS:
+            continue
+        spawns = [g for g in db["gameobject"] if g["id"] == r["entry"]]
+        gameobjects[r["entry"]] = {
+            "name": r["name"], "type": int(r["type"]), "size": float(r["size"]),
+            "loot": int(r["data1"]) if int(r["type"]) == GO_TYPE_CHEST else 0,
+            "respawn": most_common(int(g["spawntimesecsmin"]) for g in spawns) if spawns else DEFAULT_RESPAWN,
+        }
+        loot_id = r["data1"]
+        if int(r["type"]) == GO_TYPE_CHEST and loot_id in object_loot_rows:
+            object_loot[loot_id] = loot_entries(object_loot_rows[loot_id])
+            item_ids.update(entry["item"] for entry in object_loot[loot_id] if entry["min_or_ref"] >= 0)
+    write("loot_tables.json", {"creature": creature_loot, "reference": references, "gameobject": object_loot})
     quests = export_quests(db)
     for quest in quests.values():
         item_ids.update(item for item, _ in quest["reward_choices"] + quest["reward_items"] + quest["items"])
         if quest["source_item"]:
             item_ids.add(quest["source_item"])
+    # Items that start an exported quest when used (The Collector's schedule).
+    item_ids.update(int(r["entry"]) for r in db["item_template"] if int(r["startquest"]) in QUESTS)
     write("quests.json", quests)
 
     items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"] if int(r["entry"]) in item_ids}
@@ -346,7 +379,8 @@ def main(path):
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
     # The game uses its own names, not the classic ones.
-    renames.apply(items, creatures, vendors, {}, classic_names(db))
+    renames.apply(items, creatures, vendors, {}, classic_names(db), gameobjects)
+    write("gameobjects.json", gameobjects)
     write("vendors.json", vendors)
     write("creatures.json", creatures)
     write("items.json", items)

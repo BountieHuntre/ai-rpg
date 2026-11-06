@@ -153,6 +153,10 @@ var _talk_left := 0.0
 var _wanted: Array[int] = []
 var _business: Npc
 var _quest_check_left := 0.0
+## The place an exploration quest sends it to, and the game object (a
+## Bundle of Wood) holding an item its quests need, worked out with the rest.
+var _explore := ""
+var _chest: GameObject
 var _far := false
 ## When the BotManager last ticked it while far (BotManager.far_schedule).
 var far_clock := 0.0
@@ -201,7 +205,10 @@ func learn_spells() -> void:
 	profile.known_spells = known
 	profile.talents = {}
 	Talents.spend_for_bot(profile, Talents.bot_trees(profile.char_class, in_party and _has_shield_on()))
-	for entry: Dictionary in SpellDB.class_trainer_list(profile.char_class, profile.race):
+	# By level, so each rank comes after the one before it.
+	var list := SpellDB.class_trainer_list(profile.char_class, profile.race)
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.level) < int(b.level))
+	for entry: Dictionary in list:
 		if int(entry.level) > profile.level:
 			continue
 		var previous := SpellDB.previous_rank(int(entry.spells[0]))
@@ -226,15 +233,14 @@ func learn_spells() -> void:
 ## it's been dead, a Stay order, and the buffs it cast on itself.
 func saved_state() -> Dictionary:
 	var p := global_position
-	var auras := []
-	for aura in combatant.auras:
-		var ends_on_standing: bool = int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED != 0
-		if aura.caster == combatant and not ends_on_standing:
-			auras.append({ "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts })
+	# Its buffs, its own and ones the player or other bots put on it, as the
+	# player's are saved.
+	var auras := combatant.saved_auras()
 	return {
 		"zone": manager.zone_name_at(p) if manager else AshfordVale.ZONE_NAME, "position": [p.x, p.y, p.z], "facing": facing,
 		"health": combatant.health, "mana": combatant.mana, "dead_for": _dead_for,
 		"stay": [_stay_at.x, _stay_at.y, _stay_at.z] if command == Command.STAY else [], "auras": auras,
+		"item_cooldowns": spells.saved_item_cooldowns(),
 	}
 
 
@@ -247,10 +253,8 @@ func restore_state(state: Dictionary) -> void:
 	global_position = Vector3(at[0], at[1], at[2])
 	facing = float(state.get("facing", 0.0))
 	_visual.rotation.y = facing
-	for saved: Dictionary in state.get("auras", []):
-		var spell := SpellDB.get_spell(int(saved.id))
-		if not spell.is_empty():
-			combatant.restore_aura(spell, combatant, float(saved.remaining), float(saved.duration), saved.amounts)
+	combatant.restore_saved_auras(state.get("auras", []))
+	spells.restore_item_cooldowns(state.get("item_cooldowns", {}))
 	combatant.mana = clampf(float(state.get("mana", combatant.max_mana)), 0.0, combatant.max_mana)
 	var health := clampi(int(state.get("health", combatant.max_health)), 0, combatant.max_health)
 	if health <= 0:
@@ -360,6 +364,11 @@ func _think() -> void:
 		var questing: bool = manager != null and not in_party and Settings.get_value("bot_quests")
 		_wanted = quests.wanted_creatures(manager.spawn_entries()) if questing else ([] as Array[int])
 		_business = _quest_npc() if questing else null
+		_explore = quests.place_to_explore() if questing else ""
+		_chest = _nearest_chest() if questing else null
+	# Walking into a place explores it, fighting or not.
+	if not _explore.is_empty():
+		_check_explored()
 	_enemy = _choose_enemy()
 	if spells.casting.is_empty():
 		_use_spells()
@@ -519,11 +528,77 @@ func _solo_idle() -> void:
 			else:
 				_go_to(npc.global_position)
 			return
+	if _explore_quest() or _fetch_from_chest():
+		return
 	_roam_left -= THINK_INTERVAL
 	var arrived := not _has_destination or global_position.distance_to(_destination) < 2.0
 	if (arrived or _roam_left <= 0.0) and manager:
 		_go_to(manager.hunting_spot(profile.level, _wanted))
 		_roam_left = 20.0
+
+
+## Walks to the place an exploration quest sends it to; well inside it, the
+## place is explored. Returns whether it's on its way.
+func _explore_quest() -> bool:
+	if _explore.is_empty() or manager == null:
+		return false
+	var place := manager.place_named(_explore)
+	if place.is_empty():
+		_explore = ""
+		return false
+	var center: Vector2 = place[1]
+	_go_to(Vector3(center.x, manager.ground_height(center.x, center.y), center.y))
+	return true
+
+
+## Inside the place an exploration quest sends it to: explored.
+func _check_explored() -> void:
+	var place := manager.place_named(_explore) if manager else []
+	if place.is_empty() or Vector2(global_position.x, global_position.z).distance_to(place[1]) <= float(place[2]) * 0.6:
+		if not place.is_empty():
+			quests.explored(_explore)
+		_explore = ""
+
+
+## Walks to a game object holding an item its quests need and takes it.
+## Returns whether it's busy with one.
+func _fetch_from_chest() -> bool:
+	if _chest == null or not is_instance_valid(_chest) or not _chest.is_spawned():
+		_chest = null
+		return false
+	if global_position.distance_to(_chest.global_position) > CHEST_REACH:
+		_go_to(_chest.global_position)
+		return true
+	for item in quests.object_items_needed():
+		if _chest.holds(item):
+			quests.took_item(item)
+			break
+	_chest.take_for_bot()
+	_chest = _nearest_chest()
+	return true
+
+
+## The nearest game object holding an item its quests still need, within
+## CHEST_SEARCH yards, or null.
+func _nearest_chest() -> GameObject:
+	var needed := quests.object_items_needed()
+	if needed.is_empty():
+		return null
+	var best: GameObject = null
+	var best_distance := CHEST_SEARCH
+	for node in get_tree().get_nodes_in_group("game_objects"):
+		var chest := node as GameObject
+		if not chest.is_spawned() or not needed.any(func(item: int) -> bool: return chest.holds(item)):
+			continue
+		var distance := global_position.distance_to(chest.global_position)
+		if distance < best_distance:
+			best = chest
+			best_distance = distance
+	return best
+
+
+const CHEST_REACH := 3.0
+const CHEST_SEARCH := 600.0
 
 
 ## Sets off to walk over to the player, to trade.

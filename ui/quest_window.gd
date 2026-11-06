@@ -30,6 +30,8 @@ const SELECTED := Color(1, 1, 1, 0.15)
 enum Page { LIST, DETAILS, PROGRESS, REWARD }
 
 var npc: Npc
+## The item offering its quest (open_item), or 0 when it's an NPC.
+var _item := 0
 
 var _player: Player
 var _ui_scale := 1.0
@@ -52,14 +54,31 @@ func open(quest_npc: Npc, player: Player, ui_scale: float) -> void:
 		_show(Page.LIST)
 
 
+## Offers the quest an item starts (item_template.startquest), as classic
+## does when such an item is used. Accepting takes the item, unless the
+## quest needs it.
+func open_item(item_id: int, player: Player, ui_scale: float) -> void:
+	npc = null
+	_item = item_id
+	_player = player
+	_ui_scale = ui_scale
+	visible = true
+	_quest_id = QuestLog.quest_from_item(item_id)
+	_choice = -1
+	_show(Page.DETAILS)
+
+
 func close() -> void:
 	npc = null
+	_item = 0
 	visible = false
 	hovered.emit({})
 
 
 func _process(_delta: float) -> void:
 	if npc == null:
+		if _item != 0 and Inventory.count_item(_item) == 0:
+			close()
 		return
 	if not is_instance_valid(npc) or _player.global_position.distance_to(npc.global_position) > RANGE:
 		close()
@@ -87,6 +106,10 @@ func accept() -> void:
 	if not error.is_empty():
 		message.emit(error, true)
 		return
+	if _item != 0:
+		var needed: bool = QuestDB.get_quest(_quest_id).items.any(func(need: Array) -> bool: return int(need[0]) == _item)
+		if not needed:
+			Inventory.remove_items(_item, 1)
 	Sfx.play("loot")
 	close()
 
@@ -106,6 +129,8 @@ func complete() -> void:
 
 func _services() -> Array[String]:
 	var services: Array[String] = []
+	if npc == null:
+		return services
 	if npc.vendor != 0:
 		services.append("vendor")
 	if not npc.trainer.is_empty():
@@ -119,7 +144,7 @@ func _show(page: Page) -> void:
 
 
 func _build() -> void:
-	if npc == null:
+	if npc == null and _item == 0:
 		return
 	for child in get_children():
 		child.queue_free()
@@ -131,7 +156,7 @@ func _build() -> void:
 	back.size = size
 	back.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(back)
-	_text(self, Vector2(4, 1), npc.npc_name, HEADING, 7)
+	_text(self, Vector2(4, 1), npc.npc_name if npc else str(ItemDB.get_item(_item).name), HEADING, 7)
 	var close_button := _text(self, Vector2(WIDTH - 9, 1), "x", Color(0.9, 0.4, 0.4), 7)
 	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	close_button.gui_input.connect(func(event: InputEvent) -> void:
@@ -229,6 +254,9 @@ func _rewards(quest: Dictionary, choosing: bool) -> void:
 
 
 func _back() -> void:
+	if npc == null:
+		close()
+		return
 	if QuestLog.for_npc(npc.npc_id()).size() > 1 or not _services().is_empty():
 		_show(Page.LIST)
 	else:

@@ -359,6 +359,8 @@ func _apply_save(data: Dictionary) -> void:
 	var saved_quests: Dictionary = data.get("quests", {})
 	for id: String in saved_quests:
 		quests[int(id)] = { "kills": saved_quests[id].kills.map(func(count: float) -> int: return int(count)) }
+		if saved_quests[id].has("explored"):
+			quests[int(id)].explored = bool(saved_quests[id].explored)
 	quests_done.assign(data.get("quests_done", []).map(func(id: float) -> int: return int(id)))
 	party.assign(data.get("party", []))
 	friends.assign(data.get("friends", []))

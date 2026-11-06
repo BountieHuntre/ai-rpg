@@ -3,7 +3,8 @@ extends Node
 ## Tracks the player's current target (a creature, an NPC or a playerbot) and
 ## draws the ring under it.
 
-signal loot_requested(corpse: Enemy, take_all: bool)
+## A corpse or a game object (GameObject) to loot.
+signal loot_requested(corpse: Node3D, take_all: bool)
 ## Right-click on a friendly NPC.
 signal npc_clicked(npc: Node3D)
 
@@ -115,6 +116,13 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 		set_target(collider)
 		if button == MOUSE_BUTTON_RIGHT:
 			npc_clicked.emit(collider)
+		return
+	# Right-clicking a game object (a Bundle of Wood) opens it, when it holds
+	# something a quest needs.
+	if collider is GameObject:
+		var thing := collider as GameObject
+		if button == MOUSE_BUTTON_RIGHT and thing.open():
+			loot_requested.emit(thing, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot"))
 		return
 	# Clicking a playerbot only targets it: its menu is on the target and
 	# party frames.

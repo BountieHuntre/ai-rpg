@@ -232,5 +232,115 @@
 		"objectives": "Bring Grunmaw's Claw to Marshal Edric Thorne in Wexford.",
 		"progress": "Grunmaw is still out there, then.",
 		"completion": "His claw. I'd not have believed it if I weren't holding it. You've done Harrowfield a great service. Take your pick from the armory, with my thanks."
+	},
+	"62": {
+		"title": "The Old Delve",
+		"giver": "MarshalThorne",
+		"ender": "MarshalThorne",
+		"details": "The burrowlings came up out of the Old Delve, the old mine in the northwest hills, and they've not stopped coming. Before I send anyone in after them, I need to know what we're facing.\n\nGo up the road past the Coombe farm to the mine and have a look round. How many there are, how deep they've dug. Don't get yourself killed doing it.",
+		"objectives": "Explore the Old Delve, then return to Marshal Edric Thorne in Wexford.",
+		"progress": "",
+		"completion": "That many? And firecallers among them. I feared as much.\n\nYou've a sharp eye. Take this for your trouble.",
+		"explore": "the Old Delve"
+	},
+	"76": {
+		"title": "Copperhollow",
+		"giver": "MarshalThorne",
+		"ender": "MarshalThorne",
+		"details": "There's a second mine, Copperhollow, in the hills northeast of here, off the pass road's branch east. The miners walked out of it a year ago and nobody's been back since.\n\nIf the burrowlings have taken that one too, we're in worse shape than I thought. Go and see.",
+		"objectives": "Explore Copperhollow, then report back to Marshal Edric Thorne in Wexford.",
+		"progress": "",
+		"completion": "Both mines, then. They're spreading through the hills like rot through a fence post.\n\nWell, now I know. That's worth something.",
+		"explore": "Copperhollow"
+	},
+	"239": {
+		"title": "The South Watch Needs Help!",
+		"giver": "MarshalThorne",
+		"ender": "DeputyGarrow",
+		"details": "A runner came up from the south watch this morning. Deputy Garrow holds the bridge over the stream with a handful of watchmen, and the Ditchjaw gnolls have been testing her post every night.\n\nShe needs another sword more than I do. Follow the south road down to the bridge and report to her.",
+		"objectives": "Go to the south watch by the stream bridge and speak with Deputy Nell Garrow.",
+		"progress": "",
+		"completion": "The marshal sent you? Thank the light. We've been holding this bridge on cold suppers and no sleep.\n\nIf you're staying, there's work for you."
+	},
+	"35": {
+		"title": "Further Concerns",
+		"giver": "MarshalThorne",
+		"ender": "WatchmanAshby",
+		"details": "The fish-men at the mere worry me more than they should. Watchman Ashby keeps an eye on them from his hut on the mere's west shore, and his last report was short and strange.\n\nGo and speak with him. Find out what he isn't putting in writing.",
+		"objectives": "Speak with Watchman Colm Ashby at his hut on the west shore of the Mirrow Mere.",
+		"progress": "",
+		"completion": "The marshal wants to know what's wrong? I'll tell you what's wrong. Two of my watchmen are missing."
+	},
+	"37": {
+		"title": "Find the Lost Watchmen",
+		"giver": "WatchmanAshby",
+		"ender": "HalfEatenBody",
+		"details": "Aldous and Merrick went round the north shore of the mere three days ago to count the fish-men's huts on the east shore. They should have been back by nightfall.\n\nI can't leave the hut. Follow the shore road north and east and look for them. If they're hurt, help them. If they're not... find out what happened.",
+		"objectives": "Search the north shore of the Mirrow Mere for the lost watchmen, Aldous and Merrick.",
+		"progress": "",
+		"completion": "A body lies half in the reeds, torn and chewed. What's left of the tabard is Wexford Watch blue.\n\nThe face is gone, but the boots are Merrick's. There's no sign of Aldous."
+	},
+	"45": {
+		"title": "Discover Aldous's Fate",
+		"giver": "HalfEatenBody",
+		"ender": "AldousCorpse",
+		"details": "Webbed footprints churn the mud around Merrick's body, and a second set of boots, a watchman's, leads away east along the shore toward the mirefin huts.\n\nAldous may have run, or been taken. Follow the trail to the mirefin village on the east shore.",
+		"objectives": "Search the mirefin village on the east shore of the Mirrow Mere for Aldous, or signs of his fate.",
+		"progress": "",
+		"completion": "Aldous lies among the reed huts with his sword still in his hand. He didn't go quietly.\n\nHis watch medallion hangs at his neck, and Merrick's is clutched in his fist. He must have taken it from his friend's body before they caught him."
+	},
+	"71": {
+		"title": "Report to the Watchman",
+		"giver": "AldousCorpse",
+		"ender": "WatchmanAshby",
+		"details": "The medallions are all that's left to bring home. Watchman Ashby will want them, and the families will want to know.\n\nTake them back to his hut on the west shore.",
+		"objectives": "Bring the Fallen Watchmen's Medallions to Watchman Colm Ashby at the Mirrow Mere.",
+		"progress": "Did you find them?",
+		"completion": "Both of them. I knew it, the moment they didn't come back. I knew it.\n\nThank you for bringing them home. Their families should have these."
+	},
+	"39": {
+		"title": "Deliver the Watchman's Report",
+		"giver": "WatchmanAshby",
+		"ender": "MarshalThorne",
+		"details": "The marshal needs to hear this from someone who saw it. The fish-men have killed two of the watch, and they'll grow bolder if no one answers it.\n\nTake my report to Marshal Thorne in Wexford. Tell him everything.",
+		"objectives": "Report to Marshal Edric Thorne in Wexford.",
+		"progress": "",
+		"completion": "Two good men. Aldous trained half the watch, and Merrick had a wife and a little one.\n\nThe mirefins will answer for this. You've done the watch a great service, and the watch looks after its own."
+	},
+	"59": {
+		"title": "Cloth and Leather Armor",
+		"giver": "MarshalThorne",
+		"ender": "WennaLisle",
+		"details": "You've earned better than the rags on your back. The watch keeps an account with Wenna Lisle, the seamstress here in the village.\n\nTake this token to her. She'll fit you out with something sturdy, on the watch's coin.",
+		"objectives": "Give the Wexford Armor Token to Wenna Lisle in Wexford.",
+		"progress": "Is that a watch token you've got there?",
+		"completion": "A watch token, and from the marshal himself. You must have done something right.\n\nLet's see. I've a few pieces that should fit you."
+	},
+	"5545": {
+		"title": "A Bundle of Trouble",
+		"giver": "ForemanHarlow",
+		"ender": "ForemanHarlow",
+		"details": "The prowlers and bears came down out of the woods at dawn and ran my cutters off before they could haul the day's work in. The wood's still out there, bundled and tied, lying where they dropped it.\n\nI've a buyer in Wexford waiting on it. Gather up eight bundles from round the camp and bring them to me, and mind the beasts.",
+		"objectives": "Bring 8 Bundles of Wood to Foreman Edda Harlow at the Ashwood lumber camp.",
+		"progress": "Any luck with the bundles?",
+		"completion": "That's the lot of it. My buyer will be glad, and so am I.\n\nHere, you've earned a share."
+	},
+	"123": {
+		"title": "The Collector",
+		"giver": "",
+		"ender": "MarshalThorne",
+		"details": "The ledger lists the farms of Harrowfield one by one, with the coin taken from each and the dates it was paid. Every page is signed the same way: the Collector.\n\nSomeone is squeezing the farmers, and the gnolls are carrying his money. The marshal in Wexford would want to see this.",
+		"objectives": "Take The Collector's Itinerary to Marshal Edric Thorne in Wexford.",
+		"progress": "What have you got there?",
+		"completion": "Where did you get this? Off a gnoll? Then the brigands and the gnolls are working together, and this Collector sits in the middle of it, taking his cut.\n\nThis is the first real lead we've had."
+	},
+	"147": {
+		"title": "Manhunt",
+		"giver": "MarshalThorne",
+		"ender": "MarshalThorne",
+		"details": "The Collector has a name. Odo, they call him, a brigand who wears his rings over his gloves. The farmers say he holes up in Thornwick Tower, east of the mere, with a band of hedge-mages and cutthroats round him.\n\nHe's bled Harrowfield long enough. Find him, kill him, and bring me his signet ring as proof.",
+		"objectives": "Kill Odo the Collector at Thornwick Tower, and bring The Collector's Signet to Marshal Edric Thorne in Wexford.",
+		"progress": "Is the Collector still breathing?",
+		"completion": "His signet. The farmers will sleep easier tonight, and so will I.\n\nThe watch's armory is open to you. Take what suits you."
 	}
 }

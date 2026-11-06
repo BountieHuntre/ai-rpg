@@ -1,6 +1,6 @@
 class_name LootWindow
 extends Control
-## Classic-style loot window for a corpse: money first, then one row per item.
+## Classic-style loot window for a corpse (or a game object such as a Bundle of Wood): money first, then one row per item.
 ## Click a row to take it. Hovering an item shows its tooltip. Closes itself
 ## when the corpse is empty, respawns or the player walks away.
 ## Sizes are in HUD units (1/270 of the window height), times ui_scale.
@@ -19,13 +19,15 @@ const BACK := Color(0.08, 0.08, 0.1, 0.92)
 const ROW_HOVER := Color(1, 1, 1, 0.08)
 const COPPER_COLOR := Color(0.85, 0.55, 0.25)
 
-var corpse: Enemy
+## The corpse or game object being looted: anything with `loot`,
+## `loot_money` and has_loot().
+var corpse: Node3D
 
 var _player: Player
 var _ui_scale := 1.0
 
 
-func open(new_corpse: Enemy, player: Player, ui_scale: float) -> void:
+func open(new_corpse: Node3D, player: Player, ui_scale: float) -> void:
 	corpse = new_corpse
 	_player = player
 	_ui_scale = ui_scale
@@ -43,7 +45,7 @@ func close() -> void:
 
 
 ## Takes the money and every item that fits, as with shift-click looting.
-static func take_all(target: Enemy) -> Array[String]:
+static func take_all(target: Node3D) -> Array[String]:
 	var messages: Array[String] = []
 	if target.loot_money > 0:
 		messages.append(_take_money(target))
@@ -55,8 +57,8 @@ static func take_all(target: Enemy) -> Array[String]:
 	return messages
 
 
-static func _take_money(target: Enemy) -> String:
-	var amount := target.loot_money
+static func _take_money(target: Node3D) -> String:
+	var amount: int = target.loot_money
 	target.loot_money = 0
 	Sfx.play("coins")
 	# In a party the money is split between the members nearby.
@@ -68,7 +70,7 @@ static func _take_money(target: Enemy) -> String:
 	return "You loot %s" % ItemDB.money_words(amount)
 
 
-static func _take_item(target: Enemy, index: int) -> String:
+static func _take_item(target: Node3D, index: int) -> String:
 	var drop: Dictionary = target.loot[index]
 	var left := GameState.add_item(drop.id, drop.count)
 	var taken: int = drop.count - left
@@ -102,7 +104,7 @@ func _refresh() -> void:
 func _rebuild() -> void:
 	for child in get_children():
 		child.free()
-	var rows := corpse.loot.size() + (1 if corpse.loot_money > 0 else 0)
+	var rows: int = corpse.loot.size() + (1 if corpse.loot_money > 0 else 0)
 	size = Vector2(WIDTH, 14.0 + rows * ROW_HEIGHT + 3.0) * _ui_scale
 	var back := ColorRect.new()
 	back.color = BACK
@@ -128,7 +130,7 @@ func _rebuild() -> void:
 		var drop: Dictionary = corpse.loot[i]
 		var item := ItemDB.get_item(drop.id)
 		_add_row(y, ItemDB.quality_color(item), item.name, ItemDB.quality_color(item), drop.count, func() -> void:
-			var index := corpse.loot.find(drop)
+			var index: int = corpse.loot.find(drop)
 			if index >= 0:
 				var result := _take_item(corpse, index)
 				message.emit(result, result == "Inventory is full.")

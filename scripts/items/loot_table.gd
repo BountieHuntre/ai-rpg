@@ -24,6 +24,24 @@ static func roll_creature(loot_id: int) -> Array[Dictionary]:
 	return drops
 
 
+## What a game object (a chest, a Bundle of Wood) holds when opened, from
+## gameobject_loot_template by its loot id: rolled like a creature's, its
+## quest-only items only for quests underway.
+static func roll_object(loot_id: int) -> Array[Dictionary]:
+	var drops: Array[Dictionary] = []
+	_process(_get_tables().get("gameobject", {}).get(str(loot_id), []), drops)
+	return drops
+
+
+## Every item a game object's loot can hold, quest-only ones included.
+static func object_items(loot_id: int) -> Array[int]:
+	var items: Array[int] = []
+	for entry: Dictionary in _get_tables().get("gameobject", {}).get(str(loot_id), []):
+		if int(entry.min_or_ref) >= 0 and not int(entry.item) in items:
+			items.append(int(entry.item))
+	return items
+
+
 ## Quest-only drops (negative chances) a creature's loot can hold, including
 ## through references.
 static func quest_items(loot_id: int) -> Array[int]:

@@ -54,7 +54,21 @@ built on (quest_template: level, minimum level, previous quest, kill and item
 objectives, reward items and choices, money, RewMoneyMaxLevel). The game's
 titles, text and quest givers are its own, in `data/quests.json`. Quest XP
 follows Quest::XPValue, and quest-only drops (negative loot chances) only roll
-while a quest needs the item, as in CMaNGOS.
+while a quest needs the item, as in CMaNGOS. Exploration quests carry
+QuestFlags 4 (QUEST_FLAGS_EXPLORATION); classic's area triggers are client
+data (AreaTrigger.dbc), so the place each one sends you to is the game's own.
+Items that start a quest carry item_template.startquest, and accepting one
+destroys the item unless the quest requires it (WorldSession::
+HandleQuestgiverAcceptQuestOpcode).
+
+`gameobjects.json` holds the game objects in `GAMEOBJECTS` (gameobject_template:
+name, type, size, and for chests their loot id, data1), with the usual respawn
+time of their classic spawns (gameobject.spawntimesecsmin); their loot is the
+`gameobject` table of `loot_tables.json` (gameobject_loot_template). Quest
+givers and enders that are objects come from gameobject_questrelation and
+gameobject_involvedrelation, named in the game's quest text like NPCs.
+Vendors with a VendorTemplateId and no npc_vendor rows sell the template's
+list (npc_vendor_template).
 
 `spells.json` also carries `procs`: procs per minute and cooldowns from
 spell_proc_event (Seal of Justice 5, Light and Wisdom 20, Command 7, each with

@@ -1,119 +1,215 @@
 class_name Harrowfield
 extends Zone
 ## Farmland south of Ashford Vale over the mountain pass, for levels 6 to 12
-## (Grunmaw, an elite gnoll, is 11). The village of Wexford stands where the
-## pass road comes down, with the Coombe farm and its pumpkin patch to the
-## west, the Old Delve mine in the northwest hills, the Mirrow Mere to the
-## east with fish-men on its shores, a brigand-held farmstead in the
-## southwest, and gnolls in the hills south of the stream. Built in code from
-## the layout below, in world coordinates, like Ashford Vale. -Z is north.
+## (Grunmaw, an elite gnoll, is 11): a big zone, a thousand yards across, as
+## classic's second zones dwarf their starting valleys. The village of Wexford
+## stands where the pass road comes down, with the Coombe farm and its pumpkin
+## patch to the west and the west garrison at the end of that road; the Old
+## Delve mine in the northwest hills and Copperhollow, a second burrowling
+## mine, in the northeast hills; the Mirrow Mere to the east with fish-men on
+## its shores, Thornwick Tower beyond it and the Ashwood lumber camp in the
+## east woods; the Pellow vineyard south of the village; a brigand-held
+## farmstead in the southwest; the stream across the south with the south
+## watch at its bridge and the Reedford landing downstream; and gnolls in the
+## hills south of the stream. Built in code from the layout below, in world
+## coordinates, like Ashford Vale. -Z is north.
 
 const ZONE_NAME := "Harrowfield"
-const CENTER := Vector2(0, 400)
-const SIZE := 400.0
-const STEP := 2.0
+const CENTER := Vector2(0, 700)
+const SIZE := 1000.0
+## Yards between the ground's vertices (Ashford Vale's are 2; this one is big).
+const STEP := 2.5
+## How far in from the edge the mountains start, and where they're full height.
+const MOUNTAIN_START := 56.0
+const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 1.4
 const STREAM_BED := 0.2
 const STREAM_WIDTH := 4.0
 const ROAD_WIDTH := 2.6
 const SEED := 2203
 
-const VILLAGE := Vector2(0, 340)
+const VILLAGE := Vector2(0, 440)
 const VILLAGE_HEIGHT := 5.0
 const VILLAGE_FLAT := 30.0
 ## Wexford's churchyard, where the dead of Harrowfield come back.
-const GRAVEYARD := Vector3(-18, VILLAGE_HEIGHT, 352)
+const GRAVEYARD := Vector3(-18, VILLAGE_HEIGHT, 452)
 const GRAVEYARD_FACING := -PI / 2
 
-## Named places, for what playerbots say: [name, center, radius], smallest
-## first, so a point is in the first place that holds it.
+## Named places, for what playerbots say and the world map: [name, center,
+## radius], smallest first, so a point is in the first place that holds it.
 const PLACES := [
-	["the south watch", Vector2(8, 452), 10.0],
-	["the pumpkin patch", Vector2(-75, 388), 14.0],
-	["the Coombe farm", Vector2(-70, 348), 18.0],
-	["Grunmaw's camp", Vector2(-70, 525), 18.0],
-	["the Old Delve", Vector2(-115, 295), 22.0],
-	["the brigand farmstead", Vector2(-115, 415), 22.0],
-	["Wexford", Vector2(0, 340), 30.0],
-	["the pass", Vector2(-24, 250), 30.0],
-	["the west meadow", Vector2(-35, 420), 30.0],
-	["the Mirrow Mere", Vector2(95, 395), 40.0],
-	["the northeast woods", Vector2(100, 300), 40.0],
-	["the gnoll hills", Vector2(0, 515), 40.0],
-	["the southeast woods", Vector2(100, 495), 45.0],
+	["the south watch", Vector2(22, 735), 12.0],
+	["the west garrison", Vector2(-420, 520), 14.0],
+	["the pumpkin patch", Vector2(-200, 525), 16.0],
+	["the Reedford landing", Vector2(-260, 778), 16.0],
+	["Thornwick Tower", Vector2(380, 450), 18.0],
+	["the mirefin village", Vector2(332, 592), 18.0],
+	["the Coombe farm", Vector2(-190, 470), 22.0],
+	["Grunmaw's camp", Vector2(-175, 935), 22.0],
+	["the Pellow vineyard", Vector2(140, 640), 26.0],
+	["the Old Delve", Vector2(-315, 335), 28.0],
+	["Copperhollow", Vector2(172, 300), 28.0],
+	["the brigand farmstead", Vector2(-300, 690), 28.0],
+	["the Ashwood lumber camp", Vector2(380, 700), 30.0],
+	["Wexford", Vector2(0, 440), 35.0],
+	["the pass", Vector2(-24, 250), 35.0],
+	["the Mirrow Mere", Vector2(270, 560), 70.0],
+	["the west woods", Vector2(-360, 470), 70.0],
+	["the west meadow", Vector2(-110, 620), 75.0],
+	["the northeast woods", Vector2(330, 330), 100.0],
+	["the southwest woods", Vector2(-380, 900), 100.0],
+	["the gnoll hills", Vector2(0, 930), 110.0],
+	["the southeast woods", Vector2(300, 880), 120.0],
 ]
 
 ## Level areas flattened for buildings and camps: [center, radius, height].
 const FLATS := [
-	[Vector2(-70, 348), 16.0, 5.0],   # Coombe farm
-	[Vector2(-75, 388), 12.0, 4.6],   # pumpkin patch
-	[Vector2(-115, 295), 14.0, 8.0],  # the Old Delve
-	[Vector2(-115, 415), 15.0, 5.0],  # brigand farmstead
-	[Vector2(-70, 525), 13.0, 7.0],   # Grunmaw's camp
-	[Vector2(8, 452), 6.0, 4.0],      # south watch
-	[Vector2(45, 400), 5.0, 4.0],     # watchman's hut
-	[Vector2(42, 366), 8.0, 5.0],     # Wainwright cottage
+	[Vector2(-190, 470), 16.0, 5.0],  # Coombe farm
+	[Vector2(-200, 525), 12.0, 4.6],  # pumpkin patch
+	[Vector2(-310, 335), 14.0, 8.0],  # the Old Delve
+	[Vector2(-300, 690), 15.0, 5.0],  # brigand farmstead
+	[Vector2(-175, 935), 13.0, 7.0],  # Grunmaw's camp
+	[Vector2(22, 735), 6.0, 4.0],     # south watch
+	[Vector2(203, 582), 5.0, 4.0],    # watchman's hut
+	[Vector2(120, 500), 8.0, 5.0],    # Wainwright cottage
+	[Vector2(168, 300), 14.0, 8.0],   # Copperhollow
+	[Vector2(380, 700), 18.0, 5.0],   # Ashwood lumber camp
+	[Vector2(380, 450), 10.0, 8.0],   # Thornwick Tower
+	[Vector2(140, 640), 22.0, 4.5],   # Pellow vineyard
+	[Vector2(-260, 776), 8.0, 2.6],   # Reedford landing
+	[Vector2(-420, 520), 8.0, 5.5],   # west garrison
+	[Vector2(332, 592), 10.0, 3.0],   # mirefin village
 ]
+const FARM := 0
+const PATCH := 1
+const DELVE := 2
+const FARMSTEAD := 3
+const GNOLL_CAMP := 4
+const SOUTH_WATCH := 5
+const HUT := 6
+const COTTAGE := 7
+const COPPERHOLLOW := 8
+const LUMBER_CAMP := 9
+const TOWER := 10
+const VINEYARD := 11
+const LANDING := 12
+const GARRISON := 13
+const MIREFIN_VILLAGE := 14
+## The farm's ploughed fields, round its house: center and radius.
+const FIELDS := Vector2(-190, 482)
+const FIELDS_RADIUS := 52.0
 ## Rounded hills: [center, radius, height].
 const HILLS := [
-	[Vector2(-150, 292), 50.0, 28.0],  # the Old Delve's hill
-	[Vector2(0, 525), 45.0, 8.0],      # gnoll hills
-	[Vector2(150, 480), 40.0, 10.0],
-	[Vector2(130, 280), 35.0, 7.0],
+	[Vector2(-345, 332), 50.0, 28.0],  # the Old Delve's hill
+	[Vector2(-430, 285), 90.0, 20.0],
+	[Vector2(205, 300), 50.0, 28.0],   # Copperhollow's hill
+	[Vector2(300, 270), 70.0, 14.0],
+	[Vector2(0, 930), 110.0, 10.0],    # gnoll hills
+	[Vector2(380, 960), 80.0, 12.0],
+	[Vector2(380, 450), 35.0, 6.0],    # Thornwick's knoll
+	[Vector2(-120, 1060), 90.0, 9.0],
 ]
-const LAKE := Vector2(95, 395)
-const LAKE_RADIUS := 28.0
+const LAKE := Vector2(270, 560)
+const LAKE_RADIUS := 55.0
 const LAKE_BED := -0.6
 const STREAM := [
-	Vector2(95, 420), Vector2(70, 455), Vector2(20, 470), Vector2(-40, 466),
-	Vector2(-100, 480), Vector2(-210, 500),
+	Vector2(250, 612), Vector2(190, 690), Vector2(90, 745), Vector2(0, 760),
+	Vector2(-120, 755), Vector2(-250, 790), Vector2(-380, 800), Vector2(-510, 830),
 ]
 const ROADS := [
-	[Vector2(-8, 290), Vector2(0, 318)],
-	[Vector2(-20, 338), Vector2(-55, 345), Vector2(-90, 322), Vector2(-112, 300)],
-	[Vector2(-58, 350), Vector2(-72, 378)],
-	[Vector2(0, 362), Vector2(2, 420), Vector2(5, 458), Vector2(5, 480), Vector2(-10, 505)],
-	[Vector2(22, 345), Vector2(42, 372), Vector2(45, 398)],
+	# The pass down to Wexford.
+	[Vector2(-8, 290), Vector2(-4, 360), Vector2(0, 418)],
+	# West to the Coombe farm and on to the west garrison.
+	[Vector2(-20, 438), Vector2(-90, 450), Vector2(-170, 462)],
+	[Vector2(-210, 470), Vector2(-300, 500), Vector2(-415, 520)],
+	# The farm to its pumpkin patch.
+	[Vector2(-188, 486), Vector2(-198, 513)],
+	# Up to the Old Delve.
+	[Vector2(-110, 450), Vector2(-200, 400), Vector2(-296, 345)],
+	# South over the bridge to the gnoll hills.
+	[Vector2(0, 462), Vector2(4, 560), Vector2(8, 650), Vector2(10, 740), Vector2(10, 775), Vector2(0, 840), Vector2(-20, 880)],
+	# East to the Wainwright cottage, then the watchman's hut by the mere.
+	[Vector2(22, 445), Vector2(80, 470), Vector2(112, 495)],
+	[Vector2(125, 505), Vector2(170, 545), Vector2(198, 578)],
+	# Round the mere's north shore to the lumber camp, with Thornwick off it.
+	[Vector2(125, 505), Vector2(200, 490), Vector2(275, 488), Vector2(345, 520), Vector2(372, 600), Vector2(380, 690)],
+	[Vector2(300, 495), Vector2(372, 456)],
+	# The pass road's branch east to Copperhollow.
+	[Vector2(-4, 360), Vector2(60, 330), Vector2(155, 302)],
+	# The vineyard, and the track west to the Reedford landing.
+	[Vector2(5, 600), Vector2(120, 632)],
+	[Vector2(8, 700), Vector2(-100, 720), Vector2(-255, 772)],
 ]
 ## Woods: [center, radius]. Trees thin out toward the edges.
 const WOODS := [
-	[Vector2(100, 300), 40.0],
-	[Vector2(100, 495), 45.0],
-	[Vector2(-60, 268), 25.0],
-	[Vector2(-150, 470), 30.0],
+	[Vector2(330, 330), 110.0],
+	[Vector2(300, 880), 130.0],
+	[Vector2(-90, 320), 45.0],
+	[Vector2(-360, 470), 70.0],
+	[Vector2(-380, 900), 100.0],
+	[Vector2(440, 700), 60.0],
+	[Vector2(150, 1010), 80.0],
+	[Vector2(-60, 1120), 60.0],
 ]
 ## Where the south road crosses the stream.
-const BRIDGE_X := 5.0
-const BRIDGE_START := 460.0
-const BRIDGE_END := 478.0
+const BRIDGE_X := 10.0
+const BRIDGE_START := 748.0
+const BRIDGE_END := 769.0
 const BRIDGE_RAMP := 8.0
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
 const SPAWNS := [
-	[525, Vector2(40, 282), 20.0, 6],     # Mangy Wolf, north of the mere road (5-6)
-	[30, Vector2(-60, 270), 16.0, 5],     # Forest Spider, the pass woods (5-6)
-	[285, Vector2(72, 380), 12.0, 6],     # Mirefin, the mere's west shore (6-7)
-	[735, Vector2(110, 368), 12.0, 5],    # Mirefin Wader, its north shore (6-7)
-	[524, Vector2(-38, 422), 26.0, 8],    # Flintback Boar, west meadow (7-8)
-	[524, Vector2(40, 425), 16.0, 4],
-	[390, Vector2(-75, 390), 8.0, 2],     # Fattened Hog, the pumpkin patch (7)
-	[330, Vector2(-77, 386), 1.0, 1],     # Old Duchess (9)
-	[1922, Vector2(100, 300), 30.0, 8],   # Gray Forest Wolf, northeast woods (7-8)
-	[40, Vector2(-108, 300), 11.0, 5],    # Burrowling Pickman, the Old Delve (6-7)
-	[476, Vector2(-121, 290), 6.0, 3],    # Burrowling Firecaller (7-8)
-	[43, Vector2(-124, 302), 7.0, 4],     # Mine Spider (8-9)
-	[327, Vector2(-127, 295), 1.0, 1],    # Brasstooth (8)
-	[116, Vector2(-110, 412), 14.0, 7],   # Brigand Cutthroat, the farmstead (8-9)
-	[474, Vector2(-122, 422), 9.0, 4],    # Brigand Hedge-Mage (9-10)
-	[822, Vector2(80, 512), 20.0, 5],     # Young Forest Bear, southeast woods (8-9)
-	[118, Vector2(112, 482), 28.0, 8],    # Prowler (9-10)
-	[732, Vector2(-50, 472), 14.0, 5],    # Mirefin Lurker, down the stream (9-10)
-	[46, Vector2(55, 462), 12.0, 5],      # Mirefin Forager (9-10)
-	[97, Vector2(-20, 512), 18.0, 7],     # Ditchjaw Runt, gnoll hills (8-9)
-	[478, Vector2(32, 520), 15.0, 5],     # Ditchjaw Outrider (9-10)
-	[117, Vector2(-68, 523), 11.0, 5],    # Ditchjaw Brute, Grunmaw's camp (11-12)
-	[448, Vector2(-72, 528), 1.0, 1],     # Grunmaw (11, elite)
+	[525, Vector2(90, 330), 35.0, 8],      # Mangy Wolf, north of Wexford (5-6)
+	[30, Vector2(-90, 320), 25.0, 6],      # Forest Spider, the pass woods (5-6)
+	[30, Vector2(-350, 460), 30.0, 6],     # Forest Spider, the west woods
+	[285, Vector2(225, 535), 14.0, 6],     # Mirefin, the mere's west shore (6-7)
+	[735, Vector2(285, 505), 14.0, 6],     # Mirefin Wader, its north shore (6-7)
+	[285, Vector2(332, 592), 12.0, 6],     # Mirefin, the mirefin village on its east shore
+	[524, Vector2(-110, 620), 45.0, 10],   # Flintback Boar, west meadow (7-8)
+	[524, Vector2(80, 580), 25.0, 5],
+	[390, Vector2(-200, 527), 8.0, 2],     # Fattened Hog, the pumpkin patch (7)
+	[330, Vector2(-202, 523), 1.0, 1],     # Old Duchess (9)
+	[390, Vector2(140, 640), 16.0, 4],     # Fattened Hog, the vineyard
+	[1922, Vector2(330, 330), 60.0, 10],   # Gray Forest Wolf, northeast woods (7-8)
+	[40, Vector2(-303, 340), 11.0, 5],     # Burrowling Pickman, the Old Delve (6-7)
+	[476, Vector2(-316, 330), 6.0, 3],     # Burrowling Firecaller (7-8)
+	[43, Vector2(-319, 342), 7.0, 4],      # Mine Spider (8-9)
+	[327, Vector2(-322, 335), 1.0, 1],     # Brasstooth (8)
+	[40, Vector2(175, 305), 11.0, 5],      # Burrowling Pickman, Copperhollow
+	[476, Vector2(188, 297), 6.0, 3],      # Burrowling Firecaller
+	[43, Vector2(186, 310), 8.0, 4],       # Mine Spider
+	[116, Vector2(-295, 687), 22.0, 8],    # Brigand Cutthroat, the farmstead (8-9)
+	[474, Vector2(-310, 697), 12.0, 4],    # Brigand Hedge-Mage (9-10)
+	[474, Vector2(380, 452), 12.0, 4],     # Brigand Hedge-Mage, Thornwick Tower
+	[116, Vector2(365, 475), 18.0, 6],     # Brigand Cutthroat, Thornwick Tower
+	[822, Vector2(240, 860), 35.0, 6],     # Young Forest Bear, southeast woods (8-9)
+	[822, Vector2(430, 790), 25.0, 5],     # Young Forest Bear, by the lumber camp
+	[118, Vector2(340, 880), 55.0, 10],    # Prowler, southeast woods (9-10)
+	[118, Vector2(430, 640), 30.0, 6],     # Prowler, by the lumber camp
+	[732, Vector2(-130, 760), 25.0, 6],    # Mirefin Lurker, down the stream (9-10)
+	[732, Vector2(-300, 808), 20.0, 5],    # Mirefin Lurker, by the Reedford landing
+	[46, Vector2(150, 715), 18.0, 6],      # Mirefin Forager, up the stream (9-10)
+	[97, Vector2(-40, 905), 35.0, 9],      # Ditchjaw Runt, gnoll hills (8-9)
+	[478, Vector2(80, 925), 30.0, 6],      # Ditchjaw Outrider (9-10)
+	[97, Vector2(150, 990), 30.0, 6],      # Ditchjaw Runt, south of the hills
+	[117, Vector2(-172, 932), 14.0, 6],    # Ditchjaw Brute, Grunmaw's camp (11-12)
+	[448, Vector2(-178, 938), 1.0, 1],     # Grunmaw (11, elite)
+	[1922, Vector2(-380, 900), 50.0, 8],   # Gray Forest Wolf, southwest woods
+	[473, Vector2(380, 457), 1.0, 1],      # Odo the Collector, at Thornwick Tower's door (10)
+]
+
+## Quest givers and enders that are things: [object entry, node name, point,
+## facing]. The lost watchmen of the Fishy Peril chain: a half-eaten body on
+## the mere's north shore, and Aldous in the mirefin village.
+const QUEST_OBJECTS := [
+	[55, "HalfEatenBody", Vector2(245, 497), 0.6],
+	[56, "AldousCorpse", Vector2(338, 594), 2.2],
+]
+## Chests to loot: [object entry, center, radius, count]. Bundles of Wood
+## round the Ashwood lumber camp, for A Bundle of Trouble.
+const CHESTS := [
+	[176793, Vector2(385, 700), 45.0, 12],
 ]
 
 const GRASS := Color(0.42, 0.58, 0.26)
@@ -139,6 +235,11 @@ var _detail := FastNoiseLite.new()
 func _init() -> void:
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
+	for line: Array in ROADS:
+		for i in line.size() - 1:
+			var a: Vector2 = line[i]
+			var b: Vector2 = line[i + 1]
+			_road_segments.append([a, b, Rect2(a, Vector2.ZERO).expand(b)])
 	zone_name = ZONE_NAME
 	center = CENTER
 	size = SIZE
@@ -147,6 +248,8 @@ func _init() -> void:
 	hub = VILLAGE
 	places = PLACES
 	spawns = SPAWNS
+	quest_objects = QUEST_OBJECTS
+	chests = CHESTS
 
 
 func _ready() -> void:
@@ -156,15 +259,23 @@ func _ready() -> void:
 	_build_village()
 	_build_farm()
 	_build_cottage()
-	_build_mine()
+	_build_mine(FLATS[DELVE], -1, "OldDelve")
+	_build_mine(FLATS[COPPERHOLLOW], 1, "Copperhollow")
 	_build_farmstead()
 	_build_gnoll_camp()
 	_build_watch_posts()
 	_build_bridge()
+	_build_lumber_camp()
+	_build_tower()
+	_build_vineyard()
+	_build_landing()
+	_build_garrison()
+	_build_mirefin_village()
 	_build_trees()
 	_build_rocks()
 	_build_clutter()
 	spawn_creatures(SEED + 3, "Harrow", [], WATER_LEVEL)
+	spawn_objects(SEED + 6, WATER_LEVEL)
 
 
 # Shape of the land.
@@ -173,10 +284,13 @@ func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
 	# Mountains round the edges, squarer than the vale's ring, so the
-	# farmland reaches further into the corners.
+	# farmland reaches further into the corners. They're as deep as the
+	# vale's (MOUNTAIN_START yards), however big the zone, so where the two
+	# meet the ground is the same.
 	var offset := point - CENTER
 	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	height += mountain_height(x, z, smoothstep(0.78, 1.05, reach / 185.0))
+	var half := SIZE / 2.0
+	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
 	for hill: Array in HILLS:
 		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
 	height = lerpf(VILLAGE_HEIGHT, height, smoothstep(VILLAGE_FLAT, VILLAGE_FLAT + 16.0, point.distance_to(VILLAGE)))
@@ -194,21 +308,37 @@ func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var shade := _detail.get_noise_2d(x, z) * 0.06
 	var color := GRASS.lerp(FOREST_FLOOR, _woods_density(point))
 	# Ploughed strips round the farm.
-	var field := 1.0 - smoothstep(30.0, 38.0, point.distance_to(Vector2(-70, 360)))
+	var field := 1.0 - smoothstep(FIELDS_RADIUS - 8.0, FIELDS_RADIUS, point.distance_to(FIELDS))
 	if field > 0.0 and fposmod(x * 0.25 + z * 0.1, 2.0) < 1.0:
 		color = color.lerp(FIELD, field * 0.7)
 	color = color.lerp(COBBLE, 1.0 - smoothstep(20.0, 24.0, point.distance_to(VILLAGE)))
 	for flat: Array in FLATS:
 		color = color.lerp(DIRT, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
-	var road := distance_to_pass(point)
-	for line: Array in ROADS:
-		road = minf(road, distance_to_line(point, line))
+	var road := minf(distance_to_pass(point), _road_distance(point, ROAD_WIDTH + 1.0))
 	color = color.lerp(DIRT, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, road))
 	var water := minf(distance_to_line(point, STREAM) - STREAM_WIDTH, point.distance_to(LAKE) - LAKE_RADIUS)
 	color = color.lerp(MUD, 1.0 - smoothstep(1.0, 4.0, water))
 	color = color.lerp(ROCK, smoothstep(0.82, 0.68, normal.y))
 	color = color.lerp(ROCK, smoothstep(24.0, 34.0, y))
 	return Color(color.r + shade, color.g + shade, color.b + shade)
+
+
+## Distance to the nearest road, or INF when none is within `reach`: only
+## the segments whose box (grown by `reach`) holds the point are measured.
+## Made in _init, before any worker thread reads it.
+var _road_segments: Array = []
+
+
+func _road_distance(point: Vector2, reach: float) -> float:
+	var best := INF
+	for segment: Array in _road_segments:
+		if not (segment[2] as Rect2).grow(reach).has_point(point):
+			continue
+		var a: Vector2 = segment[0]
+		var b: Vector2 = segment[1]
+		var t := clampf((point - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+		best = minf(best, point.distance_to(a + (b - a) * t))
+	return best
 
 
 func _woods_density(point: Vector2) -> float:
@@ -218,6 +348,11 @@ func _woods_density(point: Vector2) -> float:
 	return density
 
 
+## A point `offset` (x, z) from a place's center, at a height.
+static func _near(place: Vector2, offset: Vector2, y: float) -> Vector3:
+	return Vector3(place.x + offset.x, y, place.y + offset.y)
+
+
 # Wexford: an inn, a chapel with its churchyard, cottages and a well round a
 # cobbled green.
 
@@ -225,42 +360,52 @@ func _build_village() -> void:
 	var village := Node3D.new()
 	village.name = "Wexford"
 	add_child(village)
+	var v := VILLAGE
 	var y := VILLAGE_HEIGHT
 	# The Harrow Inn, east of the green, two storeys with its door to the west.
-	Props.box(village, Vector3(18, y, 330), Vector3(10, 7, 14), PLASTER)
-	Props.roof(village, Vector3(18, y + 7, 330), Vector3(11, 4, 15), ROOF)
-	Props.box(village, Vector3(12.9, y, 332), Vector3(0.3, 2.6, 1.6), DARK_WOOD, 0.0, false)
-	Props.box(village, Vector3(13, y + 2.8, 328), Vector3(0.2, 1, 1.6), DARK_WOOD, 0.0, false)
-	for beam in [324.0, 330.0, 336.0]:
-		Props.box(village, Vector3(12.9, y, beam), Vector3(0.25, 7, 0.3), DARK_WOOD, 0.0, false)
+	Props.box(village, _near(v, Vector2(18, -10), y), Vector3(10, 7, 14), PLASTER)
+	Props.roof(village, _near(v, Vector2(18, -10), y + 7), Vector3(11, 4, 15), ROOF)
+	Props.box(village, _near(v, Vector2(12.9, -8), y), Vector3(0.3, 2.6, 1.6), DARK_WOOD, 0.0, false)
+	Props.box(village, _near(v, Vector2(13, -12), y + 2.8), Vector3(0.2, 1, 1.6), DARK_WOOD, 0.0, false)
+	for beam in [-16.0, -10.0, -4.0]:
+		Props.box(village, _near(v, Vector2(12.9, beam), y), Vector3(0.25, 7, 0.3), DARK_WOOD, 0.0, false)
 	# The chapel north of the green, its churchyard to the west.
-	Props.box(village, Vector3(-13, y, 318), Vector3(8, 6, 12), STONE)
-	Props.roof(village, Vector3(-13, y + 6, 318), Vector3(13, 3, 9), ROOF, PI / 2)
-	Props.box(village, Vector3(-13, y, 324.1), Vector3(2.2, 3.4, 0.3), DARK_WOOD, 0.0, false)
-	Props.box(village, Vector3(-13, y, 311.5), Vector3(3, 10, 3), STONE)
-	Props.roof(village, Vector3(-13, y + 10, 311.5), Vector3(3.6, 2.5, 3.6), ROOF)
-	for stone in [Vector2(-22, 346), Vector2(-25, 349), Vector2(-22, 352), Vector2(-25, 355), Vector2(-28, 346), Vector2(-28, 352)]:
-		Props.box(village, Vector3(stone.x, y, stone.y), Vector3(0.9, 1.1, 0.25), DARK_STONE, 0.0, false)
-	for post in [Vector2(-31, 343), Vector2(-31, 359), Vector2(-19, 343), Vector2(-19, 359)]:
-		Props.box(village, Vector3(post.x, y, post.y), Vector3(0.4, 1.2, 0.4), DARK_WOOD, 0.0, false)
+	Props.box(village, _near(v, Vector2(-13, -22), y), Vector3(8, 6, 12), STONE)
+	Props.roof(village, _near(v, Vector2(-13, -22), y + 6), Vector3(13, 3, 9), ROOF, PI / 2)
+	Props.box(village, _near(v, Vector2(-13, -15.9), y), Vector3(2.2, 3.4, 0.3), DARK_WOOD, 0.0, false)
+	Props.box(village, _near(v, Vector2(-13, -28.5), y), Vector3(3, 10, 3), STONE)
+	Props.roof(village, _near(v, Vector2(-13, -28.5), y + 10), Vector3(3.6, 2.5, 3.6), ROOF)
+	for stone in [Vector2(-22, 6), Vector2(-25, 9), Vector2(-22, 12), Vector2(-25, 15), Vector2(-28, 6), Vector2(-28, 12)]:
+		Props.box(village, _near(v, stone, y), Vector3(0.9, 1.1, 0.25), DARK_STONE, 0.0, false)
+	for post in [Vector2(-31, 3), Vector2(-31, 19), Vector2(-19, 3), Vector2(-19, 19)]:
+		Props.box(village, _near(v, post, y), Vector3(0.4, 1.2, 0.4), DARK_WOOD, 0.0, false)
 	# Cottages round the green.
-	for cottage in [[Vector2(-18, 334), 0.0], [Vector2(-12, 368), PI / 2], [Vector2(16, 360), 0.0]]:
-		var at: Vector2 = cottage[0]
-		Props.box(village, Vector3(at.x, y, at.y), Vector3(7, 4, 6), PLASTER, cottage[1])
-		Props.roof(village, Vector3(at.x, y + 4, at.y), Vector3(8, 3, 7), THATCH, cottage[1])
+	for cottage in [[Vector2(-18, -6), 0.0], [Vector2(-12, 28), PI / 2], [Vector2(16, 20), 0.0]]:
+		Props.box(village, _near(v, cottage[0], y), Vector3(7, 4, 6), PLASTER, cottage[1])
+		Props.roof(village, _near(v, cottage[0], y + 4), Vector3(8, 3, 7), THATCH, cottage[1])
 	# The tanner's stall, a well, and the marshal's banner on the green.
-	Props.box(village, Vector3(-11, y, 345), Vector3(1.4, 1, 4), WOOD)
-	Props.box(village, Vector3(-11.6, y + 3, 345), Vector3(2.2, 0.2, 4.6), CANVAS, 0.0, false)
-	for post in [Vector2(-12.3, 343), Vector2(-12.3, 347)]:
-		Props.box(village, Vector3(post.x, y, post.y), Vector3(0.25, 3, 0.25), DARK_WOOD, 0.0, false)
-	Props.cylinder(village, Vector3(6, y, 348), 1.2, 1.0, DARK_STONE)
+	Props.box(village, _near(v, Vector2(-11, 5), y), Vector3(1.4, 1, 4), WOOD)
+	Props.box(village, _near(v, Vector2(-11.6, 5), y + 3), Vector3(2.2, 0.2, 4.6), CANVAS, 0.0, false)
+	for post in [Vector2(-12.3, 3), Vector2(-12.3, 7)]:
+		Props.box(village, _near(v, post, y), Vector3(0.25, 3, 0.25), DARK_WOOD, 0.0, false)
+	Props.cylinder(village, _near(v, Vector2(6, 8), y), 1.2, 1.0, DARK_STONE)
 	for side in [-1, 1]:
-		Props.box(village, Vector3(6 + side * 1.0, y, 348), Vector3(0.2, 2.6, 0.2), DARK_WOOD, 0.0, false)
-	Props.roof(village, Vector3(6, y + 2.6, 348), Vector3(2.8, 0.9, 2.2), THATCH)
-	Props.box(village, Vector3(-2, y, 348), Vector3(0.25, 5, 0.25), DARK_WOOD, 0.0, false)
-	Props.box(village, Vector3(-1.3, y + 3.2, 348), Vector3(1.2, 1.6, 0.1), Color(0.2, 0.3, 0.6), 0.0, false)
-	torch(village, Vector3(12.6, y + 2.6, 334.5))
-	torch(village, Vector3(-10.5, y + 2.4, 324.5))
+		Props.box(village, _near(v, Vector2(6 + side * 1.0, 8), y), Vector3(0.2, 2.6, 0.2), DARK_WOOD, 0.0, false)
+	Props.roof(village, _near(v, Vector2(6, 8), y + 2.6), Vector3(2.8, 0.9, 2.2), THATCH)
+	Props.box(village, _near(v, Vector2(-2, 8), y), Vector3(0.25, 5, 0.25), DARK_WOOD, 0.0, false)
+	Props.box(village, _near(v, Vector2(-1.3, 8), y + 3.2), Vector3(1.2, 1.6, 0.1), Color(0.2, 0.3, 0.6), 0.0, false)
+	torch(village, _near(v, Vector2(12.6, -5.5), y + 2.6))
+	torch(village, _near(v, Vector2(-10.5, -15.5), y + 2.4))
+	# The smithy east of the well: a stone forge under a lean-to roof, with an
+	# anvil out front, where the weaponsmith and the Man-at-Arms trainer stand.
+	Props.box(village, _near(v, Vector2(25, 7), y), Vector3(6, 4.5, 5), DARK_STONE)
+	Props.roof(village, _near(v, Vector2(25, 7), y + 4.5), Vector3(7, 2, 6), ROOF, PI / 2)
+	Props.box(village, _near(v, Vector2(21.6, 7), y), Vector3(0.8, 1.4, 2.4), Color(0.12, 0.1, 0.1))
+	torch(village, _near(v, Vector2(21.4, 7), y + 0.9), 5.0)
+	Props.box(village, _near(v, Vector2(19.5, 11), y), Vector3(0.7, 0.8, 0.5), DARK_STONE)
+	Props.box(village, _near(v, Vector2(19.5, 11), y + 0.8), Vector3(1.1, 0.3, 0.5), Color(0.25, 0.25, 0.28), 0.0, false)
+	for rack in [3.0, 4.0, 5.0]:
+		Props.box(village, _near(v, Vector2(21.8, rack + 1.5), y), Vector3(0.1, 1.6, 0.1), Color(0.6, 0.6, 0.65), 0.2, false)
 
 
 # The Coombe farm: a farmhouse, a barn and a fenced pumpkin patch to the south.
@@ -269,21 +414,21 @@ func _build_farm() -> void:
 	var farm := Node3D.new()
 	farm.name = "CoombeFarm"
 	add_child(farm)
-	var center: Vector2 = FLATS[0][0]
-	var y: float = FLATS[0][2]
-	Props.box(farm, Vector3(center.x - 4, y, center.y - 6), Vector3(9, 4.5, 7), PLASTER)
-	Props.roof(farm, Vector3(center.x - 4, y + 4.5, center.y - 6), Vector3(10, 3.5, 8), THATCH)
-	Props.box(farm, Vector3(center.x + 8, y, center.y - 2), Vector3(7, 5, 10), WOOD)
-	Props.roof(farm, Vector3(center.x + 8, y + 5, center.y - 2), Vector3(8, 3, 11), DARK_WOOD, PI / 2)
+	var at: Vector2 = FLATS[FARM][0]
+	var y: float = FLATS[FARM][2]
+	Props.box(farm, _near(at, Vector2(-4, -6), y), Vector3(9, 4.5, 7), PLASTER)
+	Props.roof(farm, _near(at, Vector2(-4, -6), y + 4.5), Vector3(10, 3.5, 8), THATCH)
+	Props.box(farm, _near(at, Vector2(8, -2), y), Vector3(7, 5, 10), WOOD)
+	Props.roof(farm, _near(at, Vector2(8, -2), y + 5), Vector3(8, 3, 11), DARK_WOOD, PI / 2)
 	for bale in [Vector2(3, 5), Vector2(4.5, 5.5), Vector2(3.6, 6.6)]:
-		Props.cylinder(farm, Vector3(center.x + bale.x, y, center.y + bale.y), 0.7, 0.9, THATCH, false)
-	var patch: Vector2 = FLATS[1][0]
-	var patch_y: float = FLATS[1][2]
+		Props.cylinder(farm, _near(at, bale, y), 0.7, 0.9, THATCH, false)
+	var patch: Vector2 = FLATS[PATCH][0]
+	var patch_y: float = FLATS[PATCH][2]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 5
 	for i in 22:
-		var at := patch + Vector2(rng.randf_range(-9, 9), rng.randf_range(-9, 9))
-		Props.cylinder(farm, Vector3(at.x, patch_y, at.y), rng.randf_range(0.3, 0.55), 0.5, PUMPKIN, false)
+		var spot := patch + Vector2(rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+		Props.cylinder(farm, Vector3(spot.x, patch_y, spot.y), rng.randf_range(0.3, 0.55), 0.5, PUMPKIN, false)
 	# A low fence round the patch, open toward the farm.
 	for side in 4:
 		var angle := side * PI / 2
@@ -292,39 +437,40 @@ func _build_farm() -> void:
 		for step in range(-5, 6):
 			if side == 3 and absi(step) <= 1:
 				continue
-			var at := patch + along * 11.0 + across * step * 2.0
-			Props.box(farm, Vector3(at.x, patch_y, at.y), Vector3(0.25, 1.0, 0.25), WOOD, 0.0, false)
+			var spot := patch + along * 11.0 + across * step * 2.0
+			Props.box(farm, Vector3(spot.x, patch_y, spot.y), Vector3(0.25, 1.0, 0.25), WOOD, 0.0, false)
 
 
 func _build_cottage() -> void:
 	var cottage := Node3D.new()
 	cottage.name = "WainwrightCottage"
 	add_child(cottage)
-	var at: Vector2 = FLATS[7][0]
-	var y: float = FLATS[7][2]
-	Props.box(cottage, Vector3(at.x + 3, y, at.y - 2), Vector3(6, 4, 6), PLASTER, 0.4)
-	Props.roof(cottage, Vector3(at.x + 3, y + 4, at.y - 2), Vector3(7, 3, 7), THATCH, 0.4)
-	Props.box(cottage, Vector3(at.x - 3, y, at.y + 3), Vector3(2, 1, 1.2), WOOD)
+	var at: Vector2 = FLATS[COTTAGE][0]
+	var y: float = FLATS[COTTAGE][2]
+	Props.box(cottage, _near(at, Vector2(3, -2), y), Vector3(6, 4, 6), PLASTER, 0.4)
+	Props.roof(cottage, _near(at, Vector2(3, -2), y + 4), Vector3(7, 3, 7), THATCH, 0.4)
+	Props.box(cottage, _near(at, Vector2(-3, 3), y), Vector3(2, 1, 1.2), WOOD)
 
 
-# The Old Delve: a mine in the northwest hill, which the burrowlings dug into.
-
-func _build_mine() -> void:
+## A mine dug into a hill beside its flat: `side` -1 for a hill to the west
+## (the Old Delve), 1 for one to the east (Copperhollow).
+func _build_mine(flat: Array, side: int, node_name: String) -> void:
 	var mine := Node3D.new()
-	mine.name = "OldDelve"
+	mine.name = node_name
 	add_child(mine)
-	var y: float = FLATS[2][2]
-	var x := -129.0
-	var z := 295.0
-	Props.box(mine, Vector3(x - 3.5, y, z), Vector3(7, 5, 5), Color(0.05, 0.04, 0.04))
-	for side in [-1, 1]:
-		Props.box(mine, Vector3(x, y, z + side * 2.7), Vector3(0.6, 4.6, 0.6), DARK_WOOD)
+	var at: Vector2 = flat[0]
+	var y: float = flat[2]
+	var x := at.x + side * 14.0
+	var z := at.y
+	Props.box(mine, Vector3(x + side * 3.5, y, z), Vector3(7, 5, 5), Color(0.05, 0.04, 0.04))
+	for end in [-1, 1]:
+		Props.box(mine, Vector3(x, y, z + end * 2.7), Vector3(0.6, 4.6, 0.6), DARK_WOOD)
 	Props.box(mine, Vector3(x, y + 4.6, z), Vector3(0.8, 0.6, 6.2), DARK_WOOD, 0.0, false)
-	Props.box(mine, Vector3(-118, y, 288), Vector3(1.6, 1.2, 2.4), WOOD)
-	for pile in [Vector2(-121, 305), Vector2(-106, 290)]:
-		Props.cylinder(mine, Vector3(pile.x, y, pile.y), 1.6, 1.4, ROCK, true, 0.3)
-	for light in [Vector2(x + 0.4, z - 3.2), Vector2(x + 0.4, z + 3.2)]:
-		torch(mine, Vector3(light.x, y + 2.8, light.y))
+	Props.box(mine, _near(at, Vector2(side * 3, -7), y), Vector3(1.6, 1.2, 2.4), WOOD)
+	for pile in [Vector2(side * 6, 10), Vector2(-side * 9, -5)]:
+		Props.cylinder(mine, _near(at, pile, y), 1.6, 1.4, ROCK, true, 0.3)
+	for end in [-1, 1]:
+		torch(mine, Vector3(x - side * 0.4, y + 2.8, z + end * 3.2))
 
 
 # The brigands' farmstead: a burned-out house and barn they've taken over.
@@ -333,36 +479,46 @@ func _build_farmstead() -> void:
 	var farmstead := Node3D.new()
 	farmstead.name = "BrigandFarmstead"
 	add_child(farmstead)
-	var center: Vector2 = FLATS[3][0]
-	var y: float = FLATS[3][2]
+	var at: Vector2 = FLATS[FARMSTEAD][0]
+	var y: float = FLATS[FARMSTEAD][2]
 	var charred := Color(0.22, 0.19, 0.17)
 	# The house's walls without a roof.
-	Props.box(farmstead, Vector3(center.x - 5, y, center.y - 7), Vector3(9, 3.5, 0.6), charred)
-	Props.box(farmstead, Vector3(center.x - 9.2, y, center.y - 4), Vector3(0.6, 2.5, 6), charred)
-	Props.box(farmstead, Vector3(center.x - 0.8, y, center.y - 5), Vector3(0.6, 3, 4), charred)
-	Props.box(farmstead, Vector3(center.x + 8, y, center.y + 2), Vector3(6, 4, 8), WOOD)
-	Props.roof(farmstead, Vector3(center.x + 8, y + 4, center.y + 2), Vector3(7, 2.5, 9), DARK_WOOD, PI / 2)
-	Props.roof(farmstead, Vector3(center.x - 3, y, center.y + 7), Vector3(4, 2.6, 3.4), Color(0.45, 0.18, 0.15), 0.3)
-	Props.cylinder(farmstead, Vector3(center.x, y, center.y), 1.0, 0.3, DARK_STONE, false)
-	torch(farmstead, Vector3(center.x, y + 0.6, center.y), 6.0)
+	Props.box(farmstead, _near(at, Vector2(-5, -7), y), Vector3(9, 3.5, 0.6), charred)
+	Props.box(farmstead, _near(at, Vector2(-9.2, -4), y), Vector3(0.6, 2.5, 6), charred)
+	Props.box(farmstead, _near(at, Vector2(-0.8, -5), y), Vector3(0.6, 3, 4), charred)
+	Props.box(farmstead, _near(at, Vector2(8, 2), y), Vector3(6, 4, 8), WOOD)
+	Props.roof(farmstead, _near(at, Vector2(8, 2), y + 4), Vector3(7, 2.5, 9), DARK_WOOD, PI / 2)
+	Props.roof(farmstead, _near(at, Vector2(-3, 7), y), Vector3(4, 2.6, 3.4), Color(0.45, 0.18, 0.15), 0.3)
+	Props.cylinder(farmstead, _near(at, Vector2.ZERO, y), 1.0, 0.3, DARK_STONE, false)
+	torch(farmstead, _near(at, Vector2.ZERO, y + 0.6), 6.0)
 	for crate in [Vector2(4, -4), Vector2(5, -3), Vector2(-5, 3)]:
-		Props.box(farmstead, Vector3(center.x + crate.x, y, center.y + crate.y), Vector3(1, 1, 1), WOOD)
+		Props.box(farmstead, _near(at, crate, y), Vector3(1, 1, 1), WOOD)
 
 
 func _build_gnoll_camp() -> void:
 	var camp := Node3D.new()
 	camp.name = "GrunmawCamp"
 	add_child(camp)
-	var center: Vector2 = FLATS[4][0]
-	var y: float = FLATS[4][2]
+	var at: Vector2 = FLATS[GNOLL_CAMP][0]
+	var y: float = FLATS[GNOLL_CAMP][2]
 	for i in 3:
 		var angle := TAU * i / 3.0 + 1.0
-		var at := center + Vector2(cos(angle), sin(angle)) * 7.0
-		Props.roof(camp, Vector3(at.x, y, at.y), Vector3(4, 3, 4), Color(0.5, 0.4, 0.3), -angle)
-	Props.cylinder(camp, Vector3(center.x, y, center.y), 1.0, 0.3, DARK_STONE, false)
-	torch(camp, Vector3(center.x, y + 0.6, center.y), 6.0)
+		var spot := at + Vector2(cos(angle), sin(angle)) * 7.0
+		Props.roof(camp, Vector3(spot.x, y, spot.y), Vector3(4, 3, 4), Color(0.5, 0.4, 0.3), -angle)
+	Props.cylinder(camp, _near(at, Vector2.ZERO, y), 1.0, 0.3, DARK_STONE, false)
+	torch(camp, _near(at, Vector2.ZERO, y + 0.6), 6.0)
 	for bone in [Vector2(3, 2), Vector2(-2, 4), Vector2(4, -3)]:
-		Props.box(camp, Vector3(center.x + bone.x, y, center.y + bone.y), Vector3(1.2, 0.2, 0.2), STONE, bone.x, false)
+		Props.box(camp, _near(at, bone, y), Vector3(1.2, 0.2, 0.2), STONE, bone.x, false)
+
+
+## A wooden watchtower on four posts, with a roof: the south watch and the
+## west garrison.
+func _watchtower(parent: Node3D, at: Vector2, y: float, height: float, width: float) -> void:
+	var half := width / 2.0 - 0.3
+	for corner in [Vector2(-half, -half), Vector2(half, -half), Vector2(-half, half), Vector2(half, half)]:
+		Props.box(parent, _near(at, corner, y), Vector3(0.4, height, 0.4), DARK_WOOD)
+	Props.box(parent, _near(at, Vector2.ZERO, y + height), Vector3(width, 0.3, width), WOOD, 0.0, false)
+	Props.roof(parent, _near(at, Vector2.ZERO, y + height + 1.2), Vector3(width + 0.4, 1.6, width + 0.4), ROOF)
 
 
 ## The south watch by the bridge and the watchman's hut by the mere.
@@ -370,17 +526,14 @@ func _build_watch_posts() -> void:
 	var posts := Node3D.new()
 	posts.name = "WatchPosts"
 	add_child(posts)
-	var watch: Vector2 = FLATS[5][0]
-	var y: float = FLATS[5][2]
-	for corner in [Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(-1.5, 1.5), Vector2(1.5, 1.5)]:
-		Props.box(posts, Vector3(watch.x + 3 + corner.x, y, watch.y - 3 + corner.y), Vector3(0.4, 5, 0.4), DARK_WOOD)
-	Props.box(posts, Vector3(watch.x + 3, y + 5, watch.y - 3), Vector3(3.8, 0.3, 3.8), WOOD, 0.0, false)
-	Props.roof(posts, Vector3(watch.x + 3, y + 6.2, watch.y - 3), Vector3(4.2, 1.6, 4.2), ROOF)
-	torch(posts, Vector3(watch.x + 1, y + 2.4, watch.y - 1))
-	var hut: Vector2 = FLATS[6][0]
-	var hut_y: float = FLATS[6][2]
-	Props.box(posts, Vector3(hut.x - 3, hut_y, hut.y), Vector3(4, 3, 4), WOOD)
-	Props.roof(posts, Vector3(hut.x - 3, hut_y + 3, hut.y), Vector3(5, 2, 5), THATCH)
+	var watch: Vector2 = FLATS[SOUTH_WATCH][0]
+	var y: float = FLATS[SOUTH_WATCH][2]
+	_watchtower(posts, watch + Vector2(3, -3), y, 5.0, 3.8)
+	torch(posts, _near(watch, Vector2(1, -1), y + 2.4))
+	var hut: Vector2 = FLATS[HUT][0]
+	var hut_y: float = FLATS[HUT][2]
+	Props.box(posts, _near(hut, Vector2(-3, 0), hut_y), Vector3(4, 3, 4), WOOD)
+	Props.roof(posts, _near(hut, Vector2(-3, 0), hut_y + 3), Vector3(5, 2, 5), THATCH)
 
 
 func _build_bridge() -> void:
@@ -400,7 +553,152 @@ func _build_bridge() -> void:
 			Props.box(bridge, Vector3(BRIDGE_X + side * 2.4, STREAM_BED - 1.0, z), Vector3(0.5, deck - STREAM_BED + 2.0, 0.5), DARK_WOOD, 0.0, false)
 
 
-# Woods and scattered trees, placed by a seeded random walk over the map.
+# The Ashwood lumber camp: tents, log piles, a saw horse and stumps in a
+# clearing in the east woods.
+
+func _build_lumber_camp() -> void:
+	var camp := Node3D.new()
+	camp.name = "AshwoodLumberCamp"
+	add_child(camp)
+	var at: Vector2 = FLATS[LUMBER_CAMP][0]
+	var y: float = FLATS[LUMBER_CAMP][2]
+	for tent in [[Vector2(-9, -6), 0.2], [Vector2(-9, 5), -0.2], [Vector2(-2, -11), PI / 2]]:
+		Props.roof(camp, _near(at, tent[0], y), Vector3(5, 3, 4), CANVAS, tent[1])
+	# Log piles, three logs under two under one.
+	for pile in [Vector2(6, -6), Vector2(7, 4)]:
+		for layer in 3:
+			for log_index in 3 - layer:
+				var across := (log_index - (2 - layer) / 2.0) * 0.8
+				Props.box(camp, _near(at, pile + Vector2(0, across), y + layer * 0.7), Vector3(6, 0.7, 0.7), WOOD, 0.0, layer == 0)
+	# A saw horse with a log on it.
+	Props.box(camp, _near(at, Vector2(0, 8), y), Vector3(1.2, 1.0, 3.0), DARK_WOOD)
+	Props.box(camp, _near(at, Vector2(0, 8), y + 1.0), Vector3(5, 0.6, 0.6), WOOD, 0.0, false)
+	Props.cylinder(camp, _near(at, Vector2(-3, 0), y), 0.9, 0.3, DARK_STONE, false)
+	torch(camp, _near(at, Vector2(-3, 0), y + 0.6), 6.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = SEED + 7
+	for i in 14:
+		var angle := rng.randf() * TAU
+		var spot := at + Vector2(cos(angle), sin(angle)) * rng.randf_range(12.0, 22.0)
+		var ground := height_at(spot.x, spot.y)
+		Props.cylinder(camp, Vector3(spot.x, ground, spot.y), rng.randf_range(0.4, 0.6), 0.6, WOOD)
+
+
+# Thornwick Tower: a round stone tower on a knoll east of the mere, which
+# brigand hedge-mages have taken.
+
+func _build_tower() -> void:
+	var tower := Node3D.new()
+	tower.name = "ThornwickTower"
+	add_child(tower)
+	var at: Vector2 = FLATS[TOWER][0]
+	var y: float = FLATS[TOWER][2]
+	Props.cylinder(tower, _near(at, Vector2.ZERO, y), 4.0, 16.0, STONE)
+	Props.cylinder(tower, _near(at, Vector2.ZERO, y + 16.0), 4.8, 5.0, ROOF, false, 0.0)
+	# Its door to the south, and dark windows up its side.
+	Props.box(tower, _near(at, Vector2(0, 3.9), y), Vector3(1.8, 3.0, 0.4), DARK_WOOD, 0.0, false)
+	for window in [[Vector2(0, 3.95), 7.0], [Vector2(3.95, 0), 10.0], [Vector2(-3.95, 0), 12.0], [Vector2(0, -3.95), 9.0]]:
+		var spot: Vector2 = window[0]
+		Props.box(tower, _near(at, spot, y + window[1]), Vector3(0.8 if spot.x == 0.0 else 0.3, 1.2, 0.3 if spot.x == 0.0 else 0.8), Color(0.08, 0.07, 0.1), 0.0, false)
+	for crate in [Vector2(5, 5), Vector2(6, 4), Vector2(-5, 6)]:
+		Props.box(tower, _near(at, crate, y), Vector3(1, 1, 1), WOOD)
+	torch(tower, _near(at, Vector2(1.6, 4.6), y + 2.4))
+
+
+# The Pellow vineyard: rows of vines on posts, and the press house.
+
+func _build_vineyard() -> void:
+	var vineyard := Node3D.new()
+	vineyard.name = "PellowVineyard"
+	add_child(vineyard)
+	var at: Vector2 = FLATS[VINEYARD][0]
+	var y: float = FLATS[VINEYARD][2]
+	var leaves: Array[Transform3D] = []
+	var posts: Array[Transform3D] = []
+	for row in range(-2, 3):
+		for column in range(-4, 5):
+			var spot := at + Vector2(column * 4.0, row * 5.0 + 3.0)
+			posts.append(Transform3D(Basis(), Vector3(spot.x, y + 0.8, spot.y)))
+			leaves.append(Transform3D(Basis().scaled(Vector3(3.6, 0.9, 0.8)), Vector3(spot.x, y + 1.2, spot.y)))
+	var post := BoxMesh.new()
+	post.size = Vector3(0.2, 1.6, 0.2)
+	Props.scatter(vineyard, post, DARK_WOOD, posts)
+	var leaf := BoxMesh.new()
+	leaf.size = Vector3.ONE
+	Props.scatter(vineyard, leaf, Color(0.28, 0.48, 0.2), leaves)
+	Props.box(vineyard, _near(at, Vector2(0, -16), y), Vector3(7, 3.5, 5), PLASTER)
+	Props.roof(vineyard, _near(at, Vector2(0, -16), y + 3.5), Vector3(8, 2.5, 6), ROOF)
+	for barrel in [Vector2(5, -15), Vector2(5, -17), Vector2(6.2, -16)]:
+		Props.cylinder(vineyard, _near(at, barrel, y), 0.5, 1.0, WOOD)
+
+
+# The Reedford landing: a dock on the stream's north bank, a shed and a boat.
+
+func _build_landing() -> void:
+	var landing := Node3D.new()
+	landing.name = "ReedfordLanding"
+	add_child(landing)
+	var at: Vector2 = FLATS[LANDING][0]
+	var y: float = FLATS[LANDING][2]
+	var deck := y + 0.3
+	plank(landing, Vector3(at.x, deck, at.y + 4.0), Vector3(at.x, deck, at.y + 15.0))
+	for z in [8.0, 11.5, 15.0]:
+		for side in [-1, 1]:
+			Props.box(landing, Vector3(at.x + side * 2.3, STREAM_BED - 1.0, at.y + z), Vector3(0.4, deck - STREAM_BED + 1.6, 0.4), DARK_WOOD, 0.0, false)
+	Props.box(landing, _near(at, Vector2(-5, -3), y), Vector3(4, 3, 4), WOOD)
+	Props.roof(landing, _near(at, Vector2(-5, -3), y + 3), Vector3(5, 1.8, 5), THATCH)
+	Props.box(landing, Vector3(at.x + 4.0, WATER_LEVEL - 0.3, at.y + 12.0), Vector3(1.6, 0.7, 4.2), WOOD, 0.0, false)
+	for crate in [Vector2(3, -2), Vector2(4, -1)]:
+		Props.box(landing, _near(at, crate, y), Vector3(1, 1, 1), WOOD)
+
+
+# The west garrison: a tall watchtower and a short palisade at the end of
+# the west road.
+
+func _build_garrison() -> void:
+	var garrison := Node3D.new()
+	garrison.name = "WestGarrison"
+	add_child(garrison)
+	var at: Vector2 = FLATS[GARRISON][0]
+	var y: float = FLATS[GARRISON][2]
+	_watchtower(garrison, at + Vector2(-2, -3), y, 8.0, 5.0)
+	for i in 7:
+		Props.box(garrison, _near(at, Vector2(-6, -6 + i * 2.0), y), Vector3(0.6, 2.4, 0.6), DARK_WOOD)
+	Props.box(garrison, _near(at, Vector2(2, -4), y), Vector3(0.25, 5, 0.25), DARK_WOOD, 0.0, false)
+	Props.box(garrison, _near(at, Vector2(2.7, -4), y + 3.2), Vector3(1.2, 1.6, 0.1), Color(0.2, 0.3, 0.6), 0.0, false)
+	torch(garrison, _near(at, Vector2(1, 1), y + 2.4))
+
+
+# The mirefin village: reed huts and drying racks on the mere's east shore.
+
+func _build_mirefin_village() -> void:
+	var village := Node3D.new()
+	village.name = "MirefinVillage"
+	add_child(village)
+	var at: Vector2 = FLATS[MIREFIN_VILLAGE][0]
+	var y: float = FLATS[MIREFIN_VILLAGE][2]
+	var reed := Color(0.55, 0.5, 0.3)
+	for hut in [Vector2(-5, -4), Vector2(4, -6), Vector2(6, 4), Vector2(-6, 5)]:
+		Props.cylinder(village, _near(at, hut, y), 1.7, 2.4, reed, true, 0.25)
+	for rack in [Vector2(0, -1), Vector2(1, 6)]:
+		for side in [-1, 1]:
+			Props.box(village, _near(at, rack + Vector2(side * 1.2, 0), y), Vector3(0.15, 1.4, 0.15), DARK_WOOD, 0.0, false)
+		Props.box(village, _near(at, rack, y + 1.3), Vector3(2.6, 0.12, 0.12), DARK_WOOD, 0.0, false)
+		Props.box(village, _near(at, rack, y + 0.7), Vector3(1.8, 0.5, 0.08), Color(0.4, 0.5, 0.45), 0.0, false)
+
+
+# Woods and scattered trees, placed by a seeded random walk over the map. The
+# attempts scale with the zone's area, so it's as wooded as the vale.
+
+## Placement attempts per 400 by 400 yards (Ashford Vale's size).
+const TREE_ATTEMPTS := 7000
+const ROCK_ATTEMPTS := 1500
+const CLUTTER_ATTEMPTS := 16000
+
+
+func _area_share() -> float:
+	return SIZE * SIZE / (400.0 * 400.0)
+
 
 func _random_point(rng: RandomNumberGenerator) -> Vector2:
 	var half := SIZE / 2.0 - EDGE_INSET
@@ -410,7 +708,6 @@ func _random_point(rng: RandomNumberGenerator) -> Vector2:
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
-	add_child(trees)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
 	var pine_trunks: Array[Transform3D] = []
@@ -421,7 +718,7 @@ func _build_trees() -> void:
 	var trunk_shape := CylinderShape3D.new()
 	trunk_shape.radius = 0.45
 	trunk_shape.height = 4.0
-	for attempt in 7000:
+	for attempt in roundi(TREE_ATTEMPTS * _area_share()):
 		var point := _random_point(rng)
 		var chance := 0.02 + 0.55 * _woods_density(point)
 		var y := height_at(point.x, point.y)
@@ -450,6 +747,9 @@ func _build_trees() -> void:
 	oak_trunk.height = 2.8
 	oak_trunk.top_radius = 0.3
 	oak_trunk.bottom_radius = 0.45
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
+	add_child(trees)
 	Props.scatter(trees, trunk, DARK_WOOD, pine_trunks)
 	Props.scatter(trees, Props.cone(1.9, 3.6), Color(0.16, 0.34, 0.2), pine_lower)
 	Props.scatter(trees, Props.cone(1.35, 2.8), Color(0.19, 0.39, 0.22), pine_upper)
@@ -464,11 +764,10 @@ func _clear_for_tree(point: Vector2, y: float) -> bool:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 4.0 or distance_to_pass(point) < PASS_FLOOR + 3.0:
 		return false
-	if point.distance_to(Vector2(-70, 360)) < 34.0:
+	if point.distance_to(FIELDS) < FIELDS_RADIUS - 2.0:
 		return false
-	for line: Array in ROADS:
-		if distance_to_line(point, line) < ROAD_WIDTH + 2.5:
-			return false
+	if _road_distance(point, ROAD_WIDTH + 2.5) < ROAD_WIDTH + 2.5:
+		return false
 	for flat: Array in FLATS:
 		if point.distance_to(flat[0]) < flat[1] + 3.0:
 			return false
@@ -478,11 +777,10 @@ func _clear_for_tree(point: Vector2, y: float) -> bool:
 func _build_rocks() -> void:
 	var rocks := StaticBody3D.new()
 	rocks.name = "Rocks"
-	add_child(rocks)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
 	var placed: Array[Transform3D] = []
-	for attempt in 1500:
+	for attempt in roundi(ROCK_ATTEMPTS * _area_share()):
 		var point := _random_point(rng)
 		var y := height_at(point.x, point.y)
 		var chance := 0.03 + 0.4 * smoothstep(9.0, 20.0, y)
@@ -497,37 +795,57 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
+	add_child(rocks)
 	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
 
 
-const CLUTTER_ATTEMPTS := 16000
-
-
-## Grass tufts and flowers on open ground, as in Ashford Vale.
+## Grass tufts and flowers on open ground, as in Ashford Vale. The random
+## draws are made first, in order, so the placing is the same each time; the
+## ground's height and whether it's open are worked out on worker threads.
 func _build_clutter() -> void:
 	var clutter := Node3D.new()
 	clutter.name = "Clutter"
 	add_child(clutter)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 4
+	var count := roundi(CLUTTER_ATTEMPTS * _area_share())
+	var draws := []
+	draws.resize(count)
+	for i in count:
+		draws[i] = [_random_point(rng), rng.randf() * TAU, rng.randf(), rng.randf(), rng.randf()]
+	# The ground's height at each spot, or NAN where nothing grows.
+	var heights := []
+	heights.resize(count)
+	var chunks := 64
+	var task := WorkerThreadPool.add_group_task(func(chunk: int) -> void:
+		for i in range(chunk * count / chunks, (chunk + 1) * count / chunks):
+			var point: Vector2 = draws[i][0]
+			var y := height_at(point.x, point.y)
+			heights[i] = y if y <= 26.0 and _clear_for_clutter(point, y) else NAN
+	, chunks)
+	WorkerThreadPool.wait_for_group_task_completion(task)
 	var grass: Array[Transform3D] = []
 	var tall_grass: Array[Transform3D] = []
 	var yellow: Array[Transform3D] = []
 	var purple: Array[Transform3D] = []
-	for attempt in CLUTTER_ATTEMPTS:
-		var point := _random_point(rng)
-		var y := height_at(point.x, point.y)
-		if y > 26.0 or not _clear_for_clutter(point, y):
+	for i in count:
+		var y: float = heights[i]
+		if is_nan(y):
 			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
+		var point: Vector2 = draws[i][0]
+		var spin := Basis(Vector3.UP, draws[i][1])
 		var at := Vector3(point.x, y, point.y)
-		var roll := rng.randf()
+		var roll: float = draws[i][2]
+		var pick: float = draws[i][3]
+		var stretch: float = draws[i][4]
 		if roll < 0.06:
-			(yellow if rng.randf() < 0.5 else purple).append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.1)), at + Vector3.UP * 0.25))
+			(yellow if pick < 0.5 else purple).append(Transform3D(spin.scaled(Vector3.ONE * lerpf(0.7, 1.1, stretch)), at + Vector3.UP * 0.25))
 		elif roll < 0.4:
-			tall_grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.2, 1.8), 1)), at + Vector3.UP * 0.2))
+			tall_grass.append(Transform3D(spin.scaled(Vector3(1, lerpf(1.2, 1.8, stretch), 1)), at + Vector3.UP * 0.2))
 		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.2), 1)), at + Vector3.UP * 0.15))
+			grass.append(Transform3D(spin.scaled(Vector3(1, lerpf(0.8, 1.2, stretch), 1)), at + Vector3.UP * 0.15))
 	add_clutter(clutter, Props.cone(0.18, 0.3, 4), Color(0.34, 0.55, 0.22), grass)
 	add_clutter(clutter, Props.cone(0.14, 0.4, 4), Color(0.42, 0.58, 0.24), tall_grass)
 	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.95, 0.82, 0.25), yellow)
@@ -540,9 +858,8 @@ func _clear_for_clutter(point: Vector2, y: float) -> bool:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5 or distance_to_pass(point) < ROAD_WIDTH + 0.8:
 		return false
-	for line: Array in ROADS:
-		if distance_to_line(point, line) < ROAD_WIDTH + 0.8:
-			return false
+	if _road_distance(point, ROAD_WIDTH + 0.8) < ROAD_WIDTH + 0.8:
+		return false
 	for flat: Array in FLATS:
 		if point.distance_to(flat[0]) < flat[1]:
 			return false

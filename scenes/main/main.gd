@@ -57,6 +57,10 @@ func _ready() -> void:
 	_bots.name = "BotManager"
 	add_child(_bots)
 	_bots.setup(_player, _world)
+	# Buffs the bots put on the player and each other find their casters.
+	Combatant.relink_auras(get_tree())
+	_hud.menu_open = func() -> bool: return _menu.visible
+	_hud.main_menu_requested.connect(func() -> void: _menu.toggle())
 	_hud.setup(_player, _camera, _game_view)
 	_bots.bots_changed.connect(_hud.refresh_units)
 	_player.targeting.loot_requested.connect(_hud.open_loot)
@@ -101,7 +105,7 @@ func save_game() -> void:
 		var p := _player.global_position
 		GameState.player_state = {
 			"zone": _world.zone_at(p).zone_name, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
-			"auras": _saved_auras(c),
+			"auras": c.saved_auras(),
 			"item_cooldowns": _player.spells.saved_item_cooldowns(),
 		}
 	_store_corpses()
@@ -154,10 +158,7 @@ func _restore_player() -> void:
 	var c := _player.combatant
 	_player.spells.restore_item_cooldowns(state.get("item_cooldowns", {}))
 	# Buffs come back with the time they had left, as WoW saves auras on logout.
-	for saved: Dictionary in state.get("auras", []):
-		var spell := SpellDB.get_spell(int(saved.id))
-		if not spell.is_empty():
-			c.restore_aura(spell, c, float(saved.remaining), float(saved.duration), saved.amounts)
+	c.restore_saved_auras(state.get("auras", []))
 	# New characters and the freshly resurrected start full.
 	if state.has("health"):
 		c.health = clampi(int(state.health), 1, c.max_health)
@@ -165,16 +166,6 @@ func _restore_player() -> void:
 
 
 ## The player's own buffs, by spell id. Debuffs from enemies aren't kept.
-func _saved_auras(c: Combatant) -> Array:
-	var saved := []
-	for aura in c.auras:
-		# Food and drink end when you stand, so they aren't kept.
-		var ends_on_standing: bool = int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED != 0
-		if aura.caster == c and not ends_on_standing:
-			saved.append({ "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts })
-	return saved
-
-
 ## Several inventory changes in a row (looting everything) save once.
 func _queue_save() -> void:
 	if not _save_queued:
@@ -273,7 +264,7 @@ func _log_out() -> void:
 func _on_player_died() -> void:
 	# Only the auras that outlast death come back with you, and cooldowns keep running.
 	GameState.player_state = {
-		"auras": _saved_auras(_player.combatant), "item_cooldowns": _player.spells.saved_item_cooldowns(),
+		"auras": _player.combatant.saved_auras(), "item_cooldowns": _player.spells.saved_item_cooldowns(),
 		"graveyard": _world.zone_at(_player.global_position).zone_name,
 	}
 	_store_corpses()
@@ -286,9 +277,17 @@ func _on_player_died() -> void:
 ## mouse at the screen centre, where windows like the vendor's would swallow
 ## the motion. So drags go straight to the camera, before the UI, including the
 ## button release that ends them.
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_update_drag_shield()
 	_check_zone()
+	# Exploration quests: walking into the place they send you to.
+	_explore_left -= delta
+	if _explore_left <= 0.0:
+		_explore_left = 0.25
+		QuestLog.check_exploration(_player.global_position, _world.places())
+
+
+var _explore_left := 0.0
 
 
 ## The zone the player was last in.
@@ -352,7 +351,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_menu.toggle()
 		elif _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_trade() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
+		elif _hud.close_world_map() or _hud.close_trade() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
 			pass
 		elif _hud.close_inventory_window():
 			pass

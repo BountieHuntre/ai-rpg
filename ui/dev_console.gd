@@ -15,13 +15,13 @@ const COMMANDS := {
 	"help": ["", "List the commands."],
 	"additem": ["<id or name> [count]", "Put items in your bags."],
 	"money": ["<copper, or 1g2s3c>", "Give money (negative takes it)."],
-	"level": ["<1-60>", "Set your level."],
+	"level": ["<1-60>", "Set your level (or your targeted playerbot's)."],
 	"xp": ["<amount>", "Gain experience."],
 	"heal": ["", "Full health and mana."],
 	"god": ["", "Toggle taking no damage."],
 	"kill": ["", "Kill your target."],
 	"learn": ["<id or name>", "Learn a spell (the highest rank for a name)."],
-	"trainall": ["", "Learn every spell your class trainer teaches at your level, for free."],
+	"trainall": ["", "Learn every spell your class trainer teaches at your level, for free (party bots too)."],
 	"resettalents": ["", "Take back every talent point, for free."],
 	"bis": ["", "Put on the best gear in the game for your class and level (BiS)."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
@@ -243,6 +243,17 @@ func _cmd_level(args: PackedStringArray) -> String:
 	if args.is_empty() or not args[0].is_valid_int():
 		return "!Usage: level <1-%d>" % ClassicData.MAX_LEVEL
 	var level := clampi(int(args[0]), 1, ClassicData.MAX_LEVEL)
+	# A targeted playerbot is levelled instead of the player.
+	var bot := _player.targeting.target as Bot
+	if bot:
+		bot.profile.level = level
+		bot.profile.xp = 0
+		bot.stats.refresh()
+		bot.combatant.health = bot.combatant.max_health
+		if bot.combatant.has_mana():
+			bot.combatant.mana = bot.combatant.max_mana
+		bot.progression.leveled_up.emit(level)
+		return "%s is now level %d." % [bot.profile.char_name, level]
 	GameState.level = level
 	GameState.xp = 0
 	_player.stats.refresh()
@@ -302,6 +313,26 @@ func _cmd_learn(args: PackedStringArray) -> String:
 ## Everything the class trainer would teach now, rank by rank, as if trained
 ## in order: the trainer's own rules (level, previous rank, race), no cost.
 func _cmd_trainall(_args: PackedStringArray) -> String:
+	var lines: Array[String] = [_train_player()]
+	# Party bots learn everything their class trains at their level too.
+	for member: Node in Party.members:
+		var bot := member as Bot
+		if bot == null:
+			continue
+		var before := bot.profile.known_spells.duplicate()
+		bot.learn_spells()
+		bot.stats.refresh()
+		var learned: Array[String] = []
+		for id: int in bot.profile.known_spells:
+			if not id in before:
+				learned.append(SpellDB.full_name(SpellDB.get_spell(id)))
+		lines.append("%s learned %d spell%s%s" % [bot.profile.char_name, learned.size(), "" if learned.size() == 1 else "s",
+			": %s." % ", ".join(learned) if not learned.is_empty() else "."])
+	return "
+".join(lines)
+
+
+func _train_player() -> String:
 	var list := SpellDB.class_trainer_list(GameState.char_class, GameState.race)
 	if list.is_empty():
 		return "!Your class has no trainer spells yet."

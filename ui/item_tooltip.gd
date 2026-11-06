@@ -133,16 +133,25 @@ func _fill(rows: VBoxContainer, lines: Array) -> void:
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var left := _label(line[0], line[2])
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if str(line[1]).is_empty():
-			# Long single-column lines, like spell descriptions, wrap.
-			left.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			left.custom_minimum_size.x = WIDTH * _ui_scale
 		row.add_child(left)
 		if not str(line[1]).is_empty():
 			var right := _label(line[1], line[3] if line.size() > 3 else line[2])
 			right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			row.add_child(right)
 		rows.add_child(row)
+	# As wide as its widest line, up to WIDTH, as classic's tooltips: a short
+	# one ("Socials (O)") is small, and longer single-column lines, like
+	# spell descriptions, wrap at WIDTH.
+	var widest := 0.0
+	for row: HBoxContainer in rows.get_children():
+		widest = maxf(widest, row.get_combined_minimum_size().x)
+	var width := minf(widest, WIDTH * _ui_scale)
+	rows.custom_minimum_size.x = width
+	for row: HBoxContainer in rows.get_children():
+		if row.get_child_count() == 1:
+			var left := row.get_child(0) as Label
+			left.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			left.custom_minimum_size.x = width
 
 
 func _label(text: String, color: Color) -> Label:
@@ -187,7 +196,11 @@ func _place() -> void:
 			# Not enough room on either side: shift the main panel over.
 			x = clampf(window.x - size.x - extra, 0.0, window.x)
 			compare_x = x + size.x
-	position = Vector2(x, clampf(at.y, 0.0, window.y - size.y))
+	# No room below the cursor (the action bar, the menu buttons): above it.
+	var y := at.y
+	if y + size.y > window.y:
+		y = get_viewport().get_mouse_position().y - OFFSET.y * _ui_scale - size.y
+	position = Vector2(x, clampf(y, 0.0, window.y - size.y))
 	for panel: PanelContainer in shown:
 		panel.global_position = Vector2(compare_x, clampf(position.y, 0.0, window.y - panel.size.y))
 		compare_x += panel.size.x

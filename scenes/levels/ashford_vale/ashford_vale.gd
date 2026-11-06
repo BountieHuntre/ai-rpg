@@ -308,7 +308,6 @@ func _build_bridge() -> void:
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
-	add_child(trees)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
 	var pine_trunks: Array[Transform3D] = []
@@ -349,6 +348,9 @@ func _build_trees() -> void:
 	oak_trunk.height = 2.8
 	oak_trunk.top_radius = 0.3
 	oak_trunk.bottom_radius = 0.45
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
+	add_child(trees)
 	Props.scatter(trees, trunk, DARK_WOOD, pine_trunks)
 	Props.scatter(trees, Props.cone(1.9, 3.6), Color(0.16, 0.34, 0.2), pine_lower)
 	Props.scatter(trees, Props.cone(1.35, 2.8), Color(0.19, 0.39, 0.22), pine_upper)
@@ -375,7 +377,6 @@ func _clear_for_tree(point: Vector2, y: float) -> bool:
 func _build_rocks() -> void:
 	var rocks := StaticBody3D.new()
 	rocks.name = "Rocks"
-	add_child(rocks)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
 	var placed: Array[Transform3D] = []
@@ -394,6 +395,9 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
+	add_child(rocks)
 	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
 
 

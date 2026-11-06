@@ -373,6 +373,64 @@ func restore_aura(spell: Dictionary, caster: Combatant, remaining: float, length
 	auras_changed.emit()
 
 
+## Auras kept across a save (the player's and playerbots'): ones it cast on
+## itself and ones another player unit (the player or a playerbot) cast on it,
+## with the caster's name, but not food and drink, which end when you stand.
+## Creatures' debuffs aren't kept.
+func saved_auras() -> Array:
+	var saved := []
+	for aura in auras:
+		if int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED != 0:
+			continue
+		var caster: Combatant = aura.caster if is_instance_valid(aura.caster) else null
+		var caster_name: String = aura.get("caster_name", "")
+		if caster_name == "" and caster != self:
+			if caster == null or not caster.is_player:
+				continue
+			caster_name = caster.display_name
+		var entry := { "id": int(aura.spell.Id), "remaining": aura.remaining, "duration": aura.duration, "amounts": aura.amounts }
+		if caster_name != "":
+			entry.caster = caster_name
+		saved.append(entry)
+	return saved
+
+
+## Puts back saved_auras with the time they had left. One another unit cast
+## goes back with that unit as its caster if it's in the world; otherwise it
+## keeps the name until relink_auras finds it.
+func restore_saved_auras(saved: Array) -> void:
+	for entry: Dictionary in saved:
+		var spell := SpellDB.get_spell(int(entry.id))
+		if spell.is_empty():
+			continue
+		var caster_name := str(entry.get("caster", ""))
+		var caster := _player_unit_named(caster_name) if caster_name != "" else self
+		restore_aura(spell, caster if caster else self, float(entry.remaining), float(entry.duration), entry.amounts)
+		if caster == null:
+			auras[-1].caster_name = caster_name
+
+
+## Once every unit is in the world: auras restored before their caster was
+## (the player loads before the bots) get their caster back.
+static func relink_auras(tree: SceneTree) -> void:
+	for node in tree.get_nodes_in_group("player_units"):
+		var unit := (node as PlayerUnit).combatant
+		for aura in unit.auras:
+			if aura.has("caster_name"):
+				var caster := unit._player_unit_named(aura.caster_name)
+				if caster:
+					aura.caster = caster
+					aura.erase("caster_name")
+
+
+func _player_unit_named(unit_name: String) -> Combatant:
+	for node in get_tree().get_nodes_in_group("player_units"):
+		var unit := (node as PlayerUnit).combatant
+		if unit.display_name == unit_name:
+			return unit
+	return null
+
+
 func remove_aura(spell_id: int, notify := true) -> void:
 	var before := auras.size()
 	auras = auras.filter(func(aura: Dictionary) -> bool: return int(aura.spell.Id) != spell_id)

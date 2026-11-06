@@ -16,6 +16,8 @@ signal message(text: String, is_error: bool)
 signal link_requested(item_id: int)
 ## Right-click on a bag item while trading: put it up for trade.
 signal trade_requested(ref: Dictionary)
+## An item that starts a quest was used: the HUD offers its quest.
+signal quest_item_used(item_id: int)
 
 const SLOT := 16.0
 const GAP := 2.0
@@ -336,6 +338,11 @@ func _right_click_bag_item(ref: Dictionary) -> String:
 			Sfx.play("sell")
 		return sold
 	var stack := Inventory.stack_at(ref)
+	if not stack.is_empty() and QuestLog.quest_from_item(int(stack.id)) > 0:
+		var error := QuestLog.item_quest_error(QuestLog.quest_from_item(int(stack.id)))
+		if error.is_empty():
+			quest_item_used.emit(int(stack.id))
+		return error
 	if not stack.is_empty() and int(ItemDB.get_item(stack.id).get("spellid_1", 0)) > 0:
 		return _player.spells.use_item(ref)
 	return Inventory.use_from_bag(ref)
