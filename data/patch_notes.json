@@ -1,5 +1,14 @@
 [
 	{
+		"version": "0.5.2",
+		"date": "11-06-2026",
+		"notes": [
+			"The game now checks for updates when it starts. When a new version is out, choose Update to download and install it, and the game starts again on its own.",
+			"Not now? Choose Later to be asked next time, or Skip This Version.",
+			"A new Interface option, Check for Updates at Start, turns the check off."
+		]
+	},
+	{
 		"version": "0.5.1",
 		"date": "11-06-2026",
 		"notes": [
