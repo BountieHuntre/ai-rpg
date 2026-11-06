@@ -1,5 +1,25 @@
 [
 	{
+		"version": "0.4.0",
+		"date": "11-06-2026",
+		"notes": [
+			"A second zone: Harrowfield, farmland for levels 6 to 12 over the mountain pass south of Ashford Vale, many times the size of the vale.",
+			"Harrowfield's village, Wexford, has an inn, a chapel and churchyard, a smithy, trainers for Templars, Clerics and Men-at-Arms, and Hesketh Steele the weaponsmith.",
+			"Explore the Coombe farm and its pumpkin patch, the Old Delve and Copperhollow mines, the Mirrow Mere and its mirefin village, Thornwick Tower, the Ashwood lumber camp, the Pellow vineyard, the Reedford landing, the west garrison, a brigand farmstead and the gnoll hills.",
+			"Twenty-nine quests in Harrowfield, among them the search for the lost watchmen, the hunt for the Collector, and Grunmaw.",
+			"New kinds of quest: explore a place, gather things lying in the world such as Bundles of Wood, and start a quest from an item you find. Some quests begin and end at things rather than people.",
+			"New creatures: mirefins, flintback boars, prowlers, young forest bears, Ditchjaw gnolls, brigand cutthroats and hedge-mages, and more. Spiders' bites poison, and gnoll outriders strike twice.",
+			"Godric Vane, the Weapon Master by the priory, teaches weapon skills.",
+			"A world map: press M to see your zone, your party and where you stand, or pick the whole world.",
+			"Menu buttons beside the action bar for Character Info, Spellbook, Talents, Quest Log, Socials, World Map and the Main Menu.",
+			"Playerbots travel between zones through the pass and quest in Harrowfield too.",
+			"Whisper a playerbot about the item it's selling to get its price. Trades with a playerbot start with the item you talked about already in.",
+			"Buffs others cast on you and your party's playerbots are kept when you log out and back in.",
+			"The game runs smoothly with many more playerbots, and the Random Bots option now goes up to 400.",
+			"Tooltips fit their text, and near the bottom of the screen they appear above the cursor."
+		]
+	},
+	{
 		"version": "0.3.1",
 		"date": "11-05-2026",
 		"notes": [
