@@ -98,6 +98,11 @@ const DEV_BUTTONS := [
 const RESULT := Color(0.6, 0.9, 0.6)
 ## The open "Reset Character?" confirmation, or null.
 var _confirm: ColorRect
+## The Developer tab's "Spawn Enemy" choices: its ranks, and the level
+## (0 until changed: the player's) and rank picked.
+const SPAWN_RANKS := ["Normal", "Elite", "Boss"]
+var _spawn_level := 0
+var _spawn_rank := 0
 const ERROR_COLOR := Color(1, 0.6, 0.4)
 const TAB_SELECTED := Color(1, 0.85, 0.3)
 const TAB_WIDTH := 58.0
@@ -413,6 +418,7 @@ func _build_developer(content: VBoxContainer) -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(button)
 	content.add_child(grid)
+	content.add_child(_spawn_row(console))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", roundi(3 * _ui_scale))
 	var field := LineEdit.new()
@@ -438,6 +444,41 @@ func _build_developer(content: VBoxContainer) -> void:
 	var reset := _button("Reset Character...", _confirm_reset)
 	reset.add_theme_color_override("font_color", ERROR_COLOR)
 	content.add_child(reset)
+
+
+## "Spawn Enemy": a level and a rank, and a button that runs the console's
+## "spawn" (a random creature ahead, just outside its aggro range). The level
+## starts at the player's; both are kept while the window is open.
+func _spawn_row(console: DevConsole) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	var label := _label("Spawn Enemy", TEXT)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	row.add_child(_label("Level", TEXT))
+	var level := SpinBox.new()
+	level.min_value = 1
+	level.max_value = ClassicData.MAX_LEVEL + 3
+	level.value = _spawn_level if _spawn_level > 0 else GameState.level
+	level.custom_minimum_size.x = 34 * _ui_scale
+	level.get_line_edit().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	var player := console.player()
+	level.get_line_edit().focus_entered.connect(func() -> void: player.typing = true)
+	level.get_line_edit().focus_exited.connect(func() -> void: player.typing = false)
+	level.value_changed.connect(func(value: float) -> void: _spawn_level = int(value))
+	row.add_child(level)
+	var rank := OptionButton.new()
+	rank.custom_minimum_size.x = 46 * _ui_scale
+	rank.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	rank.get_popup().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	for choice: String in SPAWN_RANKS:
+		rank.add_item(choice)
+	rank.select(_spawn_rank)
+	rank.item_selected.connect(func(index: int) -> void: _spawn_rank = index)
+	row.add_child(rank)
+	row.add_child(_button("Spawn", func() -> void:
+		_show_result(console.run("spawn %d %s" % [int(level.value), SPAWN_RANKS[_spawn_rank].to_lower()]))))
+	return row
 
 
 ## Asks before starting the character over (the console's "reset confirm").

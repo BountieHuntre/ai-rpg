@@ -22,6 +22,8 @@ const BORDER := Color(0.55, 0.5, 0.38)
 const OUTSIDE := Color(0.08, 0.1, 0.08)
 const GREY := Color(0.6, 0.6, 0.6)
 const DONE := Color(0.45, 0.9, 0.45)
+## Creatures made by the dev console's "spawn".
+const SPAWNED_COLOR := Color(1, 0.25, 0.2)
 
 ## Captured zone maps by zone name, kept across HUD rebuilds and reloads.
 static var _maps: Dictionary
@@ -182,6 +184,22 @@ func _draw_overlay() -> void:
 		var font_size := roundi(9 * _ui_scale)
 		_overlay.draw_string_outline(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, maxi(roundi(2 * _ui_scale), 2), Color.BLACK)
 		_overlay.draw_string(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, marker[1])
+	# Creatures made by the dev console's "spawn": red dots (bigger for elites
+	# and bosses, grey once dead), on the rim when off the map; hover for which.
+	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+		if not enemy.temporary:
+			continue
+		var offset := Vector2(enemy.global_position.x, enemy.global_position.z) - here
+		var at := center + offset * scale
+		if offset.length() * scale > center.x - 3 * _ui_scale:
+			at = center + offset.normalized() * (center.x - 3 * _ui_scale)
+		var alive := enemy.combatant.is_alive()
+		var radius := (2.6 if enemy.boss else 2.2 if enemy.elite else 1.8) * _ui_scale
+		_overlay.draw_circle(at, radius + maxf(_ui_scale * 0.6, 1.0), Color.BLACK)
+		_overlay.draw_circle(at, radius, SPAWNED_COLOR if alive else GREY)
+		var rank := " (Boss)" if enemy.boss else " (Elite)" if enemy.elite else ""
+		_hotspots.append([at, radius + 2.0 * _ui_scale, [[enemy.combatant.display_name, "", SPAWNED_COLOR if alive else GREY],
+			["Level %s%s" % ["??" if enemy.boss else str(enemy.level), rank], "" if alive else "Dead", Color.WHITE]]])
 	# Party members: blue dots, on the rim when off the map.
 	for bot in Party.members:
 		if not is_instance_valid(bot):
