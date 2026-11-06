@@ -1,5 +1,12 @@
 [
 	{
+		"version": "0.3.1",
+		"date": "11-05-2026",
+		"notes": [
+			"Behind-the-scenes testing tools only: nothing changes in play."
+		]
+	},
+	{
 		"version": "0.3.0",
 		"date": "11-05-2026",
 		"notes": [
