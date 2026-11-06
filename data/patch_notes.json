@@ -1,5 +1,15 @@
 [
 	{
+		"version": "0.5.1",
+		"date": "11-06-2026",
+		"notes": [
+			"Fixed a white box showing behind an item while you carry it from your bags.",
+			"Adventurers in Harrowfield now give directions from Wexford, not the priory.",
+			"Ask an adventurer who gives a quest and they'll say where that person really stands.",
+			"Ask about a trainer and you're pointed to the nearest one of that class, in Wexford or the priory."
+		]
+	},
+	{
 		"version": "0.5.0",
 		"date": "11-06-2026",
 		"notes": [
