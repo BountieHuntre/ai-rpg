@@ -75,6 +75,11 @@ var _new_name := ""
 var _entering := false
 ## The Options menu, over every screen.
 var _options_menu := GameMenu.new()
+## Looks for a newer release (released builds only), and installs it.
+var _updater: Updater
+## Shows the update's dialog again when the screen is rebuilt (resizing
+## frees the old one); empty when there's none.
+var _update_dialog := Callable()
 
 
 func _ready() -> void:
@@ -110,6 +115,9 @@ func _ready() -> void:
 		_load_characters(resume)
 		if _selected < _characters.size() and _characters[_selected].name == resume:
 			_enter_world.call_deferred()
+			return
+	if Updater.should_check():
+		_start_update_check()
 
 
 func _build_background() -> void:
@@ -164,6 +172,8 @@ func _rebuild() -> void:
 			_build_select()
 		Screen.CREATE:
 			_build_create()
+	if _update_dialog.is_valid():
+		_update_dialog.call()
 
 
 func _show_screen(screen: Screen) -> void:
@@ -662,6 +672,95 @@ func _show_modal(text: String, buttons: Array) -> void:
 		panel.position = (get_viewport_rect().size - panel.size) / 2
 	panel.resized.connect(center)
 	center.call_deferred()
+
+
+# Updates.
+
+func _start_update_check() -> void:
+	_updater = Updater.new()
+	add_child(_updater)
+	_updater.found.connect(_on_update_found)
+	_updater.progress.connect(_on_update_progress)
+	_updater.failed.connect(_on_update_failed)
+	_updater.ready_to_restart.connect(_on_update_ready)
+	_updater.check()
+
+
+## A newer release: asks, once the screen is free of other dialogs (the
+## login's steps), unless the player skipped this version.
+func _on_update_found(version: String, size: int) -> void:
+	if _settings.get_value("update", "skipped", "") == version:
+		return
+	while _modal != null or _entering:
+		if _entering:
+			return
+		await get_tree().create_timer(0.5).timeout
+	_update_dialog = _show_update_prompt.bind(version, size)
+	_update_dialog.call()
+	if Updater.auto_accept():
+		_accept_update.call_deferred(version)
+
+
+func _show_update_prompt(version: String, size: int) -> void:
+	var installs := _updater.can_install()
+	var text := "Version %s is available (you have %s)." % [version, Updater.current_version()]
+	if installs:
+		text += "
+Download and install it now?" + (" (%d MB)" % roundi(size / 1048576.0) if size > 0 else "")
+	else:
+		text += "
+Open the download page?"
+	_show_modal(text, ["Update" if installs else "Download Page", "Later", "Skip This Version"])
+	var buttons: Array = _modal.get_meta("buttons")
+	buttons[0].pressed.connect(_accept_update.bind(version))
+	buttons[1].pressed.connect(func() -> void: _update_dialog = Callable())
+	buttons[2].pressed.connect(func() -> void:
+		_update_dialog = Callable()
+		_settings.set_value("update", "skipped", version)
+		_settings.save(_settings_path())
+	)
+	buttons[2].custom_minimum_size.x = 70 * _ui_scale
+
+
+func _accept_update(version: String) -> void:
+	if not _updater.can_install():
+		_update_dialog = Callable()
+		_updater.open_page()
+		return
+	_update_dialog = _show_update_download.bind(version)
+	_update_dialog.call()
+	_updater.download()
+
+
+func _show_update_download(version: String) -> void:
+	_show_modal("Downloading version %s..." % version, ["Cancel"])
+	_modal.set_meta("version", version)
+	_modal.get_meta("buttons")[0].pressed.connect(func() -> void:
+		_update_dialog = Callable()
+		_updater.cancel()
+	)
+
+
+func _on_update_progress(fraction: float) -> void:
+	if _modal and _modal.has_meta("version"):
+		var message: Label = _modal.get_meta("box").get_child(0)
+		message.text = "Downloading version %s... %d%%" % [_modal.get_meta("version"), roundi(fraction * 100.0)]
+
+
+func _on_update_failed(message: String) -> void:
+	_update_dialog = Callable()
+	_show_modal(message + "
+Open the download page instead?", ["Download Page", "Close"])
+	_modal.get_meta("buttons")[0].pressed.connect(_updater.open_page)
+
+
+## The new files wait for the game to close: the install script copies them
+## in and starts the game again.
+func _on_update_ready() -> void:
+	_update_dialog = Callable()
+	_show_modal("Installing the update. The game will start again in a moment.", [])
+	await get_tree().create_timer(1.0).timeout
+	get_tree().quit()
 
 
 func _close_modal() -> void:

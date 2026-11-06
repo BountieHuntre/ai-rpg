@@ -45,6 +45,8 @@ const DEFAULTS := {
 	"bar_right": false,
 	"bar_right_2": false,
 	"loading_tips": true,
+	# Released builds look for a newer release on GitHub at start (Updater).
+	"check_updates": true,
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
 	# Playerbots, after the playerbots module's options (AiPlayerbot.* in

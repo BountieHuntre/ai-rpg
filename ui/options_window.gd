@@ -55,6 +55,7 @@ const CATEGORIES := {
 		["loading_tips", "Show Loading Screen Tips", "check", null],
 		["mouse_speed", "Mouse Look Speed", "slider", [0.25, 2.5]],
 		["invert_mouse", "Invert Mouse", "check", null],
+		["check_updates", "Check for Updates at Start", "check", null],
 	],
 	# Numbers are [lowest, highest, step, unit].
 	"Playerbots": [
