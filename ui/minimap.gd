@@ -5,7 +5,9 @@ extends Control
 ## above (with the creatures and characters hidden) into a texture the map
 ## scrolls over, and swapped for the next zone's when they cross into it.
 ## Quest givers show their "!" or "?", and the spawn areas of creatures a
-## quest underway still needs are shaded; ones out of range sit on the rim.
+## quest underway still needs are shaded; turn-ins and areas out of range sit
+## on the rim, but quests to take show only when they're on the map (the world
+## map shows them all).
 ## The mouse wheel over it zooms; hovering a quest area or giver shows what
 ## it's for. Sizes are in HUD units times ui_scale.
 
@@ -51,6 +53,8 @@ var _hotspots: Array = []
 ## Where hover text goes; set by the HUD.
 var tooltip: ItemTooltip
 var _hover_lines: Array = []
+## Set while the world map is open over it, so hovering doesn't show its tooltips.
+var hover_blocked := false
 
 
 ## The minimap's top left corner on screen, in HUD units, for laying out the
@@ -138,7 +142,7 @@ func _update_hover() -> void:
 	var lines := []
 	var mouse := _overlay.get_local_mouse_position()
 	var center := _overlay.size / 2.0
-	if mouse.distance_to(center) <= center.x and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not hover_blocked and mouse.distance_to(center) <= center.x and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		for i in range(_hotspots.size() - 1, -1, -1):
 			var spot: Array = _hotspots[i]
 			if mouse.distance_to(spot[0]) <= spot[1]:
@@ -192,13 +196,17 @@ func _draw_overlay() -> void:
 		var marker := QuestLog.marker(npc.npc_id())
 		var offset := Vector2(npc.global_position.x, npc.global_position.z) - here
 		var at := center + offset * scale
-		if offset.length() * scale > center.x - 5 * _ui_scale:
+		var off_map := offset.length() * scale > center.x - 5 * _ui_scale
+		if off_map:
+			# Quests to take only show near by; turn-ins point the way.
+			if marker[0] == "!":
+				continue
 			at = center + offset.normalized() * (center.x - 5 * _ui_scale)
 		if str(marker[0]).is_empty():
 			if offset.length() < view:
 				_overlay.draw_circle(at, 1.5 * _ui_scale, Targeting.FRIENDLY_COLOR)
 			continue
-		_hotspots.append([at, 5.0 * _ui_scale, _npc_lines(npc)])
+		_hotspots.append([at, 5.0 * _ui_scale, npc_lines(npc)])
 		var font_size := roundi(9 * _ui_scale)
 		_overlay.draw_string_outline(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, maxi(roundi(2 * _ui_scale), 2), Color.BLACK)
 		_overlay.draw_string(font, at + Vector2(-2.5, 3.5) * _ui_scale, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, marker[1])
@@ -237,6 +245,11 @@ func _draw_overlay() -> void:
 	_overlay.draw_polyline(arrow + PackedVector2Array([tip]), Color.BLACK, maxf(_ui_scale * 0.6, 1.0))
 
 
+## The quest areas shown: [[center (x, z), radius, tooltip lines], ...].
+func quest_areas() -> Array:
+	return _areas
+
+
 ## Spawn areas of creatures that quests underway still need: ones to kill, and
 ## ones that drop a quest item still wanted.
 func _update_areas() -> void:
@@ -260,12 +273,12 @@ func _update_areas() -> void:
 	for spawn: Array in spawns:
 		var entry := int(spawn[0])
 		if wanted.has(entry):
-			_areas.append([spawn[1], float(spawn[2]), _area_lines(entry)])
+			_areas.append([spawn[1], float(spawn[2]), area_lines(entry)])
 
 
 ## Tooltip for a quest area: the creature, then each quest it counts toward
 ## with the objectives involved.
-func _area_lines(entry: int) -> Array:
+static func area_lines(entry: int) -> Array:
 	var data := Enemy.creature_data(entry)
 	var lines := [[str(data.get("Name", "")), "", Color.WHITE]]
 	for quest: Array in QuestLog.objectives_for_creature(entry, int(data.get("LootId", 0))):
@@ -277,7 +290,7 @@ func _area_lines(entry: int) -> Array:
 
 ## Tooltip for a quest giver: their name and title, then their quests with
 ## what each is waiting on.
-func _npc_lines(npc: Npc) -> Array:
+static func npc_lines(npc: Npc) -> Array:
 	var lines := [[npc.npc_name, "", Targeting.FRIENDLY_COLOR], ["<%s>" % npc.subname, "", Color.WHITE]]
 	for entry: Dictionary in QuestLog.for_npc(npc.npc_id()):
 		var quest := QuestDB.get_quest(entry.id)

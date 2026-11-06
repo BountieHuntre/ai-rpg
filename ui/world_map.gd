@@ -6,8 +6,11 @@ extends Control
 ## arrow and the party's dots, with the name of the place under the mouse
 ## along the top. The dropdown picks another zone or the whole world; on the
 ## world map the zones lie as they do in the world, and clicking one opens
-## it; right-click zooms back out. The game carries on behind it. Sizes are in
-## HUD units, times ui_scale.
+## it; right-click zooms back out. Every quest giver's "!" or "?" shows, with
+## the objectives of quests underway: the spawn areas of creatures they need
+## (the minimap's), places to explore and chests holding what they need;
+## hover one for what it is. The game carries on behind it. Sizes are in HUD
+## units, times ui_scale.
 
 const WORLD := "World"
 const TITLE_BAR := 13.0
@@ -30,6 +33,9 @@ var _map := Control.new()
 var _picker := OptionButton.new()
 ## Map side in HUD units.
 var _side := 200.0
+## What the mouse can point at: [[map position, radius, tooltip lines], ...].
+var _hotspots: Array = []
+var _hover_lines: Array = []
 
 
 func setup(player: Player, world: World, minimap: Minimap, ui_scale: float, screen: Vector2) -> void:
@@ -83,6 +89,7 @@ func toggle() -> void:
 ## Opens on the zone the player is in.
 func open() -> void:
 	visible = true
+	_minimap.hover_blocked = true
 	show_view(_world.zone_at(_player.global_position).zone_name)
 
 
@@ -90,6 +97,8 @@ func close() -> bool:
 	if not visible:
 		return false
 	visible = false
+	_minimap.hover_blocked = false
+	_show_tooltip([])
 	return true
 
 
@@ -120,6 +129,20 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if visible:
 		_map.queue_redraw()
+		var lines := []
+		var mouse := _map.get_local_mouse_position()
+		if Rect2(Vector2.ZERO, _map.size).has_point(mouse):
+			for i in range(_hotspots.size() - 1, -1, -1):
+				if mouse.distance_to(_hotspots[i][0]) <= _hotspots[i][1]:
+					lines = _hotspots[i][2]
+					break
+		_show_tooltip(lines)
+
+
+func _show_tooltip(lines: Array) -> void:
+	if lines != _hover_lines and _minimap.tooltip:
+		_hover_lines = lines
+		_minimap.tooltip.show_lines(lines)
 
 
 # Where things are: world points (x, z) to pixels on the map and back.
@@ -184,6 +207,7 @@ func _draw_map() -> void:
 				break
 	if caption != "":
 		_centered(font, Vector2(_map.size.x / 2.0, 10 * _ui_scale), caption, GOLD, 9)
+	_draw_quests(font)
 	# The party's dots, then the player's arrow on top.
 	for bot in Party.members:
 		if is_instance_valid(bot) and _on_view(bot.global_position):
@@ -199,6 +223,57 @@ func _draw_map() -> void:
 		var arrow := PackedVector2Array([tip, back + side * 4.0 * _ui_scale, center - forward * 1.5 * _ui_scale, back - side * 4.0 * _ui_scale])
 		_map.draw_colored_polygon(arrow, PLAYER_ARROW)
 		_map.draw_polyline(arrow + PackedVector2Array([tip]), Color.BLACK, maxf(_ui_scale * 0.7, 1.0))
+
+
+## Quest objectives, then quest givers' markers over them, each a hotspot.
+func _draw_quests(font: Font) -> void:
+	_hotspots = []
+	var per_yard := _map.size.x / float(_bounds()[1])
+	# Spawn areas of creatures quests underway need.
+	for area: Array in _minimap.quest_areas():
+		var point: Vector2 = area[0]
+		if _on_view(Vector3(point.x, 0, point.y)):
+			_hotspots.append(_area(point, float(area[1]) * per_yard, area[2]))
+	# Places to explore.
+	for id: int in GameState.quests:
+		var place_name := QuestLog.explore_place(id)
+		if place_name.is_empty() or GameState.quests[id].get("explored", false):
+			continue
+		for place: Array in _world.places():
+			var point: Vector2 = place[1]
+			if place[0] == place_name and _on_view(Vector3(point.x, 0, point.y)):
+				_hotspots.append(_area(point, float(place[2]) * per_yard, [[QuestLog.place_title(place_name), "", Color.WHITE],
+					[QuestDB.get_quest(id).title, "", QuestLog.YELLOW], [" - %s explored" % QuestLog.place_title(place_name), "", Minimap.GREY]]))
+	# Chests holding what quests need: small gold diamonds.
+	for object: GameObject in get_tree().get_nodes_in_group("game_objects"):
+		if not object.is_spawned() or not object.is_usable() or not _on_view(object.global_position):
+			continue
+		var at := _to_map(Vector2(object.global_position.x, object.global_position.z))
+		var r := 2.5 * _ui_scale
+		var diamond := PackedVector2Array([at + Vector2(0, -r), at + Vector2(r, 0), at + Vector2(0, r), at + Vector2(-r, 0)])
+		_map.draw_colored_polygon(diamond, Minimap.AREA_EDGE)
+		_map.draw_polyline(diamond + PackedVector2Array([diamond[0]]), Color.BLACK, maxf(_ui_scale * 0.6, 1.0))
+		_hotspots.append([at, r + 2.0 * _ui_scale, [[object.object_name(), "", Color.WHITE], ["Holds what a quest needs", "", QuestLog.YELLOW]]])
+	# Every quest giver with something for the player.
+	var font_size := roundi(10 * _ui_scale)
+	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
+		var marker := QuestLog.marker(npc.npc_id())
+		if str(marker[0]).is_empty() or not _on_view(npc.global_position):
+			continue
+		var at := _to_map(Vector2(npc.global_position.x, npc.global_position.z))
+		var spot := at + Vector2(-2.5, 3.5) * _ui_scale
+		_map.draw_string_outline(font, spot, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, maxi(roundi(2 * _ui_scale), 2), Color.BLACK)
+		_map.draw_string(font, spot, marker[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, marker[1])
+		_hotspots.append([at, 5.0 * _ui_scale, Minimap.npc_lines(npc)])
+
+
+## A shaded quest area (at least a few pixels across), as a hotspot.
+func _area(point: Vector2, radius: float, lines: Array) -> Array:
+	var at := _to_map(point)
+	var r := maxf(radius, 3.0 * _ui_scale)
+	_map.draw_circle(at, r, Minimap.AREA_COLOR)
+	_map.draw_arc(at, r, 0.0, TAU, 32, Minimap.AREA_EDGE, maxf(_ui_scale, 1.0))
+	return [at, r, lines]
 
 
 ## Whether a point is on the zone shown (anywhere, on the world map).

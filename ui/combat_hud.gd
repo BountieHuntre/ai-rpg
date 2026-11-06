@@ -539,6 +539,8 @@ func _build() -> void:
 	_world_map = WorldMap.new()
 	add_child(_world_map)
 	_world_map.setup(_player, _game_view.get_node("GameViewport/World"), _minimap, _ui_scale, Vector2(_width, _height))
+	# Its quest tooltips show over it.
+	move_child(_tooltip, -1)
 	if map_open:
 		_world_map.open()
 	_unit_menu = PopupMenu.new()
