@@ -415,6 +415,9 @@ func _binding_wins(binding: int, held_mods: int) -> bool:
 func pressed(event: InputEvent, action: String) -> bool:
 	if not event.is_action_pressed(action):
 		return false
+	# Actions with fixed keys (Esc's "pause") have no bindings to weigh.
+	if not _values.keys.has(action):
+		return true
 	var made := binding_of(event)
 	if made == 0:
 		# A gamepad.
@@ -431,6 +434,8 @@ func pressed(event: InputEvent, action: String) -> bool:
 func held(action: String) -> bool:
 	if not Input.is_action_pressed(action):
 		return false
+	if not _values.keys.has(action):
+		return true
 	var mods := _held_modifiers()
 	var any_down := false
 	for binding in keys_for(action):
