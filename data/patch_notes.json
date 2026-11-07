@@ -1,5 +1,21 @@
 [
 	{
+		"version": "0.6.0",
+		"date": "11-06-2026",
+		"notes": [
+			"Party Commands (K, or the new button beside the action bar): a small window you can keep open while you play, to give orders to the playerbots in your party.",
+			"Tell each member to follow or stay, attack your target, and whether to assist you, defend the party or stay passive.",
+			"Send members to sell their junk or everything in their bags to a vendor near you, or to their trainer to learn new spells.",
+			"Choose the buffs each member keeps up: a Templar's Presence, Oath and Boon, a Cleric's Fortitude, Spirit, Warding and own buffs, a Man-at-Arms' stance and shout.",
+			"Open a member's bags to give and take items freely, soulbound ones included, and to put gear on them.",
+			"Party members now learn new spells only when you take them to their trainer, paying from their own money and yours. They'll tell you when they have something to learn.",
+			"Playerbots find their way round houses, fences, walls, trees and rocks instead of getting stuck on them.",
+			"Creatures come back twice as fast.",
+			"Key bindings can use Shift, Ctrl and Alt with a key, such as Shift-1.",
+			"The game also checks for updates when you return to the menu from the game."
+		]
+	},
+	{
 		"version": "0.5.3",
 		"date": "11-06-2026",
 		"notes": [
