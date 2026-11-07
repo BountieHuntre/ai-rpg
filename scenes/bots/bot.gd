@@ -152,7 +152,7 @@ const COME_TIME := 120.0
 var in_party := false
 var command := Command.FOLLOW
 ## How it picks fights in a party ("Assist", "Defend" or "Passive"), or "" for
-## the Party Bots Attack option. Set from the party window (PartyWindow).
+## the Party Bots Attack option. Set from the party bar (PartyBar).
 var behavior := ""
 const BEHAVIORS := ["Assist", "Defend", "Passive"]
 ## Which buff it keeps up in each of its class's categories (BUFF_CATEGORIES):

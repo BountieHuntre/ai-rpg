@@ -47,8 +47,8 @@ const DEFAULTS := {
 	"loading_tips": true,
 	# Released builds look for a newer release on GitHub at start (Updater).
 	"check_updates": true,
-	# Where the party window was dragged to, in HUD units ([] for its place).
-	"party_window_pos": [],
+	# The party bar (PartyBar) shows while you have a party, unless hidden (K).
+	"party_bar_shown": true,
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
 	# Playerbots, after the playerbots module's options (AiPlayerbot.* in
@@ -93,7 +93,7 @@ const ACTIONS := [
 	["spellbook", "Spellbook", "Interface"], ["talents", "Talents", "Interface"],
 	["quest_log", "Quest Log", "Interface"],
 	["social", "Social", "Interface"], ["world_map", "World Map", "Interface"],
-	["party_commands", "Party Commands", "Interface"],
+	["party_commands", "Show/Hide Party Bar", "Interface"],
 	["ability_1", "Action Button 1", "Action Bar"], ["ability_2", "Action Button 2", "Action Bar"],
 	["ability_3", "Action Button 3", "Action Bar"], ["ability_4", "Action Button 4", "Action Bar"],
 	["ability_5", "Action Button 5", "Action Bar"], ["ability_6", "Action Button 6", "Action Bar"],
@@ -212,7 +212,7 @@ func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
 ## The shipped defaults, read over DEFAULTS in every build.
 const SHIPPED_PATH := "res://default_options.cfg"
 ## Options that belong to one machine, never shipped.
-const NOT_SHIPPED := ["monitor", "chatframe_rect", "party_window_pos"]
+const NOT_SHIPPED := ["monitor", "chatframe_rect"]
 
 
 ## An option's default in this build (the shipped one, if any).

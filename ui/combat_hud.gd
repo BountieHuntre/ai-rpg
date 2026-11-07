@@ -119,7 +119,7 @@ var _quest_npc: Npc
 var _quest_log: QuestLogUI
 var _social: SocialWindow
 ## Orders for party bots (K), and a party bot's bags.
-var _party_window: PartyWindow
+var _party_bar: PartyBar
 var _bot_bag: BotBagWindow
 var _world_map: WorldMap
 var _micro_menu: MicroMenu
@@ -358,7 +358,6 @@ func _build() -> void:
 	var talents_open := _talents.is_open() if _talents and is_instance_valid(_talents) else false
 	var log_open := _quest_log.visible if _quest_log else false
 	var social_open := _social.visible if _social else false
-	var party_open := _party_window.visible if _party_window else false
 	var bag_bot: Bot = _bot_bag.bot if _bot_bag and _bot_bag.is_open() else null
 	if _bot_bag:
 		_bot_bag.close()
@@ -538,30 +537,29 @@ func _build() -> void:
 		"talents": func() -> bool: return _talents.is_open(),
 		"quest_log": func() -> bool: return _quest_log.visible,
 		"social": func() -> bool: return _social.visible,
-		"party_commands": func() -> bool: return _party_window != null and _party_window.visible,
+		"party_commands": func() -> bool: return _party_bar != null and _party_bar.is_shown(),
 		"world_map": func() -> bool: return _world_map.visible,
 		"main_menu": func() -> bool: return menu_open.call(),
 	})
 	_micro_menu.main_menu_requested.connect(func() -> void: main_menu_requested.emit())
-	# Party commands, and a party bot's bags beside them.
-	_party_window = PartyWindow.new()
-	add_child(_party_window)
-	_party_window.setup(_player, _ui_scale, Vector2(_width, _height))
-	_party_window.message.connect(_on_loot_message)
+	# Party commands above the menu buttons, and a party bot's bags.
+	_party_bar = PartyBar.new()
+	add_child(_party_bar)
+	_party_bar.setup(_player, _ui_scale, _tooltip, _micro_menu)
+	_party_bar.message.connect(_on_loot_message)
 	_bot_bag = BotBagWindow.new()
 	_bot_bag.position = Vector2(_width - 260, 60) * _ui_scale
 	add_child(_bot_bag)
 	_bot_bag.setup(_inventory, _tooltip, _ui_scale)
 	_bot_bag.message.connect(_on_loot_message)
-	_party_window.bag_requested.connect(func(bot: Bot) -> void:
+	_party_bar.bag_requested.connect(func(bot: Bot) -> void:
 		_bot_bag.toggle(bot)
 		if _bot_bag.is_open():
-			# Beside the party window, on whichever side has room.
-			var left := _party_window.position.x - _bot_bag.size.x - 3 * _ui_scale
-			_bot_bag.position = Vector2(left if left >= 0.0 else _party_window.position.x + _party_window.size.x + 3 * _ui_scale, _party_window.position.y)
-			_inventory.open_bags())
-	if party_open:
-		_party_window.toggle()
+			# Left of your bags, their bottoms level, so items go across.
+			_inventory.open_bags()
+			var bags := _inventory.bags_rect()
+			var room := Rect2(Vector2(_width, _height) * _ui_scale, Vector2.ZERO) if bags.size == Vector2.ZERO else bags
+			_bot_bag.position = Vector2(maxf(room.position.x - _bot_bag.size.x - 3 * _ui_scale, 0.0), maxf(room.end.y - _bot_bag.size.y, 0.0)))
 	if bag_bot and is_instance_valid(bag_bot):
 		_bot_bag.open(bag_bot)
 	move_child(_tooltip, -1)
@@ -1203,7 +1201,7 @@ func close_trade() -> bool:
 
 
 func close_party_window() -> bool:
-	return _party_window.close()
+	return _party_bar.close()
 
 
 func close_bot_bag() -> bool:

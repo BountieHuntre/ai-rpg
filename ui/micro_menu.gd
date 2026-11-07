@@ -24,7 +24,7 @@ const BUTTONS := [
 	["Talents", "talents", "talents"],
 	["Quest Log", "quest_log", "quest"],
 	["Socials", "social", "social"],
-	["Party Commands", "party_commands", "party"],
+	["Party Bar", "party_commands", "party"],
 	["World Map", "world_map", "map"],
 	["Main Menu", "", "menu"],
 ]
@@ -39,6 +39,11 @@ var _tooltip: ItemTooltip
 ## Whether each button's window is open, by action: Callable() -> bool.
 var _open_checks: Dictionary = {}
 var _buttons: Array[Control] = []
+## Where the buttons are, in HUD units: their top, left edge and the right
+## edge of the room they have (the party bar sits above them).
+var top := 0.0
+var left_edge := 0.0
+var right_edge := 0.0
 var _hovered := -1
 
 
@@ -55,6 +60,10 @@ func setup(ui_scale: float, screen: Vector2, tooltip: ItemTooltip, open_checks: 
 	var room := screen.x - Minimap.MARGIN - left
 	var per_row := clampi(floori((room + GAP) / (WIDTH + GAP)), 1, BUTTONS.size())
 	var bottom := SpellUI.bottom_row_y(screen.y, 0) + SpellUI.SLOT
+	var rows := ceili(BUTTONS.size() / float(per_row))
+	top = bottom - HEIGHT - (rows - 1) * (HEIGHT + GAP)
+	left_edge = left
+	right_edge = screen.x - Minimap.MARGIN
 	for i in BUTTONS.size():
 		var row := i / per_row
 		var column := i % per_row
