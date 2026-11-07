@@ -163,7 +163,7 @@ func add_from_bag(ref: Dictionary) -> void:
 	var stack := Inventory.stack_at(ref)
 	if stack.is_empty() or _mine.any(func(slot: Dictionary) -> bool: return slot.get("ref") == ref):
 		return
-	if stack.get("bound", false) or not BotBag.can_trade(int(stack.id)):
+	if not _may_trade(stack):
 		message.emit(ERR_SOULBOUND, true)
 		return
 	var free := _mine.find({})
@@ -171,6 +171,16 @@ func add_from_bag(ref: Dictionary) -> void:
 		return
 	_mine[free] = { "ref": ref, "id": int(stack.id), "count": int(stack.count) }
 	_changed()
+
+
+## Whether a stack can go in the trade: soulbound things only to a party
+## member (who keeps them bound), and quest items never.
+func _may_trade(stack: Dictionary) -> bool:
+	if int(ItemDB.get_item(int(stack.id)).get("bonding", 0)) == 4:  # classic bonding 4: quest items
+		return false
+	if Party.is_member(bot):
+		return true
+	return not stack.get("bound", false) and BotBag.can_trade(int(stack.id))
 
 
 func _take_back(slot: int) -> void:
@@ -228,7 +238,7 @@ func _put_in_topic() -> void:
 			if wanted <= 0 or stack.is_empty() or int(stack.id) != id:
 				continue
 			var free := _mine.find({})
-			if free < 0 or stack.get("bound", false) or not BotBag.can_trade(id):
+			if free < 0 or not _may_trade(stack):
 				return
 			_mine[free] = { "ref": Inventory.bag_ref(b, i), "id": id, "count": int(stack.count) }
 			wanted -= int(stack.count)
@@ -345,7 +355,9 @@ func _complete() -> void:
 	for slot in _mine:
 		if not slot.is_empty():
 			var stack := Inventory.take_stack(slot.ref)
-			bot.bag.add(int(stack.id), int(stack.count))
+			# A party member's soulbound things stay so.
+			var bound: bool = stack.get("bound", false) or int(ItemDB.get_item(int(stack.id)).get("bonding", 0)) == 1
+			bot.bag.add(int(stack.id), int(stack.count), bound)
 	for entry: Array in incoming:
 		bot.bag.remove(int(entry[0]), int(entry[1]))
 		Inventory.add_item(int(entry[0]), int(entry[1]))

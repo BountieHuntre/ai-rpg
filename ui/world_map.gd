@@ -121,7 +121,7 @@ func show_view(view: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("world_map"):
+	if Settings.pressed(event, "world_map"):
 		toggle()
 		get_viewport().set_input_as_handled()
 

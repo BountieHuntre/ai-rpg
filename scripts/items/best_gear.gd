@@ -301,7 +301,7 @@ static func _worn_score(stack: Dictionary, w: Dictionary, who: CharacterProfile)
 static func _stow(stack: Dictionary, who: CharacterProfile, bag: BotBag) -> bool:
 	if who != GameState:
 		if bag != null and not stack.get("bound", false):
-			bag.add(int(stack.id), maxi(int(stack.get("count", 1)), 1))
+			bag.add(int(stack.id), maxi(int(stack.get("count", 1)), 1), bool(stack.get("bound", false)))
 		return true
 	if Inventory.free_slots() <= 0:
 		return false

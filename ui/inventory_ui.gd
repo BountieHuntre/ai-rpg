@@ -16,6 +16,8 @@ signal message(text: String, is_error: bool)
 signal link_requested(item_id: int)
 ## Right-click on a bag item while trading: put it up for trade.
 signal trade_requested(ref: Dictionary)
+## Right-click on a bag item while a party bot's bags are open: give it.
+signal give_requested(ref: Dictionary)
 ## An item that starts a quest was used: the HUD offers its quest.
 signal quest_item_used(item_id: int)
 
@@ -55,6 +57,8 @@ var _held_icon: Control
 var selling := false
 ## A trade window is open: right-clicked bag items go into the trade.
 var trading := false
+## A party bot's bags are open (BotBagWindow): right-clicked bag items go to it.
+var giving := false
 var _rebuild_queued := false
 ## Whether a window point is over the HUD (any window, bar or frame), set by
 ## the HUD. Releasing a dragged item anywhere else offers to destroy it.
@@ -106,10 +110,10 @@ func close_one() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("bags"):
+	if Settings.pressed(event, "bags"):
 		_bags_window.visible = not _bags_window.visible
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("character_window"):
+	elif Settings.pressed(event, "character_window"):
 		_character_window.visible = not _character_window.visible
 		get_viewport().set_input_as_handled()
 
@@ -332,6 +336,9 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 func _right_click_bag_item(ref: Dictionary) -> String:
 	if trading:
 		trade_requested.emit(ref)
+		return ""
+	if giving:
+		give_requested.emit(ref)
 		return ""
 	if selling:
 		var sold := Inventory.sell(ref)

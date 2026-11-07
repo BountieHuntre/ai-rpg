@@ -48,8 +48,21 @@ func setup(player: Player, world: World) -> void:
 	Party.changed.connect(_number_party)
 
 
+## Detours round obstacles, and free places for bots standing in one.
+var paths := BotPaths.new(self)
+
+
 func _ready() -> void:
 	add_to_group("bot_manager")
+
+
+## A party bot says something in party chat.
+func party_say(bot: Bot, text: String) -> void:
+	_chatter.party(bot, text)
+
+
+func space_state() -> PhysicsDirectSpaceState3D:
+	return _world.get_world_3d().direct_space_state
 
 
 ## A saved bot by name, whatever its case, or {}.

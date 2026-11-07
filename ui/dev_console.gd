@@ -320,6 +320,7 @@ func _cmd_trainall(_args: PackedStringArray) -> String:
 		if bot == null:
 			continue
 		var before := bot.profile.known_spells.duplicate()
+		bot.trained_level = bot.profile.level
 		bot.learn_spells()
 		bot.stats.refresh()
 		var learned: Array[String] = []

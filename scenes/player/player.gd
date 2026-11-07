@@ -75,19 +75,19 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Bound actions: keys arrive here directly, mouse buttons through the root
 ## scene (the game view doesn't take mouse input).
 func handle_action(event: InputEvent) -> void:
-	if event.is_action_pressed("target_next"):
+	if Settings.pressed(event, "target_next"):
 		targeting.cycle()
-	elif event.is_action_pressed("autorun"):
+	elif Settings.pressed(event, "autorun"):
 		autorunning = not autorunning
-	elif event.is_action_pressed("sit"):
+	elif Settings.pressed(event, "sit"):
 		sitting = not sitting
-	elif event.is_action_pressed("toggle_walk"):
+	elif Settings.pressed(event, "toggle_walk"):
 		walking = not walking
-	elif event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
+	elif Settings.pressed(event, "move_up") or Settings.pressed(event, "move_down"):
 		autorunning = false
 	# Buttons of hidden extra bars do nothing.
 	for i in GameState.shown_slots():
-		if event.is_action_pressed(GameState.slot_action(i)) and GameState.action_bar[i] != 0:
+		if Settings.pressed(event, GameState.slot_action(i)) and GameState.action_bar[i] != 0:
 			if SpellDB.is_flyout(GameState.action_bar[i]):
 				flyout_pressed.emit(i)
 			else:
@@ -102,12 +102,12 @@ func _physics_process(delta: float) -> void:
 		direction = _move_direction(camera, delta)
 	_visual.rotation.y = facing
 
-	if sitting and (direction != Vector3.ZERO or (not typing and Input.is_action_just_pressed("jump"))):
+	if sitting and (direction != Vector3.ZERO or (not typing and Input.is_action_just_pressed("jump") and Settings.held("jump"))):
 		sitting = false
 	if is_on_floor():
 		velocity.x = direction.x
 		velocity.z = direction.z
-		if alive and (not typing and Input.is_action_just_pressed("jump")):
+		if alive and (not typing and Input.is_action_just_pressed("jump") and Settings.held("jump")):
 			velocity.y = JUMP_SPEED
 	else:
 		velocity.y -= GRAVITY * delta
@@ -119,11 +119,11 @@ func _physics_process(delta: float) -> void:
 
 ## Velocity from the movement keys, already scaled to the right speed.
 func _move_direction(camera: OrbitCamera, delta: float) -> Vector3:
-	var forward := 0.0 if typing else Input.get_axis("move_down", "move_up")
+	var forward := 0.0 if typing else Settings.axis("move_down", "move_up")
 	if autorunning or camera.is_auto_running():
 		forward = maxf(forward, 1.0) if forward >= 0.0 else forward
-	var turn := 0.0 if typing else Input.get_axis("move_left", "move_right")
-	var strafe := 0.0 if typing else Input.get_axis("strafe_left", "strafe_right")
+	var turn := 0.0 if typing else Settings.axis("move_left", "move_right")
+	var strafe := 0.0 if typing else Settings.axis("strafe_left", "strafe_right")
 
 	if camera.is_steering():
 		facing = camera.yaw

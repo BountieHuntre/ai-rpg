@@ -344,14 +344,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == RESET_KEY and event.shift_pressed and Settings.developer_tools():
 		GameState.reset_character()
 		get_tree().reload_current_scene()
-	elif event.is_action_pressed("pause"):
+	elif Settings.pressed(event, "pause"):
 		# Esc closes the menu, the loot window and other windows, then clears
 		# the target, and only then opens the game menu.
 		if _menu.visible:
 			_menu.toggle()
 		elif _hud.is_looting():
 			_hud.close_loot()
-		elif _hud.close_world_map() or _hud.close_trade() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer():
+		elif _hud.close_world_map() or _hud.close_trade() or _hud.close_bot_bag() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer() or _hud.close_party_window():
 			pass
 		elif _hud.close_inventory_window():
 			pass

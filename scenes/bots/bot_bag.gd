@@ -52,6 +52,47 @@ func sell_trash() -> int:
 	return gained
 
 
+## Sells the junk: [items sold, copper gained].
+func sell_trash_count() -> Array:
+	var count := 0
+	for stack in stacks:
+		if is_trash(int(stack.id)):
+			count += int(stack.count)
+	return [count, sell_trash()]
+
+
+## Sells everything a vendor will buy but soulbound things (party members'
+## gear passed to it): [items sold, copper gained].
+func sell_all() -> Array:
+	var count := 0
+	var gained := 0
+	for i in range(stacks.size() - 1, -1, -1):
+		var value := _vendor_value(stacks[i])
+		if value > 0 and not is_bound(stacks[i]):
+			count += int(stacks[i].count)
+			gained += value
+			stacks.remove_at(i)
+	money += gained
+	return [count, gained]
+
+
+## Room for a stack of this item: an existing stack with space, or a free
+## place among its STACKS.
+func has_room(id: int, count: int, bound := false) -> bool:
+	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
+	var space := (MAX_STACKS - stacks.size()) * stack_size
+	for stack in stacks:
+		if int(stack.id) == id and is_bound(stack) == bound:
+			space += stack_size - int(stack.count)
+	return space >= count
+
+
+## Soulbound: passed to it by a party member (who may take it back), never
+## sold to anyone else or offered in trade.
+static func is_bound(stack: Dictionary) -> bool:
+	return bool(stack.get("bound", false))
+
+
 static func can_trade(id: int) -> bool:
 	return not int(ItemDB.get_item(id).get("bonding", 0)) in UNTRADEABLE
 
@@ -64,23 +105,28 @@ func count_of(id: int) -> int:
 	return total
 
 
-func add(id: int, count: int) -> void:
+## Soulbound stacks keep to themselves, marked "bound".
+func add(id: int, count: int, bound := false) -> void:
 	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
 	for stack in stacks:
-		if count > 0 and int(stack.id) == id and int(stack.count) < stack_size:
+		if count > 0 and int(stack.id) == id and is_bound(stack) == bound and int(stack.count) < stack_size:
 			var moved := mini(stack_size - int(stack.count), count)
 			stack.count = int(stack.count) + moved
 			count -= moved
 	while count > 0:
 		var moved := mini(stack_size, count)
-		stacks.append({ "id": id, "count": moved })
+		var stack := { "id": id, "count": moved }
+		if bound:
+			stack.bound = true
+		stacks.append(stack)
 		count -= moved
 	_make_room()
 
 
-func remove(id: int, count: int) -> void:
+## Takes some of an item, of its unbound stacks (or its bound ones).
+func remove(id: int, count: int, bound := false) -> void:
 	for i in range(stacks.size() - 1, -1, -1):
-		if count > 0 and int(stacks[i].id) == id:
+		if count > 0 and int(stacks[i].id) == id and is_bound(stacks[i]) == bound:
 			var taken := mini(int(stacks[i].count), count)
 			stacks[i].count = int(stacks[i].count) - taken
 			count -= taken
@@ -104,6 +150,11 @@ func _make_room() -> void:
 	while stacks.size() > MAX_STACKS:
 		var cheapest := 0
 		for i in stacks.size():
+			# Soulbound gear it was given goes last.
+			if is_bound(stacks[i]) != is_bound(stacks[cheapest]):
+				if is_bound(stacks[cheapest]):
+					cheapest = i
+				continue
 			var trash := is_trash(int(stacks[i].id))
 			var cheapest_trash := is_trash(int(stacks[cheapest].id))
 			if trash != cheapest_trash:
@@ -124,7 +175,7 @@ static func _vendor_value(stack: Dictionary) -> int:
 func for_sale() -> Array[Dictionary]:
 	var goods: Array[Dictionary] = []
 	for stack in stacks:
-		if can_trade(int(stack.id)) and int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) > 0 and not is_trash(int(stack.id)):
+		if can_trade(int(stack.id)) and not is_bound(stack) and int(ItemDB.get_item(int(stack.id)).get("SellPrice", 0)) > 0 and not is_trash(int(stack.id)):
 			goods.append(stack)
 	return goods
 
@@ -167,7 +218,10 @@ static func from_dict(data: Dictionary) -> BotBag:
 	var bag := BotBag.new()
 	for stack in data.get("stacks", []):
 		if not ItemDB.get_item(int(stack.id)).is_empty():
-			bag.stacks.append({ "id": int(stack.id), "count": int(stack.count) })
+			var kept := { "id": int(stack.id), "count": int(stack.count) }
+			if bool(stack.get("bound", false)):
+				kept.bound = true
+			bag.stacks.append(kept)
 	bag.money = int(data.get("money", 0))
 	bag.markup = float(data.get("markup", bag.markup))
 	bag.buy_rate = float(data.get("buy_rate", bag.buy_rate))

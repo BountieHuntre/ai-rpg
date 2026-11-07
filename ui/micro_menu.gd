@@ -24,6 +24,7 @@ const BUTTONS := [
 	["Talents", "talents", "talents"],
 	["Quest Log", "quest_log", "quest"],
 	["Socials", "social", "social"],
+	["Party Commands", "party_commands", "party"],
 	["World Map", "world_map", "map"],
 	["Main Menu", "", "menu"],
 ]
@@ -161,6 +162,11 @@ func _draw_button(button: Control, index: int) -> void:
 		"social":
 			_draw_bust(button, center + Vector2(-1.6, 1.6) * s, Color(0.85, 0.68, 0.5), Color(0.25, 0.45, 0.25), 0.75)
 			_draw_bust(button, center + Vector2(1.6, 0.4) * s, Color(0.8, 0.62, 0.45), Color(0.3, 0.35, 0.6), 0.75)
+		"party":
+			# Three heads, the middle one in front with a gold banner.
+			_draw_bust(button, center + Vector2(-2.4, 0.6) * s, Color(0.8, 0.62, 0.45), Color(0.3, 0.35, 0.6), 0.6)
+			_draw_bust(button, center + Vector2(2.4, 0.6) * s, Color(0.85, 0.68, 0.5), Color(0.25, 0.45, 0.25), 0.6)
+			_draw_bust(button, center + Vector2(0, 1.4) * s, Color(0.88, 0.7, 0.52), Color(0.6, 0.15, 0.12), 0.7)
 		"map":
 			var radius := 3.6 * s
 			button.draw_circle(center, radius, Color(0.2, 0.4, 0.75))

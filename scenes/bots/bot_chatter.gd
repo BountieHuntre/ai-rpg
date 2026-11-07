@@ -696,6 +696,11 @@ func _line(bot: Bot, kind: String, pool: Array, channel := 0) -> void:
 	_say(bot, kind, channel, _fill(str(pool.pick_random()), bot))
 
 
+## A party bot's line in party chat.
+func party(bot: Bot, text: String) -> void:
+	_say(bot, "party", 0, text)
+
+
 ## Says a line, linking any items and quests named in brackets.
 func _say(bot: Bot, kind: String, channel: int, text: String, _items := {}) -> void:
 	var linked := Chat.link_text(text)

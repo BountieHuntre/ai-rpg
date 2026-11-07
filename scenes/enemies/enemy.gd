@@ -70,6 +70,9 @@ const LOOKS := {
 ## Seconds to respawn and yards to wander; below zero takes the classic
 ## spawn's values from the data.
 @export var respawn_override := -1.0
+## Respawn times are this share of classic's (unlike classic, which with few
+## players about leaves hunting grounds empty too long).
+const RESPAWN_SCALE := 0.5
 @export var wander_override := -1.0
 ## Never attacks on sight, whatever its classic faction: it only fights back.
 @export var passive := false
@@ -199,7 +202,7 @@ func _ready() -> void:
 	var rank := rank_override if rank_override >= 0 else int(_data.Rank)
 	elite = rank > 0
 	boss = rank == RANK_BOSS
-	respawn_time = respawn_override if respawn_override >= 0.0 else float(_data.get("Respawn", 180))
+	respawn_time = respawn_override if respawn_override >= 0.0 else float(_data.get("Respawn", 180)) * RESPAWN_SCALE
 	_wander_distance = wander_override if wander_override >= 0.0 else float(_data.get("Wander", 0))
 	_wander_target = _home
 	_wander_wait = randf_range(WANDER_PAUSE_MIN, WANDER_PAUSE_MAX)

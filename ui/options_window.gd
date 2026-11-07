@@ -138,6 +138,8 @@ var _apply_button: Button
 var _ui_scale := 1.0
 ## The key being rebound: [action, slot], or [] when not waiting for a key.
 var _binding := []
+## A modifier key pressed while waiting for a key, bound if let go alone.
+var _modifier_down := 0
 var _note: Label
 ## The Key Bindings tab's buttons by action, [first key, second key], updated
 ## in place so the list keeps its scroll position.
@@ -226,7 +228,8 @@ func _update_apply() -> void:
 
 
 ## While waiting for a key, the next key or bindable mouse button pressed is
-## the binding. Left and right clicks still work the window.
+## the binding, with the Shift, Ctrl and Alt held (Shift-1). Left and right
+## clicks still work the window.
 func _input(event: InputEvent) -> void:
 	if not visible or _binding.is_empty():
 		return
@@ -234,11 +237,20 @@ func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	var mouse := event as InputEventMouseButton
 	if key and key.pressed and not key.echo:
-		code = int(key.physical_keycode)
+		if int(key.physical_keycode) in Settings.MODIFIER_KEYS:
+			# Shift, Ctrl or Alt alone binds when let go without another key;
+			# with one, it's that key's modifier (Shift-1).
+			_modifier_down = int(key.physical_keycode)
+			get_viewport().set_input_as_handled()
+			return
+		code = Settings.binding_of(key)
+	elif key and not key.pressed and int(key.physical_keycode) == _modifier_down:
+		code = _modifier_down
 	elif mouse and mouse.pressed and mouse.button_index in Settings.BINDABLE_MOUSE:
-		code = -int(mouse.button_index)
+		code = Settings.binding_of(mouse)
 	if code == 0:
 		return
+	_modifier_down = 0
 	get_viewport().set_input_as_handled()
 	var action: String = _binding[0]
 	var slot: int = _binding[1]
@@ -246,7 +258,7 @@ func _input(event: InputEvent) -> void:
 	var note := ""
 	if code == KEY_ESCAPE:
 		note = ""
-	elif code in Settings.RESERVED_KEYS:
+	elif Settings.is_reserved(code):
 		note = "%s can't be bound." % Settings.key_name(code)
 	else:
 		var taken_from := Settings.bind_in(_keys, action, slot, code)
@@ -699,6 +711,7 @@ func _key_button(action: String, slot: int) -> Button:
 	)
 	button.pressed.connect(func() -> void:
 		_binding = [action, slot]
+		_modifier_down = 0
 		_note.text = ""
 		_refresh_keys()
 	)

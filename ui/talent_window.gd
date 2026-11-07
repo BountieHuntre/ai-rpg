@@ -70,7 +70,7 @@ func close_one() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("talents"):
+	if Settings.pressed(event, "talents"):
 		toggle()
 		get_viewport().set_input_as_handled()
 

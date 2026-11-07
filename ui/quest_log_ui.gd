@@ -51,7 +51,7 @@ func close() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("quest_log"):
+	if Settings.pressed(event, "quest_log"):
 		toggle()
 		get_viewport().set_input_as_handled()
 

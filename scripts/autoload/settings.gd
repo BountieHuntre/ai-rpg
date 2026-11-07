@@ -47,6 +47,8 @@ const DEFAULTS := {
 	"loading_tips": true,
 	# Released builds look for a newer release on GitHub at start (Updater).
 	"check_updates": true,
+	# Where the party window was dragged to, in HUD units ([] for its place).
+	"party_window_pos": [],
 	"mouse_speed": 1.0,
 	"invert_mouse": false,
 	# Playerbots, after the playerbots module's options (AiPlayerbot.* in
@@ -91,6 +93,7 @@ const ACTIONS := [
 	["spellbook", "Spellbook", "Interface"], ["talents", "Talents", "Interface"],
 	["quest_log", "Quest Log", "Interface"],
 	["social", "Social", "Interface"], ["world_map", "World Map", "Interface"],
+	["party_commands", "Party Commands", "Interface"],
 	["ability_1", "Action Button 1", "Action Bar"], ["ability_2", "Action Button 2", "Action Bar"],
 	["ability_3", "Action Button 3", "Action Bar"], ["ability_4", "Action Button 4", "Action Bar"],
 	["ability_5", "Action Button 5", "Action Bar"], ["ability_6", "Action Button 6", "Action Bar"],
@@ -135,6 +138,11 @@ const MOUSE_NAMES := {
 	MOUSE_BUTTON_MIDDLE: ["Middle Mouse", "M3"], MOUSE_BUTTON_XBUTTON1: ["Mouse Button 4", "M4"],
 	MOUSE_BUTTON_XBUTTON2: ["Mouse Button 5", "M5"],
 }
+## Modifiers a binding can hold with its key (Shift-1, Ctrl-Mouse Button 4):
+## Godot's key modifier masks, or'd into the binding's keycode (or into the
+## button index of a mouse binding, which is stored negated).
+const MODIFIER_MASK := KEY_MASK_SHIFT | KEY_MASK_CTRL | KEY_MASK_ALT
+const MODIFIER_KEYS := [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]
 ## Keys that can't be bound: Esc opens the game menu, ` the console, and /
 ## opens the chat with a slash typed (walking is on Numpad /, as in classic).
 const RESERVED_KEYS := [KEY_ESCAPE, KEY_QUOTELEFT, KEY_SLASH]
@@ -204,7 +212,7 @@ func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
 ## The shipped defaults, read over DEFAULTS in every build.
 const SHIPPED_PATH := "res://default_options.cfg"
 ## Options that belong to one machine, never shipped.
-const NOT_SHIPPED := ["monitor", "chatframe_rect"]
+const NOT_SHIPPED := ["monitor", "chatframe_rect", "party_window_pos"]
 
 
 ## An option's default in this build (the shipped one, if any).
@@ -310,7 +318,7 @@ func bind_key(action: String, slot: int, keycode: int) -> String:
 ## The same binding done on a copy of the bindings (the Options window's,
 ## until Apply). Returns the label of the action the key was taken from.
 static func bind_in(keys: Dictionary, action: String, slot: int, keycode: int) -> String:
-	if keycode in RESERVED_KEYS:
+	if is_reserved(keycode):
 		return ""
 	var taken_from := ""
 	if keycode != 0:
@@ -332,21 +340,135 @@ func default_keys() -> Dictionary:
 	return _default_keys.duplicate(true)
 
 
-## A short name for a key: "W", "Space", "Num 1".
+## A short name for a key: "W", "Space", "Num 1", "Shift-1", "Ctrl-Alt-Q".
 static func key_name(keycode: int) -> String:
 	if keycode == 0:
 		return ""
+	var mods := modifiers_of(keycode)
+	var prefix := ("Shift-" if mods & KEY_MASK_SHIFT else "") + ("Ctrl-" if mods & KEY_MASK_CTRL else "") + ("Alt-" if mods & KEY_MASK_ALT else "")
+	var code := base_of(keycode)
 	if keycode < 0:
-		return MOUSE_NAMES.get(-keycode, ["Mouse Button %d" % -keycode])[0]
-	var text := OS.get_keycode_string(keycode)
-	return text.replace("Kp ", "Num ")
+		return prefix + MOUSE_NAMES.get(code, ["Mouse Button %d" % code])[0]
+	return prefix + OS.get_keycode_string(code).replace("Kp ", "Num ")
+
+
+## A binding's key (or mouse button index, positive) without its modifiers.
+static func base_of(binding: int) -> int:
+	return absi(binding) & ~MODIFIER_MASK
+
+
+## A binding's modifiers, as Godot's key modifier masks.
+static func modifiers_of(binding: int) -> int:
+	return absi(binding) & MODIFIER_MASK
+
+
+## Whether a key can't be bound, with or without modifiers.
+static func is_reserved(binding: int) -> bool:
+	return binding > 0 and base_of(binding) in RESERVED_KEYS
+
+
+## The binding a key or mouse press makes: its key or button with the
+## modifiers held (none for the modifier keys themselves), or 0.
+static func binding_of(event: InputEvent) -> int:
+	var key := event as InputEventKey
+	var mouse := event as InputEventMouseButton
+	if key:
+		var code := int(key.physical_keycode)
+		return code if code in MODIFIER_KEYS else code | _event_modifiers(key)
+	if mouse:
+		return -(int(mouse.button_index) | _event_modifiers(mouse))
+	return 0
+
+
+static func _event_modifiers(event: InputEventWithModifiers) -> int:
+	return (KEY_MASK_SHIFT if event.shift_pressed else 0) | (KEY_MASK_CTRL if event.ctrl_pressed else 0) | (KEY_MASK_ALT if event.alt_pressed else 0)
+
+
+## The modifiers held now.
+static func _held_modifiers() -> int:
+	return (KEY_MASK_SHIFT if Input.is_key_pressed(KEY_SHIFT) else 0) | (KEY_MASK_CTRL if Input.is_key_pressed(KEY_CTRL) else 0) | (KEY_MASK_ALT if Input.is_key_pressed(KEY_ALT) else 0)
+
+
+## Whether a binding counts as pressed with `held` modifiers down: its own
+## modifiers are among them, and no other binding of the same key with more of
+## them is (as classic: with Shift-1 bound, Shift-1 doesn't also press 1; with
+## it unbound, it does).
+func _binding_wins(binding: int, held_mods: int) -> bool:
+	var mods := modifiers_of(binding)
+	if mods & ~held_mods:
+		return false
+	var mouse := binding < 0
+	for action: String in _values.keys:
+		for other in _values.keys[action]:
+			var o := int(other)
+			if o == 0 or (o < 0) != mouse or base_of(o) != base_of(binding):
+				continue
+			var other_mods := modifiers_of(o)
+			if other_mods != mods and other_mods & mods == mods and other_mods & ~held_mods == 0:
+				return false
+	return true
+
+
+## Whether an input event presses an action, with the bindings' modifiers
+## taken into account: use it rather than event.is_action_pressed for bound
+## actions.
+func pressed(event: InputEvent, action: String) -> bool:
+	if not event.is_action_pressed(action):
+		return false
+	var made := binding_of(event)
+	if made == 0:
+		# A gamepad.
+		return true
+	for binding in keys_for(action):
+		var b := int(binding)
+		if b != 0 and (b < 0) == (made < 0) and base_of(b) == base_of(made) and _binding_wins(b, modifiers_of(made)):
+			return true
+	return false
+
+
+## Whether an action is held now, as pressed() judges it: use it rather than
+## Input.is_action_pressed for bound actions.
+func held(action: String) -> bool:
+	if not Input.is_action_pressed(action):
+		return false
+	var mods := _held_modifiers()
+	var any_down := false
+	for binding in keys_for(action):
+		var b := int(binding)
+		if b == 0:
+			continue
+		var down := Input.is_mouse_button_pressed(base_of(b) as MouseButton) if b < 0 else Input.is_physical_key_pressed(base_of(b) as Key)
+		if not down:
+			continue
+		any_down = true
+		if _binding_wins(b, mods):
+			return true
+	# Held by a gamepad.
+	return not any_down
+
+
+## Input.get_axis with held().
+func axis(negative: String, positive: String) -> float:
+	return (Input.get_action_strength(positive) if held(positive) else 0.0) - (Input.get_action_strength(negative) if held(negative) else 0.0)
 
 
 ## The label for an action's first key, for the action bar: symbols for
 ## punctuation, "N1" for the number pad, and at most three letters.
 func key_label(action: String) -> String:
 	var keys := keys_for(action)
-	var keycode := int(keys[0]) if int(keys[0]) != 0 else int(keys[1])
+	var binding := int(keys[0]) if int(keys[0]) != 0 else int(keys[1])
+	# Classic's short marks for modifiers: "s1", "c2", "a3".
+	var mods := modifiers_of(binding)
+	var prefix := ("s" if mods & KEY_MASK_SHIFT else "") + ("c" if mods & KEY_MASK_CTRL else "") + ("a" if mods & KEY_MASK_ALT else "")
+	var keycode := -base_of(binding) if binding < 0 else base_of(binding)
+	if not prefix.is_empty():
+		var short := _short_key(keycode)
+		return prefix + (short.substr(0, 1) if prefix.length() + short.length() > 3 else short)
+	return _short_key(keycode)
+
+
+## The action bar's label for a key with no modifiers.
+func _short_key(keycode: int) -> String:
 	if SHORT_KEYS.has(keycode):
 		return SHORT_KEYS[keycode]
 	if keycode < 0:
@@ -425,7 +547,7 @@ func _apply_all() -> void:
 
 ## Keyboard keys of an action in the input map, as two physical keycodes.
 static func _unreserved(keycode: int) -> int:
-	return 0 if keycode in RESERVED_KEYS else keycode
+	return 0 if is_reserved(keycode) else keycode
 
 
 static func _keys_in_map(action: String) -> Array:
@@ -435,7 +557,7 @@ static func _keys_in_map(action: String) -> Array:
 		var key := event as InputEventKey
 		var mouse := event as InputEventMouseButton
 		if i < 2 and (key or mouse):
-			keys[i] = int(key.physical_keycode) if key else -int(mouse.button_index)
+			keys[i] = binding_of(event)
 			i += 1
 	return keys
 
@@ -476,14 +598,23 @@ func _apply(key: String) -> void:
 					if event is InputEventKey or event is InputEventMouseButton:
 						InputMap.action_erase_event(action, event)
 				for keycode in _values.keys[action]:
-					if int(keycode) > 0:
-						var event := InputEventKey.new()
-						event.physical_keycode = int(keycode)
-						InputMap.action_add_event(action, event)
-					elif int(keycode) < 0:
-						var event := InputEventMouseButton.new()
-						event.button_index = -int(keycode) as MouseButton
-						InputMap.action_add_event(action, event)
+					var binding := int(keycode)
+					var event: InputEventWithModifiers
+					if binding > 0:
+						var key_event := InputEventKey.new()
+						key_event.physical_keycode = base_of(binding) as Key
+						event = key_event
+					elif binding < 0:
+						var mouse_event := InputEventMouseButton.new()
+						mouse_event.button_index = base_of(binding) as MouseButton
+						event = mouse_event
+					else:
+						continue
+					var mods := modifiers_of(binding)
+					event.shift_pressed = mods & KEY_MASK_SHIFT != 0
+					event.ctrl_pressed = mods & KEY_MASK_CTRL != 0
+					event.alt_pressed = mods & KEY_MASK_ALT != 0
+					InputMap.action_add_event(action, event)
 		"sound_enabled", "master_volume":
 			var volume: float = get_value("master_volume")
 			AudioServer.set_bus_mute(0, not get_value("sound_enabled") or volume <= 0.0)

@@ -62,6 +62,28 @@ const TALK_TIME := 1.5
 const BOON_REFRESH := 30.0
 ## Spellcasters get Boon of Clarity (mana), everyone else Boon of Strength.
 const CASTER_CLASSES := [ClassicData.CharClass.PRIEST, ClassicData.CharClass.MAGE, ClassicData.CharClass.WARLOCK]
+## Buff categories per class for the party window, and the spells in each.
+## Auto leaves the choice to the bot (as below); a spell keeps that one up;
+## None keeps none.
+const BUFF_CATEGORIES := {
+	ClassicData.CharClass.PALADIN: ["Presence", "Oath", "Boon"],
+	ClassicData.CharClass.PRIEST: ["Fortitude", "Spirit", "Warding", "Self"],
+	ClassicData.CharClass.WARRIOR: ["Stance", "Shout"],
+}
+const CATEGORY_SPELLS := {
+	"Presence": ["Bulwark Presence", "Thorned Presence", "Focused Presence", "Hallowed Presence",
+		"Gloomward Presence", "Frostward Presence", "Emberward Presence"],
+	"Oath": ["Oath of Dominion", "Oath of Valor", "Oath of the Vanguard", "Oath of Insight", "Oath of Mending", "Oath of Binding"],
+	"Boon": ["Boon of Strength", "Boon of Clarity", "Boon of Sovereigns", "Boon of Quietude", "Boon of Radiance", "Boon of Refuge",
+		"Greater Boon of Strength", "Greater Boon of Clarity", "Greater Boon of Sovereigns", "Greater Boon of Quietude",
+		"Greater Boon of Radiance", "Greater Boon of Refuge"],
+	"Fortitude": ["Litany of Fortitude"],
+	"Spirit": ["Uplifted Spirit"],
+	"Warding": ["Shadow Warding"],
+	"Self": ["Inner Flame", "Umbral Guard", "Withering Touch"],
+	"Stance": ["Vanguard Stance", "Bastion Stance", "Fury Stance"],
+	"Shout": ["Rallying Cry"],
+}
 ## Presences a Templar bot keeps up, best first.
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 ## Oaths a Templar bot fights with, best first.
@@ -84,6 +106,11 @@ func set_far(far: bool) -> void:
 	if far == _far:
 		return
 	_far = far
+	# Far bots walk through walls: one that comes near standing in one steps
+	# out to the nearest open place.
+	if not far and manager and combatant.is_alive():
+		global_position = manager.paths.free_spot(global_position)
+		_detour.clear()
 	for node: Node in [self, combatant, stats, spells, spells.get_node_or_null("SpellProcs")]:
 		if node:
 			node.set_physics_process(not far)
@@ -124,6 +151,23 @@ const COME_REACH := 4.0
 const COME_TIME := 120.0
 var in_party := false
 var command := Command.FOLLOW
+## How it picks fights in a party ("Assist", "Defend" or "Passive"), or "" for
+## the Party Bots Attack option. Set from the party window (PartyWindow).
+var behavior := ""
+const BEHAVIORS := ["Assist", "Defend", "Passive"]
+## Which buff it keeps up in each of its class's categories (BUFF_CATEGORIES):
+## "Auto" (its own judgement), "None", or a spell's name.
+var buff_choices := {}
+## Spells are known up to this level: a bot on its own trains as it levels,
+## a party bot when the player takes it to its trainer (train()). 0 is its level.
+var trained_level := 0
+## Its level before the last level-up (several can come at once).
+var _level_before := 1
+## A creature it was told to attack, before anything else.
+var _ordered_target: Combatant
+## An errand the party window sent it on: { "kind": "sell" or "train", "npc",
+## "all" (sell everything, not only junk) }.
+var _errand := {}
 ## Its place in the party, which spreads the members out behind the leader.
 var party_slot := 0
 
@@ -144,6 +188,14 @@ var _stuck_for := 0.0
 var _behind_for := 0.0
 var _last_leader_distance := 0.0
 var _sidestep_left := 0.0
+## Waypoints round something in the way (BotPaths.detour), walked before the
+## route; and when it's given up on.
+var _detour: Array[Vector3] = []
+## Where the leg to the route's next waypoint began.
+var _leg_start := Vector3.ZERO
+var _detour_until := 0.0
+## Seconds a detour may take before the bot looks again.
+const DETOUR_TIME := 20.0
 var _sidestep_side := 1.0
 var _stay_at := Vector3.ZERO
 var _roam_left := 0.0
@@ -179,7 +231,8 @@ func _ready() -> void:
 			_last_attacker = source.display_name
 	)
 	combatant.died.connect(_on_died)
-	progression.leveled_up.connect(func(_level: int) -> void: learn_spells())
+	progression.leveled_up.connect(_on_leveled_up)
+	_level_before = profile.level
 	learn_spells()
 	combatant.health = combatant.max_health
 	combatant.mana = combatant.max_mana if combatant.has_mana() else 0.0
@@ -205,11 +258,13 @@ func learn_spells() -> void:
 	profile.known_spells = known
 	profile.talents = {}
 	Talents.spend_for_bot(profile, Talents.bot_trees(profile.char_class, in_party and _has_shield_on()))
-	# By level, so each rank comes after the one before it.
+	# By level, so each rank comes after the one before it; up to the level
+	# it has trained to.
+	var up_to := profile.level if trained_level <= 0 else mini(trained_level, profile.level)
 	var list := SpellDB.class_trainer_list(profile.char_class, profile.race)
 	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.level) < int(b.level))
 	for entry: Dictionary in list:
-		if int(entry.level) > profile.level:
+		if int(entry.level) > up_to:
 			continue
 		var previous := SpellDB.previous_rank(int(entry.spells[0]))
 		if previous != 0 and not previous in known:
@@ -241,6 +296,7 @@ func saved_state() -> Dictionary:
 		"health": combatant.health, "mana": combatant.mana, "dead_for": _dead_for,
 		"stay": [_stay_at.x, _stay_at.y, _stay_at.z] if command == Command.STAY else [], "auras": auras,
 		"item_cooldowns": spells.saved_item_cooldowns(),
+		"behavior": behavior, "buffs": buff_choices, "trained_level": trained_level,
 	}
 
 
@@ -264,10 +320,29 @@ func restore_state(state: Dictionary) -> void:
 		_feedback.show_dead()
 	else:
 		combatant.health = health
+	behavior = str(state.get("behavior", ""))
+	var buffs: Variant = state.get("buffs", {})
+	buff_choices = buffs if buffs is Dictionary else {}
+	trained_level = int(state.get("trained_level", 0))
+	if trained_level > 0:
+		learn_spells()
 	var stay: Array = state.get("stay", [])
 	if stay.size() == 3:
 		command = Command.STAY
 		_stay_at = Vector3(stay[0], stay[1], stay[2])
+
+
+## On its own it trains as it goes; in a party it waits for the player to
+## take it to its trainer, and says so.
+func _on_leveled_up(_level: int) -> void:
+	if not in_party:
+		trained_level = 0
+	elif trained_level <= 0:
+		trained_level = _level_before
+	_level_before = profile.level
+	learn_spells()
+	if in_party and not spells_to_train().is_empty():
+		_party_say("I've new spells to learn, take me to my trainer when you can")
 
 
 ## Fresh joins start following; a party put back from the save keeps its
@@ -284,6 +359,12 @@ func joined_party(fresh := true) -> void:
 
 func left_party() -> void:
 	in_party = false
+	_ordered_target = null
+	_errand = {}
+	# On its own again, it goes and trains.
+	if trained_level > 0:
+		trained_level = 0
+		learn_spells()
 	_enemy = null
 	combatant.attack_target = null
 	progression.level_cap = manager.max_level() if manager else ClassicData.MAX_LEVEL
@@ -386,6 +467,8 @@ func _think() -> void:
 			_has_destination = false
 		return
 	combatant.attack_target = null
+	if not _errand.is_empty() and _do_errand():
+		return
 	if in_party:
 		_party_idle()
 	else:
@@ -398,9 +481,13 @@ func _choose_enemy() -> Combatant:
 	if not in_party:
 		return _solo_enemy()
 	var leader := _leader()
-	var mode: String = Settings.get_value("bot_assist")
+	# Told to attack something: that, until it's dead.
+	if _ordered_target and is_instance_valid(_ordered_target) and _ordered_target.is_alive():
+		return _ordered_target
+	_ordered_target = null
+	var mode := fight_mode()
 	# What the leader is attacking, or has targeted and is fighting.
-	if mode == "Assist My Target" and leader and leader.combatant.is_alive():
+	if mode == "Assist" and leader and leader.combatant.is_alive():
 		var target := leader.combatant.attack_target
 		if target == null:
 			var picked := leader.targeting.target_combatant()
@@ -425,6 +512,152 @@ func _choose_enemy() -> Combatant:
 		if best == null or combatant.distance_to(enemy.combatant) < combatant.distance_to(best):
 			best = enemy.combatant
 	return best
+
+
+## How it picks fights: its own setting, or the Party Bots Attack option's.
+func fight_mode() -> String:
+	if behavior in BEHAVIORS:
+		return behavior
+	return { "Assist My Target": "Assist", "Passive": "Passive" }.get(Settings.get_value("bot_assist"), "Defend")
+
+
+## Attack this, whatever its fighting mode, until it's dead.
+func order_attack(target: Combatant) -> void:
+	_ordered_target = target
+	_errand = {}
+	_resting = false
+	sitting = false
+	_think_left = 0.0
+
+
+## The spells of a buff category it knows.
+func buff_options(category: String) -> Array[String]:
+	var known: Array[String] = []
+	for spell_name: String in CATEGORY_SPELLS.get(category, []):
+		if profile.best_rank(spell_name) != 0:
+			known.append(spell_name)
+	return known
+
+
+func buff_choice(category: String) -> String:
+	return str(buff_choices.get(category, "Auto"))
+
+
+## Whether a unit has an aura of the spell (any rank), from this bot or anyone.
+func _wears(target: Combatant, spell_name: String, mine := false) -> bool:
+	for aura in target.auras:
+		if aura.spell.SpellName == spell_name and (not mine or aura.caster == combatant):
+			return true
+	return false
+
+
+# Errands from the party window: selling at a vendor, training at a trainer.
+
+## Walks to a vendor and sells its junk (or everything in its bag).
+func send_to_vendor(npc: Npc, everything: bool) -> void:
+	_errand = { "kind": "sell", "npc": npc, "all": everything }
+	_ordered_target = null
+	_resting = false
+	sitting = false
+	_think_left = 0.0
+
+
+## Walks to its class trainer and learns what it's ready for.
+func send_to_trainer(npc: Npc) -> void:
+	_errand = { "kind": "train", "npc": npc }
+	_ordered_target = null
+	_resting = false
+	sitting = false
+	_think_left = 0.0
+
+
+func errand() -> String:
+	return str(_errand.get("kind", ""))
+
+
+## On its way, or there and done: true while the errand takes its time.
+func _do_errand() -> bool:
+	var npc: Npc = _errand.get("npc")
+	if npc == null or not is_instance_valid(npc):
+		_errand = {}
+		return false
+	if global_position.distance_to(npc.global_position) > NPC_REACH:
+		_go_to(npc.global_position)
+		return true
+	_has_destination = false
+	_face(npc.global_position)
+	var kind: String = _errand.kind
+	var everything: bool = _errand.get("all", false)
+	_errand = {}
+	if kind == "sell":
+		var sold := bag.sell_all() if everything else bag.sell_trash_count()
+		_party_say("sold %d item%s to %s for %s" % [sold[0], "" if sold[0] == 1 else "s", npc.npc_name, ItemDB.money_text(sold[1])] if sold[0] > 0 else "nothing to sell")
+	elif kind == "train":
+		_party_say(train())
+	return true
+
+
+func _party_say(text: String) -> void:
+	if manager and in_party:
+		manager.party_say(self, text)
+
+
+# Training: party bots learn new spells at their trainer.
+
+## Trainer entries for spells it could know at its level and doesn't: as a
+## player's trainer lists them (each rank after the one before).
+func spells_to_train() -> Array[Dictionary]:
+	var known: Array[int] = profile.known_spells.duplicate()
+	var wanted: Array[Dictionary] = []
+	var list := SpellDB.class_trainer_list(profile.char_class, profile.race)
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.level) < int(b.level))
+	for entry: Dictionary in list:
+		if int(entry.level) > profile.level:
+			continue
+		var previous := SpellDB.previous_rank(int(entry.spells[0]))
+		if previous != 0 and not previous in known:
+			continue
+		var new_spell := false
+		for id in entry.spells:
+			if not int(id) in known:
+				known.append(int(id))
+				new_spell = true
+		if new_spell:
+			wanted.append(entry)
+	return wanted
+
+
+func training_cost() -> int:
+	var cost := 0
+	for entry in spells_to_train():
+		cost += int(entry.get("cost", 0))
+	return cost
+
+
+## Learns everything it's ready for, paying from its own money and the
+## player's for the rest. Says how it went.
+func train() -> String:
+	var wanted := spells_to_train()
+	if wanted.is_empty():
+		return "nothing new for me to learn yet"
+	var cost := training_cost()
+	if bag.money + GameState.money < cost:
+		return "training costs %s, and we've only %s between us" % [ItemDB.money_text(cost), ItemDB.money_text(bag.money + GameState.money)]
+	var from_me := mini(bag.money, cost)
+	bag.money -= from_me
+	if cost > from_me:
+		GameState.money -= cost - from_me
+		GameState.inventory_changed.emit()
+	trained_level = profile.level
+	learn_spells()
+	Sfx.play_at("level_up", global_position)
+	var names: Array[String] = []
+	for entry in wanted:
+		var spell_name := str(SpellDB.get_spell(int(entry.spells[0])).get("SpellName", ""))
+		if not spell_name in names:
+			names.append(spell_name)
+	var paid := "" if cost == 0 else (" (%s, %s of it yours)" % [ItemDB.money_text(cost), ItemDB.money_text(cost - from_me)] if cost > from_me else " (%s)" % ItemDB.money_text(cost))
+	return "learned %s%s" % [", ".join(names), paid]
 
 
 func _fights_group(enemy: Enemy) -> bool:
@@ -745,6 +978,7 @@ func _teleport_to(leader: Player) -> void:
 	sitting = false
 	_resting = false
 	_route.clear()
+	_detour.clear()
 	velocity = Vector3.ZERO
 	global_position = _follow_spot(leader) + Vector3.UP * 0.5
 	_has_destination = false
@@ -758,6 +992,15 @@ func stay() -> void:
 
 func follow() -> void:
 	command = Command.FOLLOW
+
+
+## Sits down to eat and drink now (the party window's Rest), unless fighting.
+func rest() -> bool:
+	if combatant.is_in_combat() or not combatant.is_alive():
+		return false
+	_errand = {}
+	_start_rest()
+	return true
 
 
 func _start_rest() -> void:
@@ -849,14 +1092,24 @@ func _use_cleric_spells() -> void:
 		return
 	if fighting or _resting:
 		return
-	for name in CLERIC_SELF_BUFFS:
+	var self_choice := buff_choice("Self")
+	var self_buffs: Array = CLERIC_SELF_BUFFS if self_choice == "Auto" else [] if self_choice == "None" else [self_choice]
+	for name: String in self_buffs:
 		if _lacks(me, name) and _try(name, me):
 			return
+	# Fortitude and Spirit unless told otherwise; Shadow Warding when chosen.
+	var group_buffs: Array[String] = []
+	for category: String in ["Fortitude", "Spirit", "Warding"]:
+		var choice := buff_choice(category)
+		if choice == "Auto" and category != "Warding":
+			group_buffs.append(CATEGORY_SPELLS[category][0])
+		elif choice != "Auto" and choice != "None":
+			group_buffs.append(choice)
 	for unit in group:
 		var target := unit.combatant
 		if not target.is_alive() or me.distance_to(target) > 30.0:
 			continue
-		for name in CLERIC_GROUP_BUFFS:
+		for name in group_buffs:
 			if _lacks(target, name) and _try(name, target):
 				return
 
@@ -879,13 +1132,16 @@ func _use_man_at_arms_spells() -> void:
 	var fighting := me.is_in_combat()
 	var form := spells.current_form()
 	var stance := "Bastion Stance" if in_party and _has_shield_on() and profile.best_rank("Bastion Stance") != 0 else "Vanguard Stance"
-	if form == 0 or (not fighting and SpellDB.stance_form(SpellDB.get_spell(profile.best_rank(stance))) != form):
+	var stance_choice := buff_choice("Stance")
+	if stance_choice != "Auto" and stance_choice != "None" and profile.best_rank(stance_choice) != 0:
+		stance = stance_choice
+	if stance_choice != "None" and (form == 0 or (not fighting and SpellDB.stance_form(SpellDB.get_spell(profile.best_rank(stance))) != form)):
 		if _try(stance, me):
 			return
 	if fighting and me.health < me.max_health * 0.25 and _try("Final Stand", me):
 		return
 	# Rage only comes in a fight, so the shout does too.
-	if fighting and _lacks(me, "Rallying Cry") and _try("Rallying Cry", me):
+	if fighting and buff_choice("Shout") != "None" and _lacks(me, "Rallying Cry") and _try("Rallying Cry", me):
 		return
 	if _enemy == null:
 		return
@@ -950,14 +1206,21 @@ func _use_templar_spells() -> void:
 		for unit in group:
 			if unit != self and not unit.combatant.is_alive() and _try("Revival", unit.combatant):
 				return
-	if not _has_own(me, SpellDB.is_paladin_aura):
-		for presence in PRESENCES:
-			if _try(presence, me):
-				return
+	var presence := buff_choice("Presence")
+	if presence == "Auto":
+		if not _has_own(me, SpellDB.is_paladin_aura):
+			for name in PRESENCES:
+				if _try(name, me):
+					return
+	elif presence != "None" and not _wears(me, presence, true) and _try(presence, me):
+		return
 	if _enemy:
+		var oath_choice := buff_choice("Oath")
 		var oath := me.find_aura(func(spell: Dictionary) -> bool: return SpellDB.is_seal(spell))
-		if oath.is_empty():
-			for name in OATHS:
+		if oath_choice == "None":
+			pass
+		elif oath.is_empty() or (oath_choice != "Auto" and not _wears(me, oath_choice, true)):
+			for name: String in (OATHS if oath_choice == "Auto" else [oath_choice]):
 				if _try(name, me):
 					return
 		elif me.distance_to(_enemy) <= 10.0 and _try("Verdict", _enemy):
@@ -969,9 +1232,13 @@ func _use_templar_spells() -> void:
 		var target := unit.combatant
 		if not target.is_alive() or me.distance_to(target) > 30.0:
 			continue
+		var choice := buff_choice("Boon")
+		if choice == "None":
+			break
+		var name := choice if choice != "Auto" else "Boon of Clarity" if unit.profile.char_class in CASTER_CLASSES else "Boon of Strength"
 		var boon := target.find_aura(func(spell: Dictionary) -> bool: return SpellDB.is_blessing(spell))
-		if boon.is_empty() or (boon.caster == me and boon.remaining < BOON_REFRESH and boon.remaining >= 0.0):
-			var name := "Boon of Clarity" if unit.profile.char_class in CASTER_CLASSES else "Boon of Strength"
+		var other_boon: bool = not boon.is_empty() and boon.caster == me and str(boon.spell.SpellName) != name
+		if boon.is_empty() or other_boon or (boon.caster == me and boon.remaining < BOON_REFRESH and boon.remaining >= 0.0):
 			if _try(name, target):
 				return
 
@@ -1037,8 +1304,14 @@ func _try(spell_name: String, target: Combatant) -> bool:
 ## out again only when the point moves a few yards (a creature or the leader
 ## moving), so the bot keeps going through the gate it chose.
 func _go_to(point: Vector3) -> void:
-	if not _has_destination or _route.is_empty() or point.distance_to(_destination) > 3.0:
+	# Somewhere else entirely: the detour round the last obstacle is no use.
+	if _has_destination and point.distance_to(_destination) > 15.0:
+		_detour.clear()
+	# Also when it's been moved off its way (raised at a graveyard, summoned).
+	var off_route := not _route.is_empty() and global_position.distance_to(_route[0]) > _leg_start.distance_to(_route[0]) + 20.0
+	if not _has_destination or _route.is_empty() or off_route or point.distance_to(_destination) > 3.0:
 		_route = manager.route(global_position, point) if manager else ([point] as Array[Vector3])
+		_leg_start = global_position
 	else:
 		_route[-1] = point
 	_destination = point
@@ -1049,15 +1322,22 @@ func _move(delta: float) -> void:
 	var direction := Vector3.ZERO
 	# How far the waypoint is, so a long far step stops on it, not past it.
 	var to_waypoint := INF
+	if not _detour.is_empty() and (not _has_destination or Time.get_ticks_msec() / 1000.0 > _detour_until):
+		_detour.clear()
 	if _has_destination and not sitting and spells.casting.is_empty() and not combatant.is_stunned() and not combatant.is_rooted():
-		var waypoint := _route[0] if not _route.is_empty() else _destination
+		# Round an obstacle first, a waypoint at a time.
+		while not _detour.is_empty() and Vector2(_detour[0].x - global_position.x, _detour[0].z - global_position.z).length() < 0.6:
+			_detour.pop_front()
+		var waypoint := _detour[0] if not _detour.is_empty() else _route[0] if not _route.is_empty() else _destination
 		var offset := waypoint - global_position
 		offset.y = 0.0
 		to_waypoint = offset.length()
-		if offset.length() > (0.3 if _route.size() <= 1 else 1.0):
+		if not _detour.is_empty():
+			direction = offset.normalized()
+		elif offset.length() > (0.3 if _route.size() <= 1 else 1.0):
 			direction = offset.normalized()
 		elif _route.size() > 1:
-			_route.pop_front()
+			_leg_start = _route.pop_front()
 		else:
 			_has_destination = false
 	if direction != Vector3.ZERO and _sidestep_left > 0.0:
@@ -1097,9 +1377,22 @@ func _move(delta: float) -> void:
 	_stuck_for = _stuck_for + delta if moved < RUN_SPEED * combatant.speed_multiplier() * delta * 0.3 else 0.0
 	if _stuck_for > STUCK_TIME:
 		_stuck_for = 0.0
-		velocity.y = JUMP_SPEED
-		_sidestep_left = SIDESTEP_TIME
-		_sidestep_side = [-1.0, 1.0].pick_random()
+		# Find a way round what's in the way; failing that (a lip in the
+		# ground, another unit), hop and sidestep.
+		var goal := _route[0] if not _route.is_empty() else _destination
+		var way: Array[Vector3] = manager.paths.detour(global_position, goal) if manager else ([] as Array[Vector3])
+		if way.is_empty() and manager and manager.paths.busy():
+			# Others are finding their ways this frame: ask again next.
+			_stuck_for = STUCK_TIME
+			return
+		if way.size() > 0 and (_detour.is_empty() or way[0].distance_to(_detour[0]) > 0.5):
+			_detour = way
+			_detour_until = Time.get_ticks_msec() / 1000.0 + DETOUR_TIME
+		else:
+			_detour.clear()
+			velocity.y = JUMP_SPEED
+			_sidestep_left = SIDESTEP_TIME
+			_sidestep_side = [-1.0, 1.0].pick_random()
 
 
 func _face(point: Vector3) -> void:

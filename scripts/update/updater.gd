@@ -5,8 +5,9 @@ extends Node
 ## "AI RPG" folder (the exe and its pck). Installing downloads the zip,
 ## unpacks it under user://update/, and starts a small PowerShell script that
 ## waits for the game to close, copies the new files over the game's folder
-## and starts it again. Only released Windows builds check (FrontEnd), unless
-## the Check for Updates option is off.
+## and starts it again. Only released Windows builds check (FrontEnd, at
+## start and on every return to it from the game), unless the Check for
+## Updates option is off.
 ##
 ## Developer builds can try it: `-- --check-updates` checks from the editor,
 ## `--pretend-version=0.5.0` plays an older game, `--update-dir=<dir>` installs
@@ -25,8 +26,6 @@ const RELEASES_URL := "https://api.github.com/repos/%s/releases?per_page=20" % R
 const PAGE_URL := "https://github.com/%s/releases" % REPO
 const ASSET_SUFFIX := "-windows.zip"
 const STAGE_DIR := "user://update/"
-## Checked once a run (logging out back to the front end doesn't ask again).
-static var checked := false
 
 var latest_version := ""
 var _asset_url := ""
@@ -37,7 +36,7 @@ var _downloading := false
 
 ## Whether this run should look for updates at all.
 static func should_check() -> bool:
-	if checked or not Settings.get_value("check_updates"):
+	if not Settings.get_value("check_updates"):
 		return false
 	if "--check-updates" in _dev_args():
 		return true
@@ -85,7 +84,6 @@ func _ready() -> void:
 ## this game, and nothing when there's none (or GitHub can't be reached; a
 ## failed check isn't worth troubling the player with).
 func check() -> void:
-	checked = true
 	_http.request_completed.connect(_on_releases, CONNECT_ONE_SHOT)
 	if _http.request(RELEASES_URL, _headers()) != OK:
 		_http.request_completed.disconnect(_on_releases)
