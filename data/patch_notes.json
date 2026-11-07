@@ -1,5 +1,14 @@
 [
 	{
+		"version": "0.6.1",
+		"date": "11-06-2026",
+		"notes": [
+			"Fixed Esc not opening the main menu.",
+			"Party Commands is now a bar of icons above the menu buttons, like a pet bar, instead of a window whose buttons overlapped. Pick a party member (or Everyone) by their portrait, then give orders; each buff slot shows the spell they keep up, and clicking it shows the choices.",
+			"A party member's bags now open beside your own."
+		]
+	},
+	{
 		"version": "0.6.0",
 		"date": "11-06-2026",
 		"notes": [
