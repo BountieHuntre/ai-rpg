@@ -1,6 +1,6 @@
 class_name HumanoidModel
 extends Node3D
-## A character model: Human, Dwarf or Gnome (assets/models/<race>/<race>.glb,
+## A character model: one of the playable races (assets/models/<race>/<race>.glb,
 ## all built by tools/models/human/build_human.py on one skeleton): a body,
 ## hair and beard from an appearance, the gear worn (armour colours, helm,
 ## cloak, weapons and shield in hand, the ranged weapon while shooting), and
@@ -13,12 +13,16 @@ extends Node3D
 
 const SHADER := preload("res://shaders/character.gdshader")
 ## Races with a model: ClassicData.Race -> its file's name.
-const RACE_MODELS := { ClassicData.Race.HUMAN: "human", ClassicData.Race.DWARF: "dwarf", ClassicData.Race.GNOME: "gnome" }
+const RACE_MODELS := {
+	ClassicData.Race.HUMAN: "human", ClassicData.Race.DWARF: "dwarf", ClassicData.Race.GNOME: "gnome",
+	ClassicData.Race.ORC: "orc", ClassicData.Race.NIGHT_ELF: "wood_elf", ClassicData.Race.UNDEAD: "undead",
+	ClassicData.Race.TROLL: "troll", ClassicData.Race.TAUREN: "hornkin",
+}
 ## Colour slots, as the build script's SLOT_NAMES; the shader has room for 32.
 const SLOT_COUNT := 32
 
 enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
-	BACK, RANGED, RANGED_TRIM, HELM_TRIM }
+	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK }
 
 const SKIN_COLORS := [
 	Color(0.96, 0.8, 0.68), Color(0.9, 0.71, 0.56), Color(0.8, 0.59, 0.43),
@@ -33,6 +37,34 @@ const HAIR_STYLES := [["HairShort", "HairLong", "HairCrest", ""], ["HairFLong", 
 const FACES := [["", "BeardShort", "BeardLong"], [""]]
 const BODIES := ["BodyMale", "BodyFemale"]
 const EYE_COLOR := Color(0.1, 0.09, 0.12)
+## Races' own skins and hair colours (as many as SKIN_COLORS and HAIR_COLORS,
+## so an appearance's choice fits any race), eyes, and tusks, horns and bone;
+## races not named take the Human's.
+const RACE_SKINS := {
+	"orc": [Color(0.42, 0.58, 0.25), Color(0.35, 0.5, 0.2), Color(0.5, 0.6, 0.3), Color(0.3, 0.42, 0.2),
+		Color(0.55, 0.52, 0.3), Color(0.45, 0.4, 0.28)],
+	"troll": [Color(0.36, 0.55, 0.62), Color(0.3, 0.48, 0.55), Color(0.42, 0.62, 0.5), Color(0.5, 0.45, 0.62),
+		Color(0.32, 0.58, 0.45), Color(0.55, 0.6, 0.66)],
+	"undead": [Color(0.66, 0.68, 0.6), Color(0.58, 0.62, 0.55), Color(0.62, 0.58, 0.62), Color(0.5, 0.56, 0.5),
+		Color(0.7, 0.66, 0.58), Color(0.55, 0.6, 0.66)],
+	"wood_elf": [Color(0.62, 0.52, 0.75), Color(0.52, 0.45, 0.7), Color(0.45, 0.52, 0.72), Color(0.7, 0.58, 0.78),
+		Color(0.4, 0.4, 0.6), Color(0.58, 0.62, 0.8)],
+	"hornkin": [Color(0.45, 0.3, 0.18), Color(0.32, 0.22, 0.14), Color(0.58, 0.42, 0.26), Color(0.18, 0.16, 0.15),
+		Color(0.8, 0.76, 0.68), Color(0.5, 0.48, 0.45)],
+}
+const RACE_HAIRS := {
+	"troll": [Color(0.75, 0.2, 0.12), Color(0.2, 0.35, 0.7), Color(0.25, 0.55, 0.3), Color(0.9, 0.9, 0.85),
+		Color(0.85, 0.5, 0.15), Color(0.5, 0.25, 0.55), Color(0.1, 0.08, 0.07)],
+	"wood_elf": [Color(0.2, 0.5, 0.5), Color(0.85, 0.88, 0.9), Color(0.25, 0.45, 0.25), Color(0.2, 0.25, 0.55),
+		Color(0.45, 0.25, 0.55), Color(0.1, 0.08, 0.12), Color(0.55, 0.75, 0.6)],
+	"undead": [Color(0.1, 0.08, 0.07), Color(0.3, 0.2, 0.12), Color(0.5, 0.5, 0.48), Color(0.85, 0.84, 0.8),
+		Color(0.3, 0.35, 0.25), Color(0.45, 0.15, 0.12), Color(0.6, 0.5, 0.3)],
+	"hornkin": [Color(0.2, 0.13, 0.08), Color(0.35, 0.22, 0.12), Color(0.1, 0.08, 0.07), Color(0.6, 0.45, 0.28),
+		Color(0.85, 0.82, 0.75), Color(0.5, 0.48, 0.45), Color(0.5, 0.25, 0.1)],
+}
+const RACE_EYES := { "undead": Color(1.0, 0.85, 0.35), "wood_elf": Color(0.85, 0.95, 1.0), "orc": Color(0.5, 0.1, 0.08) }
+const TUSK_COLORS := { "undead": Color(0.8, 0.78, 0.68) }
+const TUSK_COLOR := Color(0.9, 0.86, 0.72)
 ## Bare legs show smallclothes.
 const SMALLCLOTHES := Color(0.62, 0.58, 0.5)
 const TRIM_COLOR := Color(0.72, 0.56, 0.26)
@@ -105,7 +137,7 @@ static var _parts_by_race: Dictionary = {}
 static var _bare_by_race: Dictionary = {}
 static var _tree_root: AnimationNodeBlendTree
 
-## Which model: "human", "dwarf" or "gnome" (RACE_MODELS). Set before adding.
+## Which model: "human", "dwarf", "gnome", "orc"... (RACE_MODELS). Set before adding.
 var race := "human"
 ## Props for a creature, which has no gear: { "main": prop, "off": prop,
 ## "helm": helm part } (MAIN_PROPS values, "Off_..." or "Shield_..." parts).
@@ -323,12 +355,15 @@ func _apply_appearance() -> void:
 	var body: int = appearance.body
 	for i in BODIES.size():
 		_show(BODIES[i], i == body)
-	_colors[SKIN] = SKIN_COLORS[appearance.skin] if skin_override.a <= 0.0 else skin_override
+	var skins: Array = RACE_SKINS.get(race, SKIN_COLORS)
+	_colors[SKIN] = skins[mini(appearance.skin, skins.size() - 1)] if skin_override.a <= 0.0 else skin_override
+	_colors[TUSK] = TUSK_COLORS.get(race, TUSK_COLOR)
 	# Humanoid creatures' own head and tail (burrowlings, mirefin, ditchjaw).
 	for part in ["Species_head", "Species_tail"]:
 		_show(part, _parts.has(part))
-	_colors[HAIR] = HAIR_COLORS[appearance.hair_color]
-	_colors[EYES] = EYE_COLOR
+	var hairs: Array = RACE_HAIRS.get(race, HAIR_COLORS)
+	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
+	_colors[EYES] = RACE_EYES.get(race, EYE_COLOR)
 	_colors[TRIM] = TRIM_COLOR
 	# Women are a little smaller.
 	_model.scale = Vector3.ONE * (0.95 if body == 1 else 1.0)

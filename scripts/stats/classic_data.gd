@@ -38,10 +38,9 @@ const RACE_NAMES := {
 	Race.UNDEAD: "Undead", Race.TAUREN: "Hornkin", Race.GNOME: "Gnome", Race.TROLL: "Troll",
 }
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
-## Races finished enough to play (a character model, HumanoidModel.RACE_MODELS;
-## the rest are capsules): the only ones character creation offers and bots
-## are made as.
-const PLAYABLE_RACES := [Race.HUMAN, Race.DWARF, Race.GNOME]
+## Races finished enough to play (a character model, HumanoidModel.RACE_MODELS):
+## the only ones character creation offers and bots are made as.
+const PLAYABLE_RACES := [Race.HUMAN, Race.ORC, Race.DWARF, Race.NIGHT_ELF, Race.UNDEAD, Race.TAUREN, Race.GNOME, Race.TROLL]
 
 static var _tables: Dictionary
 static var _characters: Dictionary

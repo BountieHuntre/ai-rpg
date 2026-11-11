@@ -36,7 +36,7 @@ FPS = 30
 SLOT_NAMES = [
 	"skin", "hair", "eyes", "chest", "legs", "feet", "hands", "waist",
 	"shoulders", "wrists", "head", "trim", "blade", "handle", "shield", "shield_trim",
-	"back", "ranged", "ranged_trim", "helm_trim",
+	"back", "ranged", "ranged_trim", "helm_trim", "tusk",
 ]
 SLOT = {name: i for i, name in enumerate(SLOT_NAMES)}
 # U steps: room for this many slots (shaders/character.gdshader's array).
@@ -49,6 +49,19 @@ RACES = {
 	"human": {"legs": 1.0, "torso": 1.0, "width": 1.0, "head": 1.0, "hands": 1.0, "props": 1.0},
 	"dwarf": {"legs": 0.62, "torso": 0.88, "width": 1.28, "head": 1.12, "hands": 1.12, "props": 0.9},
 	"gnome": {"legs": 0.5, "torso": 0.58, "width": 0.8, "head": 1.35, "hands": 1.1, "props": 0.62},
+	# The rest of the playable races: reshaped, `limbs` scaling the arms' and
+	# legs' thickness, with `features` of their own on the head and body
+	# (race_features): tusks, ears, horns, snout...
+	"orc": {"legs": 0.96, "torso": 1.02, "width": 1.2, "head": 1.0, "hands": 1.22, "props": 1.05, "limbs": 1.15,
+			"features": ["jaw", "tusks", "brow", "ears_short"]},
+	"wood_elf": {"legs": 1.14, "torso": 1.08, "width": 0.97, "head": 0.97, "hands": 1.0, "props": 1.05, "limbs": 0.93,
+			"features": ["ears_long", "brow_tufts"]},
+	"undead": {"legs": 0.98, "torso": 0.96, "width": 0.9, "head": 0.97, "hands": 1.0, "props": 1.0, "limbs": 0.72,
+			"features": ["bare_jaw", "brow", "ribs"]},
+	"troll": {"legs": 1.16, "torso": 1.06, "width": 1.02, "head": 1.05, "hands": 1.2, "props": 1.08, "limbs": 0.95,
+			"features": ["jaw", "big_tusks", "long_nose", "ears_wide"]},
+	"hornkin": {"legs": 1.12, "torso": 1.12, "width": 1.42, "head": 1.2, "hands": 1.35, "props": 1.15, "limbs": 1.2,
+			"features": ["snout", "horns", "ears_side", "tail"]},
 	# Humanoid creatures: the same body and animations with a head and tail
 	# of their own (species_parts), and only the parts creatures use.
 	"burrowling": {"legs": 0.5, "torso": 0.6, "width": 0.85, "head": 1.15, "hands": 1.15, "props": 0.7, "species": "burrowling"},
@@ -347,12 +360,57 @@ def body(name, female):
 		b.box((0.122 * hw * x, 0.0, 1.7), (0.03, 0.05, 0.065), "Head", "skin", shade=0.9)
 	b.box((0, 0.14, 1.668), (0.035, 0.045, 0.06), "Head", "skin", top=(0.8, 0.6), shift=(0, -0.01), shade=0.95)
 	b.box((0, 0.128, 1.625), (0.05, 0.015, 0.012), "Head", "skin", shade=0.6)
+	race_features(b, f, RACE.get("features", []))
 	return _limbs(b, f)
+
+
+def race_features(b, f, features):
+	"""A race's own features on the Human's head and body, in the Human's
+	measurements (place() scales them with the head). Women's tusks and horns
+	are smaller."""
+	k = 0.8 if f else 1.0
+	for x in (-1, 1):
+		if "tusks" in features:
+			b.beam((0.045 * x, 0.12, 1.595), (0.06 * x, 0.15, 1.65 + 0.02 * k), 0.025 * k, 0.025 * k, "Head", "tusk", taper=0.45)
+		if "big_tusks" in features:
+			b.beam((0.05 * x, 0.12, 1.595), (0.1 * x, 0.18, 1.7 + 0.04 * k), 0.035 * k, 0.035 * k, "Head", "tusk", taper=0.35)
+		if "ears_short" in features:
+			b.beam((0.12 * x, -0.01, 1.7), (0.18 * x, -0.04, 1.75), 0.06, 0.025, "Head", "skin", taper=0.3, shade=0.9)
+		if "ears_long" in features:
+			b.beam((0.12 * x, -0.01, 1.71), (0.29 * x, -0.1, 1.86), 0.07, 0.022, "Head", "skin", taper=0.2, shade=0.9)
+		if "ears_wide" in features:
+			b.beam((0.12 * x, -0.01, 1.7), (0.3 * x, -0.03, 1.74), 0.08, 0.022, "Head", "skin", taper=0.25, shade=0.9)
+		if "ears_side" in features:
+			b.beam((0.12 * x, -0.02, 1.76), (0.22 * x, -0.03, 1.73), 0.06, 0.04, "Head", "skin", taper=0.5, shade=0.85)
+		if "horns" in features:
+			b.beam((0.09 * x, -0.0, 1.8), (0.24 * x, 0.0, 1.84), 0.06 * k, 0.06 * k, "Head", "tusk", taper=0.7)
+			b.beam((0.24 * x, 0.0, 1.84), (0.3 * x, 0.06, 1.96 * k + 1.84 * (1 - k)), 0.045 * k, 0.045 * k, "Head", "tusk", taper=0.3)
+		if "brow_tufts" in features:
+			b.beam((0.06 * x, 0.13, 1.745), (0.13 * x, 0.11, 1.8), 0.02, 0.02, "Head", "hair", taper=0.3)
+		if "ribs" in features:
+			for z in (1.3, 1.36):
+				b.box((0.09 * x, 0.15, z), (0.08, 0.02, 0.018), "Chest", "tusk")
+	if "jaw" in features:
+		b.box((0, 0.085, 1.59), (0.2, 0.09, 0.06), "Head", "skin", top=(1.05, 1.1), shade=0.92)
+	if "bare_jaw" in features:
+		b.box((0, 0.1, 1.585), (0.12, 0.06, 0.04), "Head", "tusk", top=(1.1, 1.0))
+		b.box((0, 0.12, 1.612), (0.09, 0.02, 0.014), "Head", "eyes")
+	if "brow" in features:
+		b.box((0, 0.13, 1.742), (0.2, 0.035, 0.028), "Head", "skin", shade=0.8)
+	if "long_nose" in features:
+		b.beam((0, 0.13, 1.7), (0, 0.22, 1.63), 0.06, 0.05, "Head", "skin", taper=0.45, shade=0.95)
+	if "snout" in features:
+		b.box((0, 0.16, 1.63), (0.17, 0.12, 0.11), "Head", "skin", top=(0.9, 0.85), shade=0.95)
+		b.box((0, 0.225, 1.64), (0.12, 0.012, 0.05), "Head", "eyes")
+		b.box((0, 0.2, 1.62), (0.05, 0.02, 0.02), "Head", "trim")
+	if "tail" in features:
+		b.beam((0, -0.12, 0.98), (0, -0.2, 0.62), 0.04, 0.04, "Hips", "skin", taper=0.6)
+		b.box((0, -0.21, 0.58), (0.06, 0.06, 0.1), "Hips", "hair")
 
 
 def _limbs(b, f):
 	"""Arms, hands and legs on both sides."""
-	arm_r = 1.0 if f else 1.3
+	arm_r = (1.0 if f else 1.3) * RACE.get("limbs", 1.0)
 	for side, x in (("Right", 1), ("Left", -1)):
 		sh = Vector(_side(x, (0.28, 0, 1.42)))
 		el = Vector(_side(x, (0.32, 0, 1.14)))
@@ -364,7 +422,7 @@ def _limbs(b, f):
 		hand = 0.85 if f else 1.0
 		b.box(_side(x, (0.345, 0.035, 0.83)), (0.085 * hand, 0.1 * hand, 0.12 * hand), side + "Hand", "hands", top=(1.0, 0.9))
 		b.box(_side(x, (0.32, 0.085, 0.86)), (0.035, 0.035, 0.06), side + "Hand", "hands")
-		leg = 1.0 if f else 1.2
+		leg = (1.0 if f else 1.2) * (1.0 + (RACE.get("limbs", 1.0) - 1.0) * 0.6)
 		hip = Vector(_side(x, (0.1, 0, 0.97)))
 		knee = Vector(_side(x, (0.12, 0, 0.52)))
 		b.loft([(hip, 0.1 * leg, 0.105 * leg, side + "UpperLeg"),
@@ -1083,8 +1141,13 @@ def key_animations(arm, anims):
 # ---------------------------------------------------------------- main
 
 def main():
+	"""Builds every race, or those named after `--` (`-- orc troll`)."""
 	global RACE
+	import sys
+	only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 	for race, shape in RACES.items():
+		if only and race not in only:
+			continue
 		RACE = shape
 		build(race)
 
