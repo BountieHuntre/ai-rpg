@@ -881,25 +881,30 @@ func _update_floats(delta: float) -> void:
 
 
 func _update_enemy_names() -> void:
+	# Every creature and playerbot has a label: the far ones (most of them,
+	# with hundreds of bots) are skipped on distance alone, and a label's
+	# colour is set only when it changes (setting it re-lays the label out).
 	var shown: bool = Settings.get_value("enemy_names")
+	var eye := _camera.global_position
+	var reach := NAMEPLATE_RANGE * NAMEPLATE_RANGE
 	for entry in _enemy_names:
+		var label: Label = entry.label
 		if not is_instance_valid(entry.combatant):
-			entry.label.visible = false
+			label.visible = false
 			continue
 		var combatant: Combatant = entry.combatant
-		var label: Label = entry.label
 		var world: Vector3 = combatant.body.global_position + Vector3.UP * NAMEPLATE_HEIGHT
-		label.visible = (
-			shown
-			and combatant.is_alive()
-			and not _camera.is_position_behind(world)
-			and _camera.global_position.distance_to(world) <= NAMEPLATE_RANGE
-		)
-		if label.visible:
-			var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
-			label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
-			# Grey once someone outside the party taps it.
-			label.add_theme_color_override("font_color", Targeting.name_color(combatant.body))
+		if not shown or eye.distance_squared_to(world) > reach or not combatant.is_alive() or _camera.is_position_behind(world):
+			label.visible = false
+			continue
+		label.visible = true
+		var on_window: Vector2 = _camera.unproject_position(world) * _game_view.stretch_shrink
+		label.position = on_window - Vector2(label.size.x / 2.0, label.size.y)
+		# Grey once someone outside the party taps it.
+		var color := Targeting.name_color(combatant.body)
+		if color != entry.get("color", Color.TRANSPARENT):
+			entry.color = color
+			label.add_theme_color_override("font_color", color)
 
 
 ## The party under the player frame: each member's name, level, health,
@@ -1037,7 +1042,9 @@ func _update_npc_names() -> void:
 		marker.visible = not str(shown[0]).is_empty()
 		if marker.visible:
 			marker.text = shown[0]
-			marker.add_theme_color_override("font_color", shown[1])
+			if shown[1] != entry.get("color", Color.TRANSPARENT):
+				entry.color = shown[1]
+				marker.add_theme_color_override("font_color", shown[1])
 			marker.position = label.position + Vector2((label.size.x - marker.size.x) / 2.0, -marker.size.y + 2 * _ui_scale)
 
 

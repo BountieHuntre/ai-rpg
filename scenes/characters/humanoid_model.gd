@@ -70,11 +70,13 @@ const RANGED_SHOTS := { 2: "shoot_bow", 3: "shoot_gun", 18: "shoot_gun", 16: "th
 
 ## Animations that loop.
 const LOOPS := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "strafe_right", "fall", "sit",
-	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun"]
+	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun", "ready_2h"]
 const LOCO := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "strafe_right", "fall", "sit",
-	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun"]
+	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun", "ready_2h"]
 const UPPER := ["attack_1h", "attack_1h_b", "attack_2h", "attack_off", "punch", "block", "parry", "dodge", "hit",
-	"cast_release", "shoot_bow", "shoot_gun", "throw", "shoot_wand"]
+	"cast_release", "shoot_bow", "shoot_gun", "throw", "shoot_wand", "attack_2h_b", "parry_2h", "hit_2h"]
+## Creature props held in both hands, as two-handed items are.
+const TWO_HANDED_PROPS := ["sword2h", "axe2h", "mace2h", "staff", "polearm"]
 const FULL := ["jump", "land", "sit_down", "stand_up", "death", "wave", "bow", "cheer", "nod", "laugh", "cry"]
 ## Bones the upper-body actions move; the legs keep walking.
 const UPPER_BONES := ["Spine", "Chest", "Neck", "Head", "RightShoulder", "RightUpperArm", "RightLowerArm",
@@ -92,6 +94,8 @@ const RUN_SPEED := 7.0
 const ANIM_STEPS: Array[Vector2] = [Vector2(15, 1.0 / 30.0), Vector2(25, 1.0 / 15.0), Vector2(35, 0.1)]
 ## Out of view: just enough to keep the pose right when turned to.
 const OFF_SCREEN_STEP := 0.5
+## Yards from the camera past which parts other than the body aren't drawn.
+const PART_RANGE := 35.0
 ## How often gear is checked for changes, in seconds.
 const GEAR_CHECK := 0.5
 
@@ -107,6 +111,9 @@ var race := "human"
 ## "helm": helm part } (MAIN_PROPS values, "Off_..." or "Shield_..." parts).
 var creature_gear: Dictionary = {}
 var appearance: Dictionary = {}
+## A creature's own skin, scales or fur (the humanoid creatures), over the
+## appearance's skin colour; none while its alpha is 0.
+var skin_override := Color(0, 0, 0, 0)
 ## Clothes shown where nothing is worn (slot enum -> colour), for NPCs.
 var outfit: Dictionary = {}
 var _material := ShaderMaterial.new()
@@ -140,7 +147,7 @@ var _anim_time := 0.0
 
 
 func _init() -> void:
-	name = "HumanoidModel"
+	name = "Model"
 	_colors.resize(SLOT_COUNT)
 	_colors.fill(Color.WHITE)
 	_material.shader = SHADER
@@ -284,7 +291,10 @@ func _apply_appearance() -> void:
 	var body: int = appearance.body
 	for i in BODIES.size():
 		_show(BODIES[i], i == body)
-	_colors[SKIN] = SKIN_COLORS[appearance.skin]
+	_colors[SKIN] = SKIN_COLORS[appearance.skin] if skin_override.a <= 0.0 else skin_override
+	# Humanoid creatures' own head and tail (burrowlings, mirefin, ditchjaw).
+	for part in ["Species_head", "Species_tail"]:
+		_show(part, _parts.has(part))
 	_colors[HAIR] = HAIR_COLORS[appearance.hair_color]
 	_colors[EYES] = EYE_COLOR
 	_colors[TRIM] = TRIM_COLOR
@@ -293,7 +303,7 @@ func _apply_appearance() -> void:
 
 
 func _show(part: String, on: bool) -> void:
-	if on == _shown.has(part):
+	if on == _shown.has(part) or (on and not _parts.has(part)):
 		return
 	if not on:
 		_shown[part].queue_free()
@@ -304,6 +314,13 @@ func _show(part: String, on: bool) -> void:
 	mesh.mesh = _parts[part][0]
 	mesh.skin = _parts[part][1]
 	mesh.material_override = _material
+	mesh.layers = Targeting.UNIT_RENDER_LAYER
+	# Small parts are a pixel or two far off: not drawn past PART_RANGE, and
+	# weapons, hair and beards cast no shadow (each is its own draw).
+	if not part.begins_with("Body"):
+		mesh.visibility_range_end = PART_RANGE
+	if part.begins_with("Main_") or part.begins_with("Off_") or part.begins_with("Ranged_") 			or part.begins_with("Hair") or part.begins_with("Beard"):
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_skeleton.add_child(mesh)
 	mesh.skeleton = mesh.get_path_to(_skeleton)
 	_shown[part] = mesh
@@ -523,7 +540,7 @@ func _follow(body: CharacterBody3D, c: Combatant) -> void:
 	c.shot.connect(_on_shot)
 	c.swung.connect(func(_target: Combatant) -> void: _attack(false))
 	c.off_hand_swung.connect(func(_target: Combatant) -> void: _attack(true))
-	c.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: _upper("hit", true))
+	c.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: _upper("hit_2h" if _two_handed() else "hit", true))
 	c.avoided.connect(_on_avoided)
 	c.blocked_attack.connect(func(_attacker: Combatant) -> void: _upper("block"))
 	c.died.connect(_on_died)
@@ -632,7 +649,7 @@ func _update_loco(delta: float) -> void:
 		var shots := str(RANGED_SHOTS.get(int(_item(Inventory.Slot.RANGED).get("subclass", 0)), ""))
 		state = "aim_bow" if shots == "shoot_bow" else "aim_gun" if shots == "shoot_gun" else "ready"
 	elif c.is_in_combat() or c.attack_target:
-		state = "ready"
+		state = "ready_2h" if _two_handed() else "ready"
 	_tree.set("parameters/speed/scale", clampf(scale, 0.3, 2.5))
 	_set_loco(state)
 
@@ -668,16 +685,25 @@ func _attack(off_hand: bool) -> void:
 		_upper("attack_off")
 		return
 	var main := _item(Inventory.Slot.MAIN_HAND)
-	if not creature_gear.is_empty():
-		_swing += 1
+	_swing += 1
+	if _two_handed():
+		_upper("attack_2h" if _swing % 2 == 0 else "attack_2h_b")
+	elif not creature_gear.is_empty():
 		_upper("punch" if creature_gear.get("main", "") == "" else "attack_1h" if _swing % 2 == 0 else "attack_1h_b")
 	elif main.is_empty():
 		_upper("punch")
-	elif int(main.get("InventoryType", 0)) == Inventory.INVTYPE_TWO_HAND:
-		_upper("attack_2h")
 	else:
-		_swing += 1
 		_upper("attack_1h" if _swing % 2 == 0 else "attack_1h_b")
+
+
+## Holding a two-handed weapon (not while its ranged weapon is out): it's
+## held in both hands in a fight.
+func _two_handed() -> bool:
+	if _drawn:
+		return false
+	if not creature_gear.is_empty():
+		return str(creature_gear.get("main", "")) in TWO_HANDED_PROPS
+	return int(_item(Inventory.Slot.MAIN_HAND).get("InventoryType", 0)) == Inventory.INVTYPE_TWO_HAND
 
 
 ## A shot with the ranged weapon.
@@ -689,7 +715,7 @@ func _on_shot(_target: Combatant) -> void:
 func _on_avoided(text: String, _source: Combatant) -> void:
 	match text.to_lower():
 		"parry":
-			_upper("parry")
+			_upper("parry_2h" if _two_handed() else "parry")
 		"block":
 			_upper("block")
 		"dodge":

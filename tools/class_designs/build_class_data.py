@@ -20,6 +20,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 CLASS_ID = 10
 FAMILY = 12
 TRAINER = "spellsword"
+# The two-handed sword Spellswords start with: the game's own (every classic
+# two-hander needs level 2), made from classic's Practice Sword and weaker,
+# in its own id range; ItemDB merges the class file's items.
+STARTING_SWORD = 900500
+STARTING_SWORD_BASE = 8177
 RACES = [1, 4, 5, 7, 8]  # Human, Night Elf, Undead, Gnome, Troll
 
 # spell_template values used here (as SpellDB names them).
@@ -462,17 +467,23 @@ def build():
         rows = tables["level_stats"]["%d-1" % race]
         level_stats["%d-%d" % (race, CLASS_ID)] = [[rows[l][s] + paladin[l][s] - warrior[l][s] for s in range(5)] for l in range(60)]
     class_stats = {str(CLASS_ID): tables["class_stats"]["2"]}
-    # Starting kits: the race's Man-at-Arms kit with a sword and no shield
+    # Starting kits: the race's Man-at-Arms kit with a two-handed sword (the
+    # Initiate's Greatsword, below) in place of its weapon and shield
     # (shields come with Wardweave), and the class's proficiencies.
     kits = json.load(open(os.path.join(ROOT, "data", "classic", "characters.json"), encoding="utf8"))
     characters = {}
     for race in RACES:
         items = [i for i in kits["%d-1" % race]["items"] if i[0] not in (25, 37, 2362, 3111)]
-        items.insert(0, [25, 1])
+        items.insert(0, [STARTING_SWORD, 1])
         characters["%d-%d" % (race, CLASS_ID)] = {"items": items, "proficiencies": ["2:7", "2:8", "2:15", "4:0", "4:1", "4:2", "4:6"]}
 
+    classic_items = json.load(open(os.path.join(ROOT, "data", "classic", "items.json"), encoding="utf8"))
+    sword = dict(classic_items[str(STARTING_SWORD_BASE)])
+    sword.update({"entry": STARTING_SWORD, "name": "Initiate's Greatsword", "description": "", "RequiredLevel": 1,
+                  "ItemLevel": 1, "Quality": 1, "dmg_min1": 5, "dmg_max1": 9, "delay": 3400, "BuyPrice": 0, "SellPrice": 1})
     out = {
         "class": CLASS_ID,
+        "items": {str(STARTING_SWORD): sword},
         "spells": spells, "chains": chains, "trainers": {TRAINER: trainer}, "start_spells": start,
         "talents": {str(CLASS_ID): trees}, "book_tabs": {str(CLASS_ID): book_tabs}, "links": links,
         "level_stats": level_stats, "class_stats": class_stats, "characters": characters,

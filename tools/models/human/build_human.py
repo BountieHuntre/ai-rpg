@@ -49,6 +49,11 @@ RACES = {
 	"human": {"legs": 1.0, "torso": 1.0, "width": 1.0, "head": 1.0, "hands": 1.0, "props": 1.0},
 	"dwarf": {"legs": 0.62, "torso": 0.88, "width": 1.28, "head": 1.12, "hands": 1.12, "props": 0.9},
 	"gnome": {"legs": 0.5, "torso": 0.58, "width": 0.8, "head": 1.35, "hands": 1.1, "props": 0.62},
+	# Humanoid creatures: the same body and animations with a head and tail
+	# of their own (species_parts), and only the parts creatures use.
+	"burrowling": {"legs": 0.5, "torso": 0.6, "width": 0.85, "head": 1.15, "hands": 1.15, "props": 0.7, "species": "burrowling"},
+	"mirefin": {"legs": 0.45, "torso": 0.62, "width": 1.0, "head": 1.45, "hands": 1.1, "props": 0.75, "species": "mirefin"},
+	"ditchjaw": {"legs": 1.04, "torso": 1.0, "width": 1.06, "head": 1.05, "hands": 1.1, "props": 1.05, "species": "ditchjaw"},
 }
 RACE = RACES["human"]
 HIP_Z = 0.96
@@ -84,6 +89,9 @@ for side, x in (("Right", 1), ("Left", -1)):
 GRIP_R = Vector((0.345, 0.035, 0.81))
 GRIP_L = Vector((-0.345, 0.035, 0.81))
 SHIELD_AT = Vector((-0.42, 0.015, 1.0))
+# The left wrist's place on a two-handed weapon, from the right hand's grip:
+# back down the handle (the weapon points +Y in the hand) and a little up.
+TWO_HAND_GRIP = Vector((0, -0.17, 0.05))
 # Chunky, heroic proportions: the head, hands and feet bigger than life.
 HEAD_AT = Vector((0, 0.01, 1.56))
 HEAD_SCALE = 1.18
@@ -110,9 +118,9 @@ def place(v, group):
 		return body_point(HEAD_AT) + (v - HEAD_AT) * HEAD_SCALE * RACE["head"]
 	if group in WRIST:
 		return body_point(WRIST[group]) + (v - WRIST[group]) * HAND_SCALE * RACE["hands"]
-	if group in ("WeaponR", "WeaponL"):
-		grip = GRIP_R if group == "WeaponR" else GRIP_L
-		return place(grip, "RightHand" if group == "WeaponR" else "LeftHand") + (v - grip) * RACE["props"]
+	if group in ("WeaponR", "WeaponL", "GripL"):
+		grip = GRIP_L if group == "WeaponL" else GRIP_R
+		return place(grip, "LeftHand" if group == "WeaponL" else "RightHand") + (v - grip) * RACE["props"]
 	if group == "ShieldL":
 		return body_point(SHIELD_AT) + (v - SHIELD_AT) * RACE["props"]
 	if group in GROUP_SCALE:
@@ -123,6 +131,9 @@ BONES += [
 	("WeaponR", tuple(GRIP_R), tuple(GRIP_R + Vector((0, 0.2, 0))), "RightHand"),
 	("WeaponL", tuple(GRIP_L), tuple(GRIP_L + Vector((0, 0.2, 0))), "LeftHand"),
 	("ShieldL", tuple(SHIELD_AT), tuple(SHIELD_AT + Vector((-0.15, 0, 0))), "LeftLowerArm"),
+	# Where the left wrist goes on a two-handed weapon's handle, below the
+	# right hand: the two-handed animations reach it there by IK (two_hand_ik).
+	("GripL", tuple(GRIP_R + TWO_HAND_GRIP), tuple(GRIP_R + TWO_HAND_GRIP + Vector((0, -0.1, 0))), "WeaponR"),
 ]
 BONE_NAMES = [b[0] for b in BONES]
 
@@ -290,6 +301,8 @@ def body(name, female):
 		b.box((0, 0.11, 1.32), (0.27, 0.1, 0.12), "Chest", "chest", top=(0.85, 0.6), shift=(0, -0.02))
 	# Neck and head.
 	b.tube((0, 0, 1.46), (0, 0.01, 1.6), 0.062 if f else 0.08, 0.056 if f else 0.072, "Neck", "skin")
+	if RACE.get("species"):
+		return _limbs(b, f)
 	hw = 0.92 if f else 1.0
 	head = [
 		((0, 0.04, 1.565), 0.06 * hw, 0.06, "Head"),
@@ -305,7 +318,11 @@ def body(name, female):
 		b.box((0.122 * hw * x, 0.0, 1.7), (0.03, 0.05, 0.065), "Head", "skin", shade=0.9)
 	b.box((0, 0.14, 1.668), (0.035, 0.045, 0.06), "Head", "skin", top=(0.8, 0.6), shift=(0, -0.01), shade=0.95)
 	b.box((0, 0.128, 1.625), (0.05, 0.015, 0.012), "Head", "skin", shade=0.6)
-	# Arms, hands and legs on both sides.
+	return _limbs(b, f)
+
+
+def _limbs(b, f):
+	"""Arms, hands and legs on both sides."""
 	arm_r = 1.0 if f else 1.3
 	for side, x in (("Right", 1), ("Left", -1)):
 		sh = Vector(_side(x, (0.28, 0, 1.42)))
@@ -331,6 +348,45 @@ def body(name, female):
 		b.box(_side(x, (0.12, 0.04, 0.055)), (0.12 * leg, 0.26, 0.11), side + "Foot", "feet", top=(0.9, 0.62), shift=(0, -0.04))
 		b.box(_side(x, (0.12, 0.04, 0.008)), (0.125 * leg, 0.265, 0.016), side + "Foot", "feet", shade=0.55)
 	return b
+
+
+def species_parts(species):
+	"""A humanoid creature's head (on the Head bone, in place of the human
+	head) and tail: burrowlings rat-snouted with round ears and a thin tail,
+	mirefin a great fish head with fins, ditchjaw a hyena's head and mane."""
+	head = Builder("Species_head")
+	tail = Builder("Species_tail")
+	if species == "burrowling":
+		head.loft([((0, -0.09, 1.7), 0.1, 0.09, "Head"), ((0, 0.02, 1.71), 0.12, 0.12, "Head"),
+				   ((0, 0.14, 1.67), 0.075, 0.07, "Head"), ((0, 0.24, 1.64), 0.035, 0.035, "Head")],
+				  ["skin", "skin", "skin"], sides=8, cap_slots=("skin", "trim"))
+		for x in (-1, 1):
+			head.box((0.11 * x, -0.02, 1.84), (0.025, 0.12, 0.13), "Head", "skin", top=(1.0, 0.8), shade=0.85)
+			head.box((0.07 * x, 0.1, 1.74), (0.03, 0.03, 0.03), "Head", "eyes")
+		head.box((0, 0.2, 1.61), (0.06, 0.06, 0.02), "Head", "trim")
+		tail.beam((0, -0.12, 0.95), (0, -0.42, 0.82), 0.04, 0.04, "Hips", "skin", taper=0.4)
+		tail.beam((0, -0.42, 0.82), (0, -0.62, 0.62), 0.025, 0.025, "Hips", "skin", taper=0.4)
+	elif species == "mirefin":
+		head.loft([((0, 0.0, 1.5), 0.15, 0.15, "Head"), ((0, 0.03, 1.62), 0.19, 0.18, "Head"),
+				   ((0, 0.01, 1.78), 0.15, 0.16, "Head"), ((0, -0.03, 1.88), 0.07, 0.08, "Head")],
+				  ["skin", "skin", "skin"], sides=8)
+		head.box((0, 0.17, 1.58), (0.22, 0.04, 0.035), "Head", "eyes")
+		for x in (-1, 1):
+			head.box((0.1 * x, 0.12, 1.74), (0.06, 0.05, 0.06), "Head", "eyes")
+			head.box((0.19 * x, -0.02, 1.64), (0.03, 0.1, 0.14), "Head", "hair", top=(1.0, 0.5))
+		head.box((0, -0.05, 1.88), (0.03, 0.26, 0.14), "Head", "hair", top=(1.0, 0.6))
+		head.box((0, -0.18, 1.74), (0.03, 0.08, 0.24), "Head", "hair")
+	elif species == "ditchjaw":
+		head.loft([((0, -0.07, 1.68), 0.1, 0.1, "Head"), ((0, 0.03, 1.72), 0.115, 0.12, "Head"),
+				   ((0, 0.12, 1.67), 0.08, 0.08, "Head"), ((0, 0.28, 1.62), 0.045, 0.045, "Head")],
+				  ["skin", "skin", "skin"], sides=8, cap_slots=("skin", "eyes"))
+		for x in (-1, 1):
+			head.box((0.08 * x, -0.03, 1.86), (0.03, 0.06, 0.16), "Head", "hair", top=(0.4, 0.4))
+			head.box((0.065 * x, 0.11, 1.74), (0.03, 0.03, 0.025), "Head", "eyes")
+		head.box((0, 0.2, 1.6), (0.06, 0.12, 0.02), "Head", "trim")
+		head.box((0, -0.11, 1.6), (0.07, 0.07, 0.34), "Head", "hair", top=(1.0, 1.4))
+		tail.beam((0, -0.13, 0.98), (0, -0.38, 0.78), 0.08, 0.08, "Hips", "hair", taper=0.6)
+	return [head] + ([tail] if tail.faces else [])
 
 
 def shoulders():
@@ -629,6 +685,10 @@ READY = pose(
 	both("UpperLeg", (14, -6, 0)), both("LowerLeg", (-26, 0, 0)), both("Foot", (12, 0, 0)),
 	both("UpperArm", (28, -12, 0)), both("LowerArm", (55, 0, 0)),
 	Spine=(-6, 0, 0), Chest=(-4, 0, 0), Head=(8, 0, 0), loc={"Hips": (0, 0, -0.05)})
+# Combat ready with a two-handed weapon: held up across the body (the left
+# hand joins it on the handle by IK).
+READY_2H = pose(READY, {"RightUpperArm": (32, 22, 0), "RightLowerArm": (62, 0, 0), "RightHand": (-28, 0, 0)},
+				Chest=(-4, 0, -12), Spine=(-6, 0, -4))
 SIT = pose(
 	both("UpperLeg", (80, -24, 0)), both("LowerLeg", (-118, 0, 0)), both("Foot", (30, 0, 0)),
 	both("UpperArm", (30, -10, 0)), both("LowerArm", (40, 0, 0)),
@@ -725,11 +785,23 @@ def attacks():
 	wind_b = pose(READY, {"RightUpperArm": (85, -75, 0), "RightLowerArm": (35, 0, 0)}, Chest=(0, 0, -30))
 	strike_b = pose(READY, {"RightUpperArm": (80, 35, 0), "RightLowerArm": (10, 0, 0)}, Chest=(-4, 0, 32))
 	a["attack_1h_b"] = one_shot((5, wind_b), (9, strike_b), (12, strike_b))
-	wind2 = pose(READY, both("UpperArm", (160, -6, 0)), both("LowerArm", (70, 0, 0)),
-				 {"LeftUpperArm": (160, -20, 0)}, Spine=(6, 0, 0), Chest=(4, 0, 0))
-	strike2 = pose(READY, both("UpperArm", (30, 8, 0)), both("LowerArm", (10, 0, 0)), {"LeftUpperArm": (40, -30, 0)},
-				   Spine=(-20, 0, 0), Chest=(-6, 0, 0), loc={"Hips": (0, 0.04, -0.1)})
-	a["attack_2h"] = one_shot((7, wind2), (12, strike2), (16, strike2))
+	# Two-handed: the right arm places the weapon; the left hand is put on the
+	# handle afterwards by IK (two_hand_ik), so only the right arm is posed.
+	wind2 = pose(READY_2H, {"RightUpperArm": (165, 10, 0), "RightLowerArm": (60, 0, 0), "RightHand": (-20, 0, 0)},
+				 Spine=(6, 0, 0), Chest=(4, 0, -10))
+	strike2 = pose(READY_2H, {"RightUpperArm": (40, 18, 0), "RightLowerArm": (10, 0, 0), "RightHand": (10, 0, 0)},
+				   Spine=(-20, 0, 0), Chest=(-6, 0, 12), loc={"Hips": (0, 0.04, -0.1)})
+	a["attack_2h"] = one_shot((7, wind2), (12, strike2), (16, strike2), start=READY_2H)
+	sweep_wind = pose(READY_2H, {"RightUpperArm": (75, -55, 0), "RightLowerArm": (55, 0, 0), "RightHand": (-30, 0, 0)},
+					  Chest=(0, 0, -40), Spine=(0, 0, -10))
+	sweep = pose(READY_2H, {"RightUpperArm": (75, 50, 0), "RightLowerArm": (30, 0, 0), "RightHand": (-30, 0, 0)},
+				 Chest=(-4, 0, 42), Spine=(-6, 0, 12), loc={"Hips": (0, 0.03, -0.07)})
+	a["attack_2h_b"] = one_shot((7, sweep_wind), (12, sweep), (15, sweep), start=READY_2H)
+	parry2 = pose(READY_2H, {"RightUpperArm": (75, 28, 0), "RightLowerArm": (80, 0, 0), "RightHand": (-15, 0, 0)}, Chest=(0, 0, 12))
+	a["parry_2h"] = one_shot((3, parry2), (9, parry2), start=READY_2H)
+	hit2 = pose(READY_2H, Spine=(12, 0, 0), Chest=(6, 0, 0), Head=(12, 0, 0), loc={"Hips": (0, -0.04, -0.05)})
+	a["hit_2h"] = one_shot((2, hit2), (5, hit2), start=READY_2H)
+	a["ready_2h"] = [(0, READY_2H), (20, pose(READY_2H, Chest=(-2, 0, -12), loc={"Hips": (0, 0, -0.06)})), (40, READY_2H)]
 	a["attack_off"] = [(f, mirror_pose(p)) for f, p in a["attack_1h"]]
 	jab = pose(READY, {"RightUpperArm": (82, 8, 0), "RightLowerArm": (8, 0, 0)}, Chest=(-4, 0, 24), Spine=(-6, 0, 0))
 	a["punch"] = one_shot((4, jab), (7, jab))
@@ -853,6 +925,35 @@ def all_animations():
 	return anims
 
 
+# Animations whose left hand holds the two-handed weapon's handle.
+TWO_HAND_ANIMS = ["ready_2h", "attack_2h", "attack_2h_b", "parry_2h", "hit_2h"]
+TWO_HAND_BONES = ["LeftUpperArm", "LeftLowerArm"]
+
+
+def two_hand_ik(arm, names):
+	"""Puts the left wrist on the GripL bone (the handle) in each of these
+	animations by IK, baked into their keyframes."""
+	bpy.context.view_layer.objects.active = arm
+	arm.select_set(True)
+	bpy.ops.object.mode_set(mode="POSE")
+	ik = arm.pose.bones["LeftLowerArm"].constraints.new("IK")
+	ik.target = arm
+	ik.subtarget = "GripL"
+	ik.chain_count = 2
+	ik.use_tail = True
+	for bone in arm.data.bones:
+		bone.select = bone.name in TWO_HAND_BONES
+	for name in names:
+		action = bpy.data.actions[name]
+		arm.animation_data.action = action
+		start, end = (int(f) for f in action.frame_range)
+		bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True,
+						 clear_constraints=False, use_current_action=True, bake_types={"POSE"})
+	arm.pose.bones["LeftLowerArm"].constraints.remove(ik)
+	arm.animation_data.action = None
+	bpy.ops.object.mode_set(mode="OBJECT")
+
+
 def key_animations(arm, anims):
 	pose_bones = arm.pose.bones
 	rest = {b.name: b.matrix_local.to_3x3() for b in arm.data.bones}
@@ -904,12 +1005,16 @@ def build(race):
 	scene.render.fps = FPS
 	arm = build_armature()
 	material = bpy.data.materials.new("Character")
-	parts = [body("BodyMale", False), body("BodyFemale", True), shoulders()] + hairs() + props()
+	if RACE.get("species"):
+		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + props()[:len(WEAPONS) + len(OFF_HAND) + 2]
+	else:
+		parts = [body("BodyMale", False), body("BodyFemale", True), shoulders()] + hairs() + props()
 	tris = {}
 	for builder in parts:
 		obj = builder.build(arm, material)
 		tris[builder.name] = sum(len(f) - 2 for f in builder.faces)
 	key_animations(arm, all_animations())
+	two_hand_ik(arm, TWO_HAND_ANIMS)
 	os.makedirs(os.path.dirname(out), exist_ok=True)
 	bpy.ops.wm.save_as_mainfile(filepath=blend)
 	bpy.ops.export_scene.gltf(
@@ -921,4 +1026,5 @@ def build(race):
 	print("wrote", out)
 
 
-main()
+if __name__ == "__main__":
+	main()

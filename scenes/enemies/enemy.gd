@@ -318,7 +318,7 @@ func set_far(far: bool) -> void:
 			node.set_physics_process(not far)
 	_feedback.set_process(not far)
 	if model:
-		model.set_animating(not far)
+		model.call("set_animating", not far)
 
 
 ## One slow tick for a far creature: what its nodes would do over `delta`.
@@ -378,9 +378,8 @@ func _wander(delta: float) -> Vector3:
 
 
 ## Human creatures shown as the Human model: creature entry -> { "main":
-## weapon prop, "off": off-hand part, "helm": helm part, "outfit": [chest,
-## legs, hood or cloak colour] } (HumanoidModel.creature_gear). The brigands
-## wear the red hoods of their band.
+## weapon prop, "off": off-hand part, "helm": helm part }
+## (HumanoidModel.creature_gear). The brigands wear the red hoods of their band.
 const HUMAN_CREATURES := {
 	38: { "main": "sword", "helm": "Helm_hood" },
 	94: { "main": "dagger", "helm": "Helm_hood" },
@@ -388,14 +387,41 @@ const HUMAN_CREATURES := {
 	473: { "main": "sword", "off": "Shield_round" },
 	474: { "main": "staff", "helm": "Helm_hood" },
 }
+## Other creatures with models: entry -> [model, props]. Beasts (wolf, boar,
+## bear, spider) are BeastModels coloured by their LOOKS colour; humanoid
+## creatures (burrowling, mirefin, ditchjaw) are HumanoidModels of their own
+## race with props as in HUMAN_CREATURES.
+const CREATURE_MODELS := {
+	299: ["wolf", {}], 69: ["wolf", {}], 525: ["wolf", {}], 1922: ["wolf", {}], 118: ["wolf", {}],
+	113: ["boar", {}], 524: ["boar", {}], 390: ["boar", {}], 330: ["boar", {}],
+	822: ["bear", {}],
+	30: ["spider", {}], 43: ["spider", {}],
+	6: ["burrowling", { "main": "dagger" }], 257: ["burrowling", { "main": "axe" }], 80: ["burrowling", { "main": "mace" }],
+	40: ["burrowling", { "main": "axe" }], 475: ["burrowling", { "main": "sword" }], 476: ["burrowling", { "main": "staff" }],
+	327: ["burrowling", { "main": "axe", "off": "Shield_round" }],
+	285: ["mirefin", { "main": "polearm" }], 735: ["mirefin", { "main": "polearm" }], 732: ["mirefin", { "main": "dagger" }],
+	46: ["mirefin", { "main": "" }],
+	97: ["ditchjaw", { "main": "axe" }], 117: ["ditchjaw", { "main": "axe2h" }], 478: ["ditchjaw", { "main": "polearm" }],
+	448: ["ditchjaw", { "main": "axe2h" }],
+}
+## How big each model is at scale 1, in LOOKS' terms, so a creature's model
+## is scaled by its LOOKS size over this.
+const MODEL_BASE_SIZE := { "wolf": 0.9, "boar": 1.0, "bear": 1.15, "spider": 0.75, "burrowling": 0.75, "mirefin": 0.9, "ditchjaw": 1.0 }
+const BEASTS := ["wolf", "boar", "bear", "spider"]
 const BRIGAND_RED := Color(0.55, 0.12, 0.1)
-## The creature's model, for HUMAN_CREATURES.
-var model: HumanoidModel
+## The creature's model (HumanoidModel or BeastModel), for HUMAN_CREATURES
+## and CREATURE_MODELS.
+var model: Node3D
 
 
 func _apply_look() -> void:
+	# Out of the target ring's projection (models mark their own meshes).
+	Targeting.mark_unit(_visual)
 	if HUMAN_CREATURES.has(creature_entry):
 		_apply_human_look()
+		return
+	if CREATURE_MODELS.has(creature_entry):
+		_apply_creature_model()
 		return
 	var look: Array = LOOKS.get(creature_entry, [Vector3.ONE, Color(0.75, 0.25, 0.25)])
 	var body: MeshInstance3D = $Visual/Body
@@ -412,6 +438,40 @@ func _apply_look() -> void:
 	_visual.scale = look[0]
 
 
+## A beast or humanoid creature of CREATURE_MODELS: its own model, sized by its
+## LOOKS size and coloured by its LOOKS colour.
+func _apply_creature_model() -> void:
+	for part in ["Body", "Nose"]:
+		get_node("Visual/" + part).visible = false
+	var look: Array = LOOKS.get(creature_entry, [Vector3.ONE, Color(0.6, 0.5, 0.4)])
+	var kind: String = CREATURE_MODELS[creature_entry][0]
+	_visual.scale = Vector3.ONE * (float(look[0].x) / float(MODEL_BASE_SIZE[kind]))
+	if model:
+		return
+	var color: Color = look[1]
+	if kind in BEASTS:
+		var beast := BeastModel.new()
+		beast.species = kind
+		beast.colors = BeastModel.coat_colors(color, kind)
+		model = beast
+		_visual.add_child(beast)
+		beast.attach_creature(self, combatant)
+		return
+	var creature := HumanoidModel.new()
+	creature.race = kind
+	creature.set_appearance({ "body": 0, "skin": 0, "hair": 3, "hair_color": 0, "face": 0 })
+	creature.skin_override = color
+	creature.creature_gear = CREATURE_MODELS[creature_entry][1]
+	# Rags: a dark loincloth and, on the furred ones, a vest.
+	var rag := color.darkened(0.55)
+	creature.outfit = { HumanoidModel.CHEST: color if kind == "mirefin" else rag.lightened(0.15), HumanoidModel.LEGS: rag,
+		HumanoidModel.FEET: color, HumanoidModel.HANDS: color, HumanoidModel.WAIST: rag.darkened(0.2),
+		HumanoidModel.HAIR: color.darkened(0.4) }
+	model = creature
+	_visual.add_child(creature)
+	creature.attach_creature(self, combatant)
+
+
 func _apply_human_look() -> void:
 	for part in ["Body", "Nose"]:
 		get_node("Visual/" + part).visible = false
@@ -419,22 +479,23 @@ func _apply_human_look() -> void:
 	if model:
 		return
 	var gear: Dictionary = HUMAN_CREATURES[creature_entry]
-	model = HumanoidModel.new()
+	var human := HumanoidModel.new()
 	# Each brigand its own face: seeded by its place in the world.
 	var seed_value := hash(str(name) + str(creature_entry))
 	var look := HumanoidModel.random_appearance(seed_value)
 	look.body = 0 if seed_value % 4 != 0 else 1
-	model.set_appearance(look)
-	model.creature_gear = gear
+	human.set_appearance(look)
+	human.creature_gear = gear
 	var outfit := HumanoidModel.outfit_for("", seed_value)
 	outfit[HumanoidModel.HEAD] = BRIGAND_RED
 	outfit[HumanoidModel.CHEST] = HumanoidModel.LEATHER[absi(seed_value) % HumanoidModel.LEATHER.size()]
 	outfit[HumanoidModel.LEGS] = Color(0.22, 0.2, 0.2)
 	if not gear.has("helm"):
 		outfit[HumanoidModel.BACK] = BRIGAND_RED
-	model.outfit = outfit
-	_visual.add_child(model)
-	model.attach_creature(self, combatant)
+	human.outfit = outfit
+	model = human
+	_visual.add_child(human)
+	human.attach_creature(self, combatant)
 
 
 func face_toward(point: Vector3) -> void:

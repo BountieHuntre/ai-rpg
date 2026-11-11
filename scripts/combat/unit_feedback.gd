@@ -136,9 +136,10 @@ func _apply_material() -> void:
 		model.set_corpse(_dead and _flash_left <= 0.0)
 
 
-## The unit's character model, when it has one (HumanoidModel).
-func _model() -> HumanoidModel:
-	return _visual.get_node_or_null("HumanoidModel") as HumanoidModel
+## The unit's model, when it has one (HumanoidModel or BeastModel, both
+## named "Model", with set_flash, set_corpse and show_dead).
+func _model() -> Node3D:
+	return _visual.get_node_or_null("Model") as Node3D
 
 
 func _build_stars() -> void:

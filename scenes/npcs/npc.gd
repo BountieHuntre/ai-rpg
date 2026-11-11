@@ -23,6 +23,7 @@ func _ready() -> void:
 	for part in ["Body", "Tabard"]:
 		if has_node(part):
 			get_node(part).visible = false
+	Targeting.mark_unit(self)
 	var model := HumanoidModel.new()
 	add_child(model)
 	model.set_appearance(appearance if not appearance.is_empty() else HumanoidModel.random_appearance(hash(npc_name)))

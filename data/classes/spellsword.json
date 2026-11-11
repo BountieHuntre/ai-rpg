@@ -1,5 +1,43 @@
 {
 	"class": 10,
+	"items": {
+		"900500": {
+			"entry": 900500,
+			"name": "Initiate's Greatsword",
+			"description": "",
+			"Quality": 1,
+			"class": 2,
+			"subclass": 8,
+			"InventoryType": 17,
+			"ItemLevel": 1,
+			"RequiredLevel": 1,
+			"AllowableClass": -1,
+			"stackable": 1,
+			"BuyPrice": 0,
+			"SellPrice": 1,
+			"bonding": 0,
+			"armor": 0,
+			"block": 0,
+			"delay": 3400,
+			"MaxDurability": 35,
+			"ContainerSlots": 0,
+			"dmg_min1": 5,
+			"dmg_max1": 9,
+			"dmg_type1": 0,
+			"dmg_min2": 0,
+			"dmg_max2": 0,
+			"dmg_type2": 0,
+			"BuyCount": 1,
+			"spellid_1": 0,
+			"spelltrigger_1": 0,
+			"spellcharges_1": 0,
+			"spellcooldown_1": -1,
+			"spellcategory_1": 0,
+			"spellcategorycooldown_1": -1,
+			"startquest": 0,
+			"stats": []
+		}
+	},
 	"spells": {
 		"900001": {
 			"Id": 900001,
@@ -25670,7 +25708,7 @@
 		"1-10": {
 			"items": [
 				[
-					25,
+					900500,
 					1
 				],
 				[
@@ -25707,7 +25745,7 @@
 		"4-10": {
 			"items": [
 				[
-					25,
+					900500,
 					1
 				],
 				[
@@ -25744,7 +25782,7 @@
 		"5-10": {
 			"items": [
 				[
-					25,
+					900500,
 					1
 				],
 				[
@@ -25781,7 +25819,7 @@
 		"7-10": {
 			"items": [
 				[
-					25,
+					900500,
 					1
 				],
 				[
@@ -25818,7 +25856,7 @@
 		"8-10": {
 			"items": [
 				[
-					25,
+					900500,
 					1
 				],
 				[

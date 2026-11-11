@@ -50,6 +50,9 @@ const MAX_STACK := 20
 static func get_item(id: int) -> Dictionary:
 	if _items.is_empty():
 		_items = JSON.parse_string(FileAccess.get_file_as_string(ITEMS_PATH))
+		# The game's own classes' items (the Spellsword's starting sword).
+		for extra: Dictionary in ClassicData.class_files():
+			_items.merge(extra.get("items", {}), true)
 		for key: String in _items:
 			if int(_items[key].get("stackable", 1)) > 1:
 				_items[key].stackable = MAX_STACK

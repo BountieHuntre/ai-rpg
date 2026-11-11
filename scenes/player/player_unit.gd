@@ -58,6 +58,8 @@ static func race_color(race: ClassicData.Race) -> Color:
 ## RACE_MODELS), or the placeholder capsule sized and coloured for races
 ## without one.
 func apply_race_look() -> void:
+	# Out of the target ring's projection.
+	Targeting.mark_unit(_visual)
 	var race_model := HumanoidModel.model_race(profile.race)
 	for part in ["Body", "Nose"]:
 		_visual.get_node(part).visible = race_model == ""

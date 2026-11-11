@@ -1,7 +1,9 @@
 class_name Targeting
 extends Node
 ## Tracks the player's current target (a creature, an NPC or a playerbot) and
-## draws the ring under it.
+## draws the ring under it: a decal projected down onto the ground, so all of
+## it shows on slopes, steps and rocks. Units' meshes are on their own render
+## layer (UNIT_RENDER_LAYER, `mark_unit`) that the decal leaves alone.
 
 ## A corpse or a game object (GameObject) to loot.
 signal loot_requested(corpse: Node3D, take_all: bool)
@@ -9,6 +11,23 @@ signal loot_requested(corpse: Node3D, take_all: bool)
 signal npc_clicked(npc: Node3D)
 
 const UNIT_LAYER := 2
+## Render layer bit for units' meshes (the player, bots, creatures, NPCs),
+## which the ring isn't projected onto.
+const UNIT_RENDER_LAYER := 1 << 1
+## The ring: inner and outer radius at a target's normal size, and how far
+## up and down it reaches to find the ground, in yards.
+const RING_INNER := 0.55
+const RING_OUTER := 0.9
+## The dark edge on both sides of the band, so it shows on bright ground.
+const RING_EDGE := 0.05
+## Far off, the ring grows: from FAR_START yards from the camera, up to
+## FAR_GROWTH times its size at FAR_START + FAR_SPAN.
+const FAR_START := 8.0
+const FAR_SPAN := 32.0
+const FAR_GROWTH := 3.0
+const RING_REACH := 3.0
+## Pixels across the ring's texture.
+const RING_TEXTURE_SIZE := 96
 const HOSTILE_COLOR := Color(0.8, 0.2, 0.2)
 const NEUTRAL_COLOR := Color(0.95, 0.8, 0.15)
 const FRIENDLY_COLOR := Color(0.25, 1, 0.25)
@@ -25,8 +44,8 @@ const COMBAT_FLASH_RATE := 2.0
 var target: Node3D
 
 @onready var _player: Player = get_parent()
-@onready var _ring: MeshInstance3D = $Ring
-var _ring_material := StandardMaterial3D.new()
+var _ring := Decal.new()
+static var _ring_texture: ImageTexture
 var _flash_time := 0.0
 
 
@@ -73,7 +92,7 @@ func set_target(node: Node3D) -> void:
 		Sfx.play("target")
 	target = node
 	if target:
-		_ring_material.albedo_color = reaction_color(target)
+		_set_ring_color(reaction_color(target))
 	# Auto-attack follows target changes but never starts from selecting alone.
 	if _player.combatant.attack_target:
 		_player.combatant.attack_target = target_combatant()
@@ -144,8 +163,48 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 
 
 func _ready() -> void:
-	_ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_ring.material_override = _ring_material
+	if not _ring_texture:
+		_ring_texture = _make_ring_texture()
+	_ring.texture_albedo = _ring_texture
+	# Lit by its own glow, as the unshaded torus was.
+	_ring.texture_emission = _ring_texture
+	_ring.emission_energy = 2.0
+	_ring.size = Vector3(RING_OUTER * 2.0, RING_REACH * 2.0, RING_OUTER * 2.0)
+	_ring.cull_mask = ~UNIT_RENDER_LAYER & 0xFFFFF
+	_ring.upper_fade = 0.0
+	_ring.lower_fade = 0.0
+	_ring.top_level = true
+	_ring.visible = false
+	add_child(_ring)
+
+
+## Puts every mesh under a unit on UNIT_RENDER_LAYER, out of the ring's way.
+static func mark_unit(node: Node) -> void:
+	if node is VisualInstance3D:
+		(node as VisualInstance3D).layers = UNIT_RENDER_LAYER
+	for child in node.get_children():
+		mark_unit(child)
+
+
+## A white ring on clear, its edges hard (pixel art), for the decal.
+static func _make_ring_texture() -> ImageTexture:
+	var size := RING_TEXTURE_SIZE
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var half := size / 2.0
+	for y in size:
+		for x in size:
+			var r := Vector2(x + 0.5 - half, y + 0.5 - half).length() / half * RING_OUTER
+			# Clear pixels black too: the glow (emission) ignores alpha. The
+			# edges are dark, so the band shows on bright ground.
+			var color := Color(0, 0, 0, 0)
+			if r >= RING_INNER and r <= RING_OUTER:
+				color = Color.WHITE if r >= RING_INNER + RING_EDGE and r <= RING_OUTER - RING_EDGE else Color(0, 0, 0, 0.85)
+			image.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(image)
+
+
+func _set_ring_color(color: Color) -> void:
+	_ring.modulate = color
 
 
 ## Whether the target is fighting the player: being auto-attacked, or chasing.
@@ -164,12 +223,20 @@ func _process(delta: float) -> void:
 		set_target(null)
 	_ring.visible = target != null
 	if target:
-		_ring.global_position = target.global_position + Vector3.UP * 0.05
+		_ring.global_position = target.global_position
+		# As big as the target is drawn (big creatures, elites and bosses).
+		var visual := target.get_node_or_null("Visual") as Node3D
+		var size := clampf(visual.scale.x, 0.8, 2.0) if visual else 1.0
+		var camera := _player.get_viewport().get_camera_3d()
+		if camera:
+			var far := clampf((camera.global_position.distance_to(target.global_position) - FAR_START) / FAR_SPAN, 0.0, 1.0)
+			size *= lerpf(1.0, FAR_GROWTH, far)
+		_ring.size = Vector3(RING_OUTER * 2.0 * size, RING_REACH * 2.0, RING_OUTER * 2.0 * size)
 		if in_combat_with_target():
 			# Flashes between bright and dark red.
 			_flash_time += delta
 			var pulse := 0.5 + 0.5 * cos(_flash_time * TAU * COMBAT_FLASH_RATE)
-			_ring_material.albedo_color = HOSTILE_COLOR.darkened(0.7).lerp(Color(1, 0.25, 0.2), pulse)
+			_set_ring_color(HOSTILE_COLOR.darkened(0.7).lerp(Color(1, 0.25, 0.2), pulse))
 		else:
 			_flash_time = 0.0
-			_ring_material.albedo_color = reaction_color(target)
+			_set_ring_color(reaction_color(target))

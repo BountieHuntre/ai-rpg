@@ -227,7 +227,31 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 
 ## The quests an NPC gives or takes: [{ "id", "status" }], turn-ins first,
 ## then new quests, then ones still underway.
+## for_npc's answers by NPC: the HUD and minimap ask for every NPC each frame,
+## and each answer checks every quest. Cleared when quests change and at
+## least every CACHE_FRAMES frames (levelling makes new quests available).
+static var _npc_cache: Dictionary = {}
+static var _cache_frame := -1000
+const CACHE_FRAMES := 15
+
+
+static func clear_cache() -> void:
+	_npc_cache.clear()
+
+
 static func for_npc(npc_id: String) -> Array:
+	var frame := Engine.get_process_frames()
+	if frame - _cache_frame > CACHE_FRAMES:
+		_npc_cache.clear()
+		_cache_frame = frame
+		if not GameState.quests_changed.is_connected(clear_cache):
+			GameState.quests_changed.connect(clear_cache)
+	if not _npc_cache.has(npc_id):
+		_npc_cache[npc_id] = _for_npc(npc_id)
+	return (_npc_cache[npc_id] as Array).duplicate()
+
+
+static func _for_npc(npc_id: String) -> Array:
 	var turn_in := []
 	var available := []
 	var underway := []

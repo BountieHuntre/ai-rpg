@@ -28,17 +28,6 @@ albedo_color = Color(0.95, 0.75, 0.3, 1)
 material = SubResource("Material_nose")
 size = Vector3(0.3, 0.25, 0.4)
 
-[sub_resource type="StandardMaterial3D" id="Material_ring"]
-shading_mode = 0
-albedo_color = Color(0.95, 0.2, 0.15, 1)
-
-[sub_resource type="TorusMesh" id="TorusMesh_ring"]
-material = SubResource("Material_ring")
-inner_radius = 0.75
-outer_radius = 0.9
-rings = 24
-ring_segments = 4
-
 [node name="Player" type="CharacterBody3D" groups=["player", "player_units"]]
 collision_layer = 2
 collision_mask = 1
@@ -78,9 +67,3 @@ death_sound = "player_die"
 
 [node name="Targeting" type="Node" parent="."]
 script = ExtResource("3_targeting")
-
-[node name="Ring" type="MeshInstance3D" parent="Targeting"]
-top_level = true
-visible = false
-cast_shadow = 0
-mesh = SubResource("TorusMesh_ring")
