@@ -1,5 +1,19 @@
 [
 	{
+		"version": "0.8.0",
+		"date": "11-11-2026",
+		"notes": [
+			"Ranged attacks: the new Shoot ability (in your spellbook) fires your bow, gun, throwing weapon or wand at your target again and again until you stop. Stand still to shoot. Bows, guns and throwing weapons can't hit targets closer than 8 yards; wands can.",
+			"Wands deal damage of their own type and can be resisted. Cleric playerbots holding a wand use it once they run low on mana.",
+			"New playable races: Dwarves (Man-at-Arms, Templar, Cleric) and Gnomes (Man-at-Arms), with their own models and looks to choose. Playerbots can be Dwarves and Gnomes too.",
+			"Helms and cloaks now show on your character: hoods, caps, mail coifs and plate helms by armour type.",
+			"Brigands, their hedge-mages and Odo the Collector now look like people, in red hoods with their weapons.",
+			"Your bow, gun or throwing knife comes out while you shoot, with aiming and shooting animations.",
+			"Everything that stacks now stacks to 20.",
+			"Arrows and shot are gone: ranged weapons need no ammo. Throwing knives and axes are now single weapons, bought one at a time."
+		]
+	},
+	{
 		"version": "0.7.0",
 		"date": "11-11-2026",
 		"notes": [
