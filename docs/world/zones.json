@@ -1,0 +1,1923 @@
+{
+	"continents": {
+		"aldmark": {
+			"name": "Aldmark",
+			"about": "The old kingdoms of men and dwarves, and the Undead's grey north: classic's Eastern Kingdoms in spirit, laid out anew.",
+			"zones": {
+				"ashford_vale": {
+					"name": "Ashford Vale",
+					"classic": "Northshire Valley",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-200,
+						-200,
+						200,
+						200
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "the priory",
+					"places": [
+						"the priory",
+						"the mine",
+						"the brigand camp",
+						"the bridge"
+					],
+					"theme": "A walled valley of vineyards round the priory, where the kingdom's recruits begin.",
+					"links": [
+						"harrowfield"
+					]
+				},
+				"harrowfield": {
+					"name": "Harrowfield",
+					"classic": "Elwynn Forest",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-500,
+						200,
+						500,
+						1200
+					],
+					"size": [
+						1000,
+						1000
+					],
+					"hub": "Wexford",
+					"places": [
+						"Wexford",
+						"the Old Delve",
+						"Copperhollow",
+						"the Mirrow Mere",
+						"Thornwick Tower"
+					],
+					"theme": "Farmland and woods over the pass from the vale, troubled by brigands, burrowlings and gnolls.",
+					"links": [
+						"ashford_vale",
+						"aldgate",
+						"dunmarch",
+						"redcrag",
+						"gloamwood"
+					]
+				},
+				"aldgate": {
+					"name": "Aldgate",
+					"classic": "Stormwind City",
+					"levels": null,
+					"faction": "alliance",
+					"kind": "city",
+					"rect": [
+						-1300,
+						200,
+						-500,
+						1000
+					],
+					"size": [
+						800,
+						800
+					],
+					"hub": "Aldgate",
+					"places": [
+						"the King's Keep",
+						"the Cathedral of the Dawn",
+						"the Harbour",
+						"the Old Town"
+					],
+					"theme": "The kingdom's walled capital on the western harbour: trainers of every class, the bank and the ships.",
+					"links": [
+						"harrowfield",
+						"dunmarch"
+					]
+				},
+				"dunmarch": {
+					"name": "The Dunmarch",
+					"classic": "Westfall",
+					"levels": [
+						10,
+						20
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-1700,
+						1000,
+						-500,
+						2200
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "Saltmere Watch",
+					"places": [
+						"Saltmere Watch",
+						"the Mill at Brack",
+						"the Drowned Lighthouse",
+						"Gullcove"
+					],
+					"theme": "Abandoned coastal farms where the brigand brotherhood gathers an army of the dispossessed.",
+					"links": [
+						"harrowfield",
+						"aldgate",
+						"gloamwood",
+						"thornwild"
+					]
+				},
+				"redcrag": {
+					"name": "Redcrag Hills",
+					"classic": "Redridge Mountains",
+					"levels": [
+						15,
+						25
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						500,
+						300,
+						1500,
+						1200
+					],
+					"size": [
+						1000,
+						900
+					],
+					"hub": "Tarnbridge",
+					"places": [
+						"Tarnbridge",
+						"the Greyward Tower",
+						"Stonejaw Camp",
+						"the Ochre Lake"
+					],
+					"theme": "Red-rock hills round a lake town, held against gnoll warbands and the orcs of the high pass.",
+					"links": [
+						"harrowfield",
+						"cinderreach",
+						"sorrowmire"
+					]
+				},
+				"gloamwood": {
+					"name": "Gloamwood",
+					"classic": "Duskwood",
+					"levels": [
+						18,
+						30
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-500,
+						1200,
+						700,
+						2200
+					],
+					"size": [
+						1200,
+						1000
+					],
+					"hub": "Lanternfall",
+					"places": [
+						"Lanternfall",
+						"the Crowmound Barrows",
+						"the Widow's Hollow",
+						"Crookback Manor"
+					],
+					"theme": "A forest under endless dusk: wolfmen, ghouls and the hungry dead round a lantern-lit town.",
+					"links": [
+						"harrowfield",
+						"dunmarch",
+						"thornwild",
+						"hollowpass",
+						"sorrowmire"
+					]
+				},
+				"frosthollow": {
+					"name": "Frosthollow",
+					"classic": "Coldridge Valley",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-1100,
+						-1200,
+						-700,
+						-800
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "the Hollow Hall",
+					"places": [
+						"the Hollow Hall",
+						"the Troll Caves",
+						"the Frozen Stair"
+					],
+					"theme": "A snowbound valley below the dwarven halls, where Dwarves and Gnomes begin.",
+					"links": [
+						"highpeak"
+					]
+				},
+				"highpeak": {
+					"name": "Highpeak",
+					"classic": "Dun Morogh",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-700,
+						-1400,
+						500,
+						-200
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "Kettlefold",
+					"places": [
+						"Kettlefold",
+						"the Cogworks",
+						"the Icewater Tarn",
+						"the Southgate Pass"
+					],
+					"theme": "Snowy pine valleys and frozen lakes under the mountains, with troll caves and a ruined gnome works.",
+					"links": [
+						"frosthollow",
+						"anvilhold",
+						"brannoch"
+					]
+				},
+				"anvilhold": {
+					"name": "Anvilhold",
+					"classic": "Ironforge",
+					"levels": null,
+					"faction": "alliance",
+					"kind": "city",
+					"rect": [
+						-700,
+						-1800,
+						-100,
+						-1400
+					],
+					"size": [
+						600,
+						400
+					],
+					"hub": "Anvilhold",
+					"places": [
+						"the Heartforge",
+						"the Delvers' Library",
+						"the Undertram"
+					],
+					"theme": "The dwarven capital hewn round a forge in the mountain's heart; its Undertram runs under the mountains to Aldgate.",
+					"links": [
+						"highpeak"
+					]
+				},
+				"brannoch": {
+					"name": "Lake Brannoch",
+					"classic": "Loch Modan",
+					"levels": [
+						10,
+						20
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						500,
+						-1400,
+						1500,
+						-500
+					],
+					"size": [
+						1000,
+						900
+					],
+					"hub": "Brannoch Hold",
+					"places": [
+						"Brannoch Hold",
+						"the Great Dam",
+						"the Silvervein Mine",
+						"the Ogre Mound"
+					],
+					"theme": "A dammed lake among green hills, mined by dwarves and raided by cave brutes and ogres.",
+					"links": [
+						"highpeak",
+						"greymire",
+						"ochre_waste"
+					]
+				},
+				"gravesend": {
+					"name": "Gravesend",
+					"classic": "Deathknell",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-2900,
+						-4500,
+						-2500,
+						-4100
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "the Gravesend Chapel",
+					"places": [
+						"the Gravesend Chapel",
+						"the Webbed Vault",
+						"the Old Crypts"
+					],
+					"theme": "A ruined chapel yard where the risen dead wake to their second life.",
+					"links": [
+						"duskmoor"
+					]
+				},
+				"duskmoor": {
+					"name": "Duskmoor Glades",
+					"classic": "Tirisfal Glades",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-2500,
+						-4800,
+						-1100,
+						-3600
+					],
+					"size": [
+						1400,
+						1200
+					],
+					"hub": "Gallowfield",
+					"places": [
+						"Gallowfield",
+						"the Zealot Abbey",
+						"Lake Hollowmere",
+						"the Plaguewood Farms"
+					],
+					"theme": "Grey glades of dead farms and pumpkin fields, hunted by the zealots of a crusading order.",
+					"links": [
+						"gravesend",
+						"ossuary",
+						"ashpine",
+						"withering"
+					]
+				},
+				"ossuary": {
+					"name": "The Ossuary",
+					"classic": "Undercity",
+					"levels": null,
+					"faction": "horde",
+					"kind": "city",
+					"rect": [
+						-1700,
+						-5200,
+						-1100,
+						-4800
+					],
+					"size": [
+						600,
+						400
+					],
+					"hub": "the Ossuary",
+					"places": [
+						"the Ruined Palace",
+						"the Alchemists' Vault",
+						"the Sewer Ring"
+					],
+					"theme": "The Undead's capital, in the catacombs beneath a fallen royal city.",
+					"links": [
+						"duskmoor"
+					]
+				},
+				"ashpine": {
+					"name": "Ashpine Forest",
+					"classic": "Silverpine Forest",
+					"levels": [
+						10,
+						20
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-2300,
+						-3600,
+						-1100,
+						-2400
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "the Grave Watch",
+					"places": [
+						"the Grave Watch",
+						"the Wolf Lord's Keep",
+						"the Ruined Mill",
+						"Shrouded Lake"
+					],
+					"theme": "A grey pine forest of wolfmen and wolves: the dead's road south to the human lands.",
+					"links": [
+						"duskmoor",
+						"hallowbrook"
+					]
+				},
+				"greymire": {
+					"name": "Greymire Fens",
+					"classic": "Wetlands",
+					"levels": [
+						20,
+						30
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						100,
+						-2600,
+						1500,
+						-1400
+					],
+					"size": [
+						1400,
+						1200
+					],
+					"hub": "Saltgate Harbour",
+					"places": [
+						"Saltgate Harbour",
+						"the Drakewatch Ruins",
+						"the Sunken Keep",
+						"the Reed Maze"
+					],
+					"theme": "A rain-soaked marsh between the dwarves and the north; its harbour sails to Kareth.",
+					"links": [
+						"brannoch",
+						"carrow",
+						"hallowbrook"
+					]
+				},
+				"hallowbrook": {
+					"name": "Hallowbrook Foothills",
+					"classic": "Hillsbrad Foothills",
+					"levels": [
+						20,
+						30
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1100,
+						-3600,
+						300,
+						-2600
+					],
+					"size": [
+						1400,
+						1000
+					],
+					"hub": "Hallowbrook",
+					"places": [
+						"Hallowbrook",
+						"Rookmill",
+						"the Orchard Farms",
+						"the Southwatch"
+					],
+					"theme": "Orchard hills where a human town and a Horde outpost fight over the farms between them.",
+					"links": [
+						"ashpine",
+						"greymire",
+						"wolfcrag",
+						"carrow"
+					]
+				},
+				"wolfcrag": {
+					"name": "Wolfcrag Peaks",
+					"classic": "Alterac Mountains",
+					"levels": [
+						30,
+						40
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1100,
+						-4500,
+						300,
+						-3600
+					],
+					"size": [
+						1400,
+						900
+					],
+					"hub": "none",
+					"places": [
+						"the Ruined Capital",
+						"the Ogre Halls",
+						"the Wolf Dens",
+						"the Snowdrift Camp"
+					],
+					"theme": "Snowbound peaks over a fallen kingdom's ruins, overrun by ogres and its own exiles.",
+					"links": [
+						"hallowbrook",
+						"withering"
+					]
+				},
+				"carrow": {
+					"name": "Carrow Downs",
+					"classic": "Arathi Highlands",
+					"levels": [
+						30,
+						40
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						300,
+						-3700,
+						1700,
+						-2600
+					],
+					"size": [
+						1400,
+						1100
+					],
+					"hub": "Thistle Keep",
+					"places": [
+						"Thistle Keep",
+						"Grimtusk Hold",
+						"the Kingstones",
+						"the Sunken Fort"
+					],
+					"theme": "Wind-swept downs of standing stones and ruined forts, fought over by both factions.",
+					"links": [
+						"greymire",
+						"hallowbrook",
+						"wildreaches"
+					]
+				},
+				"wildreaches": {
+					"name": "The Wildreaches",
+					"classic": "The Hinterlands",
+					"levels": [
+						40,
+						50
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1700,
+						-3900,
+						2900,
+						-2600
+					],
+					"size": [
+						1200,
+						1300
+					],
+					"hub": "Windroost",
+					"places": [
+						"Windroost",
+						"the Tusktide Shore",
+						"the Serpent Steps",
+						"the Overgrown Altar"
+					],
+					"theme": "High wooded hills of gryphon aeries and jungle-troll temples.",
+					"links": [
+						"carrow",
+						"blightmarch"
+					]
+				},
+				"withering": {
+					"name": "The Withering",
+					"classic": "Western Plaguelands",
+					"levels": [
+						51,
+						58
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1100,
+						-5500,
+						500,
+						-4500
+					],
+					"size": [
+						1600,
+						1000
+					],
+					"hub": "Mourncross Camp",
+					"places": [
+						"Mourncross Camp",
+						"the Necromancers' School",
+						"the Ashgrain Farms",
+						"the Great Barricade"
+					],
+					"theme": "Plagued farmland round a necromancers' school on an island keep.",
+					"links": [
+						"duskmoor",
+						"wolfcrag",
+						"blightmarch"
+					]
+				},
+				"blightmarch": {
+					"name": "The Blightmarch",
+					"classic": "Eastern Plaguelands",
+					"levels": [
+						53,
+						60
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						500,
+						-5500,
+						2100,
+						-3900
+					],
+					"size": [
+						1600,
+						1600
+					],
+					"hub": "Dawnvigil Chapel",
+					"places": [
+						"Dawnvigil Chapel",
+						"the Fallen City",
+						"the Necropolis Shadow",
+						"Mourner's Crossing"
+					],
+					"theme": "The heart of the plague: a dead city, a floating necropolis and the last chapel that holds.",
+					"links": [
+						"withering",
+						"wildreaches"
+					]
+				},
+				"cinderreach": {
+					"name": "Cinderreach",
+					"classic": "Burning Steppes",
+					"levels": [
+						50,
+						58
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						500,
+						-500,
+						1500,
+						300
+					],
+					"size": [
+						1000,
+						800
+					],
+					"hub": "Ashguard Vigil",
+					"places": [
+						"Ashguard Vigil",
+						"the Cindermount Gate",
+						"the Dragon's Rest",
+						"the Pillar of Ash"
+					],
+					"theme": "A scorched plain at the foot of the Cindermount, ruled by ashen dwarves and black dragons.",
+					"links": [
+						"redcrag",
+						"slagdeep"
+					]
+				},
+				"slagdeep": {
+					"name": "Slagdeep Gorge",
+					"classic": "Searing Gorge",
+					"levels": [
+						43,
+						50
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1500,
+						-500,
+						2500,
+						300
+					],
+					"size": [
+						1000,
+						800
+					],
+					"hub": "Ironcrest Point",
+					"places": [
+						"Ironcrest Point",
+						"the Crucible",
+						"the Slag Pits",
+						"the Firewatch"
+					],
+					"theme": "A volcanic gorge round a vast slag mine, worked by the ashen dwarves' slaves.",
+					"links": [
+						"cinderreach",
+						"ochre_waste"
+					]
+				},
+				"ochre_waste": {
+					"name": "The Ochre Waste",
+					"classic": "Badlands",
+					"levels": [
+						35,
+						45
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1500,
+						-1500,
+						2700,
+						-500
+					],
+					"size": [
+						1200,
+						1000
+					],
+					"hub": "Redfang Bluff",
+					"places": [
+						"Redfang Bluff",
+						"the Delvers' Dig",
+						"the Dragon Bones",
+						"the Sandstone Fort"
+					],
+					"theme": "Red badlands of dry canyons, old dragon bones and a dig into a buried vault.",
+					"links": [
+						"brannoch",
+						"slagdeep"
+					]
+				},
+				"sorrowmire": {
+					"name": "Sorrowmire",
+					"classic": "Swamp of Sorrows",
+					"levels": [
+						35,
+						45
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						700,
+						1200,
+						1700,
+						2200
+					],
+					"size": [
+						1000,
+						1000
+					],
+					"hub": "Gravelmoss",
+					"places": [
+						"Gravelmoss",
+						"the Drowned Temple",
+						"the Reedmist Strand",
+						"the Exiles' Haven"
+					],
+					"theme": "A grey swamp round a sunken temple of the old troll gods.",
+					"links": [
+						"redcrag",
+						"gloamwood",
+						"scar"
+					]
+				},
+				"hollowpass": {
+					"name": "Hollowpass",
+					"classic": "Deadwind Pass",
+					"levels": [
+						55,
+						60
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						300,
+						2200,
+						1100,
+						2800
+					],
+					"size": [
+						800,
+						600
+					],
+					"hub": "none",
+					"places": [
+						"the Mage's Tower",
+						"the Ravine",
+						"the Quiet Gorge"
+					],
+					"theme": "A dead, grey pass round a sorcerer's haunted tower.",
+					"links": [
+						"gloamwood",
+						"scar"
+					]
+				},
+				"scar": {
+					"name": "The Scar",
+					"classic": "Blasted Lands",
+					"levels": [
+						45,
+						55
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1100,
+						2200,
+						2300,
+						3200
+					],
+					"size": [
+						1200,
+						1000
+					],
+					"hub": "Wardstone Hold",
+					"places": [
+						"Wardstone Hold",
+						"the Dead Gate",
+						"the Blight Rift",
+						"the Viper's Coil"
+					],
+					"theme": "A blasted red waste round a dead gateway to another world, watched by a mage fortress.",
+					"links": [
+						"sorrowmire",
+						"hollowpass"
+					]
+				},
+				"thornwild": {
+					"name": "The Thornwild",
+					"classic": "Stranglethorn Vale",
+					"levels": [
+						30,
+						45
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1700,
+						2200,
+						300,
+						3800
+					],
+					"size": [
+						2000,
+						1600
+					],
+					"hub": "Corsair Cove",
+					"places": [
+						"Corsair Cove",
+						"the Outlaw Camp",
+						"the Jungle Arena",
+						"the Jade Ziggurats",
+						"the Goldtooth Mines"
+					],
+					"theme": "A great jungle down to a pirate port, full of tigers, raptors and troll ruins.",
+					"links": [
+						"dunmarch",
+						"gloamwood"
+					]
+				}
+			}
+		},
+		"kareth": {
+			"name": "Kareth",
+			"about": "The wild continent across the sea: the Wood Elves' isle, the Horde's red coast and plains, deserts, jungles and a frozen north. Classic's Kalimdor in spirit, laid out anew.",
+			"zones": {
+				"mossglen": {
+					"name": "Mossglen",
+					"classic": "Shadowglen",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-2400,
+						-5200,
+						-2000,
+						-4800
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "the Elderbough",
+					"places": [
+						"the Elderbough",
+						"the Shadowrock",
+						"the Silkhollow"
+					],
+					"theme": "A moonlit glen at the foot of the great tree, where Wood Elves begin.",
+					"links": [
+						"eldergrove"
+					]
+				},
+				"eldergrove": {
+					"name": "Eldergrove Isle",
+					"classic": "Teldrassil",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-2600,
+						-4800,
+						-1400,
+						-3600
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "Fernwatch",
+					"places": [
+						"Fernwatch",
+						"the Seers' Glade",
+						"the Moonwells",
+						"the Thornbarrow Den"
+					],
+					"theme": "An island forest grown on the branches of a world-tree, troubled by corrupted bearfolk.",
+					"links": [
+						"mossglen",
+						"silverbough"
+					]
+				},
+				"silverbough": {
+					"name": "Silverbough",
+					"classic": "Darnassus",
+					"levels": null,
+					"faction": "alliance",
+					"kind": "city",
+					"rect": [
+						-2900,
+						-4400,
+						-2600,
+						-4000
+					],
+					"size": [
+						300,
+						400
+					],
+					"hub": "Silverbough",
+					"places": [
+						"the Starlight Temple",
+						"the Grove Enclave",
+						"the Blade Terrace"
+					],
+					"theme": "The Wood Elves' capital high in the world-tree.",
+					"links": [
+						"eldergrove"
+					]
+				},
+				"moonshore": {
+					"name": "Moonshore",
+					"classic": "Darkshore",
+					"levels": [
+						10,
+						20
+					],
+					"faction": "alliance",
+					"kind": "zone",
+					"rect": [
+						-1200,
+						-4400,
+						-200,
+						-2600
+					],
+					"size": [
+						1000,
+						1800
+					],
+					"hub": "Starhaven",
+					"places": [
+						"Starhaven",
+						"the Owlfolk Isle",
+						"the Duskwater Vale",
+						"the Fallen Glaive"
+					],
+					"theme": "A long dark coast of ruined elven towns; its harbour sails to the isle and to Aldmark.",
+					"links": [
+						"dimwood",
+						"rotwood"
+					]
+				},
+				"emberhollow": {
+					"name": "Emberhollow",
+					"classic": "Valley of Trials",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						2300,
+						-1900,
+						2700,
+						-1500
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "the Proving Ground",
+					"places": [
+						"the Proving Ground",
+						"the Ember Cult Cave",
+						"the Scorpion Rocks"
+					],
+					"theme": "A dry canyon of scorpids and boars, where Orcs and Trolls begin.",
+					"links": [
+						"redsand"
+					]
+				},
+				"redsand": {
+					"name": "Redsand Coast",
+					"classic": "Durotar",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						1300,
+						-2400,
+						2300,
+						-1000
+					],
+					"size": [
+						1000,
+						1400
+					],
+					"hub": "Spikewall",
+					"places": [
+						"Spikewall",
+						"the Tidebone Isles",
+						"the Stranded Keep",
+						"Stormcrag Ridge"
+					],
+					"theme": "A red rocky coast of harpies, raptors and a stranded human keep.",
+					"links": [
+						"emberhollow",
+						"ironmaw",
+						"steppe",
+						"fogmarsh"
+					]
+				},
+				"ironmaw": {
+					"name": "Ironmaw Hold",
+					"classic": "Orgrimmar",
+					"levels": null,
+					"faction": "horde",
+					"kind": "city",
+					"rect": [
+						2300,
+						-2400,
+						2900,
+						-1900
+					],
+					"size": [
+						600,
+						500
+					],
+					"hub": "Ironmaw Hold",
+					"places": [
+						"the Warlord's Hall",
+						"the Dark Rift",
+						"the Skyport"
+					],
+					"theme": "The Orcs' capital in a canyon fortress; airships leave its tower for Aldmark.",
+					"links": [
+						"redsand"
+					]
+				},
+				"sunfold": {
+					"name": "Sunfold Camp",
+					"classic": "Camp Narache",
+					"levels": [
+						1,
+						6
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-700,
+						1000,
+						-300,
+						1400
+					],
+					"size": [
+						400,
+						400
+					],
+					"hub": "Sunfold Camp",
+					"places": [
+						"Sunfold Camp",
+						"the Thornback Ravine",
+						"the Wellspring"
+					],
+					"theme": "A plains camp of the Hornkin tribes, where their young begin.",
+					"links": [
+						"tallgrass"
+					]
+				},
+				"tallgrass": {
+					"name": "The Tallgrass",
+					"classic": "Mulgore",
+					"levels": [
+						6,
+						12
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-1500,
+						-200,
+						-300,
+						1000
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "Longhorn Village",
+					"places": [
+						"Longhorn Village",
+						"the Goldtooth Derrick",
+						"Ashmane Rock",
+						"the Ochre Stones"
+					],
+					"theme": "Rolling grassland of tallbirds and thunderhorns, its wells drilled by goblin prospectors.",
+					"links": [
+						"sunfold",
+						"windspire",
+						"steppe",
+						"cragspire"
+					]
+				},
+				"windspire": {
+					"name": "Windspire Mesa",
+					"classic": "Thunder Bluff",
+					"levels": null,
+					"faction": "horde",
+					"kind": "city",
+					"rect": [
+						-1300,
+						1000,
+						-700,
+						1400
+					],
+					"size": [
+						600,
+						400
+					],
+					"hub": "Windspire Mesa",
+					"places": [
+						"the Elders' Mesa",
+						"the Spirit Mesa",
+						"the Hunters' Mesa"
+					],
+					"theme": "The Hornkin's capital on high mesas joined by rope bridges and lifts.",
+					"links": [
+						"tallgrass"
+					]
+				},
+				"steppe": {
+					"name": "The Sunburnt Steppe",
+					"classic": "The Barrens",
+					"levels": [
+						10,
+						25
+					],
+					"faction": "horde",
+					"kind": "zone",
+					"rect": [
+						-300,
+						-1600,
+						1300,
+						1000
+					],
+					"size": [
+						1600,
+						2600
+					],
+					"hub": "the Waymeet",
+					"places": [
+						"the Waymeet",
+						"Rustwater Harbour",
+						"the Weeping Caves",
+						"the Brackish Oasis",
+						"Camp Hornwatch"
+					],
+					"theme": "A vast dry savanna of zebras, tuskfolk and raiders, crossed by the Horde's roads.",
+					"links": [
+						"redsand",
+						"tallgrass",
+						"dimwood",
+						"cragspire",
+						"fogmarsh",
+						"hundred_spires"
+					]
+				},
+				"cragspire": {
+					"name": "Cragspire Peaks",
+					"classic": "Stonetalon Mountains",
+					"levels": [
+						15,
+						27
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1700,
+						-1600,
+						-300,
+						-200
+					],
+					"size": [
+						1400,
+						1400
+					],
+					"hub": "Sunstone Retreat",
+					"places": [
+						"Sunstone Retreat",
+						"the Galecut Crag",
+						"the Burnt Vale",
+						"Cragspire Peak"
+					],
+					"theme": "High peaks stripped by goblin loggers, with harpy nests and a burned valley.",
+					"links": [
+						"steppe",
+						"dimwood",
+						"bonewind",
+						"tallgrass"
+					]
+				},
+				"dimwood": {
+					"name": "Dimwood",
+					"classic": "Ashenvale",
+					"levels": [
+						18,
+						30
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1200,
+						-2600,
+						700,
+						-1600
+					],
+					"size": [
+						1900,
+						1000
+					],
+					"hub": "Silverglade",
+					"places": [
+						"Silverglade",
+						"Splitpine Post",
+						"the Gloomwater Strand",
+						"the Warcry Lumber Camp"
+					],
+					"theme": "An old twilight forest that the elves guard against the Horde's lumber camps.",
+					"links": [
+						"moonshore",
+						"rotwood",
+						"steppe",
+						"cragspire",
+						"shattered_coast"
+					]
+				},
+				"hundred_spires": {
+					"name": "The Hundred Spires",
+					"classic": "Thousand Needles",
+					"levels": [
+						25,
+						35
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-300,
+						1000,
+						1300,
+						1900
+					],
+					"size": [
+						1600,
+						900
+					],
+					"hub": "Highwind Post",
+					"places": [
+						"Highwind Post",
+						"the Glittering Salt",
+						"the Long Lift",
+						"Stormcloud Pinnacle"
+					],
+					"theme": "A canyon of stone spires and a salt flat where goblins race.",
+					"links": [
+						"steppe",
+						"crater"
+					]
+				},
+				"bonewind": {
+					"name": "The Bonewind Waste",
+					"classic": "Desolace",
+					"levels": [
+						30,
+						40
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-2900,
+						-1600,
+						-1700,
+						0
+					],
+					"size": [
+						1200,
+						1600
+					],
+					"hub": "Bramwell's Point",
+					"places": [
+						"Bramwell's Point",
+						"Grimfeather Village",
+						"the Thunderhorn Graveyard",
+						"the Centaur Holds"
+					],
+					"theme": "A grey waste of thunderhorn bones and warring centaur clans.",
+					"links": [
+						"cragspire",
+						"wyldwood"
+					]
+				},
+				"fogmarsh": {
+					"name": "Fogmarsh",
+					"classic": "Dustwallow Marsh",
+					"levels": [
+						35,
+						45
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1300,
+						-1000,
+						2500,
+						400
+					],
+					"size": [
+						1200,
+						1400
+					],
+					"hub": "Highmoor Isle",
+					"places": [
+						"Highmoor Isle",
+						"Mirewall Village",
+						"the Broodmother's Den",
+						"the Hag's Knoll"
+					],
+					"theme": "A fog-bound marsh round an island citadel whose harbour sails to Aldmark, and a dragon's lair.",
+					"links": [
+						"redsand",
+						"steppe"
+					]
+				},
+				"wyldwood": {
+					"name": "Wyldwood",
+					"classic": "Feralas",
+					"levels": [
+						40,
+						50
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-3100,
+						0,
+						-1500,
+						2000
+					],
+					"size": [
+						1600,
+						2000
+					],
+					"hub": "Thornhaven",
+					"places": [
+						"Thornhaven",
+						"Camp Tallhorn",
+						"the Old Court Ruins",
+						"the Twin Giants"
+					],
+					"theme": "A rain forest of giant trees, yetis and the ruins of an elven capital.",
+					"links": [
+						"bonewind",
+						"hiveland"
+					]
+				},
+				"glass_dunes": {
+					"name": "The Glass Dunes",
+					"classic": "Tanaris",
+					"levels": [
+						40,
+						50
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						1300,
+						1900,
+						2700,
+						3300
+					],
+					"size": [
+						1400,
+						1400
+					],
+					"hub": "Coppersand",
+					"places": [
+						"Coppersand",
+						"the Sandwalls",
+						"the Hourglass Cave",
+						"the Breaker Beach"
+					],
+					"theme": "A burning desert round a goblin port, with sand-troll cities and a cave at the edge of time.",
+					"links": [
+						"crater"
+					]
+				},
+				"crater": {
+					"name": "The Primeval Crater",
+					"classic": "Un'Goro Crater",
+					"levels": [
+						48,
+						55
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-300,
+						1900,
+						1300,
+						3100
+					],
+					"size": [
+						1600,
+						1200
+					],
+					"hub": "the Explorers' Rest",
+					"places": [
+						"the Explorers' Rest",
+						"the Smoke Ridge",
+						"the Crystal Pylons",
+						"the Wormscar"
+					],
+					"theme": "A steaming jungle crater of great saurians, oozes and ancient crystals.",
+					"links": [
+						"hundred_spires",
+						"glass_dunes",
+						"hiveland"
+					]
+				},
+				"hiveland": {
+					"name": "The Hiveland",
+					"classic": "Silithus",
+					"levels": [
+						55,
+						60
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-1700,
+						2000,
+						-300,
+						3300
+					],
+					"size": [
+						1400,
+						1300
+					],
+					"hub": "Wardens' Hold",
+					"places": [
+						"Wardens' Hold",
+						"the Hive Spires",
+						"the Cultists' Camps",
+						"the Beetle Wall"
+					],
+					"theme": "A desert of insect hives and cultists before the gates of a buried insect empire.",
+					"links": [
+						"wyldwood",
+						"crater"
+					]
+				},
+				"shattered_coast": {
+					"name": "The Shattered Coast",
+					"classic": "Azshara",
+					"levels": [
+						45,
+						55
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						700,
+						-3600,
+						1900,
+						-2400
+					],
+					"size": [
+						1200,
+						1200
+					],
+					"hub": "Thornwatch Point",
+					"places": [
+						"Thornwatch Point",
+						"the Drowned Palaces",
+						"the Serpent Temple",
+						"the Stormwrack Bay"
+					],
+					"theme": "An autumn coast of broken elven palaces haunted by serpentfolk and goat-demons.",
+					"links": [
+						"dimwood"
+					]
+				},
+				"rotwood": {
+					"name": "Rotwood",
+					"classic": "Felwood",
+					"levels": [
+						48,
+						55
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						-200,
+						-4200,
+						500,
+						-2600
+					],
+					"size": [
+						700,
+						1600
+					],
+					"hub": "the Verdant Sanctuary",
+					"places": [
+						"the Verdant Sanctuary",
+						"Venomfall",
+						"the Greenfire Glen",
+						"the Bearfolk Hold"
+					],
+					"theme": "A forest rotted by demon fel, with tainted bearfolk and a tunnel north.",
+					"links": [
+						"dimwood",
+						"moonshore",
+						"starfall",
+						"rimefrost"
+					]
+				},
+				"starfall": {
+					"name": "Starfall Glade",
+					"classic": "Moonglade",
+					"levels": null,
+					"faction": "neutral",
+					"kind": "sanctuary",
+					"rect": [
+						-200,
+						-4800,
+						500,
+						-4200
+					],
+					"size": [
+						700,
+						600
+					],
+					"hub": "Starhollow",
+					"places": [
+						"Starhollow",
+						"the Keeper's Shrine",
+						"the Barrow Dens"
+					],
+					"theme": "A peaceful druids' glade where every Wildwarden is welcome.",
+					"links": [
+						"rotwood"
+					]
+				},
+				"rimefrost": {
+					"name": "Rimefrost Vale",
+					"classic": "Winterspring",
+					"levels": [
+						53,
+						60
+					],
+					"faction": "contested",
+					"kind": "zone",
+					"rect": [
+						500,
+						-5200,
+						1900,
+						-3600
+					],
+					"size": [
+						1400,
+						1600
+					],
+					"hub": "Frostgate",
+					"places": [
+						"Frostgate",
+						"Icemurmur Gorge",
+						"the Owlwood Thicket",
+						"the Shadow Gorge"
+					],
+					"theme": "A snowy valley of chimaeras, bearfolk and a goblin trading town.",
+					"links": [
+						"rotwood"
+					]
+				}
+			}
+		}
+	},
+	"dungeons": [
+		{
+			"name": "The Undermines",
+			"classic": "The Deadmines",
+			"levels": [
+				17,
+				26
+			],
+			"zone": "dunmarch"
+		},
+		{
+			"name": "The Gaol",
+			"classic": "The Stockade",
+			"levels": [
+				24,
+				32
+			],
+			"zone": "aldgate"
+		},
+		{
+			"name": "The Wolf Lord's Keep",
+			"classic": "Shadowfang Keep",
+			"levels": [
+				22,
+				30
+			],
+			"zone": "ashpine"
+		},
+		{
+			"name": "The Cogworks",
+			"classic": "Gnomeregan",
+			"levels": [
+				29,
+				38
+			],
+			"zone": "highpeak"
+		},
+		{
+			"name": "The Zealot Abbey",
+			"classic": "Scarlet Monastery",
+			"levels": [
+				34,
+				45
+			],
+			"zone": "duskmoor"
+		},
+		{
+			"name": "The Buried Vault",
+			"classic": "Uldaman",
+			"levels": [
+				41,
+				51
+			],
+			"zone": "ochre_waste"
+		},
+		{
+			"name": "The Drowned Temple",
+			"classic": "The Temple of Atal'Hakkar",
+			"levels": [
+				50,
+				60
+			],
+			"zone": "sorrowmire"
+		},
+		{
+			"name": "The Ashen Depths",
+			"classic": "Blackrock Depths",
+			"levels": [
+				52,
+				60
+			],
+			"zone": "cinderreach"
+		},
+		{
+			"name": "The Cinder Spire",
+			"classic": "Blackrock Spire",
+			"levels": [
+				55,
+				60
+			],
+			"zone": "cinderreach"
+		},
+		{
+			"name": "The Necromancers' School",
+			"classic": "Scholomance",
+			"levels": [
+				58,
+				60
+			],
+			"zone": "withering"
+		},
+		{
+			"name": "The Fallen City",
+			"classic": "Stratholme",
+			"levels": [
+				58,
+				60
+			],
+			"zone": "blightmarch"
+		},
+		{
+			"name": "The Ember Chasm",
+			"classic": "Ragefire Chasm",
+			"levels": [
+				13,
+				18
+			],
+			"zone": "ironmaw"
+		},
+		{
+			"name": "The Weeping Caves",
+			"classic": "Wailing Caverns",
+			"levels": [
+				17,
+				24
+			],
+			"zone": "steppe"
+		},
+		{
+			"name": "The Fathom Shrine",
+			"classic": "Blackfathom Deeps",
+			"levels": [
+				24,
+				32
+			],
+			"zone": "dimwood"
+		},
+		{
+			"name": "The Bramble Warrens",
+			"classic": "Razorfen Kraul",
+			"levels": [
+				29,
+				38
+			],
+			"zone": "steppe"
+		},
+		{
+			"name": "The Bramble Barrows",
+			"classic": "Razorfen Downs",
+			"levels": [
+				37,
+				46
+			],
+			"zone": "hundred_spires"
+		},
+		{
+			"name": "The Sandwalls",
+			"classic": "Zul'Farrak",
+			"levels": [
+				44,
+				54
+			],
+			"zone": "glass_dunes"
+		},
+		{
+			"name": "The Hollow Hills",
+			"classic": "Maraudon",
+			"levels": [
+				46,
+				55
+			],
+			"zone": "bonewind"
+		},
+		{
+			"name": "The Old Court",
+			"classic": "Dire Maul",
+			"levels": [
+				55,
+				60
+			],
+			"zone": "wyldwood"
+		},
+		{
+			"name": "The Molten Deep",
+			"classic": "Molten Core",
+			"levels": "raid",
+			"zone": "cinderreach"
+		},
+		{
+			"name": "The Dragon's Spire",
+			"classic": "Blackwing Lair",
+			"levels": "raid",
+			"zone": "cinderreach"
+		},
+		{
+			"name": "The Jade Ziggurats",
+			"classic": "Zul'Gurub",
+			"levels": "raid",
+			"zone": "thornwild"
+		},
+		{
+			"name": "The Necropolis",
+			"classic": "Naxxramas",
+			"levels": "raid",
+			"zone": "blightmarch"
+		},
+		{
+			"name": "The Broodmother's Den",
+			"classic": "Onyxia's Lair",
+			"levels": "raid",
+			"zone": "fogmarsh"
+		},
+		{
+			"name": "The Hive Gates",
+			"classic": "Ahn'Qiraj",
+			"levels": "raid",
+			"zone": "hiveland"
+		}
+	],
+	"routes": [
+		{
+			"from": "greymire",
+			"to": "fogmarsh",
+			"kind": "ship",
+			"about": "Saltgate Harbour to Highmoor Isle"
+		},
+		{
+			"from": "greymire",
+			"to": "moonshore",
+			"kind": "ship",
+			"about": "Saltgate Harbour to Starhaven"
+		},
+		{
+			"from": "moonshore",
+			"to": "eldergrove",
+			"kind": "ship",
+			"about": "Starhaven to the isle's shore"
+		},
+		{
+			"from": "thornwild",
+			"to": "steppe",
+			"kind": "ship",
+			"about": "Corsair Cove to Rustwater Harbour, neutral"
+		},
+		{
+			"from": "ironmaw",
+			"to": "duskmoor",
+			"kind": "airship",
+			"about": "Ironmaw's skyport to Gallowfield"
+		},
+		{
+			"from": "ironmaw",
+			"to": "thornwild",
+			"kind": "airship",
+			"about": "Ironmaw's skyport to the Horde camp in the Thornwild"
+		},
+		{
+			"from": "aldgate",
+			"to": "anvilhold",
+			"kind": "tram",
+			"about": "the Undertram under the mountains"
+		}
+	]
+}
