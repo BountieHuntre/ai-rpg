@@ -317,6 +317,8 @@ func set_far(far: bool) -> void:
 		if node:
 			node.set_physics_process(not far)
 	_feedback.set_process(not far)
+	if model:
+		model.set_animating(not far)
 
 
 ## One slow tick for a far creature: what its nodes would do over `delta`.
@@ -375,7 +377,26 @@ func _wander(delta: float) -> Vector3:
 	return global_position
 
 
+## Human creatures shown as the Human model: creature entry -> { "main":
+## weapon prop, "off": off-hand part, "helm": helm part, "outfit": [chest,
+## legs, hood or cloak colour] } (HumanoidModel.creature_gear). The brigands
+## wear the red hoods of their band.
+const HUMAN_CREATURES := {
+	38: { "main": "sword", "helm": "Helm_hood" },
+	94: { "main": "dagger", "helm": "Helm_hood" },
+	116: { "main": "dagger", "off": "Off_dagger", "helm": "Helm_hood" },
+	473: { "main": "sword", "off": "Shield_round" },
+	474: { "main": "staff", "helm": "Helm_hood" },
+}
+const BRIGAND_RED := Color(0.55, 0.12, 0.1)
+## The creature's model, for HUMAN_CREATURES.
+var model: HumanoidModel
+
+
 func _apply_look() -> void:
+	if HUMAN_CREATURES.has(creature_entry):
+		_apply_human_look()
+		return
 	var look: Array = LOOKS.get(creature_entry, [Vector3.ONE, Color(0.75, 0.25, 0.25)])
 	var body: MeshInstance3D = $Visual/Body
 	var skin := StandardMaterial3D.new()
@@ -389,6 +410,31 @@ func _apply_look() -> void:
 		# Dead beasts roll onto their side rather than tipping up on end.
 		_feedback.fall_axis = "z"
 	_visual.scale = look[0]
+
+
+func _apply_human_look() -> void:
+	for part in ["Body", "Nose"]:
+		get_node("Visual/" + part).visible = false
+	_visual.scale = Vector3.ONE
+	if model:
+		return
+	var gear: Dictionary = HUMAN_CREATURES[creature_entry]
+	model = HumanoidModel.new()
+	# Each brigand its own face: seeded by its place in the world.
+	var seed_value := hash(str(name) + str(creature_entry))
+	var look := HumanoidModel.random_appearance(seed_value)
+	look.body = 0 if seed_value % 4 != 0 else 1
+	model.set_appearance(look)
+	model.creature_gear = gear
+	var outfit := HumanoidModel.outfit_for("", seed_value)
+	outfit[HumanoidModel.HEAD] = BRIGAND_RED
+	outfit[HumanoidModel.CHEST] = HumanoidModel.LEATHER[absi(seed_value) % HumanoidModel.LEATHER.size()]
+	outfit[HumanoidModel.LEGS] = Color(0.22, 0.2, 0.2)
+	if not gear.has("helm"):
+		outfit[HumanoidModel.BACK] = BRIGAND_RED
+	model.outfit = outfit
+	_visual.add_child(model)
+	model.attach_creature(self, combatant)
 
 
 func face_toward(point: Vector3) -> void:

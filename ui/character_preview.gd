@@ -76,16 +76,21 @@ func _ready() -> void:
 	viewport.add_child(_model)
 
 
-## Shows a race: Humans as the model, with an appearance and what they wear
-## (Inventory.Slot -> item stack); other races as the placeholder.
+## Shows a race: as its model (Humans, Dwarves, Gnomes), with an appearance
+## and what they wear (Inventory.Slot -> item stack); other races as the
+## placeholder.
 func show_race(race: ClassicData.Race, appearance := {}, equipment := {}) -> void:
-	var human := race == ClassicData.Race.HUMAN
-	_body.visible = not human
-	_nose.visible = not human
-	if human:
+	var race_model := HumanoidModel.model_race(race)
+	_body.visible = race_model == ""
+	_nose.visible = race_model == ""
+	if _human and _human.race != race_model:
+		_human.queue_free()
+		_human = null
+	if race_model != "":
 		_model.scale = Vector3.ONE
 		if not _human:
 			_human = HumanoidModel.new()
+			_human.race = race_model
 			_model.add_child(_human)
 		_human.visible = true
 		_human.set_appearance(appearance if not appearance.is_empty() else HumanoidModel.random_appearance(0))

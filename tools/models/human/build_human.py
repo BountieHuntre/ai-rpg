@@ -31,15 +31,27 @@ from mathutils import Euler, Matrix, Quaternion, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-OUT = os.path.join(ROOT, "assets", "models", "human", "human.glb")
-BLEND = os.path.join(HERE, "human.blend")
 FPS = 30
 
 SLOT_NAMES = [
 	"skin", "hair", "eyes", "chest", "legs", "feet", "hands", "waist",
 	"shoulders", "wrists", "head", "trim", "blade", "handle", "shield", "shield_trim",
+	"back", "ranged", "ranged_trim", "helm_trim",
 ]
 SLOT = {name: i for i, name in enumerate(SLOT_NAMES)}
+# U steps: room for this many slots (shaders/character.gdshader's array).
+SLOT_COUNT = 32
+
+# Races share the Human's parts and animations, reshaped: legs and torso
+# heights, width, and the head, hands and props scaled about their joints.
+# Each is written to assets/models/<race>/<race>.glb.
+RACES = {
+	"human": {"legs": 1.0, "torso": 1.0, "width": 1.0, "head": 1.0, "hands": 1.0, "props": 1.0},
+	"dwarf": {"legs": 0.62, "torso": 0.88, "width": 1.28, "head": 1.12, "hands": 1.12, "props": 0.9},
+	"gnome": {"legs": 0.5, "torso": 0.58, "width": 0.8, "head": 1.35, "hands": 1.1, "props": 0.62},
+}
+RACE = RACES["human"]
+HIP_Z = 0.96
 
 # ---------------------------------------------------------------- skeleton
 
@@ -72,15 +84,41 @@ for side, x in (("Right", 1), ("Left", -1)):
 GRIP_R = Vector((0.345, 0.035, 0.81))
 GRIP_L = Vector((-0.345, 0.035, 0.81))
 SHIELD_AT = Vector((-0.42, 0.015, 1.0))
-# Chunky, heroic proportions: parts on these bones are scaled about the
-# point given (the head, hands and feet bigger than life).
+# Chunky, heroic proportions: the head, hands and feet bigger than life.
+HEAD_AT = Vector((0, 0.01, 1.56))
+HEAD_SCALE = 1.18
+WRIST = {"RightHand": Vector((0.34, 0.03, 0.89)), "LeftHand": Vector((-0.34, 0.03, 0.89))}
+HAND_SCALE = 1.3
 GROUP_SCALE = {
-	"Head": (Vector((0, 0.01, 1.56)), Vector((1.18, 1.18, 1.18))),
-	"RightHand": (Vector((0.34, 0.03, 0.89)), Vector((1.3, 1.3, 1.3))),
-	"LeftHand": (Vector((-0.34, 0.03, 0.89)), Vector((1.3, 1.3, 1.3))),
 	"RightFoot": (Vector((0.12, -0.02, 0.0)), Vector((1.2, 1.15, 1.1))),
 	"LeftFoot": (Vector((-0.12, -0.02, 0.0)), Vector((1.2, 1.15, 1.1))),
 }
+
+
+def body_point(v):
+	"""A point of the Human's body in the race's shape."""
+	v = Vector(v)
+	z = v.z * RACE["legs"] if v.z <= HIP_Z else HIP_Z * RACE["legs"] + (v.z - HIP_Z) * RACE["torso"]
+	return Vector((v.x * RACE["width"], v.y * RACE["width"], z))
+
+
+def place(v, group):
+	"""Where a point weighted to `group` goes for the race: the head, hands
+	and props keep their shape, scaled about the joint they hang from."""
+	v = Vector(v)
+	if group == "Head":
+		return body_point(HEAD_AT) + (v - HEAD_AT) * HEAD_SCALE * RACE["head"]
+	if group in WRIST:
+		return body_point(WRIST[group]) + (v - WRIST[group]) * HAND_SCALE * RACE["hands"]
+	if group in ("WeaponR", "WeaponL"):
+		grip = GRIP_R if group == "WeaponR" else GRIP_L
+		return place(grip, "RightHand" if group == "WeaponR" else "LeftHand") + (v - grip) * RACE["props"]
+	if group == "ShieldL":
+		return body_point(SHIELD_AT) + (v - SHIELD_AT) * RACE["props"]
+	if group in GROUP_SCALE:
+		pivot, scale = GROUP_SCALE[group]
+		v = pivot + Vector(a * b for a, b in zip(v - pivot, scale))
+	return body_point(v)
 BONES += [
 	("WeaponR", tuple(GRIP_R), tuple(GRIP_R + Vector((0, 0.2, 0))), "RightHand"),
 	("WeaponL", tuple(GRIP_L), tuple(GRIP_L + Vector((0, 0.2, 0))), "LeftHand"),
@@ -98,8 +136,8 @@ def build_armature():
 	bpy.ops.object.mode_set(mode="EDIT")
 	for name, head, tail, parent in BONES:
 		bone = data.edit_bones.new(name)
-		bone.head = head
-		bone.tail = tail
+		bone.head = place(head, name)
+		bone.tail = place(tail, name)
 		bone.roll = 0.0
 		if parent:
 			bone.parent = data.edit_bones[parent]
@@ -125,7 +163,7 @@ class Builder:
 		self.groups += groups
 		for face, slot, shade in zip(faces, slots, shades):
 			self.faces.append([base + i for i in face])
-			self.face_uv.append(((SLOT[slot] + 0.5) / 16.0, shade / 2.0))
+			self.face_uv.append(((SLOT[slot] + 0.5) / SLOT_COUNT, shade / 2.0))
 
 	def loft(self, rings, slots, sides=8, turn=None, cap_slots=None, shade=1.0):
 		"""Rings of (center, rx, ry, bone) joined into a capped tube along
@@ -206,13 +244,7 @@ class Builder:
 	def build(self, arm, material):
 		mesh = bpy.data.meshes.new(self.name)
 		bm = bmesh.new()
-		verts = []
-		for v, g in zip(self.verts, self.groups):
-			if g in GROUP_SCALE:
-				pivot, scale = GROUP_SCALE[g]
-				v = pivot + (v - pivot) * scale
-			verts.append(v)
-		bverts = [bm.verts.new(v) for v in verts]
+		bverts = [bm.verts.new(place(v, g)) for v, g in zip(self.verts, self.groups)]
 		uv_layer = bm.loops.layers.uv.new("UVMap")
 		for face, uv in zip(self.faces, self.face_uv):
 			f = bm.faces.new([bverts[i] for i in face])
@@ -442,6 +474,78 @@ def shield(name, kind):
 	return b
 
 
+def helms():
+	"""Head pieces by armour type; hair is hidden under any of them."""
+	out = []
+	b = Builder("Helm_hood")
+	b.loft([((0, -0.01, 1.74), 0.15, 0.16, "Head"), ((0, -0.015, 1.84), 0.145, 0.155, "Head"),
+			((0, -0.02, 1.9), 0.085, 0.1, "Head")], ["head", "head"], sides=8)
+	for x in (-1, 1):
+		b.box((0.14 * x, 0.0, 1.66), (0.04, 0.2, 0.2), "Head", "head", top=(1.0, 1.0))
+	b.box((0, -0.12, 1.6), (0.3, 0.07, 0.3), "Head", "head", top=(0.9, 1.0))
+	b.loft([((0, -0.02, 1.46), 0.22, 0.17, "Head"), ((0, -0.02, 1.54), 0.15, 0.13, "Head")], ["head"], sides=8)
+	out.append(b)
+	b = Builder("Helm_cap")
+	b.loft([((0, -0.005, 1.74), 0.145, 0.158, "Head"), ((0, -0.01, 1.82), 0.142, 0.152, "Head"),
+			((0, -0.01, 1.885), 0.08, 0.09, "Head")], ["head", "head"], sides=8)
+	b.loft([((0, 0.0, 1.735), 0.17, 0.18, "Head"), ((0, 0.0, 1.755), 0.17, 0.18, "Head")], ["helm_trim"], sides=8)
+	out.append(b)
+	b = Builder("Helm_coif")
+	b.loft([((0, -0.01, 1.74), 0.148, 0.16, "Head"), ((0, -0.015, 1.84), 0.142, 0.152, "Head"),
+			((0, -0.02, 1.895), 0.08, 0.095, "Head")], ["head", "head"], sides=8)
+	for x in (-1, 1):
+		b.box((0.138 * x, 0.0, 1.64), (0.035, 0.22, 0.24), "Head", "head")
+	b.box((0, 0.1, 1.575), (0.26, 0.06, 0.07), "Head", "head")
+	b.loft([((0, -0.01, 1.44), 0.2, 0.16, "Head"), ((0, -0.01, 1.6), 0.14, 0.14, "Head")], ["head"], sides=8)
+	out.append(b)
+	b = Builder("Helm_plate")
+	b.loft([((0, 0.0, 1.53), 0.12, 0.13, "Head"), ((0, 0.005, 1.6), 0.15, 0.165, "Head"),
+			((0, 0.0, 1.8), 0.15, 0.165, "Head"), ((0, -0.005, 1.9), 0.09, 0.1, "Head")],
+		   ["head", "head", "head"], sides=8)
+	b.box((0, 0.162, 1.71), (0.2, 0.02, 0.025), "Head", "eyes")
+	b.box((0, 0.165, 1.65), (0.025, 0.02, 0.08), "Head", "eyes")
+	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
+	out.append(b)
+	return out
+
+
+def cloak():
+	"""A cloak from the shoulders to the knees, each row on the bone at its
+	height, so it bends with the back."""
+	b = Builder("Cloak")
+	rows = [((0, -0.1, 1.49), 0.2, "Chest"), ((0, -0.17, 1.32), 0.25, "Chest"), ((0, -0.19, 1.12), 0.26, "Spine"),
+			((0, -0.21, 0.92), 0.27, "Hips"), ((0, -0.26, 0.6), 0.28, "Hips")]
+	b.loft([(c, w / 0.707, 0.015 / 0.707, bone) for c, w, bone in rows], ["back"] * 4, sides=4, turn=math.pi / 4)
+	for x in (-1, 1):
+		b.box((0.17 * x, -0.04, 1.47), (0.06, 0.06, 0.05), "Chest", "trim")
+	return b
+
+
+def ranged():
+	"""Ranged weapons, drawn while shooting: a bow in the left hand, a gun or
+	a throwing knife in the right."""
+	out = []
+	b = Builder("Ranged_bow")
+	g = GRIP_L
+	points = [(y, 0.13 * (y / 0.55) ** 2) for y in (-0.55, -0.4, -0.22, -0.06, 0.06, 0.22, 0.4, 0.55)]
+	for (y0, z0), (y1, z1) in zip(points, points[1:]):
+		b.beam(g + Vector((0, y0, z0)), g + Vector((0, y1, z1)), 0.04, 0.03, "WeaponL", "ranged", up=(1, 0, 0))
+	b.box(g, (0.045, 0.1, 0.045), "WeaponL", "handle")
+	b.beam(g + Vector((0, -0.55, 0.14)), g + Vector((0, 0.55, 0.14)), 0.012, 0.012, "WeaponL", "ranged_trim", up=(1, 0, 0))
+	out.append(b)
+	b = Builder("Ranged_gun")
+	g = GRIP_R
+	b.tube(g + Vector((0, 0.0, 0.03)), g + Vector((0, 0.6, 0.03)), 0.026, 0.024, "WeaponR", "ranged_trim")
+	b.beam(g + Vector((0, -0.3, -0.03)), g + Vector((0, 0.3, 0.0)), 0.075, 0.05, "WeaponR", "ranged", up=(0, 0, 1))
+	b.box(g + Vector((0, 0.6, 0.03)), (0.07, 0.04, 0.07), "WeaponR", "ranged_trim")
+	out.append(b)
+	b = Builder("Ranged_thrown")
+	b.tube(g + Vector((0, -0.06, 0)), g + Vector((0, 0.04, 0)), 0.018, 0.018, "WeaponR", "handle")
+	b.beam(g + Vector((0, 0.04, 0)), g + Vector((0, 0.22, 0)), 0.05, 0.014, "WeaponR", "ranged_trim", taper=0.15)
+	out.append(b)
+	return out
+
+
 WEAPONS = ["sword", "sword2h", "axe", "axe2h", "mace", "mace2h", "dagger", "staff", "polearm", "wand", "fist"]
 OFF_HAND = ["sword", "axe", "mace", "dagger", "fist", "orb"]
 
@@ -456,11 +560,11 @@ def props():
 		# Off-hand weapons take the off-hand colour slots: blade and trim
 		# become shield_trim and shield.
 		swap = {SLOT["blade"]: SLOT["shield_trim"], SLOT["trim"]: SLOT["shield"]}
-		b.face_uv = [((swap.get(int(u * 16), int(u * 16)) + 0.5) / 16, v) for u, v in b.face_uv]
+		b.face_uv = [((swap.get(int(u * SLOT_COUNT), int(u * SLOT_COUNT)) + 0.5) / SLOT_COUNT, v) for u, v in b.face_uv]
 		out.append(b)
 	out.append(shield("Shield_round", "round"))
 	out.append(shield("Shield_kite", "kite"))
-	return out
+	return out + helms() + [cloak()] + ranged()
 
 # ---------------------------------------------------------------- animation
 
@@ -641,6 +745,33 @@ def attacks():
 	return a
 
 
+def shooting():
+	a = {}
+	# The bow: side on, left arm out holding the bow upright; the right
+	# elbow out and back, the hand at the string by the chin.
+	aim_bow = pose(READY, {"LeftUpperArm": (88, 4, 26), "LeftLowerArm": (0, 0, 0), "LeftHand": (0, 0, 0),
+						   "RightUpperArm": (0, -78, -15), "RightLowerArm": (150, 0, 0), "RightHand": (0, 0, 0)},
+				   Chest=(0, 0, -26), Spine=(-4, 0, 0), Head=(0, 0, 26))
+	draw = pose(aim_bow, {"RightUpperArm": (0, -80, -40), "RightLowerArm": (162, 0, 0)})
+	loose = pose(aim_bow, {"RightUpperArm": (0, -80, -55), "RightLowerArm": (110, 0, 0)})
+	a["aim_bow"] = [(0, aim_bow), (20, pose(aim_bow, Chest=(1, 0, -26))), (40, aim_bow)]
+	a["shoot_bow"] = [(0, aim_bow), (5, draw), (10, draw), (12, loose), (20, aim_bow)]
+	# A gun: shouldered, the hand turned down so the barrel points ahead.
+	aim_gun = pose(READY, {"RightUpperArm": (85, 30, 0), "RightLowerArm": (60, 0, 0), "RightHand": (-145, 0, 0),
+						   "LeftUpperArm": (88, 30, 0), "LeftLowerArm": (22, 0, 0)},
+				   Chest=(0, 0, -10), Head=(-6, 0, 10))
+	recoil = pose(aim_gun, {"RightUpperArm": (95, 30, 0), "RightHand": (-158, 0, 0)}, Chest=(6, 0, -10), Head=(2, 0, 10))
+	a["aim_gun"] = [(0, aim_gun), (20, pose(aim_gun, Chest=(1, 0, -10))), (40, aim_gun)]
+	a["shoot_gun"] = [(0, aim_gun), (2, recoil), (10, aim_gun)]
+	wind = pose(READY, {"RightUpperArm": (150, -30, 0), "RightLowerArm": (70, 0, 0)}, Chest=(0, 0, -22))
+	release = pose(READY, {"RightUpperArm": (60, 12, 0), "RightLowerArm": (10, 0, 0)}, Chest=(-6, 0, 26))
+	a["throw"] = one_shot((5, wind), (9, release), (11, release))
+	point = pose(READY, {"RightUpperArm": (86, 8, 0), "RightLowerArm": (8, 0, 0), "RightHand": (-20, 0, 0)}, Chest=(0, 0, 10))
+	flick = pose(point, {"RightHand": (10, 0, 0)})
+	a["shoot_wand"] = one_shot((4, point), (6, flick), (10, point))
+	return a
+
+
 def casting():
 	a = {}
 	c1 = pose(STAND, both("UpperArm", (45, 22, 0)), both("LowerArm", (95, 0, 0)), both("Hand", (-10, 0, 0)),
@@ -717,6 +848,7 @@ def all_animations():
 	}
 	anims.update(attacks())
 	anims.update(casting())
+	anims.update(shooting())
 	anims.update(full_body())
 	return anims
 
@@ -740,7 +872,10 @@ def key_animations(arm, anims):
 				b.rotation_quaternion = (r.inverted() @ d @ r).to_quaternion()
 				b.keyframe_insert("rotation_quaternion", frame=frame)
 				if b.name in ("Root", "Hips"):
-					b.location = r.inverted() @ Vector(locs.get(b.name, (0, 0, 0)))
+					x, y, z = locs.get(b.name, (0, 0, 0))
+					w = RACE["width"]
+					offset = Vector((x * w, y * w, z * (RACE["legs"] if b.name == "Hips" else w)))
+					b.location = r.inverted() @ offset
 					b.keyframe_insert("location", frame=frame)
 		track = arm.animation_data.nla_tracks.new()
 		track.name = name
@@ -755,6 +890,15 @@ def key_animations(arm, anims):
 # ---------------------------------------------------------------- main
 
 def main():
+	global RACE
+	for race, shape in RACES.items():
+		RACE = shape
+		build(race)
+
+
+def build(race):
+	out = os.path.join(ROOT, "assets", "models", race, race + ".glb")
+	blend = os.path.join(HERE, race + ".blend")
 	bpy.ops.wm.read_factory_settings(use_empty=True)
 	scene = bpy.context.scene
 	scene.render.fps = FPS
@@ -766,15 +910,15 @@ def main():
 		obj = builder.build(arm, material)
 		tris[builder.name] = sum(len(f) - 2 for f in builder.faces)
 	key_animations(arm, all_animations())
-	os.makedirs(os.path.dirname(OUT), exist_ok=True)
-	bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+	os.makedirs(os.path.dirname(out), exist_ok=True)
+	bpy.ops.wm.save_as_mainfile(filepath=blend)
 	bpy.ops.export_scene.gltf(
-		filepath=OUT, export_format="GLB", export_animations=True, export_animation_mode="ACTIONS",
+		filepath=out, export_format="GLB", export_animations=True, export_animation_mode="ACTIONS",
 		export_skins=True, export_morph=False, export_yup=True, export_apply=False,
 		export_optimize_animation_size=False,
 	)
 	print("triangles:", tris)
-	print("wrote", OUT)
+	print("wrote", out)
 
 
 main()

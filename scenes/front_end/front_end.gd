@@ -71,7 +71,7 @@ var _characters: Array[Dictionary] = []
 var _selected := 0
 var _race := ClassicData.Race.HUMAN
 var _class := ClassicData.CharClass.PALADIN
-## The new character's look (HumanoidModel), for Humans.
+## The new character's look (HumanoidModel), for races with a model.
 var _look: Dictionary = {}
 var _new_name := ""
 ## Set once Enter World starts loading, so it can't start twice.
@@ -494,7 +494,7 @@ func _build_create() -> void:
 	# Down to just above the name box.
 	_add_preview(211)
 	_layer.get_node("Preview").show_race(_race, _look, CharacterPreview.kit_equipment(_race, _class))
-	if _race == ClassicData.Race.HUMAN:
+	if HumanoidModel.model_race(_race) != "":
 		_build_appearance()
 	var title := _label("%s %s" % [ClassicData.RACE_NAMES[_race], ClassicData.CLASS_NAMES[_class]], GOLD, 12)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -601,7 +601,7 @@ func _random_name() -> String:
 func _accept_create() -> void:
 	if _modal:
 		return
-	var look := _look if _race == ClassicData.Race.HUMAN else {}
+	var look := _look if HumanoidModel.model_race(_race) != "" else {}
 	var error := GameState.create_character(_new_name, _race, _class, look)
 	if not error.is_empty():
 		_show_modal(error, ["OK"])

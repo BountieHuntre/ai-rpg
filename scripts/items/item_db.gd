@@ -42,11 +42,17 @@ const LOSS := Color(1, 0.2, 0.2)
 const BONDING := { 1: "Binds when picked up", 2: "Binds when equipped", 3: "Binds when used", 4: "Quest Item" }
 
 static var _items: Dictionary
+## How many of anything that stacks fit in one bag slot (unlike classic's 5,
+## 10, 20 or 200 by item). Gear that doesn't stack stays at 1.
+const MAX_STACK := 20
 
 
 static func get_item(id: int) -> Dictionary:
 	if _items.is_empty():
 		_items = JSON.parse_string(FileAccess.get_file_as_string(ITEMS_PATH))
+		for key: String in _items:
+			if int(_items[key].get("stackable", 1)) > 1:
+				_items[key].stackable = MAX_STACK
 	return _items.get(str(id), {})
 
 

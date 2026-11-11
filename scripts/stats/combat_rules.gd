@@ -46,6 +46,16 @@ static func roll_auto_attack(attacker: Combatant, victim: Combatant) -> Outcome:
 	return _roll(sides)
 
 
+## A shot from a bow, gun or thrown weapon: one roll over miss, block, crit
+## and hit (ranged attacks can't be dodged or parried here).
+static func roll_ranged(attacker: Combatant, victim: Combatant) -> Outcome:
+	return _roll([
+		[Outcome.MISS, miss_chance(attacker, victim, true)],
+		[Outcome.BLOCK, block_chance(attacker, victim)],
+		[Outcome.CRIT, melee_crit_chance(attacker, victim)],
+	])
+
+
 ## Melee ability ("yellow" attack): one roll for miss, dodge, parry and block,
 ## then a separate crit roll if it lands.
 ## Extra crit chance in percent comes from talents (Improved Riposte Strike).

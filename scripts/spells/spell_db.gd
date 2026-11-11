@@ -8,6 +8,10 @@ const SPELLS_PATH := "res://data/classic/spells.json"
 
 ## Spell ids with special meaning.
 const ATTACK := 6603
+## Shoot: repeating shots with the ranged weapon (bow, gun, thrown weapon or
+## wand), toggled like Attack and known by everyone (classic's wand Shoot id;
+## classic's Shoot spells aren't in the data).
+const SHOOT := 5019
 ## Menus of spells on one button (see is_flyout).
 const BOONS := 1000001
 const GREATER_BOONS := 1000002
@@ -174,6 +178,8 @@ static var _data: Dictionary
 static func get_spell(id: int) -> Dictionary:
 	if id == ATTACK:
 		return { "Id": ATTACK, "SpellName": "Attack", "Rank1": "", "School": 0 }
+	if id == SHOOT:
+		return { "Id": SHOOT, "SpellName": "Shoot", "Rank1": "", "School": 0 }
 	if FLYOUTS.has(id):
 		return { "Id": id, "SpellName": FLYOUTS[id].name, "Rank1": "", "School": School.HOLY, "Flyout": true }
 	return _get_data().spells.get(str(id), {})

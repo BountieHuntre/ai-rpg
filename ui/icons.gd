@@ -111,7 +111,7 @@ static func item_key(item: Dictionary) -> String:
 
 ## Class spells by name, and the creatures' spells and debuffs.
 const CLASS_SPELLS := {
-	"Attack": "attack", "Mighty Blow": "strike", "Heavy Swing": "heavy", "Sweeping Cut": "cyclone", "Cyclone Strike": "cyclone",
+	"Attack": "attack", "Shoot": "bow_common", "Mighty Blow": "strike", "Heavy Swing": "heavy", "Sweeping Cut": "cyclone", "Cyclone Strike": "cyclone",
 	"Rush": "charge", "Cut Off": "charge", "Vanguard Stance": "stance_vanguard", "Bastion Stance": "stance_bastion",
 	"Fury Stance": "stance_fury", "Rallying Cry": "shout_red", "Daunting Roar": "shout_dark", "Cowing Roar": "shout_dark",
 	"Daring Roar": "shout_gold", "Gash": "bleed", "Grievous Strike": "bleed", "Rend Armor": "bleed", "Ground Slam": "slam",

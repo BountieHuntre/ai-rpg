@@ -268,7 +268,7 @@ func friendly_target() -> Combatant:
 ## player who kept up with their trainer, and spends its talent points
 ## (Talents.spend_for_bot). Later ranks of talent abilities need the talent.
 func learn_spells() -> void:
-	var known: Array[int] = [SpellDB.ATTACK]
+	var known: Array[int] = [SpellDB.ATTACK, SpellDB.SHOOT]
 	for id in SpellDB.start_spells(profile.race, profile.char_class):
 		known.append(int(id))
 	profile.known_spells = known
@@ -484,14 +484,24 @@ func _think() -> void:
 	if _enemy:
 		_resting = false
 		sitting = false
-		combatant.attack_target = _enemy
-		var reach := CASTER_RANGE if _casts_from_range() else combatant.melee_range * 0.8
+		# A caster with a wand stays back and shoots it once its mana runs
+		# low, as classic's priests do.
+		var wanding := _shoots_wand()
+		if wanding:
+			combatant.attack_target = null
+			if not _casts_from_range() and combatant.shoot_target != _enemy and combatant.shot_problem(_enemy).is_empty():
+				combatant.start_shooting(_enemy)
+		else:
+			combatant.stop_shooting()
+			combatant.attack_target = _enemy
+		var reach := CASTER_RANGE if wanding or _casts_from_range() else combatant.melee_range * 0.8
 		if combatant.distance_to(_enemy) > reach:
 			_go_to(_enemy.body.global_position)
 		else:
 			_has_destination = false
 		return
 	combatant.attack_target = null
+	combatant.stop_shooting()
 	if not _errand.is_empty() and _do_errand():
 		return
 	if in_party:
@@ -1098,6 +1108,11 @@ func _rest(delta: float) -> void:
 
 
 ## Clerics with mana stand back and cast; out of mana they close in and swing.
+## A Cleric holding a wand: it fights with the wand, not in melee.
+func _shoots_wand() -> bool:
+	return profile.char_class == ClassicData.CharClass.PRIEST 		and int(combatant.ranged_weapon.get("kind", 0)) == Inventory.WEAPON_SUBCLASS_WAND
+
+
 func _casts_from_range() -> bool:
 	var c := combatant
 	# A damage Cleric casts down to its last few drops.

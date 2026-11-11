@@ -348,10 +348,31 @@ static func gear_totals(equipment: Dictionary) -> Dictionary:
 			totals.weapon = { "min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0 }
 		if slot == Slot.OFF_HAND and int(item.dmg_max1) > 0 and int(item["class"]) == ItemDB.ITEM_CLASS_WEAPON:
 			totals.off_weapon = { "min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0 }
+		if slot == Slot.RANGED and int(item.dmg_max1) > 0 and int(item["class"]) == ItemDB.ITEM_CLASS_WEAPON:
+			totals.ranged = ranged_weapon(item)
 		if slot == Slot.OFF_HAND and int(item.subclass) == ARMOR_SUBCLASS_SHIELD and int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR:
 			totals.has_shield = true
 			totals.block += int(item.block)
 	return totals
+
+
+## Ranged weapon subclasses: how far each shoots, [range, minimum] in yards
+## (classic's 35 for bows and guns, 30 for thrown weapons and wands; the dead
+## zone under 8 yards for all but wands).
+const RANGED_REACH := { 2: [35.0, 8.0], 3: [35.0, 8.0], 18: [35.0, 8.0], 16: [30.0, 8.0], 19: [30.0, 0.0] }
+const WEAPON_SUBCLASS_WAND := 19
+
+
+## A ranged weapon's shot: damage, speed, school (wands deal theirs), its kind
+## (the weapon subclass) and reach.
+static func ranged_weapon(item: Dictionary) -> Dictionary:
+	var subclass := int(item.subclass)
+	var reach: Array = RANGED_REACH.get(subclass, [30.0, 8.0])
+	return {
+		"min": float(item.dmg_min1), "max": float(item.dmg_max1), "speed": int(item.delay) / 1000.0,
+		"school": int(item.get("dmg_type1", 0)) if subclass == WEAPON_SUBCLASS_WAND else 0, "kind": subclass,
+		"range": reach[0], "min_range": reach[1],
+	}
 
 
 static func _stack(id: int, count: int, bound: bool) -> Dictionary:

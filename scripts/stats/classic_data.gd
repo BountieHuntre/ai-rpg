@@ -38,9 +38,10 @@ const RACE_NAMES := {
 	Race.UNDEAD: "Undead", Race.TAUREN: "Hornkin", Race.GNOME: "Gnome", Race.TROLL: "Troll",
 }
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
-## Races finished enough to play (a character model; the rest are capsules):
-## the only ones character creation offers and bots are made as.
-const PLAYABLE_RACES := [Race.HUMAN]
+## Races finished enough to play (a character model, HumanoidModel.RACE_MODELS;
+## the rest are capsules): the only ones character creation offers and bots
+## are made as.
+const PLAYABLE_RACES := [Race.HUMAN, Race.DWARF, Race.GNOME]
 
 static var _tables: Dictionary
 static var _characters: Dictionary
@@ -49,7 +50,10 @@ static var _characters: Dictionary
 ## Whether new characters and bots may be this race and class: a playable
 ## race, and a class with spells (SpellDB.classes_with_spells).
 static func is_playable(race: int, char_class: int) -> bool:
-	return race in PLAYABLE_RACES and char_class in SpellDB.classes_with_spells() and is_allowed(race, char_class)
+	# SpellDB is loaded here rather than named, so ClassicData doesn't depend
+	# on it (scripts run with -s compile before the autoloads it reaches).
+	var spell_db: GDScript = load("res://scripts/spells/spell_db.gd")
+	return race in PLAYABLE_RACES and char_class in spell_db.classes_with_spells() and is_allowed(race, char_class)
 
 
 static func base_stats(race: Race, char_class: CharClass, level: int) -> Array:

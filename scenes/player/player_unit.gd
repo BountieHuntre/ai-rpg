@@ -54,16 +54,21 @@ static func race_color(race: ClassicData.Race) -> Color:
 	return RACE_LOOKS.get(race, RACE_LOOKS[ClassicData.Race.HUMAN])[1]
 
 
-## Dresses the unit for the profile's race: the Human model, or the
-## placeholder capsule sized and coloured for other races.
+## Dresses the unit for the profile's race: its model (HumanoidModel's
+## RACE_MODELS), or the placeholder capsule sized and coloured for races
+## without one.
 func apply_race_look() -> void:
-	var human := profile.race == ClassicData.Race.HUMAN
+	var race_model := HumanoidModel.model_race(profile.race)
 	for part in ["Body", "Nose"]:
-		_visual.get_node(part).visible = not human
-	if human:
+		_visual.get_node(part).visible = race_model == ""
+	if model and model.race != race_model:
+		model.queue_free()
+		model = null
+	if race_model != "":
 		_visual.scale = Vector3.ONE
 		if not model:
 			model = HumanoidModel.new()
+			model.race = race_model
 			_visual.add_child(model)
 			model.attach(self)
 		if profile.appearance.is_empty():
@@ -71,9 +76,6 @@ func apply_race_look() -> void:
 		model.set_appearance(profile.appearance)
 		model.show_equipment(profile.equipment)
 		return
-	if model:
-		model.queue_free()
-		model = null
 	_visual.scale = race_scale(profile.race)
 	var body: MeshInstance3D = _visual.get_node("Body")
 	var skin := StandardMaterial3D.new()

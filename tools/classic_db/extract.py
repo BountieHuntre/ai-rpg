@@ -160,6 +160,10 @@ SPELL_EFFECT_LEARN = 36
 SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
 ITEM_CLASS_CONSUMABLE = 0
+# Arrows and shot: the game has no ammo (ranged weapons need none), so these
+# are left out of items, vendors, loot and starting kits.
+ITEM_CLASS_PROJECTILE = 6
+ITEM_SUBCLASS_THROWN = 16
 ITEM_SUBCLASS_FOOD = 5
 SPELL_AURA_DUMMY = 4
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "classic")
@@ -311,13 +315,16 @@ def main(path):
         return [{
             "item": int(r["item"]), "chance": float(r["ChanceOrQuestChance"]), "group": int(r["groupid"]),
             "min_or_ref": int(r["mincountOrRef"]), "max": int(r["maxcount"]), "condition": int(r["condition_id"]),
-        } for r in rows]
+        } for r in rows if int(r["mincountOrRef"]) < 0 or int(r["item"]) not in ammo]
+
+    ammo = {int(r["entry"]) for r in db["item_template"] if int(r["class"]) == ITEM_CLASS_PROJECTILE}
 
     with open(os.path.join(OUT_DIR, "start_outfits.json"), encoding="utf8") as f:
         outfits = json.load(f)
     creature_loot, references = {}, {}
     item_ids = {item for outfit in outfits.values() for item in outfit}
     item_ids.update(int(r["itemid"]) for r in db["playercreateinfo_item"])
+    item_ids -= ammo
     pending = []
     for creature in creatures.values():
         loot_id = str(creature["LootId"])
@@ -343,8 +350,8 @@ def main(path):
         # NpcFlags 0x4000 is UNIT_NPC_FLAG_REPAIR: armorers who repair gear.
         vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"],
                                "repair": int(template["NpcFlags"]) & 0x4000 != 0,
-                               "items": [int(r["item"]) for r in stock]}
-        item_ids.update(int(r["item"]) for r in stock)
+                               "items": [int(r["item"]) for r in stock if int(r["item"]) not in ammo]}
+        item_ids.update(int(r["item"]) for r in stock if int(r["item"]) not in ammo)
     # Game objects: chests' loot comes from gameobject_loot_template by their
     # data1 (the loot id), and their respawn time from their classic spawns.
     object_loot_rows = {}
@@ -374,10 +381,15 @@ def main(path):
     item_ids.update(int(r["entry"]) for r in db["item_template"] if int(r["startquest"]) in QUESTS)
     write("quests.json", quests)
 
-    items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"] if int(r["entry"]) in item_ids}
+    items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"]
+             if int(r["entry"]) in item_ids and int(r["entry"]) not in ammo}
     for item in items.values():
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
+        # A thrown weapon is one weapon, not a stack of 200 to throw.
+        if int(item["class"]) == 2 and int(item["subclass"]) == ITEM_SUBCLASS_THROWN:
+            item["stackable"] = 1
+            item["BuyCount"] = 1
     # The game uses its own names, not the classic ones.
     renames.apply(items, creatures, vendors, {}, classic_names(db), gameobjects)
     write("gameobjects.json", gameobjects)
@@ -428,13 +440,17 @@ def starting_characters(db, outfits, items, level_stats):
             if not item:
                 continue
             count = int(item["BuyCount"])
+            # Thrown weapons are their own ammo in classic, given 200 at a
+            # time; with no ammo one is the weapon, worn in the ranged slot.
+            if int(item["class"]) == 2 and int(item["subclass"]) == ITEM_SUBCLASS_THROWN:
+                count = 1
             if int(item["class"]) == ITEM_CLASS_CONSUMABLE and int(item["subclass"]) == ITEM_SUBCLASS_FOOD:
                 limit = {11: 4, 59: 2}.get(int(item["spellcategory_1"]))
                 if limit and int(item["stackable"]) > limit:
                     count = limit
             start_items.append([item_id, count])
         start_items += [[int(r["itemid"]), int(r["amount"])] for r in db["playercreateinfo_item"]
-                        if (int(r["race"]), int(r["class"])) == (race, char_class)]
+                        if (int(r["race"]), int(r["class"])) == (race, char_class) and str(r["itemid"]) in items]
         # Proficiency spells name an item class and a mask of its subclasses.
         proficiencies = set()
         for r in db["playercreateinfo_spell"]:

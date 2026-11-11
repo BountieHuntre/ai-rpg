@@ -259,17 +259,18 @@ static func shown_slots() -> Array[int]:
 
 ## Classic starting spells, plus Attack, laid out on the action bar.
 func _start_spells() -> void:
-	known_spells.assign([SpellDB.ATTACK] + SpellDB.start_spells(race, char_class))
+	known_spells.assign([SpellDB.ATTACK, SpellDB.SHOOT] + SpellDB.start_spells(race, char_class))
 	talents = {}
 	talent_reset_cost = 0
 	action_bar.clear()
 	action_bar.resize(ALL_SLOTS)
 	action_bar.fill(0)
-	# Stances have the stance bar, and passives (Parry) no button.
+	# Stances have the stance bar, and passives (Parry) no button; Shoot is in
+	# the spellbook, for those who carry a ranged weapon.
 	var slot := 0
 	for id in known_spells:
 		var spell := SpellDB.get_spell(id)
-		if not SpellDB.is_stance_bar_spell(spell) and not SpellDB.is_passive(spell):
+		if id != SpellDB.SHOOT and not SpellDB.is_stance_bar_spell(spell) and not SpellDB.is_passive(spell):
 			action_bar[slot] = id
 			slot += 1
 
@@ -379,7 +380,9 @@ func _apply_save(data: Dictionary) -> void:
 	# JSON turns ints into floats and dictionary keys into strings.
 	equipment = {}
 	for slot: String in data.equipment:
-		equipment[int(slot)] = _read_stack(data.equipment[slot])
+		var worn := _read_stack(data.equipment[slot])
+		if not worn.is_empty():
+			equipment[int(slot)] = worn
 	bags.assign(data.bags.map(_read_stack))
 	containers = data.containers.map(func(container: Array) -> Array: return container.map(_read_stack))
 	player_state = data.get("player", {})
@@ -403,6 +406,9 @@ func _apply_save(data: Dictionary) -> void:
 			action_bar.resize(ALL_SLOTS)
 			for i in range(had, ALL_SLOTS):
 				action_bar[i] = 0
+		# Everyone knows Shoot (characters from before it had none).
+		if not SpellDB.SHOOT in known_spells:
+			known_spells.append(SpellDB.SHOOT)
 		# Older characters started with passives (Parry) on the bar.
 		for i in action_bar.size():
 			if action_bar[i] > 0 and SpellDB.is_passive(SpellDB.get_spell(action_bar[i])):
@@ -423,12 +429,15 @@ func _read_equipment(saved) -> Dictionary:
 	var out := {}
 	if saved is Dictionary:
 		for slot: String in saved:
-			out[int(slot)] = _read_stack(saved[slot])
+			var worn := _read_stack(saved[slot])
+			if not worn.is_empty():
+				out[int(slot)] = worn
 	return out
 
 
 func _read_stack(stack: Dictionary) -> Dictionary:
-	if stack.is_empty():
+	# Items no longer in the game (arrows and shot) are gone.
+	if stack.is_empty() or ItemDB.get_item(int(stack.get("id", 0))).is_empty():
 		return {}
 	var read := { "id": int(stack.id), "count": int(stack.count), "bound": bool(stack.get("bound", false)) }
 	if stack.has("durability"):

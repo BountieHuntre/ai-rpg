@@ -126,6 +126,11 @@ func refresh() -> void:
 	var melee_haste := c.aura_total(SpellDB.AURA_MOD_MELEE_HASTE)
 	var haste_factor := 1.0 / (1.0 + melee_haste / 100.0) if melee_haste >= 0.0 else 1.0 - melee_haste / 100.0
 	c.swing_interval *= haste_factor
+	# The ranged weapon, and ranged attack power (CMaNGOS
+	# Player::UpdateAttackPowerAndDamage: level + Agility - 10 for fighters,
+	# twice that for Rangers, Agility - 10 for the rest).
+	c.ranged_weapon = gear.get("ranged", {})
+	c.ranged_attack_power = maxi(ranged_attack_power(char_class, level, agility), 0)
 	# A weapon in the off hand (Two-Weapon Fighting) swings on its own.
 	var off: Dictionary = gear.get("off_weapon", {})
 	c.off_min_damage = float(off.get("min", 0.0))
@@ -224,6 +229,16 @@ static func health_from_stamina(stamina: int) -> int:
 static func mana_from_intellect(intellect: int) -> int:
 	var low := mini(intellect, 20)
 	return low + (intellect - low) * 15
+
+
+static func ranged_attack_power(c: ClassicData.CharClass, level: int, agility: int) -> int:
+	match c:
+		ClassicData.CharClass.WARRIOR, ClassicData.CharClass.ROGUE, ClassicData.CharClass.SPELLSWORD:
+			return level + agility - 10
+		ClassicData.CharClass.HUNTER:
+			return level * 2 + agility * 2 - 10
+		_:
+			return agility - 10
 
 
 static func melee_attack_power(c: ClassicData.CharClass, level: int, strength: int, agility: int) -> int:

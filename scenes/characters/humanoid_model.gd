@@ -1,18 +1,24 @@
 class_name HumanoidModel
 extends Node3D
-## The Human character model (assets/models/human/human.glb, built by
-## tools/models/human/build_human.py): a body, hair and beard from an
-## appearance, the gear a profile wears (armour colours, weapons and shield in
-## hand), and animations driven by the unit it stands for.
+## A character model: Human, Dwarf or Gnome (assets/models/<race>/<race>.glb,
+## all built by tools/models/human/build_human.py on one skeleton): a body,
+## hair and beard from an appearance, the gear worn (armour colours, helm,
+## cloak, weapons and shield in hand, the ranged weapon while shooting), and
+## animations driven by the unit it stands for.
 ##
-## Put it under a unit's Visual and call `attach(unit)`; without a unit (the
-## character preview, NPCs) it idles. Colours come from one ShaderMaterial a
-## model (shaders/character.gdshader), its 16 slots named in SLOTS.
+## Set `race` (RACE_MODELS), put it under a unit's Visual and call
+## `attach(unit)` for a player unit or `attach_creature(enemy)`; without one
+## (the character preview, NPCs) it idles. Colours come from one
+## ShaderMaterial a model (shaders/character.gdshader), its slots in the enum.
 
-const MODEL := "res://assets/models/human/human.glb"
 const SHADER := preload("res://shaders/character.gdshader")
+## Races with a model: ClassicData.Race -> its file's name.
+const RACE_MODELS := { ClassicData.Race.HUMAN: "human", ClassicData.Race.DWARF: "dwarf", ClassicData.Race.GNOME: "gnome" }
+## Colour slots, as the build script's SLOT_NAMES; the shader has room for 32.
+const SLOT_COUNT := 32
 
-enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM }
+enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
+	BACK, RANGED, RANGED_TRIM, HELM_TRIM }
 
 const SKIN_COLORS := [
 	Color(0.96, 0.8, 0.68), Color(0.9, 0.71, 0.56), Color(0.8, 0.59, 0.43),
@@ -56,14 +62,19 @@ const MAIN_PROPS := {
 	10: "staff", 13: "fist", 15: "dagger", 20: "staff",
 }
 const OFF_PROPS := { 0: "axe", 4: "mace", 7: "sword", 13: "fist", 15: "dagger" }
+## Head armour subclass -> helm (cloth hood, leather cap, mail coif, plate helm).
+const HELMS := { 0: "Helm_cap", 1: "Helm_hood", 2: "Helm_cap", 3: "Helm_coif", 4: "Helm_plate" }
+## Ranged weapon subclass -> the prop drawn while shooting, and how it's shot.
+const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_gun", 16: "Ranged_thrown", 19: "Main_wand" }
+const RANGED_SHOTS := { 2: "shoot_bow", 3: "shoot_gun", 18: "shoot_gun", 16: "throw", 19: "shoot_wand" }
 
 ## Animations that loop.
 const LOOPS := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "strafe_right", "fall", "sit",
-	"stunned", "dead", "cast", "channel", "dance"]
+	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun"]
 const LOCO := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "strafe_right", "fall", "sit",
-	"stunned", "dead", "cast", "channel", "dance"]
+	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun"]
 const UPPER := ["attack_1h", "attack_1h_b", "attack_2h", "attack_off", "punch", "block", "parry", "dodge", "hit",
-	"cast_release"]
+	"cast_release", "shoot_bow", "shoot_gun", "throw", "shoot_wand"]
 const FULL := ["jump", "land", "sit_down", "stand_up", "death", "wave", "bow", "cheer", "nod", "laugh", "cry"]
 ## Bones the upper-body actions move; the legs keep walking.
 const UPPER_BONES := ["Spine", "Chest", "Neck", "Head", "RightShoulder", "RightUpperArm", "RightLowerArm",
@@ -84,12 +95,17 @@ const OFF_SCREEN_STEP := 0.5
 ## How often gear is checked for changes, in seconds.
 const GEAR_CHECK := 0.5
 
-## Meshes and skins of every part, from the model file, by name.
-static var _parts: Dictionary = {}
-## The model without its parts, instanced for each character.
-static var _bare: PackedScene
+## Per race: meshes and skins of every part, from its model file, by name.
+static var _parts_by_race: Dictionary = {}
+## Per race: the model without its parts, instanced for each character.
+static var _bare_by_race: Dictionary = {}
 static var _tree_root: AnimationNodeBlendTree
 
+## Which model: "human", "dwarf" or "gnome" (RACE_MODELS). Set before adding.
+var race := "human"
+## Props for a creature, which has no gear: { "main": prop, "off": prop,
+## "helm": helm part } (MAIN_PROPS values, "Off_..." or "Shield_..." parts).
+var creature_gear: Dictionary = {}
 var appearance: Dictionary = {}
 ## Clothes shown where nothing is worn (slot enum -> colour), for NPCs.
 var outfit: Dictionary = {}
@@ -98,8 +114,16 @@ var _model: Node3D
 var _skeleton: Skeleton3D
 var _tree: AnimationTree
 var _shown: Dictionary = {}
+## The unit it stands for: a player unit (_unit) or a creature, with its body
+## and combatant.
 var _unit: PlayerUnit
+var _body: CharacterBody3D
+var _combatant: Combatant
 var _caster: SpellCaster
+var _parts: Dictionary
+## Shooting: the ranged weapon is drawn in place of the melee ones.
+var _drawn := false
+var _was_casting := false
 var _profile: CharacterProfile
 var _equipment: Dictionary = {}
 var _gear_key := -1
@@ -117,14 +141,15 @@ var _anim_time := 0.0
 
 func _init() -> void:
 	name = "HumanoidModel"
-	_colors.resize(16)
+	_colors.resize(SLOT_COUNT)
 	_colors.fill(Color.WHITE)
 	_material.shader = SHADER
 
 
 func _ready() -> void:
-	_load()
-	_model = _bare.instantiate()
+	_load(race)
+	_parts = _parts_by_race[race]
+	_model = _bare_by_race[race].instantiate()
 	add_child(_model)
 	_skeleton = _model.get_node("Armature/Skeleton3D")
 	_tree = AnimationTree.new()
@@ -145,24 +170,33 @@ func _ready() -> void:
 	_set_loco("idle")
 
 
-## Reads the model file once: its parts' meshes and a copy without them.
-static func _load() -> void:
-	if _bare:
+## Reads a race's model file once: its parts' meshes and a copy without them.
+static func _load(race_name: String) -> void:
+	if _bare_by_race.has(race_name):
 		return
-	var scene: Node3D = load(MODEL).instantiate()
+	var scene: Node3D = load("res://assets/models/%s/%s.glb" % [race_name, race_name]).instantiate()
 	var skeleton: Skeleton3D = scene.get_node("Armature/Skeleton3D")
+	var parts := {}
 	for child in skeleton.get_children():
 		if child is MeshInstance3D:
-			_parts[child.name] = [child.mesh, child.skin]
+			parts[child.name] = [child.mesh, child.skin]
 			skeleton.remove_child(child)
 			child.free()
 	var player: AnimationPlayer = scene.get_node("AnimationPlayer")
 	for anim_name in player.get_animation_list():
 		player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR if anim_name in LOOPS else Animation.LOOP_NONE
-	_bare = PackedScene.new()
-	_bare.pack(scene)
+	var bare := PackedScene.new()
+	bare.pack(scene)
 	scene.free()
-	_tree_root = _build_tree()
+	_parts_by_race[race_name] = parts
+	_bare_by_race[race_name] = bare
+	if not _tree_root:
+		_tree_root = _build_tree()
+
+
+## The model a race uses, or "" for none yet (the placeholder capsule).
+static func model_race(race_id: int) -> String:
+	return RACE_MODELS.get(race_id, "")
 
 
 ## Locomotion and lasting states (a crossfading choice, sped up to match the
@@ -250,18 +284,6 @@ func _apply_appearance() -> void:
 	var body: int = appearance.body
 	for i in BODIES.size():
 		_show(BODIES[i], i == body)
-	for style in HAIR_STYLES[0] + HAIR_STYLES[1]:
-		if style != "":
-			_show(style, false)
-	for face in FACES[0]:
-		if face != "":
-			_show(face, false)
-	var hair: String = HAIR_STYLES[body][appearance.hair]
-	if hair != "":
-		_show(hair, true)
-	var face: String = FACES[body][appearance.face]
-	if face != "":
-		_show(face, true)
 	_colors[SKIN] = SKIN_COLORS[appearance.skin]
 	_colors[HAIR] = HAIR_COLORS[appearance.hair_color]
 	_colors[EYES] = EYE_COLOR
@@ -310,12 +332,33 @@ func _apply_equipment() -> void:
 	_colors[WAIST] = _armor_color(Inventory.Slot.WAIST, outfit.get(WAIST, _colors[LEGS].darkened(0.25)))
 	_colors[SHOULDERS] = _armor_color(Inventory.Slot.SHOULDER, chest)
 	_show("Shoulders", _item(Inventory.Slot.SHOULDER).size() > 0)
-	# Weapons and shield.
+	# A helm hides the hair (and a closed one the beard).
+	var head := _item(Inventory.Slot.HEAD)
+	var helm: String = creature_gear.get("helm", HELMS.get(int(head.get("subclass", 0)), "Helm_cap") if head.size() > 0 else "")
+	for part: String in HELMS.values():
+		_show(part, part == helm)
+	_colors[HEAD] = _armor_color(Inventory.Slot.HEAD, outfit.get(HEAD, chest))
+	_colors[HELM_TRIM] = TRIM_COLOR if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
+	var body: int = appearance.get("body", 0)
+	var hair: String = HAIR_STYLES[body][appearance.get("hair", 0)] if helm == "" else ""
+	var face: String = FACES[body][appearance.get("face", 0)] if helm != "Helm_plate" else ""
+	for style: String in HAIR_STYLES[0] + HAIR_STYLES[1] + FACES[0]:
+		if style != "":
+			_show(style, style == hair or style == face)
+	# A cloak.
+	var cloak := _item(Inventory.Slot.BACK)
+	_show("Cloak", cloak.size() > 0 or outfit.has(BACK))
+	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, CLOTH[0]))
+	_apply_props()
+
+
+## Weapons and shield in hand, or the ranged weapon while shooting.
+func _apply_props() -> void:
 	var main := _item(Inventory.Slot.MAIN_HAND)
 	var off := _item(Inventory.Slot.OFF_HAND)
 	var main_prop := ""
 	if main.size() > 0 and int(main.get("class", 0)) == 2:
-		main_prop = MAIN_PROPS.get(int(main.subclass), "")
+		main_prop = "Main_" + MAIN_PROPS.get(int(main.subclass), "")
 	var off_prop := ""
 	if off.size() > 0:
 		if int(off.get("class", 0)) == 2:
@@ -324,9 +367,20 @@ func _apply_equipment() -> void:
 			off_prop = "Shield_kite" if _pick(off, 2) == 1 else "Shield_round"
 		else:
 			off_prop = "Off_orb"
-	for part in _parts:
-		if part.begins_with("Main_"):
-			_show(part, part == "Main_" + main_prop)
+	if not creature_gear.is_empty():
+		main_prop = "Main_" + str(creature_gear.get("main", "")) if creature_gear.get("main", "") != "" else ""
+		off_prop = str(creature_gear.get("off", ""))
+	var ranged := _item(Inventory.Slot.RANGED)
+	if _drawn and ranged.size() > 0:
+		main_prop = RANGED_PROPS.get(int(ranged.subclass), "")
+		off_prop = ""
+		_colors[RANGED] = _handle_color(ranged).lightened(0.15)
+		_colors[RANGED_TRIM] = Color(0.3, 0.3, 0.33)
+		if main_prop == "Main_wand":
+			main = ranged
+	for part: String in _parts:
+		if part.begins_with("Main_") or part.begins_with("Ranged_"):
+			_show(part, part == main_prop)
 		elif part.begins_with("Off_") or part.begins_with("Shield_"):
 			_show(part, part == off_prop)
 	if main.size() > 0:
@@ -342,6 +396,11 @@ func _apply_equipment() -> void:
 			_colors[SHIELD] = TRIM_COLOR if int(off.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
 			if main.size() == 0:
 				_colors[HANDLE] = _handle_color(off)
+	if not creature_gear.is_empty():
+		_colors[BLADE] = STEEL.darkened(0.15)
+		_colors[HANDLE] = WOOD
+		_colors[SHIELD] = WOOD
+		_colors[SHIELD_TRIM] = STEEL.darkened(0.15)
 	_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
 
 
@@ -448,15 +507,26 @@ func attach(unit: PlayerUnit) -> void:
 	_unit = unit
 	_profile = unit.profile
 	_caster = unit.get_node_or_null("SpellCaster")
-	var c := unit.combatant
+	_follow(unit, unit.combatant)
+	if _caster:
+		_caster.spell_finished.connect(_on_spell)
+
+
+## Drives the animations from a creature (Human brigands and the like).
+func attach_creature(creature: CharacterBody3D, c: Combatant) -> void:
+	_follow(creature, c)
+
+
+func _follow(body: CharacterBody3D, c: Combatant) -> void:
+	_body = body
+	_combatant = c
+	c.shot.connect(_on_shot)
 	c.swung.connect(func(_target: Combatant) -> void: _attack(false))
 	c.off_hand_swung.connect(func(_target: Combatant) -> void: _attack(true))
 	c.took_damage.connect(func(_amount: int, _source: Combatant, _crit: bool) -> void: _upper("hit", true))
 	c.avoided.connect(_on_avoided)
 	c.blocked_attack.connect(func(_attacker: Combatant) -> void: _upper("block"))
 	c.died.connect(_on_died)
-	if _caster:
-		_caster.spell_finished.connect(_on_spell)
 
 
 ## Stops or restarts animating (far units hold their pose).
@@ -467,7 +537,7 @@ func set_animating(on: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if _unit:
+	if _body:
 		_update_unit(delta)
 	_advance(delta)
 
@@ -501,25 +571,37 @@ func _update_unit(delta: float) -> void:
 		if key != _gear_key:
 			_gear_key = key
 			show_equipment(_profile.equipment)
+	# The ranged weapon is out while shooting.
+	var drawn := _combatant.shoot_target != null
+	if drawn != _drawn:
+		_drawn = drawn
+		_apply_props()
+		_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
 	_update_loco(delta)
 
 
 func _update_loco(delta: float) -> void:
-	var c := _unit.combatant
+	var c := _combatant
 	if not c.is_alive():
 		_set_loco("dead")
 		return
 	_dead = false
-	var velocity := _unit.velocity
-	var local := Basis(Vector3.UP, _unit.facing).inverse() * velocity
+	var velocity := _body.velocity
+	var local := global_transform.basis.orthonormalized().inverse() * velocity
 	var forward := -local.z
 	var side := local.x
 	var speed := Vector2(velocity.x, velocity.z).length()
-	var on_floor := _unit.is_on_floor()
+	var on_floor := _body.is_on_floor()
 	_airborne = 0.0 if on_floor else _airborne + delta
-	if _unit.sitting != _was_sitting:
-		_was_sitting = _unit.sitting
-		_full("sit_down" if _unit.sitting else "stand_up")
+	var sitting := _unit != null and _unit.sitting
+	if sitting != _was_sitting:
+		_was_sitting = sitting
+		_full("sit_down" if sitting else "stand_up")
+	# A creature's spell going off.
+	if not _unit:
+		if _was_casting and not c.is_casting and c.is_alive():
+			_upper("cast_release")
+		_was_casting = c.is_casting
 	if speed > 0.3 or not on_floor:
 		_dancing = false
 	var scale := 1.0
@@ -528,7 +610,7 @@ func _update_loco(delta: float) -> void:
 		state = "stunned"
 	elif _airborne > 0.3:
 		state = "fall"
-	elif _unit.sitting:
+	elif sitting:
 		state = "sit"
 	elif speed > 0.3:
 		if forward >= absf(side) * 0.7:
@@ -542,8 +624,13 @@ func _update_loco(delta: float) -> void:
 			scale = speed / RUN_SPEED
 	elif _caster and not _caster.casting.is_empty():
 		state = "channel" if _caster.channeling else "cast"
+	elif not _unit and c.is_casting:
+		state = "cast"
 	elif _dancing:
 		state = "dance"
+	elif _drawn:
+		var shots := str(RANGED_SHOTS.get(int(_item(Inventory.Slot.RANGED).get("subclass", 0)), ""))
+		state = "aim_bow" if shots == "shoot_bow" else "aim_gun" if shots == "shoot_gun" else "ready"
 	elif c.is_in_combat() or c.attack_target:
 		state = "ready"
 	_tree.set("parameters/speed/scale", clampf(scale, 0.3, 2.5))
@@ -554,7 +641,7 @@ func _set_loco(state: String) -> void:
 	if state == _loco:
 		return
 	# Leaving the ground with a jump, and landing.
-	if state == "fall" and _loco != "fall" and _unit and _unit.velocity.y > 0.0:
+	if state == "fall" and _loco != "fall" and _body and _body.velocity.y > 0.0:
 		_full("jump")
 	if _loco == "fall" and state != "fall":
 		_full("land")
@@ -581,13 +668,22 @@ func _attack(off_hand: bool) -> void:
 		_upper("attack_off")
 		return
 	var main := _item(Inventory.Slot.MAIN_HAND)
-	if main.is_empty():
+	if not creature_gear.is_empty():
+		_swing += 1
+		_upper("punch" if creature_gear.get("main", "") == "" else "attack_1h" if _swing % 2 == 0 else "attack_1h_b")
+	elif main.is_empty():
 		_upper("punch")
 	elif int(main.get("InventoryType", 0)) == Inventory.INVTYPE_TWO_HAND:
 		_upper("attack_2h")
 	else:
 		_swing += 1
 		_upper("attack_1h" if _swing % 2 == 0 else "attack_1h_b")
+
+
+## A shot with the ranged weapon.
+func _on_shot(_target: Combatant) -> void:
+	var anim: String = RANGED_SHOTS.get(int(_item(Inventory.Slot.RANGED).get("subclass", 0)), "shoot_wand")
+	_upper(anim)
 
 
 func _on_avoided(text: String, _source: Combatant) -> void:

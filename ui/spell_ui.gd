@@ -285,7 +285,8 @@ func _update_slot_state(i: int) -> void:
 	key.text = Settings.key_label(GameState.slot_action(i))
 	key.add_theme_color_override("font_color", Color(1, 0.2, 0.2) if id != 0 and caster.out_of_range(id) else Color(0.9, 0.9, 0.9))
 	# Attack glows while auto-attacking, Mighty Blow while it waits for the swing.
-	var glowing := (id == SpellDB.ATTACK and _player.combatant.attack_target) or (id != 0 and int(caster.queued_swing().get("Id", 0)) == id)
+	var glowing := (id == SpellDB.ATTACK and _player.combatant.attack_target) or (id == SpellDB.SHOOT and _player.combatant.shoot_target) \
+		or (id != 0 and int(caster.queued_swing().get("Id", 0)) == id)
 	box.modulate = Color(1.4, 1.2, 0.7) if glowing else Color.WHITE
 
 
@@ -734,6 +735,11 @@ func spell_tooltip(id: int) -> Array:
 		return lines
 	if id == SpellDB.ATTACK:
 		lines.append([SpellText.describe(spell, GameState.level), "", DESCRIPTION])
+		return lines
+	if id == SpellDB.SHOOT:
+		var weapon: Dictionary = _player.combatant.ranged_weapon
+		lines.append(["", "%d yd range" % int(weapon.range) if not weapon.is_empty() else "", Color.WHITE])
+		lines.append(["Shoot your target with your ranged weapon (a bow, gun, thrown weapon or wand) again and again until you stop. You must stand still to shoot.", "", DESCRIPTION])
 		return lines
 	if SpellDB.is_passive(spell):
 		lines.append(["Passive", "", Color.WHITE])

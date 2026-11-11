@@ -7,6 +7,8 @@ extends Node
 signal swung(target: Combatant)
 ## The off hand swung at its target (Two-Weapon Fighting).
 signal off_hand_swung(target: Combatant)
+## A shot with the ranged weapon left for its target (Shoot).
+signal shot(target: Combatant)
 signal took_damage(amount: int, source: Combatant, crit: bool)
 ## A hit that was turned away entirely, such as a miss, dodge or resist.
 signal avoided(text: String, source: Combatant)
@@ -131,6 +133,15 @@ var extra_attacks := 0
 var invulnerable := false
 ## While set, swings at this combatant whenever it is in melee range.
 var attack_target: Combatant
+## While set, shoots this combatant with the ranged weapon whenever it can
+## (Shoot): in range, faced, standing still. Melee and shooting exclude each
+## other.
+var shoot_target: Combatant
+## The ranged weapon: { "min", "max", "speed", "school", "kind", "range",
+## "min_range" } (Inventory.gear_totals, CharacterStats), or {} for none.
+var ranged_weapon: Dictionary = {}
+var ranged_attack_power := 0
+var _shot_left := 0.0
 ## Optional check of whether this unit is facing a world position.
 var faces_point: Callable
 
@@ -726,6 +737,121 @@ func _physics_process(delta: float) -> void:
 			if _resolve_melee(target, damage, CombatRules.roll_auto_attack(self, target), true):
 				auto_attack_landed.emit(target)
 			_off_swing_left = off_swing_interval
+	_tick_shooting(delta)
+
+
+# Shooting.
+
+## Starts shooting a target with the ranged weapon (stopping melee); the first
+## shot goes after half a second, as classic's Auto Shot.
+func start_shooting(target: Combatant) -> void:
+	attack_target = null
+	if shoot_target != target:
+		_shot_left = maxf(_shot_left, SHOT_DELAY)
+	shoot_target = target
+	_engage(target)
+
+
+func stop_shooting() -> void:
+	shoot_target = null
+
+
+## Why it can't shoot a target now, or "" (the range checks of Shoot).
+func shot_problem(target: Combatant) -> String:
+	if ranged_weapon.is_empty():
+		return "You need a ranged weapon equipped."
+	var distance := distance_to(target)
+	if distance > float(ranged_weapon.range):
+		return "Out of range."
+	if distance < float(ranged_weapon.min_range):
+		return "Target is too close."
+	return ""
+
+
+const SHOT_DELAY := 0.5
+## Yards a second arrows, shot and wand bolts fly.
+const SHOT_SPEED := 40.0
+
+
+func _tick_shooting(delta: float) -> void:
+	_shot_left = maxf(_shot_left - delta, 0.0)
+	if shoot_target == null:
+		return
+	if not is_instance_valid(shoot_target) or not shoot_target.is_alive() or ranged_weapon.is_empty():
+		shoot_target = null
+		return
+	if _shot_left > 0.0 or is_stunned() or is_pacified() or is_feared() or is_casting:
+		return
+	# Moving holds the shot (classic's Auto Shot and wands need you still).
+	if body.has_method("is_moving") and body.is_moving():
+		return
+	if not faces(shoot_target) or not shot_problem(shoot_target).is_empty():
+		return
+	_shot_left = float(ranged_weapon.speed)
+	var target := shoot_target
+	shot.emit(target)
+	_launch_shot(target)
+
+
+## Sends a shot flying; it lands when it gets there.
+func _launch_shot(target: Combatant) -> void:
+	var flight := Projectile.new()
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	var wand := int(ranged_weapon.school) != 0
+	box.size = Vector3.ONE * (0.18 if wand else 0.08)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = SHOT_COLORS.get(int(ranged_weapon.school), Color(0.85, 0.8, 0.6))
+	box.material = material
+	mesh.mesh = box
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	flight.add_child(mesh)
+	body.get_parent().add_child(flight)
+	flight.launch(body.global_position + Vector3.UP * 1.3, target, SHOT_SPEED, _land_shot.bind(target))
+
+
+## Bolt colours by school (physical, holy, fire, nature, frost, shadow, arcane).
+const SHOT_COLORS := {
+	1: Color(1, 0.95, 0.6), 2: Color(1, 0.5, 0.15), 3: Color(0.4, 0.9, 0.3), 4: Color(0.5, 0.8, 1),
+	5: Color(0.55, 0.25, 0.75), 6: Color(0.85, 0.6, 1),
+}
+
+
+## A shot arrives: wands are spells of their school (a resist roll, spell
+## crits, no armour); bows, guns and thrown weapons are physical (miss,
+## block, crit, armour), with ranged attack power, as CMaNGOS's ranged
+## attacks. Neither can be dodged or parried, and they earn no rage.
+func _land_shot(target: Combatant) -> void:
+	if not is_instance_valid(target) or not target.is_alive() or ranged_weapon.is_empty():
+		return
+	var weapon := ranged_weapon
+	var school := int(weapon.school)
+	var damage := randf_range(float(weapon.min), float(weapon.max))
+	if school != 0:
+		var outcome := CombatRules.roll_spell(self, target)
+		if outcome == CombatRules.Outcome.RESIST:
+			target.avoid("Resist", self)
+			return
+		var crit := outcome == CombatRules.Outcome.CRIT
+		target.take_damage(roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), self, crit, school)
+		return
+	damage += ranged_attack_power / 14.0 * float(weapon.speed)
+	var shot_outcome := CombatRules.roll_ranged(self, target)
+	match shot_outcome:
+		CombatRules.Outcome.MISS:
+			target.avoid("Miss", self)
+			return
+		CombatRules.Outcome.CRIT:
+			damage *= CombatRules.MELEE_CRIT_MULTIPLIER
+	damage = CombatRules.reduce_by_armor(damage, target, self)
+	if shot_outcome == CombatRules.Outcome.BLOCK:
+		target.blocked_attack.emit(self)
+		damage = maxf(damage - target.block_value, 0.0)
+		if damage <= 0.0:
+			target.avoid("Block", self)
+			return
+	target.take_damage(roundi(damage), self, shot_outcome == CombatRules.Outcome.CRIT)
 
 
 ## Ground Slam slows a creature's swings (players' haste is in CharacterStats).

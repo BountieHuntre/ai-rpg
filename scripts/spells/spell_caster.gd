@@ -126,6 +126,9 @@ func cast(id: int) -> void:
 	if id == SpellDB.ATTACK:
 		_toggle_attack()
 		return
+	if id == SpellDB.SHOOT:
+		toggle_shoot()
+		return
 	var spell := SpellDB.get_spell(id)
 	_item_ref = {}
 	_item_spell = 0
@@ -228,6 +231,10 @@ func _talent_crit(spell: Dictionary) -> float:
 ## Whether the current target is out of the spell's range, for the action bar.
 func out_of_range(id: int) -> bool:
 	var spell := SpellDB.get_spell(id)
+	if id == SpellDB.SHOOT:
+		var shot_at := _unit.enemy_target()
+		return shot_at != null and not _unit.combatant.ranged_weapon.is_empty() \
+			and _unit.combatant.distance_to(shot_at) > float(_unit.combatant.ranged_weapon.range)
 	if id == SpellDB.ATTACK or SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY:
 		return false
 	var target := _unit.enemy_target()
@@ -300,7 +307,25 @@ func _toggle_attack() -> void:
 	if target == null or not target.is_alive():
 		failed.emit(ERR_NO_TARGET)
 		return
+	me.stop_shooting()
 	me.attack_target = target
+
+
+## Shoot: starts or stops shooting the target with the ranged weapon.
+func toggle_shoot() -> void:
+	var me := _unit.combatant
+	if me.shoot_target:
+		me.stop_shooting()
+		return
+	var target := _unit.enemy_target()
+	if target == null or not target.is_alive():
+		failed.emit(ERR_NO_TARGET)
+		return
+	var problem := me.shot_problem(target)
+	if not problem.is_empty():
+		failed.emit(problem)
+		return
+	me.start_shooting(target)
 
 
 ## Harmful spells go at the current target. Friendly ones go at the target if
