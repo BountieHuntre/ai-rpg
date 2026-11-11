@@ -131,6 +131,38 @@ var _parts: Dictionary
 ## Shooting: the ranged weapon is drawn in place of the melee ones.
 var _drawn := false
 var _was_casting := false
+## While casting, the hands glow in the spell's school colour (the shader's
+## hand_glow, pulsing) and cubes drift up from each (Vfx.hand_glow on the hand
+## bones, made on the first cast); the school of the spell being cast.
+var _glows: Array[CPUParticles3D] = []
+var _cast_school := 0
+var _glow_time := 0.0
+var _hands_lit := false
+## The cape's springs (see _cape_springs) take their stiffness, drag and
+## weight, and its wind (_update_cape) its strength and smoothing, from the
+## cape_ options (Settings, the Developer tab's sliders).
+## Capsules the cape can't pass through: [bone, radius, height, offset along
+## the bone] (yards, before the model's own scale).
+const CAPE_COLLIDERS := [
+	["Hips", 0.2, 0.45, 0.0], ["Spine", 0.17, 0.5, 0.12],
+	["RightUpperLeg", 0.1, 0.5, 0.22], ["LeftUpperLeg", 0.1, 0.5, 0.22],
+	["RightLowerLeg", 0.08, 0.45, 0.2], ["LeftLowerLeg", 0.08, 0.45, 0.2],
+]
+var _springs: Array[SpringBoneSimulator3D] = []
+## The cape's chains (left edge, middle, right edge; the build script's
+## CAPE_CHAINS), bones in each, and how far out of step each chain's flutter
+## is with the next (radians).
+const CAPE_CHAINS := ["L", "C", "R"]
+const CAPE_BONES := 5
+const CAPE_PHASE_STEP := 1.1
+var _cape_wind := Vector3.ZERO
+## The flapping's phase (see _update_cape).
+var _flutter_time := randf() * TAU
+var _last_yaw := 0.0
+## How fast the hands' glow pulses, and its strength's range.
+const GLOW_PULSE := 5.0
+const GLOW_LOW := 0.45
+const GLOW_HIGH := 0.9
 var _profile: CharacterProfile
 var _equipment: Dictionary = {}
 var _gear_key := -1
@@ -365,6 +397,7 @@ func _apply_equipment() -> void:
 	# A cloak.
 	var cloak := _item(Inventory.Slot.BACK)
 	_show("Cloak", cloak.size() > 0 or outfit.has(BACK))
+	_cape_springs(_shown.has("Cloak"))
 	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, CLOTH[0]))
 	_apply_props()
 
@@ -550,7 +583,94 @@ func _follow(body: CharacterBody3D, c: Combatant) -> void:
 func set_animating(on: bool) -> void:
 	if _tree:
 		_tree.active = on
+	for springs in _springs:
+		springs.active = on
 	set_process(on)
+
+
+## The cape swings: spring simulations on the cape's three chains of bones
+## (CAPE_CHAINS: its left edge, middle and right edge, five bones each, built
+## for it) while a cloak is worn, held off the body and legs by capsules on
+## their bones (CAPE_COLLIDERS). Each chain is its own simulation with its own
+## flutter, so the cloth between them ripples and folds; it trails when
+## running, sways on turning and lifts when the legs kick back.
+func _cape_springs(on: bool) -> void:
+	if not on:
+		for springs in _springs:
+			springs.queue_free()
+		_springs.clear()
+		return
+	if not _springs.is_empty() or _skeleton.find_bone("CapeC1") < 0:
+		return
+	for chain: String in CAPE_CHAINS:
+		var springs := SpringBoneSimulator3D.new()
+		springs.name = "CapeSprings" + chain
+		_skeleton.add_child(springs)
+		springs.setting_count = 1
+		springs.set_root_bone_name(0, "Cape%s1" % chain)
+		springs.set_end_bone_name(0, "Cape%s%d" % [chain, CAPE_BONES])
+		springs.set_extend_end_bone(0, true)
+		springs.set_end_bone_length(0, 0.1)
+		springs.set_radius(0, 0.04)
+		springs.set_enable_all_child_collisions(0, true)
+		for collider: Array in CAPE_COLLIDERS:
+			var capsule := SpringBoneCollisionCapsule3D.new()
+			capsule.bone_name = collider[0]
+			capsule.radius = collider[1]
+			capsule.height = collider[2]
+			capsule.position_offset = Vector3(0, collider[3], 0)
+			springs.add_child(capsule)
+		# Simulated in the character's own space, every drawn frame like its
+		# animation: its movement and turning reach the cape only as the
+		# smoothed wind of _update_cape (the steps of physics movement would
+		# shake it).
+		springs.set_center_from(0, SpringBoneSimulator3D.CENTER_FROM_NODE)
+		springs.set_center_node(0, springs.get_path_to(self))
+		springs.active = is_processing()
+		_springs.append(springs)
+	_apply_cape_settings()
+	if not Settings.changed.is_connected(_on_setting_changed):
+		Settings.changed.connect(_on_setting_changed)
+	_cape_wind = Vector3.ZERO
+	_last_yaw = global_rotation.y
+
+
+## The springs' stiffness, drag and weight from the options (the Developer
+## tab's cape sliders).
+func _apply_cape_settings() -> void:
+	for springs in _springs:
+		springs.set_stiffness(0, float(Settings.get_value("cape_stiffness")))
+		springs.set_drag(0, float(Settings.get_value("cape_drag")))
+		springs.set_gravity(0, float(Settings.get_value("cape_gravity")))
+
+
+func _on_setting_changed(key: String) -> void:
+	if key.begins_with("cape_"):
+		_apply_cape_settings()
+
+
+## The wind on the cape from moving and turning, smoothed: it blows back
+## against the way the character goes and sideways as it turns.
+func _update_cape(delta: float) -> void:
+	if _springs.is_empty() or not _body or delta <= 0.0:
+		return
+	var yaw := global_rotation.y
+	var turn := angle_difference(_last_yaw, yaw) / delta
+	_last_yaw = yaw
+	var local := global_basis.orthonormalized().inverse() * _body.velocity
+	var wind := Vector3(local.x, 0.0, local.z) * -float(Settings.get_value("cape_wind")) 		+ Vector3(turn * float(Settings.get_value("cape_turn_wind")), 0.0, 0.0)
+	_cape_wind = _cape_wind.lerp(wind, 1.0 - exp(-float(Settings.get_value("cape_wind_smoothing")) * delta))
+	# Flapping: gusts rising and falling on top of the wind, mostly up and
+	# down with a little side to side and back, at frequencies that don't
+	# line up (so it never looks mechanical), as strong as the wind is, so
+	# it billows running, ripples walking and stops standing still. Each
+	# chain is a little out of step with the next, so waves run across it.
+	_flutter_time += delta * TAU * float(Settings.get_value("cape_flutter_rate"))
+	var gust := _cape_wind.length() * float(Settings.get_value("cape_flutter"))
+	for i in _springs.size():
+		var t := _flutter_time + i * CAPE_PHASE_STEP
+		var flutter := Vector3(sin(t * 0.63 + 1.0) * 0.4, sin(t), sin(t * 1.37 + 2.0) * 0.3) * gust
+		_springs[i].external_force = _cape_wind + flutter
 
 
 func _process(delta: float) -> void:
@@ -595,6 +715,45 @@ func _update_unit(delta: float) -> void:
 		_apply_props()
 		_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
 	_update_loco(delta)
+	_update_glow()
+	_update_cape(delta)
+
+
+## Glowing cubes at the hands while casting, in the spell's school colour.
+func _update_glow() -> void:
+	var spell: Dictionary = {}
+	if _caster:
+		spell = _caster.casting
+	elif _combatant.is_casting:
+		var ai = _body.get("ai")
+		if ai:
+			spell = ai.casting
+	if spell.is_empty() or not _combatant.is_alive():
+		for glow in _glows:
+			glow.emitting = false
+		if _hands_lit:
+			_hands_lit = false
+			_material.set_shader_parameter("hand_glow", Color(0, 0, 0, 0))
+		return
+	_cast_school = int(spell.get("School", 0))
+	if _glows.is_empty():
+		for hand in ["RightHand", "LeftHand"]:
+			var attach := BoneAttachment3D.new()
+			attach.bone_name = hand
+			_skeleton.add_child(attach)
+			# The hand's middle, down the bone from the wrist.
+			var glow := Vfx.hand_glow(attach, 0.07)
+			glow.position = Vector3(0, 0.08, 0)
+			_glows.append(glow)
+	var color := Vfx.school_color(_cast_school)
+	var near := Vfx.near(self, global_position)
+	for glow in _glows:
+		glow.color = color
+		glow.emitting = near
+	_glow_time += get_process_delta_time()
+	var strength := lerpf(GLOW_LOW, GLOW_HIGH, 0.5 + 0.5 * sin(_glow_time * GLOW_PULSE))
+	_hands_lit = true
+	_material.set_shader_parameter("hand_glow", Color(color.srgb_to_linear(), strength))
 
 
 func _update_loco(delta: float) -> void:
@@ -618,6 +777,7 @@ func _update_loco(delta: float) -> void:
 	if not _unit:
 		if _was_casting and not c.is_casting and c.is_alive():
 			_upper("cast_release")
+			Vfx.release(_body, _cast_school)
 		_was_casting = c.is_casting
 	if speed > 0.3 or not on_floor:
 		_dancing = false
@@ -728,6 +888,7 @@ func _on_spell(spell: Dictionary) -> void:
 		_attack(false)
 	elif not _caster.channeling:
 		_upper("cast_release")
+		Vfx.release(_body, int(spell.get("School", 0)))
 
 
 func _on_died() -> void:

@@ -89,6 +89,22 @@ for side, x in (("Right", 1), ("Left", -1)):
 GRIP_R = Vector((0.345, 0.035, 0.81))
 GRIP_L = Vector((-0.345, 0.035, 0.81))
 SHIELD_AT = Vector((-0.42, 0.015, 1.0))
+# The cape chain's joints, top to bottom: five bones hanging down the back.
+CAPE_POINTS = [(0, -0.12, 1.47), (0, -0.155, 1.3), (0, -0.18, 1.12), (0, -0.2, 0.94), (0, -0.23, 0.77), (0, -0.27, 0.6)]
+# Three chains hang the cape, so it can ripple and fold across its width:
+# its left edge, middle and right edge, each CAPE_POINTS moved out sideways
+# by its share (-1, 0, 1) of the cape's half-width at that height.
+CAPE_CHAINS = {"L": -1.0, "C": 0.0, "R": 1.0}
+
+
+def cape_half_width(z):
+	"""Half the cape's width at a height: wider towards the hem."""
+	return 0.2 + 0.08 * (1.49 - z) / 0.89
+
+
+def cape_point(chain, i):
+	x, y, z = CAPE_POINTS[i]
+	return (CAPE_CHAINS[chain] * cape_half_width(z) * 0.85, y, z)
 # The left wrist's place on a two-handed weapon, from the right hand's grip:
 # back down the handle (the weapon points +Y in the hand) and a little up.
 TWO_HAND_GRIP = Vector((0, -0.17, 0.05))
@@ -112,7 +128,10 @@ def body_point(v):
 
 def place(v, group):
 	"""Where a point weighted to `group` goes for the race: the head, hands
-	and props keep their shape, scaled about the joint they hang from."""
+	and props keep their shape, scaled about the joint they hang from. A
+	blended group (pairs of bone and weight) is placed by its first bone."""
+	if isinstance(group, tuple):
+		group = group[0][0]
 	v = Vector(v)
 	if group == "Head":
 		return body_point(HEAD_AT) + (v - HEAD_AT) * HEAD_SCALE * RACE["head"]
@@ -134,6 +153,12 @@ BONES += [
 	# Where the left wrist goes on a two-handed weapon's handle, below the
 	# right hand: the two-handed animations reach it there by IK (two_hand_ik).
 	("GripL", tuple(GRIP_R + TWO_HAND_GRIP), tuple(GRIP_R + TWO_HAND_GRIP + Vector((0, -0.1, 0))), "WeaponR"),
+	# The cape: a chain hanging down the back from the shoulders, which the
+	# game swings with spring physics (HumanoidModel._cape_springs). The
+	# animations leave it at rest.
+] + [
+	(f"Cape{chain}{i + 1}", cape_point(chain, i), cape_point(chain, i + 1), "Chest" if i == 0 else f"Cape{chain}{i}")
+	for chain in CAPE_CHAINS for i in range(len(CAPE_POINTS) - 1)
 ]
 BONE_NAMES = [b[0] for b in BONES]
 
@@ -271,9 +296,13 @@ class Builder:
 		obj = bpy.data.objects.new(self.name, mesh)
 		bpy.context.scene.collection.objects.link(obj)
 		mesh.materials.append(material)
-		for bone in set(self.groups):
-			group = obj.vertex_groups.new(name=bone)
-			group.add([i for i, g in enumerate(self.groups) if g == bone], 1.0, "REPLACE")
+		# A vertex is on one bone, or shared between bones by weight.
+		groups = {}
+		for i, g in enumerate(self.groups):
+			for bone, weight in (g if isinstance(g, tuple) else ((g, 1.0),)):
+				if bone not in groups:
+					groups[bone] = obj.vertex_groups.new(name=bone)
+				groups[bone].add([i], weight, "REPLACE")
 		obj.parent = arm
 		mod = obj.modifiers.new("Armature", "ARMATURE")
 		mod.object = arm
@@ -566,12 +595,75 @@ def helms():
 
 
 def cloak():
-	"""A cloak from the shoulders to the knees, each row on the bone at its
-	height, so it bends with the back."""
+	"""A cloak from the shoulders to the knees: a thin sheet hung on the three
+	cape chains (CAPE_CHAINS) that the springs swing. Down its length a row
+	at the middle of each bone and one at each joint shared half and half
+	between the bones meeting there; across its width columns shared between
+	the chains on either side by how near they are; so it curves and ripples
+	like cloth rather than bending as a board. The top row is held by the
+	chest."""
 	b = Builder("Cloak")
-	rows = [((0, -0.1, 1.49), 0.2, "Chest"), ((0, -0.17, 1.32), 0.25, "Chest"), ((0, -0.19, 1.12), 0.26, "Spine"),
-			((0, -0.21, 0.92), 0.27, "Hips"), ((0, -0.26, 0.6), 0.28, "Hips")]
-	b.loft([(c, w / 0.707, 0.015 / 0.707, bone) for c, w, bone in rows], ["back"] * 4, sides=4, turn=math.pi / 4)
+	bones = len(CAPE_POINTS) - 1
+	# Rows: (height point, {bone index: weight}), index -1 for the chest.
+	rows = [((0, -0.1, 1.49), {-1: 1.0})]
+	for i in range(bones):
+		top, bottom = Vector(CAPE_POINTS[i]), Vector(CAPE_POINTS[i + 1])
+		if i > 0:
+			rows.append((tuple(top), {i - 1: 0.5, i: 0.5}))
+		rows.append((tuple((top + bottom) / 2), {i: 1.0}))
+	rows.append((CAPE_POINTS[-1], {bones - 1: 1.0}))
+	columns = [-1.0, -0.5, 0.0, 0.5, 1.0]
+	chains = sorted(CAPE_CHAINS.items(), key=lambda kv: kv[1])
+
+	def column_weights(u):
+		for (a, ua), (c, uc) in zip(chains, chains[1:]):
+			if ua <= u <= uc:
+				t = (u - ua) / (uc - ua)
+				return [(a, 1.0 - t), (c, t)]
+		return [(chains[-1][0], 1.0)]
+
+	def weights(row, u):
+		out = {}
+		for index, wr in row[1].items():
+			if index < 0:
+				out["Chest"] = out.get("Chest", 0.0) + wr
+				continue
+			for chain, wc in column_weights(u):
+				if wc * wr > 0.0:
+					name = f"Cape{chain}{index + 1}"
+					out[name] = out.get(name, 0.0) + wc * wr
+		return tuple(out.items())
+
+	half = 0.0075
+	grid = []
+	for row in rows:
+		x0, y, z = row[0]
+		width = 0.2 if row[1].get(-1) else cape_half_width(z)
+		line = []
+		for u in columns:
+			line.append(((u * width, y + half, z), (u * width, y - half, z), weights(row, u)))
+		grid.append(line)
+	verts, groups, faces = [], [], []
+	index = {}
+	for r, line in enumerate(grid):
+		for c, (outer, inner, w) in enumerate(line):
+			for side, point in ((0, outer), (1, inner)):
+				index[(r, c, side)] = len(verts)
+				verts.append(point)
+				groups.append(w)
+	last_r, last_c = len(grid) - 1, len(columns) - 1
+	for r in range(last_r):
+		for c in range(last_c):
+			faces.append([index[(r, c, 0)], index[(r + 1, c, 0)], index[(r + 1, c + 1, 0)], index[(r, c + 1, 0)]])
+			faces.append([index[(r, c, 1)], index[(r, c + 1, 1)], index[(r + 1, c + 1, 1)], index[(r + 1, c, 1)]])
+	# Close the edges so the sheet is a thin solid.
+	for r in range(last_r):
+		for c in (0, last_c):
+			faces.append([index[(r, c, 0)], index[(r, c, 1)], index[(r + 1, c, 1)], index[(r + 1, c, 0)]])
+	for c in range(last_c):
+		for r in (0, last_r):
+			faces.append([index[(r, c, 0)], index[(r, c + 1, 0)], index[(r, c + 1, 1)], index[(r, c, 1)]])
+	b._add(verts, groups, faces, ["back"] * len(faces), [1.0] * len(faces))
 	for x in (-1, 1):
 		b.box((0.17 * x, -0.04, 1.47), (0.06, 0.06, 0.05), "Chest", "trim")
 	return b

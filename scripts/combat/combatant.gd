@@ -254,6 +254,11 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 		aura.charges = roundi(SpellMods.apply(caster, spell, SpellMods.CHARGES, int(spell.ProcCharges)))
 	auras.append(aura)
 	auras_changed.emit()
+	# A buff cast on the unit (not a passive, nor a debuff from the other
+	# side): a ring rising from its feet.
+	var hostile_caster := caster != null and is_instance_valid(caster) and (caster.body is Enemy) != (body is Enemy)
+	if not hostile_caster and not SpellDB.is_passive(spell):
+		Vfx.buff(body, int(spell.get("School", 0)))
 
 
 ## Sum of an aura type's amounts, optionally only effects whose misc value
@@ -607,6 +612,7 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	last_hit_school = school
 	reward_rage(amount, false)
 	took_damage.emit(amount, source, crit)
+	Vfx.hit(body, school, crit)
 	if source and is_instance_valid(source) and amount > 0:
 		source.dealt_damage.emit(self)
 		source.damage_done.emit(self, amount, school)
@@ -662,6 +668,8 @@ func avoid(text: String, source: Combatant) -> void:
 	if is_alive() and not invulnerable:
 		enter_combat()
 		avoided.emit(text, source)
+		if text in ["Parry", "Block"]:
+			Vfx.deflect(body)
 
 
 ## The healer, when there is one, draws threat from the creatures fighting
@@ -674,6 +682,8 @@ func heal(amount: int, crit := false, healer: Combatant = null) -> void:
 	var gained := mini(amount, max_health - health)
 	health = mini(health + amount, max_health)
 	healed.emit(amount, crit)
+	if amount > 0:
+		Vfx.heal(body, crit)
 	if healer and healer.is_player and is_player and gained > 0:
 		Enemy.add_heal_threat(self, healer, gained)
 

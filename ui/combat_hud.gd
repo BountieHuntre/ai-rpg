@@ -859,7 +859,7 @@ func _add_float(combatant: Combatant, text: String, color: Color, big := false) 
 	if big:
 		label.add_theme_font_size_override("font_size", roundi(CRIT_FONT_SIZE * _ui_scale))
 	label.visible = false
-	var world_position := combatant.body.global_position + Vector3.UP * FLOAT_HEIGHT
+	var world_position := combatant.body.get_global_transform_interpolated().origin + Vector3.UP * FLOAT_HEIGHT
 	_floats.append({ "label": label, "world": world_position, "age": 0.0, "offset": FLOAT_OFFSETS[_next_float_offset] })
 	_next_float_offset = (_next_float_offset + 1) % FLOAT_OFFSETS.size()
 
@@ -893,7 +893,8 @@ func _update_enemy_names() -> void:
 			label.visible = false
 			continue
 		var combatant: Combatant = entry.combatant
-		var world: Vector3 = combatant.body.global_position + Vector3.UP * NAMEPLATE_HEIGHT
+		# Where the unit is drawn (physics interpolation), so the label keeps up.
+		var world: Vector3 = combatant.body.get_global_transform_interpolated().origin + Vector3.UP * NAMEPLATE_HEIGHT
 		if not shown or eye.distance_squared_to(world) > reach or not combatant.is_alive() or _camera.is_position_behind(world):
 			label.visible = false
 			continue

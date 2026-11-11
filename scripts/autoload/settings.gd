@@ -77,6 +77,18 @@ const DEFAULTS := {
 	"spellbook_hide_old_ranks": false,
 	# Developer
 	"dev_console": true,
+	# Where the Options window was dragged to, from the middle of the screen.
+	"options_window_offset": Vector2.ZERO,
+	# The cape's spring physics (HumanoidModel._cape_springs, _update_cape),
+	# tuned live from the Developer tab (these are the values settled on).
+	"cape_stiffness": 0.0,
+	"cape_drag": 0.15,
+	"cape_gravity": 0.5,
+	"cape_wind": 0.1,
+	"cape_turn_wind": 0.15,
+	"cape_wind_smoothing": 8.0,
+	"cape_flutter": 0.15,
+	"cape_flutter_rate": 2.0,
 }
 
 ## Rebindable actions in the Key Bindings window: [action, label, section].

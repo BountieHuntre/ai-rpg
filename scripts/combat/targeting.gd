@@ -116,14 +116,28 @@ func cycle() -> void:
 	set_target(candidates[next % candidates.size()])
 
 
+## How many looted corpses a click can pass through.
+const CLICK_THROUGH := 8
+
+
 ## The creature, corpse or NPC under a point of the game view, or null.
+## Corpses already looted are clicked through, to whatever lies under them
+## (another corpse to loot, a creature).
 func unit_at(screen_position: Vector2) -> Node3D:
 	var camera := _player.get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_position)
 	var to := from + camera.project_ray_normal(screen_position) * camera.far
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
-	query.exclude = [_player.get_rid()]
-	return _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider") as Node3D
+	var skipped: Array[RID] = [_player.get_rid()]
+	var space := _player.get_world_3d().direct_space_state
+	for attempt in CLICK_THROUGH:
+		query.exclude = skipped
+		var collider := space.intersect_ray(query).get("collider") as Node3D
+		var corpse := collider as Enemy
+		if corpse == null or corpse.combatant.is_alive() or corpse.has_loot():
+			return collider
+		skipped.append(corpse.get_rid())
+	return null
 
 
 ## As in classic: left click selects the creature or NPC under the cursor.
@@ -174,6 +188,9 @@ func _ready() -> void:
 	_ring.upper_fade = 0.0
 	_ring.lower_fade = 0.0
 	_ring.top_level = true
+	# Placed every drawn frame where the target is drawn, so not interpolated
+	# itself.
+	_ring.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_ring.visible = false
 	add_child(_ring)
 
@@ -223,7 +240,7 @@ func _process(delta: float) -> void:
 		set_target(null)
 	_ring.visible = target != null
 	if target:
-		_ring.global_position = target.global_position
+		_ring.global_position = target.get_global_transform_interpolated().origin
 		# As big as the target is drawn (big creatures, elites and bosses).
 		var visual := target.get_node_or_null("Visual") as Node3D
 		var size := clampf(visual.scale.x, 0.8, 2.0) if visual else 1.0

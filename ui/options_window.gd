@@ -79,10 +79,27 @@ const CATEGORIES := {
 	],
 	"Developer": [
 		["dev_console", "Developer Console (` key)", "check", null],
+		# Live: the cape changes as the slider moves (see LIVE_PREFIX).
+		["cape_stiffness", "Cape Stiffness", "decimal", [0.0, 2.0, 0.05]],
+		["cape_drag", "Cape Drag", "decimal", [0.0, 1.0, 0.05]],
+		["cape_gravity", "Cape Weight", "decimal", [0.0, 10.0, 0.1]],
+		["cape_wind", "Cape Wind (Running)", "decimal", [0.0, 1.5, 0.05]],
+		["cape_turn_wind", "Cape Wind (Turning)", "decimal", [0.0, 3.0, 0.05]],
+		["cape_wind_smoothing", "Cape Wind Smoothing", "decimal", [0.5, 20.0, 0.5]],
+		["cape_flutter", "Cape Flutter", "decimal", [0.0, 2.0, 0.05]],
+		["cape_flutter_rate", "Cape Flaps a Second", "decimal", [0.5, 6.0, 0.1]],
 	],
 }
 
 static var _check_icons: Dictionary
+
+## Options with this prefix take effect as their slider moves, to tune while
+## watching (Apply saves them, Cancel puts them back).
+const LIVE_PREFIX := "cape_"
+## Live options' values when the window opened, for Cancel.
+var _live_before: Dictionary = {}
+## The title is being dragged, moving the window.
+var _moving := false
 
 const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
@@ -126,6 +143,32 @@ var console: DevConsole
 ## The Developer tab is showing its item list instead of its commands.
 var _item_list := false
 var _item_filter := ""
+## The item search's filters and sort (kept while the window is open):
+## category (ITEM_CATEGORIES), type and slot within it ("" for any), quality
+## (-1 for any), sort (ITEM_SORTS), its direction, and usable gear only.
+var _item_category := "All"
+var _item_type := ""
+var _item_slot := ""
+var _item_quality := -1
+var _item_sort := "Name"
+var _item_sort_down := false
+var _item_usable := false
+## Item classes by category; "Other" is everything not named here.
+const ITEM_CATEGORIES := {
+	"All": [], "Weapons": [2], "Armor": [4], "Consumables": [0], "Containers": [1, 11],
+	"Trade Goods": [7], "Recipes": [9], "Quest Items": [12], "Other": [],
+}
+const ITEM_SORTS := ["Name", "Required Level", "Item Level", "Quality", "Item ID"]
+const QUALITY_NAMES := ["Poor", "Common", "Uncommon", "Rare", "Epic", "Legendary"]
+## Weapon subclasses with their hands (the rest are ItemDB.WEAPON_TYPES).
+const WEAPON_TYPE_NAMES := {
+	0: "One-Handed Axe", 1: "Two-Handed Axe", 4: "One-Handed Mace", 5: "Two-Handed Mace",
+	7: "One-Handed Sword", 8: "Two-Handed Sword",
+}
+const ARMOR_TYPE_NAMES := { 0: "Miscellaneous", 1: "Cloth", 2: "Leather", 3: "Mail", 4: "Plate", 5: "Buckler", 6: "Shield" }
+const CONSUMABLE_TYPE_NAMES := {
+	0: "Food & Drink", 1: "Potion", 2: "Elixir", 3: "Flask", 4: "Scroll", 5: "Food", 6: "Item Enhancement", 7: "Bandage",
+}
 var _item_tooltip: ItemTooltip
 
 var _category := "Video"
@@ -148,6 +191,7 @@ var _key_buttons: Dictionary
 func open(category := "Video") -> void:
 	_category = category
 	_pending.clear()
+	_live_before.clear()
 	_keys = Settings.snapshot_keys()
 	_binding = []
 	visible = true
@@ -168,6 +212,7 @@ func apply() -> void:
 	for key: String in _pending:
 		Settings.set_value(key, _pending[key])
 	_pending.clear()
+	_live_before.clear()
 	if _keys != Settings.snapshot_keys():
 		Settings.set_value("keys", _keys.duplicate(true))
 	Settings.save()
@@ -187,6 +232,13 @@ func cancel() -> void:
 	if close_confirm():
 		return
 	_pending.clear()
+	for key: String in _live_before:
+		Settings.set_value(key, _live_before[key])
+	# Moving the window saves the options; saved again so a live preview
+	# that was cancelled isn't kept on disk.
+	if not _live_before.is_empty():
+		Settings.save()
+	_live_before.clear()
 	_close()
 
 
@@ -310,6 +362,10 @@ func _build() -> void:
 	add_child(box)
 	var title := _label("Options", GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Drag the title to move the window.
+	title.mouse_filter = Control.MOUSE_FILTER_STOP
+	title.mouse_default_cursor_shape = Control.CURSOR_MOVE
+	title.gui_input.connect(_on_title_input)
 	box.add_child(title)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", roundi(6 * _ui_scale))
@@ -350,7 +406,8 @@ func _build() -> void:
 	_note.custom_minimum_size = Vector2(10, NOTE_HEIGHT) * _ui_scale
 	if _category == KEY_BINDINGS:
 		_build_keys(content)
-	else:
+	elif not (_category == DEVELOPER and _item_list):
+		# The item search has the page to itself (no console or cape options).
 		for row: Array in CATEGORIES[_category]:
 			content.add_child(_row(row))
 	if _category == DEVELOPER:
@@ -366,8 +423,37 @@ func _build() -> void:
 	buttons.add_child(_button("Okay", okay))
 	buttons.add_child(_button("Cancel", cancel))
 	reset_size()
-	var center := func() -> void: position = (get_viewport_rect().size - size) / 2
-	center.call_deferred()
+	_place.call_deferred()
+
+
+## In the middle of the screen, moved by where it was last dragged to
+## (the options_window_offset option), kept on screen.
+func _place() -> void:
+	var screen := get_viewport_rect().size
+	var middle := (screen - size) / 2
+	var offset: Vector2 = Settings.get_value("options_window_offset")
+	position = (middle + offset).clamp(Vector2.ZERO, (screen - size).max(Vector2.ZERO))
+
+
+func _on_title_input(event: InputEvent) -> void:
+	var button := event as InputEventMouseButton
+	if button and button.button_index == MOUSE_BUTTON_LEFT:
+		_moving = button.pressed
+		if not button.pressed:
+			# Saved at once: it isn't one of the changes waiting for Apply.
+			Settings.save()
+		accept_event()
+		return
+	var motion := event as InputEventMouseMotion
+	if motion and _moving:
+		var offset: Vector2 = Settings.get_value("options_window_offset")
+		var screen := get_viewport_rect().size
+		# Only as far as keeps it on screen.
+		var wanted := (position + motion.relative).clamp(Vector2.ZERO, (screen - size).max(Vector2.ZERO))
+		offset += wanted - position
+		position = wanted
+		Settings.set_value("options_window_offset", offset)
+		accept_event()
 
 
 ## Developer commands, run through the console as soon as they're used (Cancel
@@ -578,20 +664,80 @@ func _build_item_list(content: VBoxContainer) -> void:
 	search.focus_exited.connect(func() -> void: player.typing = false)
 	top.add_child(search)
 	content.add_child(top)
+	# Filters: category, then its type and slot; quality, sort and its
+	# direction, and usable gear only. A new category rebuilds the list's
+	# choices; the rest refill it.
+	var filters := HBoxContainer.new()
+	filters.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	content.add_child(filters)
+	var more := HBoxContainer.new()
+	more.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	content.add_child(more)
 	var scroll := ScrollContainer.new()
 	# Short enough that the page itself needn't scroll as well.
-	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 24 + EXTRA_PAGE) * _ui_scale
+	scroll.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 42 + EXTRA_PAGE) * _ui_scale
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	content.add_child(scroll)
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", 0)
 	list.custom_minimum_size.x = (WIDTH + 22) * _ui_scale
 	scroll.add_child(list)
+	var count := _label("", Color(0.6, 0.6, 0.65))
+	count.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
 	var fill := func() -> void:
 		for child in list.get_children():
 			child.queue_free()
-		for item: Dictionary in _items_matching(_item_filter):
+		var matching := _items_matching(_item_filter)
+		for item: Dictionary in matching:
 			list.add_child(_item_row(item))
+		count.text = "%d items" % matching.size()
+	filters.add_child(_filter_menu(ITEM_CATEGORIES.keys().map(func(c: String) -> Array: return [c, c]), _item_category,
+		func(value) -> void:
+			_item_category = value
+			_item_type = ""
+			_item_slot = ""
+			_build()))
+	var types := _item_types(_item_category)
+	if not types.is_empty():
+		filters.add_child(_filter_menu([["Any Type", ""]] + types, _item_type, func(value) -> void:
+			_item_type = value
+			fill.call()))
+	var slots := _item_slots(_item_category)
+	if not slots.is_empty():
+		filters.add_child(_filter_menu([["Any Slot", ""]] + slots, _item_slot, func(value) -> void:
+			_item_slot = value
+			fill.call()))
+	var qualities := [["Any Quality", -1]]
+	for i in QUALITY_NAMES.size():
+		qualities.append([QUALITY_NAMES[i], i])
+	more.add_child(_filter_menu(qualities, _item_quality, func(value) -> void:
+		_item_quality = value
+		fill.call()))
+	more.add_child(_filter_menu(ITEM_SORTS.map(func(sort: String) -> Array: return ["Sort: " + sort, sort]), _item_sort,
+		func(value) -> void:
+			_item_sort = value
+			fill.call()))
+	var direction := Button.new()
+	direction.text = "v" if _item_sort_down else "^"
+	direction.custom_minimum_size = Vector2(14, 13) * _ui_scale
+	direction.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	direction.tooltip_text = "Sort ascending or descending"
+	direction.pressed.connect(func() -> void:
+		_item_sort_down = not _item_sort_down
+		direction.text = "v" if _item_sort_down else "^"
+		fill.call())
+	more.add_child(direction)
+	var usable := CheckBox.new()
+	usable.text = "Usable"
+	usable.tooltip_text = "Only gear your class can use (any level)"
+	usable.button_pressed = _item_usable
+	usable.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	style_check(usable, _ui_scale)
+	usable.toggled.connect(func(on: bool) -> void:
+		_item_usable = on
+		fill.call())
+	more.add_child(usable)
+	more.add_child(count)
 	search.text_changed.connect(func(text: String) -> void:
 		_item_filter = text
 		fill.call()
@@ -605,10 +751,122 @@ func _items_matching(filter: String) -> Array:
 	ItemDB.get_item(0)
 	var query := filter.strip_edges().to_lower()
 	var matching := ItemDB._items.values().filter(func(item: Dictionary) -> bool:
-		return query.is_empty() or str(item.name).to_lower().contains(query) or str(int(item.entry)) == query
+		if not (query.is_empty() or str(item.name).to_lower().contains(query) or str(int(item.entry)) == query):
+			return false
+		if not _in_category(item, _item_category):
+			return false
+		if _item_type != "" and _item_type_key(item) != _item_type:
+			return false
+		if _item_slot != "" and _item_slot_name(item) != _item_slot:
+			return false
+		if _item_quality >= 0 and int(item.get("Quality", 1)) != _item_quality:
+			return false
+		if _item_usable and not _usable(item):
+			return false
+		return true
 	)
-	matching.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name) < str(b.name))
+	var key := func(item: Dictionary) -> Variant:
+		match _item_sort:
+			"Required Level":
+				return int(item.get("RequiredLevel", 0))
+			"Item Level":
+				return int(item.get("ItemLevel", 0))
+			"Quality":
+				return int(item.get("Quality", 1))
+			"Item ID":
+				return int(item.entry)
+		return str(item.name).to_lower()
+	matching.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ka = key.call(a)
+		var kb = key.call(b)
+		if ka == kb:
+			return str(a.name) < str(b.name)
+		return (ka > kb) if _item_sort_down else (ka < kb))
 	return matching
+
+
+## Whether an item is in a category of ITEM_CATEGORIES.
+func _in_category(item: Dictionary, category: String) -> bool:
+	var item_class := int(item.get("class", 0))
+	if category == "All":
+		return true
+	if category == "Other":
+		for named: String in ITEM_CATEGORIES:
+			if item_class in ITEM_CATEGORIES[named]:
+				return false
+		return true
+	return item_class in ITEM_CATEGORIES[category]
+
+
+## An item's type within its category, as the Type filter names it ("" for none).
+func _item_type_key(item: Dictionary) -> String:
+	var subclass := int(item.get("subclass", 0))
+	match int(item.get("class", 0)):
+		2:
+			return WEAPON_TYPE_NAMES.get(subclass, ItemDB.WEAPON_TYPES.get(subclass, "Other"))
+		4:
+			return ARMOR_TYPE_NAMES.get(subclass, "Other")
+		0:
+			return CONSUMABLE_TYPE_NAMES.get(subclass, "Other")
+	return ""
+
+
+## The slot an item is worn in, as the Slot filter names it ("" for none).
+func _item_slot_name(item: Dictionary) -> String:
+	return ItemDB.SLOT_NAMES.get(int(item.get("InventoryType", 0)), "")
+
+
+## The Type filter's choices for a category: the types its items have.
+func _item_types(category: String) -> Array:
+	if not category in ["Weapons", "Armor", "Consumables"]:
+		return []
+	var found := {}
+	for item: Dictionary in ItemDB._items.values():
+		if _in_category(item, category):
+			found[_item_type_key(item)] = true
+	var names := found.keys()
+	names.sort()
+	return names.map(func(n: String) -> Array: return [n, n])
+
+
+## The Slot filter's choices for a category: the slots its items go in.
+func _item_slots(category: String) -> Array:
+	if not category in ["Weapons", "Armor"]:
+		return []
+	var found := {}
+	for item: Dictionary in ItemDB._items.values():
+		if _in_category(item, category) and _item_slot_name(item) != "":
+			found[_item_slot_name(item)] = true
+	var names := found.keys()
+	names.sort()
+	return names.map(func(n: String) -> Array: return [n, n])
+
+
+## Gear the player's class can use at any level: allowed to its class, with
+## the skill for it (everything else counts as usable).
+func _usable(item: Dictionary) -> bool:
+	var mask := int(item.get("AllowableClass", -1))
+	if mask > 0 and mask & (1 << (GameState.char_class - 1)) == 0:
+		return false
+	return Inventory.has_proficiency(item)
+
+
+## A dropdown of [label, value] choices with `selected` chosen; calls back
+## with the value picked.
+func _filter_menu(choices: Array, selected: Variant, picked: Callable) -> OptionButton:
+	var menu := OptionButton.new()
+	menu.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	menu.get_popup().add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for choice: Array in choices:
+		menu.add_item(str(choice[0]))
+	var at := 0
+	for i in choices.size():
+		if choices[i][1] == selected:
+			at = i
+	menu.select(at)
+	menu.item_selected.connect(func(index: int) -> void: picked.call(choices[index][1]))
+	return menu
 
 
 func _item_row(item: Dictionary) -> Control:
@@ -772,6 +1030,29 @@ func _row(row: Array) -> Control:
 			slider.value_changed.connect(func(new_value: float) -> void:
 				shown.text = _percent(new_value)
 				_set_pending(key, new_value)
+			)
+			line.add_child(slider)
+			line.add_child(shown)
+		"decimal":
+			# [min, max, step]; shown with two decimals.
+			var limits: Array = row[3]
+			var slider := HSlider.new()
+			slider.custom_minimum_size = Vector2(60, 10) * _ui_scale
+			slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			slider.min_value = limits[0]
+			slider.max_value = limits[1]
+			slider.step = limits[2]
+			slider.value = value
+			var shown := _label("%.2f" % value, TEXT)
+			shown.custom_minimum_size.x = 22 * _ui_scale
+			shown.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			slider.value_changed.connect(func(new_value: float) -> void:
+				shown.text = "%.2f" % new_value
+				_set_pending(key, new_value)
+				if key.begins_with(LIVE_PREFIX):
+					if not _live_before.has(key):
+						_live_before[key] = Settings.get_value(key)
+					Settings.set_value(key, new_value)
 			)
 			line.add_child(slider)
 			line.add_child(shown)

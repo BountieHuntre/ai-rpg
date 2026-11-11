@@ -10,12 +10,17 @@ uniform vec4 slot_colors[32];
 uniform vec4 tint = vec4(0.0);
 // A hit flash: glows white.
 uniform float flash = 0.0;
+// Hands glowing while casting: the spell's colour, alpha how strongly.
+uniform vec4 hand_glow = vec4(0.0);
+// The hands' colour slot (HumanoidModel's HANDS).
+const int HANDS_SLOT = 6;
 
 void fragment() {
 	int slot = clamp(int(UV.x * 32.0), 0, 31);
 	vec3 color = slot_colors[slot].rgb * UV.y * 2.0;
 	color = mix(color, tint.rgb, tint.a);
-	ALBEDO = mix(color, vec3(1.0), flash);
-	EMISSION = vec3(flash * 0.8);
+	vec3 glow = slot == HANDS_SLOT ? hand_glow.rgb * hand_glow.a : vec3(0.0);
+	ALBEDO = mix(mix(color, hand_glow.rgb, slot == HANDS_SLOT ? hand_glow.a * 0.7 : 0.0), vec3(1.0), flash);
+	EMISSION = vec3(flash * 0.8) + glow * 1.5;
 	ROUGHNESS = 0.9;
 }

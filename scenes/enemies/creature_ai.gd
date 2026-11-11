@@ -497,6 +497,8 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 		# Bolts fly at the spell's speed in yards per second.
 		var speed := float(spell.get("Speed", 0))
 		var flight := _me.distance_to(target) / speed if speed > 0.0 else 0.0
+		if flight > 0.0:
+			Vfx.bolt(_me.body, target.body, int(spell.get("School", 0)), flight)
 		_missiles.append({ "spell": spell, "target": target, "amount": damage, "left": flight })
 		_fly_missiles(0.0)
 	elif int(spell.get("DmgClass", 0)) == DMG_CLASS_MELEE:
