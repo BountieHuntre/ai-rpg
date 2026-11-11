@@ -532,6 +532,58 @@ def hairs():
 	b.beam((0, 0.12, 1.57), (0, 0.13, 1.42), 0.14, 0.06, "Head", "hair", taper=0.5, up=(1, 0, 0))
 	b.box((0, 0.13, 1.645), (0.11, 0.03, 0.025), "Head", "hair")
 	out.append(b)
+	return out + race_hairs()
+
+
+def race_hairs():
+	"""Styles the other races wear (HumanoidModel.RACE_HAIR_STYLES and
+	RACE_FACES pick them per race): a tall mohawk and a topknot for Orcs and
+	Trolls, stringy locks for the Undead, long flowing hair for Wood Elves,
+	Hornkin manes and braids, and goatees and a beard under the Hornkin snout."""
+	out = []
+	b = Builder("HairMohawk")
+	b.box((0, -0.01, 1.9), (0.055, 0.3, 0.2), "Head", "hair", top=(0.5, 0.75), shift=(0, -0.03))
+	b.box((0, -0.15, 1.76), (0.05, 0.06, 0.22), "Head", "hair", top=(1.0, 1.4))
+	out.append(b)
+	b = Builder("HairTopknot")
+	b.loft([((0, -0.04, 1.85), 0.045, 0.045, "Head"), ((0, -0.04, 1.96), 0.06, 0.06, "Head"),
+			((0, -0.04, 2.04), 0.025, 0.025, "Head")], ["hair", "hair"], sides=6)
+	b.box((0, -0.04, 1.885), (0.07, 0.07, 0.025), "Head", "trim")
+	b.beam((0, -0.07, 1.98), (0, -0.2, 1.62), 0.05, 0.04, "Head", "hair", taper=0.4, up=(1, 0, 0))
+	out.append(b)
+	b = Builder("HairStringy")
+	b.loft([((0, -0.005, 1.74), 0.13, 0.145, "Head"), ((0, -0.01, 1.82), 0.12, 0.135, "Head"),
+			((0, -0.01, 1.86), 0.06, 0.07, "Head")], ["hair", "hair"], sides=8)
+	for x, y, bottom in ((-0.11, 0.0, 1.5), (0.11, 0.0, 1.55), (-0.07, -0.12, 1.45), (0.06, -0.13, 1.5), (0.0, -0.14, 1.42)):
+		b.beam((x, y, 1.76), (x * 1.15, y * 1.1, bottom), 0.025, 0.022, "Head", "hair", taper=0.4, up=(1, 0, 0))
+	out.append(b)
+	b = Builder("HairElfLong")
+	hair_cap(b, 1.46, 0.5)
+	for x in (-1, 1):
+		b.beam((0.128 * x, 0.03, 1.74), (0.15 * x, 0.08, 1.36), 0.05, 0.035, "Head", "hair", taper=0.5, up=(0, 1, 0))
+	b.box((0, 0.11, 1.81), (0.2, 0.05, 0.05), "Head", "hair", top=(0.9, 1.0))
+	out.append(b)
+	b = Builder("ManeShort")
+	b.box((0, 0.0, 1.88), (0.14, 0.16, 0.07), "Head", "hair", top=(0.7, 0.7))
+	b.beam((0, -0.09, 1.86), (0, -0.2, 1.5), 0.22, 0.08, "Head", "hair", taper=0.6, up=(1, 0, 0))
+	out.append(b)
+	b = Builder("ManeBraids")
+	b.box((0, 0.0, 1.88), (0.14, 0.16, 0.07), "Head", "hair", top=(0.7, 0.7))
+	b.beam((0, -0.09, 1.86), (0, -0.16, 1.62), 0.16, 0.06, "Head", "hair", taper=0.7, up=(1, 0, 0))
+	for x in (-1, 1):
+		b.beam((0.11 * x, -0.04, 1.72), (0.14 * x, 0.06, 1.36), 0.035, 0.035, "Head", "hair", taper=0.7, up=(0, 1, 0))
+		b.box((0.14 * x, 0.06, 1.36), (0.04, 0.04, 0.04), "Head", "trim")
+	out.append(b)
+	b = Builder("BeardGoatee")
+	b.beam((0, 0.125, 1.6), (0, 0.13, 1.47), 0.07, 0.05, "Head", "hair", taper=0.4, up=(1, 0, 0))
+	out.append(b)
+	b = Builder("BeardHornkin")
+	b.beam((0, 0.17, 1.58), (0, 0.17, 1.44), 0.09, 0.06, "Head", "hair", taper=0.5, up=(1, 0, 0))
+	out.append(b)
+	b = Builder("BeardHornkinLong")
+	b.beam((0, 0.17, 1.58), (0, 0.18, 1.32), 0.12, 0.07, "Head", "hair", taper=0.45, up=(1, 0, 0))
+	b.box((0, 0.18, 1.36), (0.05, 0.05, 0.03), "Head", "trim")
+	out.append(b)
 	return out
 
 
@@ -647,6 +699,18 @@ def helms():
 		   ["head", "head", "head"], sides=8)
 	b.box((0, 0.162, 1.71), (0.2, 0.02, 0.025), "Head", "eyes")
 	b.box((0, 0.165, 1.65), (0.025, 0.02, 0.08), "Head", "eyes")
+	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
+	out.append(b)
+	# Plate without the faceplate, for faces that stick out of one (a Troll's
+	# nose and tusks, a Hornkin's snout): a dome, a brow band, cheek guards
+	# and a neck guard.
+	b = Builder("Helm_plate_open")
+	b.loft([((0, -0.005, 1.73), 0.152, 0.166, "Head"), ((0, -0.01, 1.82), 0.15, 0.162, "Head"),
+			((0, -0.01, 1.9), 0.09, 0.1, "Head")], ["head", "head"], sides=8)
+	b.loft([((0, 0.0, 1.725), 0.165, 0.178, "Head"), ((0, 0.0, 1.75), 0.165, 0.178, "Head")], ["helm_trim"], sides=8)
+	for x in (-1, 1):
+		b.box((0.15 * x, 0.02, 1.64), (0.035, 0.12, 0.16), "Head", "head", top=(1.0, 0.8))
+	b.box((0, -0.13, 1.6), (0.26, 0.06, 0.24), "Head", "head", top=(0.9, 1.0))
 	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
 	out.append(b)
 	return out

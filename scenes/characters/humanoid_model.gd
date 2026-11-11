@@ -35,6 +35,25 @@ const HAIR_COLORS := [
 ## Hair meshes per body ("" is none), then beards (men only).
 const HAIR_STYLES := [["HairShort", "HairLong", "HairCrest", ""], ["HairFLong", "HairFTail", "HairFBun", "HairShort"]]
 const FACES := [["", "BeardShort", "BeardLong"], [""]]
+## Other races' hair and beards, as many of each as the Human's (so an
+## appearance fits any race); races not named wear the Human's.
+const RACE_HAIR_STYLES := {
+	"orc": [["HairTopknot", "HairMohawk", "HairLong", ""], ["HairFTail", "HairTopknot", "HairFLong", "HairFBun"]],
+	"troll": [["HairMohawk", "HairTopknot", "HairStringy", "HairCrest"], ["HairMohawk", "HairFTail", "HairTopknot", "HairFLong"]],
+	"undead": [["HairStringy", "HairShort", "HairLong", ""], ["HairStringy", "HairFLong", "HairFTail", "HairFBun"]],
+	"wood_elf": [["HairElfLong", "HairFTail", "HairCrest", "HairShort"], ["HairElfLong", "HairFTail", "HairFBun", "HairFLong"]],
+	"hornkin": [["ManeShort", "ManeBraids", "HairMohawk", ""], ["ManeBraids", "ManeShort", "HairFTail", ""]],
+}
+const RACE_FACES := {
+	"orc": [["", "BeardGoatee", "BeardShort"], [""]],
+	"troll": [["", "BeardGoatee", "BeardShort"], [""]],
+	"wood_elf": [["", "BeardGoatee", "BeardLong"], [""]],
+	"hornkin": [["", "BeardHornkin", "BeardHornkinLong"], [""]],
+}
+## Every hair and beard mesh any race wears, to hide the ones not chosen.
+const ALL_HAIR := ["HairShort", "HairLong", "HairCrest", "HairFLong", "HairFTail", "HairFBun", "BeardShort", "BeardLong",
+	"HairMohawk", "HairTopknot", "HairStringy", "HairElfLong", "ManeShort", "ManeBraids", "BeardGoatee",
+	"BeardHornkin", "BeardHornkinLong"]
 const BODIES := ["BodyMale", "BodyFemale"]
 const EYE_COLOR := Color(0.1, 0.09, 0.12)
 ## Races' own skins and hair colours (as many as SKIN_COLORS and HAIR_COLORS,
@@ -96,6 +115,8 @@ const MAIN_PROPS := {
 const OFF_PROPS := { 0: "axe", 4: "mace", 7: "sword", 13: "fist", 15: "dagger" }
 ## Head armour subclass -> helm (cloth hood, leather cap, mail coif, plate helm).
 const HELMS := { 0: "Helm_cap", 1: "Helm_hood", 2: "Helm_cap", 3: "Helm_coif", 4: "Helm_plate" }
+## Races whose faces stick out of a closed plate helm wear it open-faced.
+const OPEN_HELM_RACES := ["troll", "hornkin"]
 ## Ranged weapon subclass -> the prop drawn while shooting, and how it's shot.
 const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_gun", 16: "Ranged_thrown", 19: "Main_wand" }
 const RANGED_SHOTS := { 2: "shoot_bow", 3: "shoot_gun", 18: "shoot_gun", 16: "throw", 19: "shoot_wand" }
@@ -419,16 +440,17 @@ func _apply_equipment() -> void:
 	# A helm hides the hair (and a closed one the beard).
 	var head := _item(Inventory.Slot.HEAD)
 	var helm: String = creature_gear.get("helm", HELMS.get(int(head.get("subclass", 0)), "Helm_cap") if head.size() > 0 else "")
-	for part: String in HELMS.values():
+	if helm == "Helm_plate" and race in OPEN_HELM_RACES:
+		helm = "Helm_plate_open"
+	for part: String in HELMS.values() + ["Helm_plate_open"]:
 		_show(part, part == helm)
 	_colors[HEAD] = _armor_color(Inventory.Slot.HEAD, outfit.get(HEAD, chest))
 	_colors[HELM_TRIM] = TRIM_COLOR if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
 	var body: int = appearance.get("body", 0)
-	var hair: String = HAIR_STYLES[body][appearance.get("hair", 0)] if helm == "" else ""
-	var face: String = FACES[body][appearance.get("face", 0)] if helm != "Helm_plate" else ""
-	for style: String in HAIR_STYLES[0] + HAIR_STYLES[1] + FACES[0]:
-		if style != "":
-			_show(style, style == hair or style == face)
+	var hair: String = RACE_HAIR_STYLES.get(race, HAIR_STYLES)[body][appearance.get("hair", 0)] if helm == "" else ""
+	var face: String = RACE_FACES.get(race, FACES)[body][appearance.get("face", 0)] if helm != "Helm_plate" else ""
+	for style: String in ALL_HAIR:
+		_show(style, style == hair or style == face)
 	# A cloak.
 	var cloak := _item(Inventory.Slot.BACK)
 	_show("Cloak", cloak.size() > 0 or outfit.has(BACK))
