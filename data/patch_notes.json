@@ -1,5 +1,17 @@
 [
 	{
+		"version": "0.9.1",
+		"date": "11-11-2026",
+		"notes": [
+			"Attacks and spells have effects: sparks when weapons hit, bursts of each school's colour when spells land, sparkles on heals, rings rising on buffs, and creatures' bolts flying to their targets.",
+			"Casters' hands glow in their spell's colour while casting.",
+			"Cloaks are cloth: they trail, ripple and flap as you run and swing round when you turn.",
+			"Movement is smoother: characters and the camera no longer stutter, whatever your frame rate.",
+			"Corpses you've already looted no longer block clicks on the ones under them.",
+			"The Options window can be moved by dragging its title, and stays where you put it."
+		]
+	},
+	{
 		"version": "0.9.0",
 		"date": "11-11-2026",
 		"notes": [
