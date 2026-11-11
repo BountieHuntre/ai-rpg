@@ -1,5 +1,17 @@
 [
 	{
+		"version": "0.11.0",
+		"date": "11-11-2026",
+		"notes": [
+			"The Horde has a home: Orcs, Trolls, the Undead and Hornkin now begin on Kareth, a continent of its own, at the Proving Ground in Emberhollow.",
+			"Emberhollow (levels 1-6): a red canyon with the orcs' hold, boars, sand scorpions, the Ember Cult's cave and Rustpincer on his ridge.",
+			"The Redsand Coast (levels 6-12): the town of Spikewall, the Tidebone trolls' village and Vazzar's isles, the Saltmarch humans' Stranded Keep, the harpies' cliffs, Stormcrag Ridge, Skull Rock and more, over the pass from Emberhollow.",
+			"30 new quests, new trainers and vendors, and new creatures with their own models: tuskfolk, imps, tigers, lizards, scorpions and crabs.",
+			"Each new race has hair styles and beards of its own, and Trolls and Hornkin wear plate helms open-faced.",
+			"Low-level helms: Harrowfield's brigands may drop a Red Brigand Mask, and Wexford and the priory sell cloth, leather and mail helms from level 8."
+		]
+	},
+	{
 		"version": "0.10.0",
 		"date": "11-11-2026",
 		"notes": [
