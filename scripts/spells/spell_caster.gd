@@ -8,6 +8,8 @@ extends Node
 ## its targets.
 
 signal failed(message: String)
+## A spell was cast (its cast time done, or an instant), before its effects.
+signal spell_finished(spell: Dictionary)
 
 ## Classic error messages.
 const ERR_NOT_READY := "Spell is not ready yet."
@@ -76,6 +78,8 @@ var _item_spell := 0
 var _procs := SpellProcs.new()
 ## The Man-at-Arms' abilities: stances, next-swing attacks, rushing in.
 var _warrior := WarriorAbilities.new()
+## The Spellsword's: forms, Edges, Resonance and Release.
+var _spellsword := SpellswordAbilities.new()
 
 @onready var _unit: PlayerUnit = get_parent()
 
@@ -88,6 +92,8 @@ func _ready() -> void:
 	add_child(_procs)
 	_warrior.name = "WarriorAbilities"
 	add_child(_warrior)
+	_spellsword.name = "SpellswordAbilities"
+	add_child(_spellsword)
 	var talent_procs := TalentProcs.new()
 	talent_procs.name = "TalentProcs"
 	add_child(talent_procs)
@@ -184,6 +190,8 @@ func cooldown_fraction(id: int) -> float:
 func mana_cost(spell: Dictionary) -> int:
 	# Spells cast from an item cost nothing (Spell::CalculatePowerCost).
 	if _item_spell != 0 and int(spell.get("Id", 0)) == _item_spell:
+		return 0
+	if _spellsword.costs_nothing(spell):
 		return 0
 	var cost := SpellDB.mana_cost(spell, ClassicData.base_mana(_unit.profile.char_class, _unit.profile.level), _unit.combatant)
 	return 0 if cost > 0 and _stillness() else cost
@@ -344,6 +352,9 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 	var warrior_problem := _warrior.problem(spell, target)
 	if not warrior_problem.is_empty():
 		return warrior_problem
+	var spellsword_problem := _spellsword.problem(spell, target)
+	if not spellsword_problem.is_empty():
+		return spellsword_problem
 	# Shroud of Shadow shuts out Holy spells (Shadowform in classic).
 	if int(spell.get("School", 0)) == SpellDB.School.HOLY and _in_shroud():
 		return ERR_SHAPESHIFTED
@@ -439,6 +450,7 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	# Mighty Blow and Sweeping Cut wait for the next swing, paying then.
 	if _warrior.queue(spell):
 		return
+	spell_finished.emit(spell)
 	# Stillness is used up by the next spell that costs mana.
 	var stillness := _stillness()
 	var uses_stillness := not stillness.is_empty() and SpellDB.mana_cost(spell, 1) > 0
@@ -451,7 +463,7 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell, _unit.combatant)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
-	if not _warrior.cast(spell, target):
+	if not _spellsword.cast(spell, target) and not _warrior.cast(spell, target):
 		_cleric_spell(spell, target, extra_crit)
 	# Helpful spells that aren't heals (heals report their own) are events for
 	# procs too (Improved Last Rite, Improved Unbridled Rage).

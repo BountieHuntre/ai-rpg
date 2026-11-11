@@ -1,0 +1,2006 @@
+{
+  "class": {
+    "name": "Banneret",
+    "plural": "Bannerets",
+    "tagline": "A knight who fights under their own banner, and whose company fights better for it.",
+    "fantasy": "A Banneret has earned the right to ride under their own colours. They fight in the front rank with spear and polearm, carry their banner into the fight or drive it into the ground where the company must hold, and shout the orders that turn a scattered party into a line. Their strength is discipline and morale, not magic.",
+    "role": [
+      "Melee damage",
+      "Off-tank",
+      "Party support"
+    ],
+    "role_text": "The only class whose main tools work through the rest of the party: banners strengthen everyone near them, and Orders give the whole party a burst of armour, damage, speed or healing. Alone they are a solid polearm fighter; in a party of playerbots they make every member better and tell them what to fight.",
+    "races": [
+      "Human",
+      "Dwarf",
+      "Orc",
+      "Tauren"
+    ],
+    "armor": [
+      "Cloth",
+      "Leather",
+      "Mail (from level 40)",
+      "Shields"
+    ],
+    "weapons": [
+      "Polearms (from level 1)",
+      "One-Handed Swords",
+      "One-Handed Maces",
+      "Two-Handed Swords",
+      "Thrown"
+    ],
+    "resource": "Morale (0 to 100)",
+    "stats": "Strength and Stamina first, then Agility. Attack power from Strength as a Man-at-Arms (2 per point); crit from Agility as a Templar.",
+    "starting_gear": [
+      "Militia Spear (polearm)",
+      "Recruit's Gambeson",
+      "Recruit's Boots",
+      "Hearthbread x4"
+    ],
+    "compare": [
+      [
+        "Man-at-Arms",
+        "Also a melee rage-like fighter, but keeps its strength to itself. The Banneret trades some personal damage for party-wide effects."
+      ],
+      [
+        "Templar",
+        "Also has party auras (Presences) and buffs. Templar auras are magic and the Templar heals; Banneret banners can be planted for a stronger local effect, and Orders are short bursts, not long buffs."
+      ],
+      [
+        "Cleric",
+        "The Banneret's Rally! heals the party a little in a pinch; it is no replacement for a healer."
+      ]
+    ],
+    "crest": "banner"
+  },
+  "mechanics": [
+    {
+      "name": "Morale",
+      "icon": "rage",
+      "summary": "The resource, from 0 to 100.",
+      "text": [
+        "Gained in a fight: 3 for each of your melee hits (6 on a critical strike), 2 each time you are struck, 12 from Spear Thrust, 2 when a party member within 30 yards lands a critical strike (at most once a second), and 10 when a party member lands a killing blow.",
+        "Out of combat it fades 3 a second, so every fight starts low. Muster fills it before a pull.",
+        "Spent on Orders and on the heavier strikes. Morale is shown on the bar where mana or rage would be, in a banner gold."
+      ]
+    },
+    {
+      "name": "Banners",
+      "icon": "boon_sovereigns",
+      "summary": "One banner at a time, carried or planted.",
+      "text": [
+        "Raising a banner takes 1.5 seconds and replaces the one you carried. While carried, it gives every party member within 30 yards its effect.",
+        "Plant Banner drives it into the ground where you stand. Within 15 yards of a planted banner the effect is doubled and adds its planted bonus, but you no longer carry it.",
+        "Recover Banner (or walking over it) takes it back up. A planted banner falls if you go more than 40 yards from it, after 3 minutes, or if you die."
+      ]
+    },
+    {
+      "name": "Orders",
+      "icon": "shout_gold",
+      "summary": "Party-wide bursts that cost Morale.",
+      "text": [
+        "Orders are shouts that affect every party member within 30 yards, including you. They are off the global cooldown but share a 1.5 second Order cooldown with each other.",
+        "Playerbots in the party react to Orders: Focus Fire! makes them switch target, Fall Back! makes them break off and run to you, Hold the Line! makes tanks taunt what is loose."
+      ]
+    },
+    {
+      "name": "Polearm Drill",
+      "icon": "polearm_common",
+      "summary": "Polearms from level 1.",
+      "text": [
+        "Bannerets start with Polearms, where other classes must learn them at the Weapon Master from level 20. Several strikes need a polearm or two-handed weapon (Sweep, Hook, Wall of Spears)."
+      ]
+    }
+  ],
+  "abilities": [
+    {
+      "name": "Spear Thrust",
+      "icon": "strike",
+      "category": "Strike",
+      "level": 1,
+      "cost": "None",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "6 sec",
+      "text": "A hard thrust that deals weapon damage plus {0} and generates 12 Morale.",
+      "ranks": [
+        [
+          1,
+          [
+            8
+          ]
+        ],
+        [
+          8,
+          [
+            18
+          ]
+        ],
+        [
+          16,
+          [
+            30
+          ]
+        ],
+        [
+          24,
+          [
+            45
+          ]
+        ],
+        [
+          32,
+          [
+            62
+          ]
+        ],
+        [
+          40,
+          [
+            82
+          ]
+        ],
+        [
+          48,
+          [
+            104
+          ]
+        ],
+        [
+          56,
+          [
+            128
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Banner of the Vanguard",
+      "icon": "boon_strength",
+      "category": "Banner",
+      "level": 4,
+      "cost": "None",
+      "range": "30 yd party",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "Carried: party members gain {0} attack power. Planted: doubled within 15 yards, and their melee attacks generate 10% more rage, Morale and energy.",
+      "ranks": [
+        [
+          4,
+          [
+            10
+          ]
+        ],
+        [
+          14,
+          [
+            20
+          ]
+        ],
+        [
+          24,
+          [
+            35
+          ]
+        ],
+        [
+          34,
+          [
+            55
+          ]
+        ],
+        [
+          44,
+          [
+            80
+          ]
+        ],
+        [
+          54,
+          [
+            110
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Plant Banner",
+      "icon": "ground",
+      "category": "Banner",
+      "level": 4,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "10 sec",
+      "text": "Drive the banner you carry into the ground. Its effect is doubled for party members within 15 yards of it and adds its planted bonus.",
+      "ranks": [
+        [
+          4,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Recover Banner",
+      "icon": "hilt",
+      "category": "Banner",
+      "level": 4,
+      "cost": "None",
+      "range": "5 yd",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Pull your planted banner from the ground and carry it again. Walking over it does the same.",
+      "ranks": [
+        [
+          4,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Haft Blow",
+      "icon": "bash",
+      "category": "Strike",
+      "level": 6,
+      "cost": "15 Morale",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "10 sec",
+      "text": "Strike with the shaft of your weapon, interrupting spellcasting and locking out that school for 4 seconds. Deals {0} damage and dazes for 4 seconds.",
+      "ranks": [
+        [
+          6,
+          [
+            12
+          ]
+        ],
+        [
+          28,
+          [
+            40
+          ]
+        ],
+        [
+          50,
+          [
+            78
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Hold the Line!",
+      "icon": "shout_gold",
+      "category": "Order",
+      "level": 8,
+      "cost": "25 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "30 sec",
+      "text": "Order: party members gain {0} armor and 10% chance to block for 8 seconds.",
+      "ranks": [
+        [
+          8,
+          [
+            60
+          ]
+        ],
+        [
+          20,
+          [
+            150
+          ]
+        ],
+        [
+          32,
+          [
+            260
+          ]
+        ],
+        [
+          44,
+          [
+            390
+          ]
+        ],
+        [
+          56,
+          [
+            540
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Lance",
+      "icon": "charge",
+      "category": "Strike",
+      "level": 10,
+      "cost": "None",
+      "range": "8-25 yd",
+      "cast": "Instant",
+      "cooldown": "20 sec",
+      "text": "Run at an enemy and strike as you arrive for weapon damage plus 25%, generating 15 Morale. Usable in combat. Learned from a class quest at level 10.",
+      "ranks": [
+        [
+          10,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Banner of the Bulwark",
+      "icon": "aegis",
+      "category": "Banner",
+      "level": 12,
+      "cost": "None",
+      "range": "30 yd party",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "Carried: party members gain {0} armor. Planted: doubled within 15 yards, and they take 4% less damage.",
+      "ranks": [
+        [
+          12,
+          [
+            90
+          ]
+        ],
+        [
+          26,
+          [
+            230
+          ]
+        ],
+        [
+          40,
+          [
+            400
+          ]
+        ],
+        [
+          54,
+          [
+            600
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Sweep",
+      "icon": "cyclone",
+      "category": "Strike",
+      "level": 14,
+      "cost": "20 Morale",
+      "range": "8 yd frontal arc",
+      "cast": "Instant",
+      "cooldown": "8 sec",
+      "text": "A wide swing that deals weapon damage plus {0} to up to 3 enemies in front of you. Needs a polearm or two-handed weapon.",
+      "ranks": [
+        [
+          14,
+          [
+            10
+          ]
+        ],
+        [
+          30,
+          [
+            34
+          ]
+        ],
+        [
+          46,
+          [
+            64
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Muster",
+      "icon": "shout_red",
+      "category": "Utility",
+      "level": 16,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "1 min",
+      "text": "Out of combat: gain 30 Morale, and party members move 10% faster until combat begins.",
+      "ranks": [
+        [
+          16,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Press the Attack!",
+      "icon": "shout_red",
+      "category": "Order",
+      "level": 18,
+      "cost": "30 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "45 sec",
+      "text": "Order: party members deal {0}% more damage for 10 seconds.",
+      "ranks": [
+        [
+          18,
+          [
+            6
+          ]
+        ],
+        [
+          38,
+          [
+            8
+          ]
+        ],
+        [
+          58,
+          [
+            10
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Pin",
+      "icon": "hobble",
+      "category": "Strike",
+      "level": 20,
+      "cost": "15 Morale",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "20 sec",
+      "text": "Drive your weapon down to pin the target in place for {0} seconds, dealing 50% weapon damage.",
+      "ranks": [
+        [
+          20,
+          [
+            3
+          ]
+        ],
+        [
+          40,
+          [
+            4
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Hook",
+      "icon": "disarm",
+      "category": "Strike",
+      "level": 22,
+      "cost": "10 Morale",
+      "range": "8 yd",
+      "cast": "Instant",
+      "cooldown": "15 sec",
+      "text": "Hook an enemy up to 8 yards away and drag it to you, slowing it by 50% for 4 seconds. Needs a polearm.",
+      "ranks": [
+        [
+          22,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Banner of the Hearth",
+      "icon": "heal_gold",
+      "category": "Banner",
+      "level": 22,
+      "cost": "None",
+      "range": "30 yd party",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "Carried: party members regain {0} health every 5 seconds, and recover from eating and drinking 20% faster. Planted: doubled within 15 yards, and they also regain 1% of their health every 3 seconds.",
+      "ranks": [
+        [
+          22,
+          [
+            8
+          ]
+        ],
+        [
+          36,
+          [
+            16
+          ]
+        ],
+        [
+          50,
+          [
+            26
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Rally!",
+      "icon": "heal_white",
+      "category": "Order",
+      "level": 24,
+      "cost": "40 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "1 min",
+      "text": "Order: heals party members for {0} at once and {1} more over 10 seconds, and frees them from fear.",
+      "ranks": [
+        [
+          24,
+          [
+            90,
+            60
+          ]
+        ],
+        [
+          34,
+          [
+            160,
+            110
+          ]
+        ],
+        [
+          44,
+          [
+            250,
+            170
+          ]
+        ],
+        [
+          54,
+          [
+            360,
+            240
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Brace",
+      "icon": "parry",
+      "category": "Defence",
+      "level": 26,
+      "cost": "10 Morale",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "20 sec",
+      "text": "Set your feet: +50% chance to parry, and to block with a shield, for 6 seconds.",
+      "ranks": [
+        [
+          26,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Fall Back!",
+      "icon": "feather",
+      "category": "Order",
+      "level": 28,
+      "cost": "20 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "1 min",
+      "text": "Order: party members move 40% faster for 6 seconds and are freed from roots and slows.",
+      "ranks": [
+        [
+          28,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Impale",
+      "icon": "bleed",
+      "category": "Strike",
+      "level": 30,
+      "cost": "All Morale (30 or more)",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Finisher: run the target through, causing it to bleed for {0} damage over 12 seconds for every 10 Morale spent.",
+      "ranks": [
+        [
+          30,
+          [
+            24
+          ]
+        ],
+        [
+          40,
+          [
+            36
+          ]
+        ],
+        [
+          50,
+          [
+            50
+          ]
+        ],
+        [
+          60,
+          [
+            66
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Banner of Defiance",
+      "icon": "ward_umbral",
+      "category": "Banner",
+      "level": 34,
+      "cost": "None",
+      "range": "30 yd party",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "Carried: party members gain {0} resistance to all schools. Planted: doubled within 15 yards, and fear and stuns on them last 10% shorter.",
+      "ranks": [
+        [
+          34,
+          [
+            20
+          ]
+        ],
+        [
+          46,
+          [
+            35
+          ]
+        ],
+        [
+          58,
+          [
+            50
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Stand Fast",
+      "icon": "stance_bastion",
+      "category": "Defence",
+      "level": 36,
+      "cost": "25 Morale",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "2 min",
+      "text": "For 10 seconds you can't be knocked back, feared or stunned, and your armor is increased by 30%. A planted banner can't fall while it lasts.",
+      "ranks": [
+        [
+          36,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Focus Fire!",
+      "icon": "eye",
+      "category": "Order",
+      "level": 38,
+      "cost": "20 Morale",
+      "range": "30 yd party, target 30 yd",
+      "cast": "Instant",
+      "cooldown": "30 sec",
+      "text": "Order: mark your target for 15 seconds. Party members' attacks against it have 5% more chance to be a critical strike, and party playerbots switch to it.",
+      "ranks": [
+        [
+          38,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Rout",
+      "icon": "fear",
+      "category": "Strike",
+      "level": 42,
+      "cost": "40 Morale",
+      "range": "8 yd",
+      "cast": "Instant",
+      "cooldown": "2 min",
+      "text": "Break their nerve: enemies within 8 yards below 25% health flee for 6 seconds.",
+      "ranks": [
+        [
+          42,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Banner of Celerity",
+      "icon": "flame_gold",
+      "category": "Banner",
+      "level": 46,
+      "cost": "None",
+      "range": "30 yd party",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "Carried: party members attack and cast {0}% faster. Planted: doubled within 15 yards.",
+      "ranks": [
+        [
+          46,
+          [
+            5
+          ]
+        ],
+        [
+          56,
+          [
+            8
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Shield Wall Formation!",
+      "icon": "shield_common",
+      "category": "Order",
+      "level": 50,
+      "cost": "50 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "5 min",
+      "text": "Order: party members take 20% less damage for 10 seconds.",
+      "ranks": [
+        [
+          50,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Sound the Charge!",
+      "icon": "slam",
+      "category": "Order",
+      "level": 52,
+      "cost": "60 Morale",
+      "range": "30 yd party",
+      "cast": "Instant",
+      "cooldown": "3 min",
+      "text": "Order: party members move 30% faster for 8 seconds, and their next melee attack in that time deals 50% more damage.",
+      "ranks": [
+        [
+          52,
+          []
+        ]
+      ]
+    }
+  ],
+  "passives": [
+    {
+      "name": "Morale",
+      "icon": "rage",
+      "level": 1,
+      "text": "Bannerets fight on Morale rather than mana. See Mechanics."
+    },
+    {
+      "name": "Polearm Drill",
+      "icon": "polearm_common",
+      "level": 1,
+      "text": "Knows Polearms from the start."
+    },
+    {
+      "name": "Mail",
+      "icon": "chest_mail_common",
+      "level": 40,
+      "text": "Learns to wear mail at level 40, as classic Hunters and Shamans do."
+    },
+    {
+      "name": "Banner Discipline",
+      "icon": "boon_sovereigns",
+      "level": 4,
+      "text": "Only one banner can be carried at a time; raising another takes 1.5 seconds and puts the old one away."
+    },
+    {
+      "name": "Company Bond",
+      "icon": "token",
+      "level": 10,
+      "text": "Each party member within 30 yards gives you 1% more Morale from every source."
+    }
+  ],
+  "trees": [
+    {
+      "name": "Standard",
+      "tint": "azure",
+      "role": "Banners and holding ground",
+      "text": "Makes banners stronger, wider and harder to lose, and lets the Banneret plant two at once.",
+      "talents": [
+        {
+          "name": "Heraldry",
+          "icon": "boon_sovereigns",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your banners' effects are increased by {0}%.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Long Pennant",
+          "icon": "feather",
+          "row": 1,
+          "col": 2,
+          "ranks": 2,
+          "text": "Your carried banner reaches party members {0} yards further.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Deep Footing",
+          "icon": "ground",
+          "row": 2,
+          "col": 0,
+          "ranks": 3,
+          "text": "Your planted banners cover {0} more yards.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Bannerman's Grit",
+          "icon": "heart",
+          "row": 2,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your maximum health is increased by {0}% while you carry or have planted a banner.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Quick Planting",
+          "icon": "hilt",
+          "row": 2,
+          "col": 2,
+          "ranks": 2,
+          "text": "Plant Banner's cooldown is {0} seconds shorter, and raising a banner takes {1} seconds less.",
+          "values": [
+            [
+              3,
+              6
+            ],
+            [
+              0.5,
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Second Standard",
+          "icon": "boon_radiance",
+          "row": 3,
+          "col": 0,
+          "ranks": 1,
+          "ability": true,
+          "text": "You may have a second banner planted, of a different kind, while you carry a third."
+        },
+        {
+          "name": "Rallying Colors",
+          "icon": "shout_gold",
+          "row": 3,
+          "col": 1,
+          "ranks": 3,
+          "text": "Your Orders cost {0}% less Morale while you stand within your planted banner's area.",
+          "values": [
+            [
+              3,
+              6,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Hearthguard",
+          "icon": "heal_gold",
+          "row": 3,
+          "col": 3,
+          "ranks": 2,
+          "text": "Banner of the Hearth also heals carried party members for {0}% of their health every 3 seconds in combat.",
+          "values": [
+            [
+              0.5,
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Unbroken Line",
+          "icon": "aegis",
+          "row": 4,
+          "col": 1,
+          "ranks": 5,
+          "text": "Party members within your planted banner's area take {0}% less damage.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Standard-Bearer's Pride",
+          "icon": "medallion",
+          "row": 4,
+          "col": 2,
+          "ranks": 3,
+          "text": "You deal {0}% more damage for each party member within your carried banner's reach.",
+          "values": [
+            [
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Steadfast Bearer",
+          "icon": "stance_vanguard",
+          "row": 4,
+          "col": 3,
+          "ranks": 3,
+          "text": "Raising a banner is {0}% less likely to be interrupted by damage.",
+          "values": [
+            [
+              33,
+              66,
+              100
+            ]
+          ]
+        },
+        {
+          "name": "Hold This Ground",
+          "icon": "stance_bastion",
+          "row": 5,
+          "col": 0,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Second Standard",
+          "text": "Order (30 Morale, 1 min): for 10 seconds party members within your planted banners' areas can't be knocked back and regain 2% of their health every second."
+        },
+        {
+          "name": "Bright Colors",
+          "icon": "stars",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "Enemies within your planted banner's area attack {0}% slower.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Colors of the Fallen",
+          "icon": "candle",
+          "row": 6,
+          "col": 0,
+          "ranks": 3,
+          "text": "When a party member within your banner's reach dies, you gain {0} Morale.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Rally Point",
+          "icon": "revive",
+          "row": 6,
+          "col": 1,
+          "ranks": 2,
+          "requires": "Unbroken Line",
+          "text": "A party member within your planted banner's area who falls below 20% health is healed for {0}% of their maximum health. Once every 2 minutes for each member.",
+          "values": [
+            [
+              10,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Weathered Colors",
+          "icon": "cloth_linen",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "Your planted banners last {0} minutes longer and fall only when you are {1} yards away.",
+          "values": [
+            [
+              2,
+              5
+            ],
+            [
+              60,
+              80
+            ]
+          ]
+        },
+        {
+          "name": "Banner of the Realm",
+          "icon": "presence_hallowed",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Raise the Banner of the Realm: carried, party members gain 5% to all stats; planted, everyone within 20 yards also gets the effects of every other banner you have planted."
+        }
+      ]
+    },
+    {
+      "name": "Command",
+      "tint": "gules",
+      "role": "Orders and Morale",
+      "text": "Makes Orders stronger, cheaper and more frequent, and turns the party's success into Morale.",
+      "talents": [
+        {
+          "name": "Drillmaster",
+          "icon": "shout_gold",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "The effects of your Orders are increased by {0}%.",
+          "values": [
+            [
+              4,
+              8,
+              12,
+              16,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Battle Cadence",
+          "icon": "rage",
+          "row": 1,
+          "col": 2,
+          "ranks": 5,
+          "text": "Your melee hits generate {0}% more Morale.",
+          "values": [
+            [
+              20,
+              40,
+              60,
+              80,
+              100
+            ]
+          ]
+        },
+        {
+          "name": "Voice Like Thunder",
+          "icon": "shout_red",
+          "row": 2,
+          "col": 0,
+          "ranks": 2,
+          "text": "Your Orders reach {0} yards further.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Steady Under Fire",
+          "icon": "aegis",
+          "row": 2,
+          "col": 1,
+          "ranks": 3,
+          "text": "Being struck generates {0}% more Morale.",
+          "values": [
+            [
+              50,
+              100,
+              150
+            ]
+          ]
+        },
+        {
+          "name": "Officer's Eye",
+          "icon": "eye",
+          "row": 2,
+          "col": 2,
+          "ranks": 5,
+          "text": "Your chance to land a critical strike is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Field Supply",
+          "icon": "bread",
+          "row": 3,
+          "col": 0,
+          "ranks": 1,
+          "ability": true,
+          "text": "Out of combat (15 min): hand out supplies. Party members regain 30% of their health and mana over 6 seconds, as if eating and drinking."
+        },
+        {
+          "name": "Fierce Discipline",
+          "icon": "gavel",
+          "row": 3,
+          "col": 1,
+          "ranks": 3,
+          "text": "Each Order you give takes {0} seconds off the cooldowns of your other Orders.",
+          "values": [
+            [
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Clear Commands",
+          "icon": "cleanse",
+          "row": 3,
+          "col": 3,
+          "ranks": 2,
+          "text": "Your Orders have a {0}% chance to free those affected from one slow or root.",
+          "values": [
+            [
+              50,
+              100
+            ]
+          ]
+        },
+        {
+          "name": "Inspiring Presence",
+          "icon": "heal_white",
+          "row": 4,
+          "col": 0,
+          "ranks": 5,
+          "text": "Your Orders also restore {0}% of health and mana to those affected.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Company Cohesion",
+          "icon": "dual",
+          "row": 4,
+          "col": 2,
+          "ranks": 3,
+          "text": "Press the Attack! also gives those affected {0}% more chance to land a critical strike.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Hardened Sergeant",
+          "icon": "chest_mail_common",
+          "row": 4,
+          "col": 3,
+          "ranks": 3,
+          "text": "Your armor is increased by {0}%.",
+          "values": [
+            [
+              3,
+              6,
+              9
+            ]
+          ]
+        },
+        {
+          "name": "Refrain",
+          "icon": "font",
+          "row": 5,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Fierce Discipline",
+          "text": "Order (no Morale, 10 min): the cooldowns of all your other Orders are finished."
+        },
+        {
+          "name": "Veteran's Composure",
+          "icon": "mind_calm",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "Fall Back! and Rally! have {0} seconds shorter cooldowns.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Chain of Command",
+          "icon": "stars",
+          "row": 6,
+          "col": 1,
+          "ranks": 3,
+          "text": "While one of your Orders is on them, party members' critical strikes give you {0} Morale.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Command Presence",
+          "icon": "verdict",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "Focus Fire! also lowers the marked target's armor by {0}%.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Warlord's Proclamation",
+          "icon": "presence_focused",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Order (70 Morale, 3 min): every Order you gave in the last 30 seconds takes effect again at half strength, and party members' cooldowns run 20% faster for 15 seconds."
+        }
+      ]
+    },
+    {
+      "name": "Lance",
+      "tint": "vert",
+      "role": "Polearm fighting",
+      "text": "The Banneret's own fighting: polearm crits, bleeds, reach and a charge through the enemy line.",
+      "talents": [
+        {
+          "name": "Polearm Training",
+          "icon": "polearm_common",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your chance to land a critical strike with polearms is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Long Reach",
+          "icon": "strike",
+          "row": 1,
+          "col": 2,
+          "ranks": 3,
+          "text": "Spear Thrust, Sweep and Impale reach {0} yards further.",
+          "values": [
+            [
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Barbed Point",
+          "icon": "bleed",
+          "row": 2,
+          "col": 0,
+          "ranks": 3,
+          "text": "Spear Thrust makes the target bleed for {0}% of its damage over 6 seconds.",
+          "values": [
+            [
+              15,
+              30,
+              45
+            ]
+          ]
+        },
+        {
+          "name": "Heavy Haft",
+          "icon": "bash",
+          "row": 2,
+          "col": 1,
+          "ranks": 2,
+          "text": "Haft Blow's cooldown is {0} seconds shorter{1}.",
+          "values": [
+            [
+              2,
+              4
+            ],
+            [
+              "",
+              ", and it stuns for 1 second"
+            ]
+          ]
+        },
+        {
+          "name": "Running Start",
+          "icon": "charge",
+          "row": 2,
+          "col": 2,
+          "ranks": 3,
+          "text": "Lance reaches {0} yards further and generates {1} more Morale.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ],
+            [
+              5,
+              10,
+              15
+            ]
+          ]
+        },
+        {
+          "name": "Skewer",
+          "icon": "execute",
+          "row": 3,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Strike (25 Morale, 12 sec): weapon damage plus 30%, and 30% more against bleeding targets."
+        },
+        {
+          "name": "Wicked Barbs",
+          "icon": "tooth",
+          "row": 3,
+          "col": 2,
+          "ranks": 2,
+          "text": "Impale's bleeding deals {0}% more damage.",
+          "values": [
+            [
+              10,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Footwork",
+          "icon": "parry",
+          "row": 3,
+          "col": 3,
+          "ranks": 5,
+          "text": "Your chance to dodge is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Sweeping Haft",
+          "icon": "cyclone",
+          "row": 4,
+          "col": 1,
+          "ranks": 3,
+          "text": "Sweep strikes {0} more enemies.",
+          "values": [
+            [
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Bloodied Point",
+          "icon": "strike_red",
+          "row": 4,
+          "col": 2,
+          "ranks": 2,
+          "text": "Your critical strikes generate {0} more Morale.",
+          "values": [
+            [
+              4,
+              8
+            ]
+          ]
+        },
+        {
+          "name": "Iron Grip",
+          "icon": "hilt",
+          "row": 4,
+          "col": 3,
+          "ranks": 3,
+          "text": "You are {0}% less likely to be disarmed.",
+          "values": [
+            [
+              33,
+              66,
+              100
+            ]
+          ]
+        },
+        {
+          "name": "Wall of Spears",
+          "icon": "ward",
+          "row": 5,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Sweeping Haft",
+          "text": "Strike (30 Morale, 30 sec): for 6 seconds, enemies coming into your melee range are struck for weapon damage and slowed by 50%. Needs a polearm."
+        },
+        {
+          "name": "Relentless Point",
+          "icon": "hex",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "Impale also lowers the healing the target receives by {0}%.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Blood in the Water",
+          "icon": "tooth_claw",
+          "row": 6,
+          "col": 0,
+          "ranks": 2,
+          "text": "Your attacks against enemies below 20% health generate {0} more Morale.",
+          "values": [
+            [
+              3,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Lancer's Fury",
+          "icon": "greatsword_common",
+          "row": 6,
+          "col": 1,
+          "ranks": 5,
+          "text": "You deal {0}% more damage with two-handed weapons.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Unhorse",
+          "icon": "disarm",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "Hook dazes for {0} seconds and its cooldown is {1} seconds shorter.",
+          "values": [
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Grand Lance",
+          "icon": "slam",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Strike (40 Morale, 1 min): charge 20 yards through the enemy line, striking up to 5 enemies in your path for weapon damage plus 150% and pinning each for 2 seconds."
+        }
+      ]
+    }
+  ],
+  "builds": [
+    {
+      "name": "Standard-bearer",
+      "points": [
+        31,
+        20,
+        0
+      ],
+      "text": "The support build for a party of playerbots: two planted banners, Rally Point and Banner of the Realm, with Orders made cheaper and stronger.",
+      "talents": {
+        "Heraldry": 5,
+        "Long Pennant": 2,
+        "Deep Footing": 3,
+        "Quick Planting": 1,
+        "Second Standard": 1,
+        "Rallying Colors": 3,
+        "Hearthguard": 1,
+        "Unbroken Line": 5,
+        "Hold This Ground": 1,
+        "Bright Colors": 3,
+        "Rally Point": 2,
+        "Weathered Colors": 2,
+        "Colors of the Fallen": 1,
+        "Banner of the Realm": 1,
+        "Drillmaster": 5,
+        "Battle Cadence": 2,
+        "Voice Like Thunder": 2,
+        "Steady Under Fire": 1,
+        "Fierce Discipline": 3,
+        "Field Supply": 1,
+        "Clear Commands": 1,
+        "Inspiring Presence": 5
+      },
+      "role": "Party support"
+    },
+    {
+      "name": "Warlord",
+      "points": [
+        11,
+        31,
+        9
+      ],
+      "text": "Orders as often as possible: Refrain, Chain of Command and Warlord's Proclamation for burst fights.",
+      "talents": {
+        "Heraldry": 5,
+        "Long Pennant": 2,
+        "Quick Planting": 2,
+        "Bannerman's Grit": 2,
+        "Drillmaster": 5,
+        "Battle Cadence": 5,
+        "Voice Like Thunder": 2,
+        "Officer's Eye": 3,
+        "Fierce Discipline": 3,
+        "Field Supply": 1,
+        "Clear Commands": 1,
+        "Inspiring Presence": 5,
+        "Refrain": 1,
+        "Veteran's Composure": 2,
+        "Chain of Command": 2,
+        "Warlord's Proclamation": 1,
+        "Polearm Training": 5,
+        "Running Start": 3,
+        "Heavy Haft": 1
+      },
+      "role": "Orders"
+    },
+    {
+      "name": "Lancer",
+      "points": [
+        5,
+        15,
+        31
+      ],
+      "text": "Solo and damage: bleeds, Skewer and Grand Lance, with Officer's Eye and Battle Cadence for Morale.",
+      "talents": {
+        "Heraldry": 3,
+        "Long Pennant": 2,
+        "Battle Cadence": 5,
+        "Officer's Eye": 5,
+        "Steady Under Fire": 3,
+        "Field Supply": 1,
+        "Fierce Discipline": 1,
+        "Polearm Training": 5,
+        "Long Reach": 3,
+        "Barbed Point": 3,
+        "Running Start": 2,
+        "Skewer": 1,
+        "Wicked Barbs": 2,
+        "Sweeping Haft": 3,
+        "Bloodied Point": 2,
+        "Wall of Spears": 1,
+        "Relentless Point": 3,
+        "Lancer's Fury": 5,
+        "Grand Lance": 1
+      },
+      "role": "Melee damage"
+    }
+  ],
+  "bots": [
+    "Carries Banner of the Vanguard with melee members, Banner of the Bulwark when the party has no tank, and plants it when a fight starts and the party holds still.",
+    "Gives Hold the Line! when the tank is low, Rally! when two members are under half health, Press the Attack! on elites and bosses, Fall Back! when the party is losing.",
+    "Uses Focus Fire! on the player's target when the party is spread across several enemies.",
+    "Fights in melee with Spear Thrust on cooldown, Sweep when crowded, Impale at 60 Morale or more, and Haft Blow on casters.",
+    "Party bar buff categories: Banner (which one it carries) and Plant (Auto, Always, Never)."
+  ],
+  "implementation": [
+    [
+      "New class slot",
+      "Classic has no tenth class id, so the Banneret needs one of our own (ClassicData.CharClass and CLASS_NAMES), a trainer list, and race pairings in characters.json. Talent tree data comes from our own file rather than the client's tables."
+    ],
+    [
+      "Spells",
+      "Every ability is new, so each needs a spell entry in our own data file beside spells.json, using classic's effect and aura types where they exist: Lance as Rush, Haft Blow as Hilt Strike, Pin as a root, Impale as a bleed, Hook as a pull."
+    ],
+    [
+      "Morale",
+      "A fourth power type in Combatant beside mana, rage and energy, earned from hits, being struck and party crits, fading out of combat."
+    ],
+    [
+      "Banners",
+      "A carried banner is a party aura like a Templar Presence. A planted banner is a new ground object with an area aura (the hallowed ground code is the nearest thing we have), owned by the Banneret."
+    ],
+    [
+      "Orders",
+      "Party-wide instant spells sharing a cooldown category. Focus Fire! and Fall Back! also need hooks in Bot so playerbots react."
+    ],
+    [
+      "Talents",
+      "Our talent rules already cover tiers, ranks and prerequisites; the passive talents map to spell modifiers and stat auras we already read."
+    ],
+    [
+      "Bots and the party bar",
+      "Bot logic for the class as listed, and its buff categories on the party bar."
+    ],
+    [
+      "Icons",
+      "Most icons can reuse painted designs we have; a banner design for the five banners would be new work in the icon painter."
+    ],
+    [
+      "Polearms",
+      "The fifteen polearms in the Polearms tab are new items, so they need entries of our own beside items.json (classic has none at these levels), vendor lists for the weaponsmiths, loot table rows for the creatures that drop them, and the quests that reward them. Painted icons need grey and green variants of the polearm design."
+    ]
+  ],
+  "items": {
+    "title": "Low-level polearms",
+    "why": "Classic has almost no polearms below level 20, as no other class can use one before the Weapon Master teaches Polearms at 20, and the game has none at all yet. A Banneret starting at level 1 needs a polearm to upgrade every few levels, as other classes have their weapons.",
+    "how": "Stats follow the game's own two-handed weapons at the same item level: about 0.42 damage per second per item level for grey (poor) items, 0.53 for white, 0.67 for green and 0.78 for blue, with polearms on the slow side (3.0 to 3.7 seconds). Prices and durability follow the same weapons.",
+    "list": [
+      {
+        "name": "Militia Spear",
+        "quality": 1,
+        "item_level": 2,
+        "required_level": 1,
+        "min": 4,
+        "max": 6,
+        "speed": 3.3,
+        "dps": 1.5,
+        "stats": {},
+        "source": "Bannerets start with it",
+        "sell": 6,
+        "buy": 30,
+        "durability": 33,
+        "text": ""
+      },
+      {
+        "name": "Hunting Spear",
+        "quality": 1,
+        "item_level": 5,
+        "required_level": 1,
+        "min": 7,
+        "max": 10,
+        "speed": 3.2,
+        "dps": 2.7,
+        "stats": {},
+        "source": "Sold by weaponsmiths in Ashford Vale and Wexford",
+        "sell": 38,
+        "buy": 190,
+        "durability": 38,
+        "text": ""
+      },
+      {
+        "name": "Rusty Pitchfork",
+        "quality": 0,
+        "item_level": 6,
+        "required_level": 1,
+        "min": 7,
+        "max": 10,
+        "speed": 3.4,
+        "dps": 2.5,
+        "stats": {},
+        "source": "Drops from brigands at the Coombe farm, Harrowfield",
+        "sell": 40,
+        "buy": 200,
+        "durability": 34,
+        "text": ""
+      },
+      {
+        "name": "Squire's Boar-Spear",
+        "quality": 1,
+        "item_level": 7,
+        "required_level": 3,
+        "min": 10,
+        "max": 15,
+        "speed": 3.3,
+        "dps": 3.8,
+        "stats": {},
+        "source": "Ashford Vale quest reward: a level 4 boar hunt for the huntsman Wat Cobbe",
+        "sell": 74,
+        "buy": 370,
+        "durability": 42,
+        "text": ""
+      },
+      {
+        "name": "Ditchjaw Spear",
+        "quality": 0,
+        "item_level": 10,
+        "required_level": 5,
+        "min": 11,
+        "max": 17,
+        "speed": 3.4,
+        "dps": 4.1,
+        "stats": {},
+        "source": "Drops from Ditchjaw gnolls in the gnoll hills",
+        "sell": 110,
+        "buy": 550,
+        "durability": 40,
+        "text": ""
+      },
+      {
+        "name": "Pike",
+        "quality": 1,
+        "item_level": 10,
+        "required_level": 5,
+        "min": 15,
+        "max": 22,
+        "speed": 3.5,
+        "dps": 5.3,
+        "stats": {},
+        "source": "Sold by Hesketh Steele, Wexford",
+        "sell": 150,
+        "buy": 750,
+        "durability": 47,
+        "text": ""
+      },
+      {
+        "name": "Mirefin Gig",
+        "quality": 2,
+        "item_level": 12,
+        "required_level": 7,
+        "min": 19,
+        "max": 29,
+        "speed": 3.0,
+        "dps": 8.0,
+        "stats": {
+          "Agility": 2,
+          "Stamina": 1
+        },
+        "source": "Rare drop from mirefins at the Mirrow Mere",
+        "sell": 432,
+        "buy": 2160,
+        "durability": 50,
+        "text": ""
+      },
+      {
+        "name": "Watchman's Partisan",
+        "quality": 2,
+        "item_level": 14,
+        "required_level": 9,
+        "min": 26,
+        "max": 38,
+        "speed": 3.4,
+        "dps": 9.4,
+        "stats": {
+          "Strength": 3,
+          "Stamina": 2
+        },
+        "source": "Reward from Marshal Edric Thorne for a Wexford watch quest",
+        "sell": 588,
+        "buy": 2940,
+        "durability": 54,
+        "text": ""
+      },
+      {
+        "name": "Recruit's Glaive",
+        "quality": 2,
+        "item_level": 13,
+        "required_level": 10,
+        "min": 24,
+        "max": 37,
+        "speed": 3.5,
+        "dps": 8.7,
+        "stats": {
+          "Strength": 3,
+          "Stamina": 1
+        },
+        "source": "Banneret class quest at level 10, the one that teaches Lance",
+        "sell": 507,
+        "buy": 2535,
+        "durability": 52,
+        "text": ""
+      },
+      {
+        "name": "Bardiche",
+        "quality": 1,
+        "item_level": 16,
+        "required_level": 11,
+        "min": 24,
+        "max": 37,
+        "speed": 3.6,
+        "dps": 8.5,
+        "stats": {},
+        "source": "Sold by Hesketh Steele, Wexford",
+        "sell": 384,
+        "buy": 1920,
+        "durability": 57,
+        "text": ""
+      },
+      {
+        "name": "Grunmaw's Gutting Pike",
+        "quality": 3,
+        "item_level": 17,
+        "required_level": 12,
+        "min": 38,
+        "max": 57,
+        "speed": 3.6,
+        "dps": 13.2,
+        "stats": {
+          "Strength": 5,
+          "Stamina": 3
+        },
+        "source": "Drops from Grunmaw in the gnoll hills",
+        "sell": 1214,
+        "buy": 6070,
+        "durability": 59,
+        "text": ""
+      },
+      {
+        "name": "Reedford Watch Glaive",
+        "quality": 2,
+        "item_level": 20,
+        "required_level": 15,
+        "min": 38,
+        "max": 56,
+        "speed": 3.5,
+        "dps": 13.4,
+        "stats": {
+          "Strength": 4,
+          "Agility": 3
+        },
+        "source": "Rare world drop in Harrowfield",
+        "sell": 1200,
+        "buy": 6000,
+        "durability": 64,
+        "text": ""
+      },
+      {
+        "name": "Thornwick Hedge-Bill",
+        "quality": 2,
+        "item_level": 22,
+        "required_level": 17,
+        "min": 39,
+        "max": 58,
+        "speed": 3.3,
+        "dps": 14.7,
+        "stats": {
+          "Strength": 5,
+          "Stamina": 4
+        },
+        "source": "Drops from brigand hedge-mages at Thornwick Tower",
+        "sell": 1452,
+        "buy": 7260,
+        "durability": 67,
+        "text": ""
+      },
+      {
+        "name": "Warden's Halberd",
+        "quality": 1,
+        "item_level": 22,
+        "required_level": 17,
+        "min": 35,
+        "max": 52,
+        "speed": 3.7,
+        "dps": 11.8,
+        "stats": {},
+        "source": "Sold by Hesketh Steele, Wexford",
+        "sell": 726,
+        "buy": 3630,
+        "durability": 67,
+        "text": ""
+      },
+      {
+        "name": "Steel-Shod Spear",
+        "quality": 2,
+        "item_level": 25,
+        "required_level": 20,
+        "min": 46,
+        "max": 69,
+        "speed": 3.4,
+        "dps": 16.9,
+        "stats": {
+          "Strength": 6,
+          "Stamina": 4
+        },
+        "source": "Quest reward in the next zone, for when Polearms open to every class at 20",
+        "sell": 1875,
+        "buy": 9375,
+        "durability": 72,
+        "text": ""
+      }
+    ],
+    "tab": "Polearms"
+  },
+  "ability_categories": [
+    {
+      "name": "Strike",
+      "tint": "gules"
+    },
+    {
+      "name": "Banner",
+      "tint": "azure"
+    },
+    {
+      "name": "Order",
+      "tint": "or"
+    },
+    {
+      "name": "Defence",
+      "tint": "vert"
+    },
+    {
+      "name": "Utility",
+      "tint": "argent"
+    }
+  ],
+  "overview_counts": [
+    [
+      "Banners",
+      "Banner",
+      "Banner of"
+    ],
+    [
+      "Orders",
+      "Order"
+    ]
+  ],
+  "bots_intro": "How a Banneret bot would fight, and how other bots answer a Banneret's Orders."
+}

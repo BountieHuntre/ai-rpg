@@ -7,3 +7,7 @@ __pycache__/
 
 # Exported builds
 build/
+
+# Blender files the model scripts write (rebuilt by tools/models/*/build_*.py)
+tools/models/**/*.blend
+tools/models/**/*.blend1

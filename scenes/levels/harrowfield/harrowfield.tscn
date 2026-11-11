@@ -99,6 +99,13 @@ npc_name = "Sir Rowan Ashdown"
 subname = "Templar Trainer"
 trainer = "paladin"
 
+[node name="SpellswordTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1.5, 5, 426.5)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Tamsin Vey"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+
 [node name="ClericTrainer" parent="." instance=ExtResource("2_npc")]
 position = Vector3(-16.5, 5, 426.5)
 rotation = Vector3(0, 3.14159, 0)

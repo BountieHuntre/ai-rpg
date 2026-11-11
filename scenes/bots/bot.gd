@@ -69,6 +69,7 @@ const BUFF_CATEGORIES := {
 	ClassicData.CharClass.PALADIN: ["Presence", "Oath", "Boon"],
 	ClassicData.CharClass.PRIEST: ["Fortitude", "Spirit", "Warding", "Self"],
 	ClassicData.CharClass.WARRIOR: ["Stance", "Shout"],
+	ClassicData.CharClass.SPELLSWORD: ["Edge", "Form"],
 }
 const CATEGORY_SPELLS := {
 	"Presence": ["Bulwark Presence", "Thorned Presence", "Focused Presence", "Hallowed Presence",
@@ -83,6 +84,8 @@ const CATEGORY_SPELLS := {
 	"Self": ["Inner Flame", "Umbral Guard", "Withering Touch"],
 	"Stance": ["Vanguard Stance", "Bastion Stance", "Fury Stance"],
 	"Shout": ["Rallying Cry"],
+	"Edge": ["Flame Edge", "Frost Edge", "Storm Edge", "Warding Edge"],
+	"Form": ["Bladesong Form", "Wardweave Form"],
 }
 ## Presences a Templar bot keeps up, best first.
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
@@ -115,6 +118,8 @@ func set_far(far: bool) -> void:
 		if node:
 			node.set_physics_process(not far)
 	_feedback.set_process(not far)
+	if model:
+		model.set_animating(not far)
 
 
 ## One slow tick for a far bot: what its nodes would do over `delta` seconds.
@@ -155,6 +160,17 @@ var command := Command.FOLLOW
 ## the Party Bots Attack option. Set from the party bar (PartyBar).
 var behavior := ""
 const BEHAVIORS := ["Assist", "Defend", "Passive"]
+## The role it plays, set from the party bar: "Tank", "Healer", "Damage", or
+## "" for its class's usual one (current_role). Its talents follow it.
+var role := ""
+const CLASS_ROLES := {
+	ClassicData.CharClass.WARRIOR: ["Tank", "Damage"],
+	ClassicData.CharClass.PALADIN: ["Tank", "Healer", "Damage"],
+	ClassicData.CharClass.PRIEST: ["Healer", "Damage"],
+	ClassicData.CharClass.SPELLSWORD: ["Tank", "Damage"],
+}
+## Below this share of health, a bot that isn't the healer still heals.
+const EMERGENCY_HEAL := 0.35
 ## Which buff it keeps up in each of its class's categories (BUFF_CATEGORIES):
 ## "Auto" (its own judgement), "None", or a spell's name.
 var buff_choices := {}
@@ -257,7 +273,7 @@ func learn_spells() -> void:
 		known.append(int(id))
 	profile.known_spells = known
 	profile.talents = {}
-	Talents.spend_for_bot(profile, Talents.bot_trees(profile.char_class, in_party and _has_shield_on()))
+	Talents.spend_for_bot(profile, Talents.bot_trees(profile.char_class, current_role()))
 	# By level, so each rank comes after the one before it; up to the level
 	# it has trained to.
 	var up_to := profile.level if trained_level <= 0 else mini(trained_level, profile.level)
@@ -296,7 +312,7 @@ func saved_state() -> Dictionary:
 		"health": combatant.health, "mana": combatant.mana, "dead_for": _dead_for,
 		"stay": [_stay_at.x, _stay_at.y, _stay_at.z] if command == Command.STAY else [], "auras": auras,
 		"item_cooldowns": spells.saved_item_cooldowns(),
-		"behavior": behavior, "buffs": buff_choices, "trained_level": trained_level,
+		"behavior": behavior, "buffs": buff_choices, "trained_level": trained_level, "role": role,
 	}
 
 
@@ -321,10 +337,11 @@ func restore_state(state: Dictionary) -> void:
 	else:
 		combatant.health = health
 	behavior = str(state.get("behavior", ""))
+	role = str(state.get("role", ""))
 	var buffs: Variant = state.get("buffs", {})
 	buff_choices = buffs if buffs is Dictionary else {}
 	trained_level = int(state.get("trained_level", 0))
-	if trained_level > 0:
+	if trained_level > 0 or not role.is_empty():
 		learn_spells()
 	var stay: Array = state.get("stay", [])
 	if stay.size() == 3:
@@ -355,6 +372,10 @@ func joined_party(fresh := true) -> void:
 	combatant.attack_target = null
 	_has_destination = false
 	progression.level_cap = ClassicData.MAX_LEVEL
+	# Its usual role may differ in a party (a Man-at-Arms with a shield tanks):
+	# talents to match.
+	learn_spells()
+	stats.refresh()
 
 
 func left_party() -> void:
@@ -444,6 +465,10 @@ func _think() -> void:
 		_sell_trash_nearby()
 		var questing: bool = manager != null and not in_party and Settings.get_value("bot_quests")
 		_wanted = quests.wanted_creatures(manager.spawn_entries()) if questing else ([] as Array[int])
+		# What the player's quests need is theirs: a random bot doesn't hunt it.
+		if questing:
+			var players: Dictionary = manager.player_needs().creatures
+			_wanted.assign(_wanted.filter(func(entry: int) -> bool: return not players.has(entry)))
 		_business = _quest_npc() if questing else null
 		_explore = quests.place_to_explore() if questing else ""
 		_chest = _nearest_chest() if questing else null
@@ -512,6 +537,41 @@ func _choose_enemy() -> Combatant:
 		if best == null or combatant.distance_to(enemy.combatant) < combatant.distance_to(best):
 			best = enemy.combatant
 	return best
+
+
+## The roles its class can play.
+func roles() -> Array:
+	return CLASS_ROLES.get(profile.char_class, ["Damage"])
+
+
+## The role it plays: the one set, or its class's usual one (Men-at-Arms and
+## Spellswords tank with a shield in a party, Templars and Clerics heal).
+func current_role() -> String:
+	if role in roles():
+		return role
+	match profile.char_class:
+		ClassicData.CharClass.WARRIOR, ClassicData.CharClass.SPELLSWORD:
+			return "Tank" if in_party and _has_shield_on() else "Damage"
+		ClassicData.CharClass.PALADIN, ClassicData.CharClass.PRIEST:
+			return "Healer"
+	return "Damage"
+
+
+## Takes up a role ("" for its usual one): its talents are spent again for it.
+func set_role(new_role: String) -> void:
+	if new_role == role:
+		return
+	role = new_role
+	learn_spells()
+	stats.refresh()
+	if in_party:
+		_party_say({ "Tank": "I'll tank", "Healer": "I'll keep you all alive", "Damage": "I'll go all out on damage" }.get(current_role(), "ok"))
+
+
+## How hurt someone must be before it heals them: the Bots Heal Below option
+## for healers, only emergencies for the rest.
+func _heal_below() -> float:
+	return heal_threshold() if current_role() == "Healer" else EMERGENCY_HEAL
 
 
 ## How it picks fights: its own setting, or the Party Bots Attack option's.
@@ -709,6 +769,10 @@ func _can_hunt(enemy: Enemy, already_fighting: bool) -> bool:
 		return false
 	if not already_fighting and enemy.state == Enemy.State.CHASE:
 		return false
+	# A random bot leaves creatures the player's quests need to the player
+	# (party bots help with them).
+	if not already_fighting and not in_party and manager and manager.player_needs().creatures.has(enemy.creature_entry):
+		return false
 	var level := profile.level
 	# Grey creatures are still worth killing for a quest.
 	var worth := enemy.level > CombatRules.gray_level(level) or enemy.creature_entry in _wanted
@@ -815,6 +879,10 @@ func _fetch_from_chest() -> bool:
 ## CHEST_SEARCH yards, or null.
 func _nearest_chest() -> GameObject:
 	var needed := quests.object_items_needed()
+	# Not ones holding what the player's quests need.
+	if manager and not in_party:
+		var players: Dictionary = manager.player_needs().items
+		needed.assign(needed.filter(func(item: int) -> bool: return not players.has(item)))
 	if needed.is_empty():
 		return null
 	var best: GameObject = null
@@ -1032,7 +1100,9 @@ func _rest(delta: float) -> void:
 ## Clerics with mana stand back and cast; out of mana they close in and swing.
 func _casts_from_range() -> bool:
 	var c := combatant
-	return profile.char_class == ClassicData.CharClass.PRIEST and c.max_mana > 0 and c.mana >= c.max_mana * CASTER_MANA \
+	# A damage Cleric casts down to its last few drops.
+	var keep := 0.05 if current_role() == "Damage" else CASTER_MANA
+	return profile.char_class == ClassicData.CharClass.PRIEST and c.max_mana > 0 and c.mana >= c.max_mana * keep \
 		and profile.best_rank("Chastise") != 0
 
 
@@ -1044,6 +1114,104 @@ func _use_spells() -> void:
 			_use_cleric_spells()
 		ClassicData.CharClass.WARRIOR:
 			_use_man_at_arms_spells()
+		ClassicData.CharClass.SPELLSWORD:
+			_use_spellsword_spells()
+
+
+# Spellsword spells: a tank in Wardweave Form with Warding Edge (with a
+# shield in a party, or when told), else a damage dealer in Bladesong Form
+# with Flame or Storm Edge; Release when the Resonance is worth it.
+
+## Whether this Spellsword tanks: told to (its Form choice), or holding a
+## shield in a party.
+func _spellsword_tanks() -> bool:
+	var choice := buff_choice("Form")
+	if choice == "Wardweave Form":
+		return true
+	if choice == "Bladesong Form":
+		return false
+	return current_role() == "Tank" and profile.best_rank("Wardweave Form") != 0
+
+
+func _use_spellsword_spells() -> void:
+	var me := combatant
+	var fighting := me.is_in_combat()
+	var tank := _spellsword_tanks()
+	# The form: the one chosen, or the role's.
+	var form_choice := buff_choice("Form")
+	var form := "Wardweave Form" if tank else "Bladesong Form"
+	if form_choice != "Auto" and form_choice != "None":
+		form = form_choice
+	var form_id := profile.best_rank(form)
+	if form_choice != "None" and form_id != 0 and spells.current_form() != SpellDB.stance_form(SpellDB.get_spell(form_id)) and _try(form, me):
+		return
+	# The Edge: the one chosen, or Warding for tanks, Storm when crowded,
+	# Flame otherwise.
+	var crowd := _crowd_near(8.0)
+	var edge_choice := buff_choice("Edge")
+	var edge := edge_choice
+	if edge_choice == "Auto":
+		edge = "Flame Edge"
+		if tank and profile.best_rank("Warding Edge") != 0:
+			edge = "Warding Edge"
+		elif crowd < 2 and profile.best_rank("Storm Edge") != 0:
+			edge = "Storm Edge"
+	if edge_choice != "None" and profile.best_rank(edge) != 0 and _lacks(me, edge, false) and _try(edge, me):
+		return
+	if fighting and me.health < me.max_health * 0.3 and _try("Last Sigil", me):
+		return
+	if fighting and tank and me.health < me.max_health * 0.6 and _lacks(me, "Runic Ward") and _try("Runic Ward", me):
+		return
+	if _enemy == null:
+		return
+	var distance := me.distance_to(_enemy)
+	# Closing in: tanks throw a blade to pull, others step in.
+	if not fighting and distance > 8.0 and _try("Hurl Blade" if tank else "Phase Step", _enemy):
+		return
+	if _enemy.is_casting and _try("Severing Sigil", _enemy):
+		return
+	var resonance := me.resonance
+	if tank:
+		var victim: Combatant = (_enemy.body as Enemy).current_victim() if _enemy.body is Enemy else null
+		if in_party and victim != null and victim != me and _try("Mark of Challenge", _enemy):
+			return
+		if in_party and _loose_enemies() >= 3 and _try("Challenging Glyph", me):
+			return
+		if _try("Reprisal", _enemy):
+			return
+		if resonance >= 3 and _try("Release", me):
+			return
+	else:
+		var elite := _enemy.body is Enemy and ((_enemy.body as Enemy).elite or (_enemy.body as Enemy).boss)
+		if elite and _try("Arcane Surge", me):
+			return
+		if resonance >= 5 and _try("Release", me):
+			return
+	if distance > me.melee_range + 1.0:
+		return
+	if crowd >= 2 and _try("Arc Cleave", _enemy):
+		return
+	_try("Arcane Strike", _enemy)
+
+
+## Living enemies fighting within a radius of the bot.
+func _crowd_near(radius: float) -> int:
+	var count := 0
+	for node in _creatures_near(radius):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and global_position.distance_to(enemy.global_position) <= radius:
+			count += 1
+	return count
+
+
+## Enemies fighting the party that aren't on this bot.
+func _loose_enemies() -> int:
+	var count := 0
+	for node in _creatures_near(15.0):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and enemy.current_victim() != combatant and _fights_group(enemy):
+			count += 1
+	return count
 
 
 # Cleric spells: heal the group (a Ward first when someone is in trouble),
@@ -1058,10 +1226,10 @@ func _use_cleric_spells() -> void:
 		return
 	if hurt and fighting and hurt.health < hurt.max_health * 0.5 and _try("Sanctified Ward", hurt):
 		return
-	if hurt and hurt.health < hurt.max_health * heal_threshold():
+	if hurt and hurt.health < hurt.max_health * _heal_below():
 		var hurting := group.filter(func(unit: PlayerUnit) -> bool:
 			var c := unit.combatant
-			return c.is_alive() and c.health < c.max_health * heal_threshold() and me.distance_to(c) <= 30.0)
+			return c.is_alive() and c.health < c.max_health * _heal_below() and me.distance_to(c) <= 30.0)
 		if hurting.size() >= 3 and _try("Communal Mending", me):
 			return
 		if hurt.health < hurt.max_health * 0.35 and _try("Swift Mending", hurt):
@@ -1131,7 +1299,8 @@ func _use_man_at_arms_spells() -> void:
 	var me := combatant
 	var fighting := me.is_in_combat()
 	var form := spells.current_form()
-	var stance := "Bastion Stance" if in_party and _has_shield_on() and profile.best_rank("Bastion Stance") != 0 else "Vanguard Stance"
+	var tank := current_role() == "Tank"
+	var stance := "Bastion Stance" if tank and profile.best_rank("Bastion Stance") != 0 else "Vanguard Stance"
 	var stance_choice := buff_choice("Stance")
 	if stance_choice != "Auto" and stance_choice != "None" and profile.best_rank(stance_choice) != 0:
 		stance = stance_choice
@@ -1161,7 +1330,7 @@ func _use_man_at_arms_spells() -> void:
 		if _try(name, _enemy):
 			return
 	# Taunt back a creature attacking someone else in the party.
-	if in_party and _enemy.body is Enemy and (_enemy.body as Enemy).current_victim() not in [null, me] and _try("Goad", _enemy):
+	if in_party and tank and _enemy.body is Enemy and (_enemy.body as Enemy).current_victim() not in [null, me] and _try("Goad", _enemy):
 		return
 	var crowd := 0
 	for node in _creatures_near(8.0):
@@ -1198,9 +1367,15 @@ func _use_templar_spells() -> void:
 		return
 	if fighting and me.health < me.max_health * 0.2 and _try("Hallowed Aegis", me):
 		return
-	if hurt and hurt.health < hurt.max_health * heal_threshold():
+	if hurt and hurt.health < hurt.max_health * _heal_below():
 		var quick := hurt.health < hurt.max_health * 0.35
 		if (quick and _try("Quick Radiance", hurt)) or _try("Mending Radiance", hurt):
+			return
+	# A tank Templar holds threat with holy power.
+	if current_role() == "Tank":
+		if _lacks(me, "Zealous Fervor") and _try("Zealous Fervor", me):
+			return
+		if fighting and _enemy and _crowd_near(8.0) >= 2 and _try("Hallowed Ground", me):
 			return
 	if not fighting:
 		for unit in group:

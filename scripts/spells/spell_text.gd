@@ -14,6 +14,9 @@ const RESISTANCE_SCHOOLS := { 4: "Fire", 16: "Frost", 32: "Shadow", 8: "Nature",
 ## numbers that depend on the caster's gear, such as Oath of Valor's damage.
 static func describe(spell: Dictionary, level: int, caster: Node = null) -> String:
 	var name := str(spell.get("SpellName", ""))
+	# The game's own classes' spells carry their text (ClassicData.CLASS_FILES).
+	if spell.has("Description"):
+		return str(spell.Description)
 	var talent := TalentText.describe(spell, level)
 	if not talent.is_empty():
 		return talent

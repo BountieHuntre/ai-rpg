@@ -542,7 +542,8 @@ func _book_entry(id: int, at: Vector2, width: float) -> void:
 	name.clip_text = true
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.size.x = (width - BOOK_ENTRY) * _ui_scale
-	_text(row, Vector2(BOOK_ENTRY, 8), "Choose one" if SpellDB.is_flyout(id) else str(spell.Rank1), Color(0.6, 0.6, 0.6), 5)
+	var under := "Choose one" if SpellDB.is_flyout(id) else "Passive" if SpellDB.is_passive(spell) else str(spell.Rank1)
+	_text(row, Vector2(BOOK_ENTRY, 8), under, Color(0.6, 0.6, 0.6), 5)
 	row.mouse_entered.connect(func() -> void:
 		row.color = Color(1, 1, 1, 0.08)
 		_tooltip.show_lines(spell_tooltip(id))
@@ -565,6 +566,9 @@ func _redraw_book() -> void:
 
 func _on_book_input(event: InputEvent, id: int, row: Control = null) -> void:
 	var button := event as InputEventMouseButton
+	# Passives are always at work: nothing to cast or put on a bar.
+	if SpellDB.is_passive(SpellDB.get_spell(id)):
+		return
 	if button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT and SpellDB.is_flyout(id):
 		_toggle_flyout(id, row)
 	elif button and button.pressed and button.button_index == MOUSE_BUTTON_RIGHT:
@@ -730,6 +734,12 @@ func spell_tooltip(id: int) -> Array:
 		return lines
 	if id == SpellDB.ATTACK:
 		lines.append([SpellText.describe(spell, GameState.level), "", DESCRIPTION])
+		return lines
+	if SpellDB.is_passive(spell):
+		lines.append(["Passive", "", Color.WHITE])
+		var passive_text := _describe(spell)
+		if not passive_text.is_empty():
+			lines.append([passive_text, "", DESCRIPTION])
 		return lines
 	var cost := _player.spells.mana_cost(spell)
 	# Talents change these: the tooltip shows what they come to.

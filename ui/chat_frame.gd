@@ -796,6 +796,8 @@ func _emote(command: String) -> void:
 	Chat.add("emote", texts[1] % target if not target.is_empty() else texts[0])
 	if command == "sit" and _player:
 		_player.sitting = true
+	elif _player and _player.model:
+		_player.model.emote(command)
 	Chat.player_spoke.emit("emote", command, target)
 
 

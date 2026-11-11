@@ -3,19 +3,25 @@ extends RefCounted
 ## Classic WoW (patch 1.12) player tables and class constants.
 ## See data/classic/SOURCE.md for where the numbers come from.
 
-enum CharClass { WARRIOR = 1, PALADIN = 2, HUNTER = 3, ROGUE = 4, PRIEST = 5, SHAMAN = 7, MAGE = 8, WARLOCK = 9, DRUID = 11 }
+## SPELLSWORD is the game's own class (no classic one has its number).
+enum CharClass { WARRIOR = 1, PALADIN = 2, HUNTER = 3, ROGUE = 4, PRIEST = 5, SHAMAN = 7, MAGE = 8, WARLOCK = 9, SPELLSWORD = 10, DRUID = 11 }
 enum Race { HUMAN = 1, ORC = 2, DWARF = 3, NIGHT_ELF = 4, UNDEAD = 5, TAUREN = 6, GNOME = 7, TROLL = 8 }
 enum Stat { STRENGTH, AGILITY, STAMINA, INTELLECT, SPIRIT }
 
 const MAX_LEVEL := 60
 const TABLES_PATH := "res://data/classic/player_tables.json"
 const CHARACTERS_PATH := "res://data/classic/characters.json"
+## The game's own classes' data (tools/class_designs/build_class_data.py), in
+## spells.json's shape plus their player tables and starting kits: SpellDB
+## and ClassicData merge it over the classic data.
+const CLASS_FILES := ["res://data/classes/spellsword.json"]
 
 ## The game's own class names; the enum keeps classic's.
 const CLASS_NAMES := {
 	CharClass.WARRIOR: "Man-at-Arms", CharClass.PALADIN: "Templar", CharClass.HUNTER: "Ranger",
 	CharClass.ROGUE: "Cutpurse", CharClass.PRIEST: "Cleric", CharClass.SHAMAN: "Seer",
 	CharClass.MAGE: "Magus", CharClass.WARLOCK: "Hexer", CharClass.DRUID: "Wildwarden",
+	CharClass.SPELLSWORD: "Spellsword",
 }
 
 
@@ -32,9 +38,18 @@ const RACE_NAMES := {
 	Race.UNDEAD: "Undead", Race.TAUREN: "Hornkin", Race.GNOME: "Gnome", Race.TROLL: "Troll",
 }
 const STAT_NAMES := ["Strength", "Agility", "Stamina", "Intellect", "Spirit"]
+## Races finished enough to play (a character model; the rest are capsules):
+## the only ones character creation offers and bots are made as.
+const PLAYABLE_RACES := [Race.HUMAN]
 
 static var _tables: Dictionary
 static var _characters: Dictionary
+
+
+## Whether new characters and bots may be this race and class: a playable
+## race, and a class with spells (SpellDB.classes_with_spells).
+static func is_playable(race: int, char_class: int) -> bool:
+	return race in PLAYABLE_RACES and char_class in SpellDB.classes_with_spells() and is_allowed(race, char_class)
 
 
 static func base_stats(race: Race, char_class: CharClass, level: int) -> Array:
@@ -71,13 +86,30 @@ static func is_allowed(race: Race, char_class: CharClass) -> bool:
 static func starting_kit(race: Race, char_class: CharClass) -> Dictionary:
 	if _characters.is_empty():
 		_characters = JSON.parse_string(FileAccess.get_file_as_string(CHARACTERS_PATH))
+		for extra in class_files():
+			_characters.merge(extra.get("characters", {}), true)
 	return _characters.get("%d-%d" % [race, char_class], { "items": [], "proficiencies": [] })
 
 
 static func _get_tables() -> Dictionary:
 	if _tables.is_empty():
 		_tables = JSON.parse_string(FileAccess.get_file_as_string(TABLES_PATH))
+		for extra in class_files():
+			_tables.level_stats.merge(extra.get("level_stats", {}), true)
+			_tables.class_stats.merge(extra.get("class_stats", {}), true)
 	return _tables
+
+
+static var _class_files: Array = []
+
+
+## The game's own classes' data files, read once.
+static func class_files() -> Array:
+	if _class_files.is_empty():
+		for path: String in CLASS_FILES:
+			if FileAccess.file_exists(path):
+				_class_files.append(JSON.parse_string(FileAccess.get_file_as_string(path)))
+	return _class_files
 
 
 # Factions, following FactionTemplateEntry in CMaNGOS (DBCStructure.h). Creature

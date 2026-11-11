@@ -70,12 +70,9 @@ func refresh() -> void:
 	# them on calls refresh again, which mustn't sync again.)
 	if not _syncing:
 		_syncing = true
-		var form := 0
-		var caster := get_parent().get_node_or_null("SpellCaster") as SpellCaster
-		if caster and caster.is_node_ready():
-			form = caster.current_form()
-		Talents.sync_passives(_combatant, _profile, _profile.equipment, form)
+		Talents.sync_passives(_combatant, _profile, _profile.equipment, _form())
 		_syncing = false
+	var form := _form()
 	var level := _profile.level
 	var base := ClassicData.base_stats(race, char_class, level)
 	var gear := Inventory.gear_totals(_profile.equipment)
@@ -112,6 +109,10 @@ func refresh() -> void:
 	# Toughness raises armor from items (SPELL_AURA_MOD_BASE_RESISTANCE_PCT).
 	var item_armor := int(gear.armor * (1.0 + c.aura_total(AURA_MOD_BASE_RESISTANCE_PCT, 1) / 100.0))
 	c.armor = item_armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
+	# The Spellsword's Wardweave Form: 2 armor a point of Intellect, more with
+	# Steady Mind.
+	if form == 21:
+		c.armor += int(intellect * 2.0 * (1.0 + _talent_amount("Steady Mind") / 100.0))
 	# Blessing of Might and Seal of the Crusader add attack power.
 	c.attack_power = maxi(melee_attack_power(char_class, level, strength, agility), 0) + int(c.aura_total(SpellDB.AURA_MOD_ATTACK_POWER))
 	# Seal of the Crusader speeds up attacks but cuts weapon damage to match,
@@ -151,6 +152,20 @@ func refresh() -> void:
 	health_per_tick = health_regen_per_tick(char_class, spirit)
 	c.health = mini(c.health, c.max_health)
 	c.mana = minf(c.mana, c.max_mana)
+
+
+## The unit's shapeshift form (stance), or 0.
+func _form() -> int:
+	var caster := get_parent().get_node_or_null("SpellCaster") as SpellCaster
+	return caster.current_form() if caster and caster.is_node_ready() else 0
+
+
+## A passive talent's amount (its rank's value), or 0.
+func _talent_amount(talent_name: String) -> float:
+	for aura in _combatant.auras:
+		if aura.spell.SpellName == talent_name and int(aura.spell.get("Attributes", 0)) & SpellDB.ATTR_PASSIVE:
+			return float(aura.amounts[0])
+	return 0.0
 
 
 ## Mana regen right now, per tick: zero within five seconds of spending mana,
@@ -213,7 +228,7 @@ static func mana_from_intellect(intellect: int) -> int:
 
 static func melee_attack_power(c: ClassicData.CharClass, level: int, strength: int, agility: int) -> int:
 	match c:
-		ClassicData.CharClass.WARRIOR, ClassicData.CharClass.PALADIN:
+		ClassicData.CharClass.WARRIOR, ClassicData.CharClass.PALADIN, ClassicData.CharClass.SPELLSWORD:
 			return level * 3 + strength * 2 - 20
 		ClassicData.CharClass.ROGUE, ClassicData.CharClass.HUNTER:
 			return level * 2 + strength + agility - 20
@@ -229,7 +244,7 @@ const BASE_DODGE := {
 	ClassicData.CharClass.PALADIN: 0.75, ClassicData.CharClass.HUNTER: 0.64,
 	ClassicData.CharClass.PRIEST: 3.0, ClassicData.CharClass.SHAMAN: 1.75,
 	ClassicData.CharClass.MAGE: 3.25, ClassicData.CharClass.WARLOCK: 2.0,
-	ClassicData.CharClass.DRUID: 0.75,
+	ClassicData.CharClass.DRUID: 0.75, ClassicData.CharClass.SPELLSWORD: 0.75,
 }
 
 ## Agility per 1% crit (or dodge), from level 1 and level 60 values with
@@ -244,11 +259,12 @@ const AGILITY_RATES := {
 	ClassicData.CharClass.PRIEST: [11.0, 20.0, 11.0, 20.0],
 	ClassicData.CharClass.WARLOCK: [8.4, 20.0, 8.4, 20.0],
 	ClassicData.CharClass.WARRIOR: [3.9, 20.0, 3.9, 20.0],
+	ClassicData.CharClass.SPELLSWORD: [4.6, 20.0, 4.6, 20.0],
 }
 
 
 static func _agility_rate(c: ClassicData.CharClass, level: int, crit: bool) -> float:
-	var rates: Array = AGILITY_RATES[c]
+	var rates: Array = AGILITY_RATES.get(c, [4.6, 20.0, 4.6, 20.0])
 	var at_1: float = rates[0] if crit else rates[2]
 	var at_60: float = rates[1] if crit else rates[3]
 	return at_1 * (60.0 - level) / 59.0 + at_60 * (level - 1.0) / 59.0
@@ -262,6 +278,7 @@ const SPELL_CRIT_DATA := {
 	ClassicData.CharClass.MAGE: [3.70, 14.77, 0.65],
 	ClassicData.CharClass.WARLOCK: [3.18, 11.30, 0.82],
 	ClassicData.CharClass.DRUID: [3.33, 12.41, 0.79],
+	ClassicData.CharClass.SPELLSWORD: [3.70, 14.77, 0.65],
 }
 
 
@@ -277,7 +294,7 @@ static func mana_regen_per_tick(c: ClassicData.CharClass, spirit: int) -> float:
 			return spirit / 4.0 + 12.5
 		ClassicData.CharClass.SHAMAN:
 			return spirit / 5.0 + 17.0
-		ClassicData.CharClass.PALADIN, ClassicData.CharClass.HUNTER, ClassicData.CharClass.WARLOCK, ClassicData.CharClass.DRUID:
+		ClassicData.CharClass.PALADIN, ClassicData.CharClass.HUNTER, ClassicData.CharClass.WARLOCK, ClassicData.CharClass.DRUID, ClassicData.CharClass.SPELLSWORD:
 			return spirit / 5.0 + 15.0
 		_:
 			return 0.0
@@ -291,7 +308,7 @@ static func health_regen_per_tick(c: ClassicData.CharClass, spirit: int) -> floa
 			value = spirit * 0.11 + 1.0
 		ClassicData.CharClass.HUNTER:
 			value = spirit * 0.43 - 5.5
-		ClassicData.CharClass.PALADIN:
+		ClassicData.CharClass.PALADIN, ClassicData.CharClass.SPELLSWORD:
 			value = spirit * 0.25
 		ClassicData.CharClass.PRIEST:
 			value = spirit * 0.15 + 1.4

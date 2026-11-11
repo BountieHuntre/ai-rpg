@@ -35,8 +35,12 @@ var sitting := false:
 				for aura in combatant.auras.duplicate():
 					if int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
 						combatant.remove_aura(int(aura.spell.Id))
-		if _visual and profile:
+		if _visual and profile and not model:
 			_visual.scale = race_scale(profile.race) * Vector3(1, SIT_HEIGHT if value else 1.0, 1)
+
+## The character model, for races that have one (Humans); others show the
+## placeholder capsule.
+var model: HumanoidModel
 
 @onready var combatant: Combatant = $Combatant
 @onready var _visual: Node3D = $Visual
@@ -50,8 +54,26 @@ static func race_color(race: ClassicData.Race) -> Color:
 	return RACE_LOOKS.get(race, RACE_LOOKS[ClassicData.Race.HUMAN])[1]
 
 
-## Dresses the placeholder model for the profile's race.
+## Dresses the unit for the profile's race: the Human model, or the
+## placeholder capsule sized and coloured for other races.
 func apply_race_look() -> void:
+	var human := profile.race == ClassicData.Race.HUMAN
+	for part in ["Body", "Nose"]:
+		_visual.get_node(part).visible = not human
+	if human:
+		_visual.scale = Vector3.ONE
+		if not model:
+			model = HumanoidModel.new()
+			_visual.add_child(model)
+			model.attach(self)
+		if profile.appearance.is_empty():
+			profile.appearance = HumanoidModel.random_appearance(hash(profile.char_name))
+		model.set_appearance(profile.appearance)
+		model.show_equipment(profile.equipment)
+		return
+	if model:
+		model.queue_free()
+		model = null
 	_visual.scale = race_scale(profile.race)
 	var body: MeshInstance3D = _visual.get_node("Body")
 	var skin := StandardMaterial3D.new()

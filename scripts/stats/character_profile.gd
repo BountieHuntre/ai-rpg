@@ -11,6 +11,9 @@ var level := 1
 var xp := 0
 ## Weapon and armor types the character can use, as "class:subclass" keys.
 var proficiencies: Array[String] = []
+## How the character looks (HumanoidModel: body, skin, hair, hair_color,
+## face); empty for a random look from the name.
+var appearance: Dictionary = {}
 ## Inventory.Slot -> item stack.
 var equipment: Dictionary = {}
 ## Spell ids the character knows, every rank included.

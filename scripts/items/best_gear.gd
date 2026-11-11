@@ -29,6 +29,13 @@ const SPECS := {
 		{ "stats": [1.0, 0.8, 2.2, 0.8, 0.0], "armor": 0.12, "health": 0.2, "mana": 0.05, "dps": 5.0, "block": 1.0, "hands": "shield" },
 		{ "stats": [2.2, 1.4, 1.0, 0.4, 0.0], "armor": 0.03, "health": 0.1, "mana": 0.03, "dps": 14.0, "block": 0.0, "hands": "two_hand" },
 	],
+	# Spellsword: Bladesong swings a two-hander, Wardweave tanks with a shield
+	# (Intellect is armor there), Arcana fights with a one-hander and spells.
+	ClassicData.CharClass.SPELLSWORD: [
+		{ "stats": [2.0, 1.0, 1.0, 1.2, 0.2], "armor": 0.03, "health": 0.1, "mana": 0.06, "dps": 13.0, "block": 0.0, "hands": "two_hand" },
+		{ "stats": [1.0, 0.8, 2.2, 1.6, 0.0], "armor": 0.12, "health": 0.2, "mana": 0.06, "dps": 5.0, "block": 1.0, "hands": "shield" },
+		{ "stats": [1.2, 0.4, 1.0, 2.0, 0.6], "armor": 0.03, "health": 0.1, "mana": 0.1, "dps": 9.0, "block": 0.0, "hands": "any" },
+	],
 	ClassicData.CharClass.PRIEST: [
 		{ "stats": [0.0, 0.0, 1.0, 2.0, 1.6], "armor": 0.02, "health": 0.08, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "off_hand" },
 		{ "stats": [0.0, 0.0, 0.8, 2.0, 2.0], "armor": 0.02, "health": 0.07, "mana": 0.15, "dps": 0.5, "block": 0.0, "hands": "off_hand" },
@@ -40,6 +47,7 @@ const WEIGHTS := {
 	ClassicData.CharClass.WARRIOR: { "stats": [2.0, 1.5, 1.3, 0.0, 0.0], "armor": 0.05, "health": 0.12, "mana": 0.0, "dps": 10.0, "block": 0.3, "hands": "any" },
 	ClassicData.CharClass.PALADIN: { "stats": [1.6, 0.8, 1.2, 1.2, 0.5], "armor": 0.05, "health": 0.1, "mana": 0.08, "dps": 7.0, "block": 0.3, "hands": "any" },
 	ClassicData.CharClass.PRIEST: { "stats": [0.0, 0.0, 1.0, 2.0, 1.6], "armor": 0.02, "health": 0.08, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "any" },
+	ClassicData.CharClass.SPELLSWORD: { "stats": [1.6, 0.8, 1.2, 1.4, 0.3], "armor": 0.05, "health": 0.1, "mana": 0.07, "dps": 9.0, "block": 0.3, "hands": "any" },
 }
 const DEFAULT_WEIGHTS := { "stats": [1.0, 1.0, 1.0, 1.0, 1.0], "armor": 0.04, "health": 0.1, "mana": 0.07, "dps": 5.0, "block": 0.2, "hands": "any" }
 ## How much a build favours its own weapon style: a matching set's score is

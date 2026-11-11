@@ -40,6 +40,7 @@ const CLASS_TEXT := {
 	ClassicData.CharClass.MAGE: "Wields fire, frost and arcane power from afar.",
 	ClassicData.CharClass.WARLOCK: "Bargains with dark powers for curses and flame.",
 	ClassicData.CharClass.DRUID: "Changes shape and draws on nature to heal and fight.",
+	ClassicData.CharClass.SPELLSWORD: "Writes spells into the blade: holds the line with wards, or cuts with fire, frost and storm.",
 }
 const NAME_STARTS := ["Al", "Bran", "Cor", "Dun", "El", "Fen", "Gar", "Hal", "Is", "Jor", "Kel", "Lor",
 	"Mar", "Nor", "Os", "Per", "Quen", "Ros", "Sel", "Tor", "Ul", "Vor", "Wen", "Yr",
@@ -70,6 +71,8 @@ var _characters: Array[Dictionary] = []
 var _selected := 0
 var _race := ClassicData.Race.HUMAN
 var _class := ClassicData.CharClass.PALADIN
+## The new character's look (HumanoidModel), for Humans.
+var _look: Dictionary = {}
 var _new_name := ""
 ## Set once Enter World starts loading, so it can't start twice.
 var _entering := false
@@ -376,7 +379,8 @@ func _update_select_preview() -> void:
 	var preview: CharacterPreview = _layer.get_node("Preview")
 	preview.visible = has_character
 	if has_character:
-		preview.show_race(_characters[_selected].race)
+		var character := _characters[_selected]
+		preview.show_race(character.race, character.get("appearance", {}), character.get("equipment", {}))
 
 
 func _enter_world() -> void:
@@ -396,7 +400,7 @@ func _enter_game() -> void:
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 
-## Classic makes you type DELETE to delete a character.
+## Classic makes you type DELETE to delete a character; here any case does.
 func _confirm_delete() -> void:
 	if _selected >= _characters.size():
 		return
@@ -411,7 +415,13 @@ func _confirm_delete() -> void:
 	confirm.grab_focus.call_deferred()
 	var accept: Button = _modal.get_meta("buttons")[0]
 	accept.disabled = true
-	confirm.text_changed.connect(func(text: String) -> void: accept.disabled = text != "DELETE")
+	# Any case will do (classic wants capitals).
+	confirm.text_changed.connect(func(text: String) -> void: accept.disabled = text.strip_edges().to_upper() != "DELETE")
+	# Enter accepts, once the word is typed.
+	confirm.text_submitted.connect(func(_text: String) -> void:
+		if not accept.disabled:
+			accept.pressed.emit()
+	)
 	accept.pressed.connect(func() -> void:
 		GameState.delete_character(character.path)
 		_load_characters()
@@ -425,6 +435,7 @@ func _start_create() -> void:
 	_race = ClassicData.Race.HUMAN
 	_class = ClassicData.CharClass.PALADIN
 	_new_name = ""
+	_look = HumanoidModel.random_appearance(randi())
 	_show_screen(Screen.CREATE)
 
 
@@ -441,9 +452,12 @@ func _build_create() -> void:
 		button.toggle_mode = true
 		button.button_group = race_group
 		button.button_pressed = race == _race
+		# Races without a model yet can't be made (ClassicData.PLAYABLE_RACES).
+		button.disabled = not race in ClassicData.PLAYABLE_RACES
+		button.tooltip_text = "Coming in a later update." if button.disabled else ""
 		button.pressed.connect(func() -> void:
 			_race = race
-			if not ClassicData.is_allowed(_race, _class):
+			if not ClassicData.is_playable(_race, _class):
 				_class = _first_allowed_class()
 			_rebuild()
 		)
@@ -463,23 +477,25 @@ func _build_create() -> void:
 		button.toggle_mode = true
 		button.button_group = class_group
 		button.button_pressed = char_class == _class
-		button.disabled = not ClassicData.is_allowed(_race, char_class)
-		button.tooltip_text = "" if not button.disabled else "Not available to %s characters." % ClassicData.RACE_NAMES[_race]
+		button.disabled = not ClassicData.is_playable(_race, char_class)
+		if not char_class in SpellDB.classes_with_spells():
+			button.tooltip_text = "Coming in a later update."
+		elif button.disabled:
+			button.tooltip_text = "Not available to %s characters." % ClassicData.RACE_NAMES[_race]
 		button.pressed.connect(func() -> void:
 			_class = char_class
 			_rebuild()
 		)
 		classes.add_child(button)
 	var class_text := CLASS_TEXT[_class] as String
-	# Classes with spells in the game so far. The rest can be made, but only attack.
-	if not _class in SpellDB.classes_with_spells():
-		class_text += "\n(No spells yet: only Men-at-Arms, Templars and Clerics have spells so far.)"
 	var class_label := _label(class_text, Color.WHITE)
 	class_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	classes.add_child(class_label)
 	# Down to just above the name box.
 	_add_preview(211)
-	_layer.get_node("Preview").show_race(_race)
+	_layer.get_node("Preview").show_race(_race, _look, CharacterPreview.kit_equipment(_race, _class))
+	if _race == ClassicData.Race.HUMAN:
+		_build_appearance()
 	var title := _label("%s %s" % [ClassicData.RACE_NAMES[_race], ClassicData.CLASS_NAMES[_class]], GOLD, 12)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(title, Vector2(_width() / 2 - 80, 20), Vector2(160, 16))
@@ -515,9 +531,61 @@ func _build_create() -> void:
 	name_edit.grab_focus.call_deferred()
 
 
+## Body and look choices for the model, at the preview's lower left, as
+## classic's arrows: Male and Female, then each choice with < and >.
+func _build_appearance() -> void:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+	var bodies := HBoxContainer.new()
+	var body_group := ButtonGroup.new()
+	for i in 2:
+		var button := Button.new()
+		button.text = ["Male", "Female"][i]
+		button.toggle_mode = true
+		button.button_group = body_group
+		button.button_pressed = int(_look.body) == i
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(func() -> void:
+			_look.body = i
+			_look = HumanoidModel.clean_appearance(_look)
+			_rebuild()
+		)
+		bodies.add_child(button)
+	box.add_child(bodies)
+	var choices := [["skin", "Skin", HumanoidModel.SKIN_COLORS.size()],
+		["hair", "Hair", HumanoidModel.HAIR_STYLES[int(_look.body)].size()],
+		["hair_color", "Hair Color", HumanoidModel.HAIR_COLORS.size()]]
+	if HumanoidModel.FACES[int(_look.body)].size() > 1:
+		choices.append(["face", "Beard", HumanoidModel.FACES[int(_look.body)].size()])
+	for choice in choices:
+		var row := HBoxContainer.new()
+		for step in [-1, 1]:
+			var arrow := Button.new()
+			arrow.text = "<" if step < 0 else ">"
+			arrow.pressed.connect(func() -> void:
+				_look[choice[0]] = posmod(int(_look[choice[0]]) + step, int(choice[2]))
+				_layer.get_node("Preview").show_race(_race, _look, CharacterPreview.kit_equipment(_race, _class))
+			)
+			row.add_child(arrow)
+			if step < 0:
+				var label := _label(choice[1], Color.WHITE)
+				label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				row.add_child(label)
+		box.add_child(row)
+	var random := Button.new()
+	random.text = "Randomize"
+	random.pressed.connect(func() -> void:
+		_look = HumanoidModel.random_appearance(randi())
+		_rebuild()
+	)
+	box.add_child(random)
+	_place(box, Vector2(_width() / 2 - 150, 128), Vector2(80, 80), Anchor.BOTTOM)
+
+
 func _first_allowed_class() -> ClassicData.CharClass:
 	for char_class: ClassicData.CharClass in ClassicData.CLASS_NAMES:
-		if ClassicData.is_allowed(_race, char_class):
+		if ClassicData.is_playable(_race, char_class):
 			return char_class
 	return ClassicData.CharClass.WARRIOR
 
@@ -533,7 +601,8 @@ func _random_name() -> String:
 func _accept_create() -> void:
 	if _modal:
 		return
-	var error := GameState.create_character(_new_name, _race, _class)
+	var look := _look if _race == ClassicData.Race.HUMAN else {}
+	var error := GameState.create_character(_new_name, _race, _class, look)
 	if not error.is_empty():
 		_show_modal(error, ["OK"])
 		return

@@ -1,0 +1,522 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Class Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: a gilt field manual. Header with the class's facts, a sticky row of
+   tabs, then one section at a time; talents as three tinted trees side by side. */
+:root {
+  --bg: #f2f0ec;
+  --panel: #fbfaf7;
+  --panel-2: #ebe7df;
+  --line: #d5cdbd;
+  --ink: #1f1b17;
+  --muted: #6b6255;
+  --gold: #8a6420;
+  --gold-soft: #b8924a;
+  --azure: #2f5694;
+  --gules: #9b2f28;
+  --vert: #2f6e3f;
+  --purpure: #6b3d8f;
+  --or: #9a6f12;
+  --argent: #6b6255;
+  --locked: #b7b0a3;
+  --q0: #7d7d7d; --q1: #1f1b17; --q2: #1c7d12; --q3: #0a5fb8;
+  --display: "Cinzel", "Trajan Pro", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0d10; --panel: #17141a; --panel-2: #1f1b22; --line: #3a3126;
+    --ink: #e4dccb; --muted: #988e7a; --gold: #d9b45e; --gold-soft: #a8843a;
+    --azure: #6f97d6; --gules: #d5675d; --vert: #6cb07c; --locked: #4b4540;
+    --purpure: #b48ad8; --or: #e0b54d; --argent: #a39985;
+    --q0: #9d9d9d; --q1: #f0ece4; --q2: #3fd42a; --q3: #3f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0d10; --panel: #17141a; --panel-2: #1f1b22; --line: #3a3126;
+  --ink: #e4dccb; --muted: #988e7a; --gold: #d9b45e; --gold-soft: #a8843a;
+  --azure: #6f97d6; --gules: #d5675d; --vert: #6cb07c; --locked: #4b4540;
+  --purpure: #b48ad8; --or: #e0b54d; --argent: #a39985;
+  --q0: #9d9d9d; --q1: #f0ece4; --q2: #3fd42a; --q3: #3f9bff;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: 0.02em; }
+h2 { font-size: 1.45rem; color: var(--gold); }
+h3 { font-size: 1.05rem; }
+p { margin: 0; max-width: 68ch; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+button, input, select { font: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, .cell:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Header */
+header.top { background: var(--panel); border-bottom: 1px solid var(--line); }
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; padding-block: 28px 22px; }
+.crest { width: 76px; height: 96px; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3rem); color: var(--gold); line-height: 1.05; }
+.hero .tag { font-size: 1.1rem; margin-top: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 0.85rem; color: var(--muted); background: var(--panel-2); }
+.status { margin-top: 10px; font-size: 0.85rem; color: var(--gules); font-weight: 700; letter-spacing: 0.04em; }
+
+/* Tabs and level */
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.tabbar { display: flex; gap: 4px; align-items: center; overflow-x: auto; padding-block: 8px; }
+.tabbar a { font-family: var(--display); font-size: 0.9rem; padding: 6px 12px; border-radius: 4px; text-decoration: none; color: var(--muted); white-space: nowrap; border: 1px solid transparent; }
+.tabbar a[aria-current="page"] { color: var(--gold); border-color: var(--gold-soft); background: var(--panel); }
+.tabbar .spacer { flex: 1; }
+.level { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 0.9rem; }
+.level input[type=range] { width: 140px; accent-color: var(--gold); }
+.level output { font-weight: 700; min-width: 2.2em; text-align: right; }
+
+main { padding-block: 26px 60px; }
+section { display: grid; gap: 22px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 22px; }
+.facts div { display: grid; gap: 2px; min-width: 0; }
+.counts { display: flex; flex-wrap: wrap; gap: 26px; }
+.counts b { font-family: var(--display); font-size: 1.8rem; color: var(--gold); display: block; line-height: 1.1; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+
+/* Icons */
+.icon { width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--gold-soft); box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); flex: none; background: var(--panel-2); }
+.icon.sm { width: 30px; height: 30px; }
+
+/* Abilities */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.filters button { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold-soft); }
+.abil-list { display: grid; gap: 10px; }
+.abil { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--cat, var(--gold-soft)); border-radius: 6px; padding: 12px 14px; display: grid; grid-template-columns: auto 1fr; gap: 12px; }
+.abil.unlearned { opacity: 0.5; }
+.abil .head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.abil .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.abil .meta span b { color: var(--ink); font-weight: 500; }
+.abil .desc { margin-top: 6px; }
+.abil .desc em { font-style: normal; color: var(--gold); font-weight: 700; }
+.abil details { margin-top: 6px; font-size: 0.9rem; }
+.abil summary { cursor: pointer; color: var(--muted); }
+.abil details table { margin-top: 6px; max-width: 420px; }
+.pill { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--cat); }
+.timeline { display: grid; grid-template-columns: repeat(60, 1fr); gap: 1px; height: 18px; margin-top: 4px; }
+.timeline i { background: var(--panel-2); border-radius: 1px; }
+.timeline i.on { background: var(--gold-soft); }
+.timeline i.here { outline: 1px solid var(--gold); }
+
+/* Talents */
+.tal-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+.tal-bar .left { font-family: var(--display); font-size: 1.15rem; }
+.tal-bar .left b { color: var(--gold); }
+.tal-bar .builds { display: flex; flex-wrap: wrap; gap: 6px; }
+.tal-bar button { border: 1px solid var(--gold-soft); background: var(--panel); color: var(--ink); border-radius: 4px; padding: 5px 12px; cursor: pointer; }
+.tal-bar button.quiet { border-color: var(--line); color: var(--muted); }
+.trees { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+.tree { border: 1px solid var(--line); border-top: 4px solid var(--tint); border-radius: 6px; background: var(--panel); padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.tree header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tree header h3 { color: var(--tint); font-size: 1.2rem; }
+.tree header .pts { font-family: var(--display); font-size: 1.2rem; }
+.tree .sub { font-size: 0.88rem; color: var(--muted); }
+.board { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(7, auto); gap: 14px 8px; justify-items: center; position: relative; padding-block: 4px; }
+.cell { position: relative; width: 48px; height: 48px; border-radius: 6px; border: 2px solid var(--locked); background: var(--panel-2); cursor: pointer; padding: 0; z-index: 1; }
+.cell img { width: 100%; height: 100%; border-radius: 4px; display: block; filter: grayscale(1) brightness(.6); }
+.cell.open { border-color: var(--vert); }
+.cell.open img { filter: none; }
+.cell.spent { border-color: var(--gold); }
+.cell.spent img { filter: none; }
+.cell.full { box-shadow: 0 0 0 2px var(--gold-soft); }
+.cell.ability { border-radius: 50%; }
+.cell.ability img { border-radius: 50%; }
+.cell .rk { position: absolute; right: -8px; bottom: -8px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-size: 0.72rem; font-weight: 700; padding: 0 4px; line-height: 1.4; color: var(--muted); }
+.cell.open .rk { color: var(--vert); border-color: var(--vert); }
+.cell.spent .rk { color: var(--gold); border-color: var(--gold); }
+.cell.sel { outline: 2px dashed var(--tint); outline-offset: 3px; }
+.link { width: 4px; background: var(--locked); border-radius: 2px; justify-self: center; z-index: 0; }
+.link.met { background: var(--gold); }
+.detail { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 6px; min-height: 120px; }
+.detail .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.detail .row h4 { margin: 0; font-family: var(--display); font-size: 1rem; }
+.detail .ctl { display: flex; gap: 6px; }
+.detail .ctl button { width: 30px; height: 30px; border-radius: 4px; border: 1px solid var(--gold-soft); background: var(--panel-2); color: var(--ink); cursor: pointer; font-weight: 700; }
+.detail .ctl button:disabled { opacity: .4; cursor: default; }
+.detail .now { }
+.detail .next { color: var(--muted); }
+.detail .need { color: var(--gules); font-size: 0.88rem; }
+.tint-azure { --tint: var(--azure); } .tint-gules { --tint: var(--gules); } .tint-vert { --tint: var(--vert); }
+.tint-purpure { --tint: var(--purpure); } .tint-or { --tint: var(--or); } .tint-argent { --tint: var(--argent); }
+.hint { font-size: 0.88rem; color: var(--muted); }
+
+/* Mechanics, bots, implementation */
+.mech { display: grid; grid-template-columns: auto 1fr; gap: 14px; }
+.mech ul, .plain { margin: 6px 0 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.passives { display: grid; gap: 10px; }
+.passive { display: flex; gap: 12px; align-items: flex-start; }
+.build-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.split { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 6px 0; background: var(--panel-2); }
+.split i:nth-child(1) { background: var(--azure); } .split i:nth-child(2) { background: var(--gules); } .split i:nth-child(3) { background: var(--vert); }
+
+/* Polearms */
+.q0 { color: var(--q0); } .q1 { color: var(--q1); } .q2 { color: var(--q2); } .q3 { color: var(--q3); }
+.weapons td.name { font-weight: 700; white-space: nowrap; }
+.weapons td.where { color: var(--muted); min-width: 16rem; }
+.dpsbar { display: flex; align-items: center; gap: 8px; min-width: 9rem; }
+.dpsbar i { display: block; height: 8px; border-radius: 2px; background: var(--gold-soft); }
+.weapons tr.reached td { background: color-mix(in srgb, var(--gold) 8%, transparent); }
+
+@media (max-width: 560px) {
+  .hero { grid-template-columns: 1fr; }
+  .crest { width: 56px; height: 70px; }
+  .level input[type=range] { width: 100px; }
+  .cell { width: 42px; height: 42px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cell { transition: border-color .15s, box-shadow .15s; }
+}
+</style>
+
+<header class="top">
+  <div class="wrap hero">
+    <div id="crest"></div>
+    <div>
+      <div class="label">Class design · not in the game</div>
+      <h1 id="cname"></h1>
+      <p class="tag" id="ctag"></p>
+      <div class="chips" id="croles"></div>
+    </div>
+  </div>
+</header>
+<nav class="tabs">
+  <div class="wrap tabbar" id="tabbar">
+    <a href="#overview">Overview</a>
+    <a href="#abilities">Abilities</a>
+    <a href="#talents">Talents</a>
+    <a href="#items" id="itemstab" hidden>Items</a>
+    <a href="#mechanics">Mechanics</a>
+    <a href="#bots">Playerbots</a>
+    <a href="#build">Building it</a>
+    <span class="spacer"></span>
+    <label class="level" for="lvl">Level <input id="lvl" type="range" min="1" max="60" value="60"> <output id="lvlout" class="num">60</output></label>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="v-overview"></section>
+  <section id="v-abilities" hidden></section>
+  <section id="v-talents" hidden></section>
+  <section id="v-items" hidden></section>
+  <section id="v-mechanics" hidden></section>
+  <section id="v-bots" hidden></section>
+  <section id="v-build" hidden></section>
+</main>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(() => {
+const D = JSON.parse(document.getElementById("data").textContent);
+// Icons as short blob URLs, made once, so redrawing doesn't copy their data.
+const ICONS = {};
+for (const [key, uri] of Object.entries(D.icons)) {
+  try {
+    const bytes = atob(uri.split(",")[1]);
+    const buf = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i);
+    ICONS[key] = URL.createObjectURL(new Blob([buf], { type: "image/png" }));
+  } catch (e) { ICONS[key] = uri; }
+}
+const C = D.class;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const img = (key, cls = "icon") => `<img class="${cls}" src="${ICONS[key] || ""}" alt="" loading="lazy">`;
+const fill = (text, vals) => text.replace(/\{(\d)\}/g, (_, i) => vals && vals[i] !== undefined ? `<em>${esc(vals[i])}</em>` : "");
+let level = 60;
+try { const saved = parseInt(localStorage.getItem("class-design-level")); if (saved >= 1 && saved <= 60) level = saved; } catch (e) {}
+
+// Header, with a crest for the class: a banner or a sword on a shield.
+const CRESTS = {
+  banner: `<svg class="crest" viewBox="0 0 76 96" aria-hidden="true"><rect x="6" y="2" width="3" height="92" rx="1.5" fill="var(--gold-soft)"/><path d="M9 6 H70 V62 L39.5 80 L9 62 Z" fill="var(--gules)" stroke="var(--gold)" stroke-width="2"/><path d="M9 30 H70" stroke="var(--gold)" stroke-width="2"/><path d="M26 14 L39.5 24 L53 14" fill="none" stroke="var(--gold)" stroke-width="2.5"/><circle cx="39.5" cy="48" r="7" fill="none" stroke="var(--gold)" stroke-width="2.5"/><circle cx="7.5" cy="3" r="3" fill="var(--gold)"/></svg>`,
+  sword: `<svg class="crest" viewBox="0 0 76 96" aria-hidden="true"><path d="M8 6 H68 V48 C68 70 52 84 38 92 C24 84 8 70 8 48 Z" fill="var(--purpure)" stroke="var(--gold)" stroke-width="2"/><path d="M38 14 L42 22 V66 H34 V22 Z" fill="var(--panel)" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 66 H52" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/><path d="M38 68 V82" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/><circle cx="38" cy="84" r="3" fill="var(--gold)"/><path d="M20 30 l4 -4 M56 30 l-4 -4 M18 46 h5 M58 46 h-5" stroke="var(--or)" stroke-width="2" stroke-linecap="round"/></svg>`,
+};
+$("#crest").outerHTML = CRESTS[C.crest] || CRESTS.banner;
+const CAT_TINT = {};
+(D.ability_categories || []).forEach(c => CAT_TINT[c.name] = c.tint);
+const catStyle = name => `--cat: var(--${CAT_TINT[name] || "gold"})`;
+$("#cname").textContent = C.name;
+$("#ctag").textContent = C.tagline;
+$("#croles").innerHTML = C.role.map(r => `<span class="chip">${esc(r)}</span>`).join("");
+
+// Level control
+const lvl = $("#lvl"), lvlout = $("#lvlout");
+lvl.value = level; lvlout.textContent = level;
+lvl.addEventListener("input", () => {
+  level = +lvl.value; lvlout.textContent = level;
+  try { localStorage.setItem("class-design-level", level); } catch (e) {}
+  renderAbilities(); clampTalents(); renderTalents(); renderPolearms();
+});
+
+// Overview
+const talentCount = D.trees.reduce((n, t) => n + t.talents.length, 0);
+const countTiles = (D.overview_counts || []).map(([label, category, prefix]) =>
+  `<div><b class="num">${D.abilities.filter(a => a.category === category && (!prefix || a.name.startsWith(prefix))).length}</b><span class="label">${esc(label)}</span></div>`).join("");
+$("#v-overview").innerHTML = `
+  <div class="panel" style="display:grid;gap:14px">
+    <h2>The ${esc(C.name)}</h2>
+    <p>${esc(C.fantasy)}</p>
+    <p>${esc(C.role_text)}</p>
+    <div class="counts">
+      <div><b class="num">${D.abilities.length}</b><span class="label">Abilities</span></div>
+      ${countTiles}
+      <div><b class="num">${talentCount}</b><span class="label">Talents in 3 trees</span></div>
+    </div>
+  </div>
+  <div class="panel facts">
+    <div><span class="label">Races</span><span>${C.races.map(esc).join(", ")}</span></div>
+    <div><span class="label">Armor</span><span>${C.armor.map(esc).join(", ")}</span></div>
+    <div><span class="label">Weapons</span><span>${C.weapons.map(esc).join(", ")}</span></div>
+    <div><span class="label">Resource</span><span>${esc(C.resource)}</span></div>
+    <div><span class="label">Stats</span><span>${esc(C.stats)}</span></div>
+    <div><span class="label">Starts with</span><span>${C.starting_gear.map(esc).join(", ")}</span></div>
+  </div>
+  <div class="panel" style="display:grid;gap:10px">
+    <h2>Beside the other classes</h2>
+    <div class="scroll"><table><tbody>${C.compare.map(r => `<tr><th style="width:9rem">${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")}</tbody></table></div>
+  </div>
+  <div style="display:grid;gap:10px">
+    <h2>Talent trees</h2>
+    <div class="build-cards">${D.trees.map(t => `<div class="panel tint-${t.tint}" style="border-top:4px solid var(--tint)"><h3 style="color:var(--tint)">${esc(t.name)}</h3><div class="label" style="margin:2px 0 6px">${esc(t.role)}</div><p>${esc(t.text)}</p></div>`).join("")}</div>
+  </div>`;
+
+// Abilities
+const CATS = ["All", ...(D.ability_categories || []).map(c => c.name)];
+let cat = "All";
+function rankAt(a) {
+  let r = -1;
+  a.ranks.forEach((rk, i) => { if (rk[0] <= level) r = i; });
+  return r;
+}
+function renderAbilities() {
+  const list = D.abilities.filter(a => cat === "All" || a.category === cat);
+  const known = D.abilities.filter(a => a.level <= level).length;
+  const learnedLevels = new Set(D.abilities.flatMap(a => a.ranks.map(r => r[0])));
+  const bars = Array.from({ length: 60 }, (_, i) => `<i class="${learnedLevels.has(i + 1) ? "on" : ""} ${i + 1 === level ? "here" : ""}" title="Level ${i + 1}"></i>`).join("");
+  $("#v-abilities").innerHTML = `
+    <div class="panel" style="display:grid;gap:10px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline">
+        <h2>Abilities</h2>
+        <span class="muted">At level <b class="num">${level}</b>: <b class="num">${known}</b> of ${D.abilities.length} learned</span>
+      </div>
+      <div><span class="label">Levels with something new to train</span><div class="timeline">${bars}</div></div>
+      <div class="filters" role="group" aria-label="Category">${CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === cat}">${c}</button>`).join("")}</div>
+    </div>
+    <div class="abil-list">${list.map(a => {
+      const r = rankAt(a);
+      const vals = a.ranks[Math.max(r, 0)][1];
+      const rankText = a.ranks.length > 1 ? (r >= 0 ? `Rank ${r + 1} of ${a.ranks.length}` : `${a.ranks.length} ranks`) : "";
+      const table = a.ranks.length > 1 ? `<details><summary>All ranks</summary><div class="scroll"><table><thead><tr><th>Rank</th><th>Level</th><th>Values</th></tr></thead><tbody>${a.ranks.map((rk, i) => `<tr${i === r ? ' style="color:var(--gold)"' : ""}><td class="num">${i + 1}</td><td class="num">${rk[0]}</td><td class="num">${rk[1].join(" / ")}</td></tr>`).join("")}</tbody></table></div></details>` : "";
+      return `<article class="abil ${a.level > level ? "unlearned" : ""}" style="${catStyle(a.category)}">
+        ${img(a.icon)}
+        <div style="min-width:0">
+          <div class="head"><h3>${esc(a.name)}</h3><span class="pill">${a.category}</span><span class="muted num" style="font-size:.85rem">Learned at ${a.level}${rankText ? " · " + rankText : ""}</span></div>
+          <div class="meta"><span>Cost <b>${esc(a.cost)}</b></span><span>Range <b>${esc(a.range)}</b></span><span>Cast <b>${esc(a.cast)}</b></span><span>Cooldown <b>${esc(a.cooldown)}</b></span></div>
+          <p class="desc">${fill(esc(a.text), vals)}</p>
+          ${table}
+        </div>
+      </article>`;
+    }).join("")}</div>`;
+  $("#v-abilities").querySelectorAll("[data-cat]").forEach(b => b.addEventListener("click", () => { cat = b.dataset.cat; renderAbilities(); }));
+}
+
+// Talents: classic rules. A point a level from 10 (51 at 60); a row needs
+// 5 points per row above it in that tree; prerequisites need every rank.
+const spent = {};
+D.trees.forEach(t => t.talents.forEach(x => spent[x.name] = 0));
+const treeOf = {};
+D.trees.forEach((t, i) => t.talents.forEach(x => treeOf[x.name] = i));
+const byName = {};
+D.trees.forEach(t => t.talents.forEach(x => byName[x.name] = x));
+let selected = D.trees.map(t => t.talents[0].name);
+const available = () => Math.max(0, level - 9);
+const total = () => Object.values(spent).reduce((a, b) => a + b, 0);
+const treePoints = (i, belowRow = 99) => D.trees[i].talents.filter(x => x.row < belowRow).reduce((n, x) => n + spent[x.name], 0);
+function why(x) {
+  const t = treeOf[x.name];
+  const need = (x.row - 1) * 5;
+  const out = [];
+  if (treePoints(t, x.row) < need) out.push(`Requires ${need} points in ${D.trees[t].name}`);
+  if (x.requires && spent[x.requires] < byName[x.requires].ranks) out.push(`Requires ${byName[x.requires].ranks} point${byName[x.requires].ranks > 1 ? "s" : ""} in ${x.requires}`);
+  return out;
+}
+function canAdd(x) { return spent[x.name] < x.ranks && total() < available() && why(x).length === 0; }
+function valid() {
+  return D.trees.every((t, i) => t.talents.every(x => spent[x.name] === 0 || (treePoints(i, x.row) >= (x.row - 1) * 5 && (!x.requires || spent[x.requires] === byName[x.requires].ranks))));
+}
+function canRemove(x) {
+  if (spent[x.name] === 0) return false;
+  spent[x.name]--; const ok = valid(); spent[x.name]++;
+  return ok;
+}
+function clampTalents() {
+  // Fewer points at a lower level: take them back from the deepest rows first.
+  while (total() > available()) {
+    const all = D.trees.flatMap(t => t.talents).filter(x => spent[x.name] > 0).sort((a, b) => b.row - a.row);
+    const x = all.find(canRemove) || all[0];
+    spent[x.name]--;
+  }
+}
+function textFor(x, rank) {
+  if (!x.values) return esc(x.text);
+  const vals = x.values.map(v => v[Math.max(rank, 1) - 1]);
+  return fill(esc(x.text), vals);
+}
+function renderTalents() {
+  const left = available() - total();
+  const split = D.trees.map((t, i) => treePoints(i)).join(" / ");
+  $("#v-talents").innerHTML = `
+    <div class="panel tal-bar">
+      <div class="left">Build <b class="num">${split}</b> · <span class="num">${left}</span> point${left === 1 ? "" : "s"} left at level <span class="num">${level}</span></div>
+      <div class="builds">${D.builds.map((b, i) => `<button type="button" data-build="${i}">${esc(b.name)}</button>`).join("")}<button type="button" class="quiet" data-reset>Reset</button></div>
+    </div>
+    <p class="hint">Click a talent to add a point; right-click, or the minus in its tree's panel, to take one back. Round icons are abilities; the others are passive. The example builds need level 60.</p>
+    <div class="trees">${D.trees.map((t, i) => {
+      const cells = t.talents.map(x => {
+        const s = spent[x.name];
+        const state = s > 0 ? "spent" : (why(x).length === 0 ? "open" : "");
+        return `<button type="button" class="cell ${state} ${s === x.ranks ? "full" : ""} ${x.ability ? "ability" : ""} ${selected[i] === x.name ? "sel" : ""}" style="grid-row:${x.row};grid-column:${x.col + 1}" data-t="${esc(x.name)}" data-tree="${i}" aria-label="${esc(x.name)}, ${s} of ${x.ranks}">
+          <img src="${ICONS[x.icon] || ""}" alt=""><span class="rk num">${s}/${x.ranks}</span></button>`;
+      }).join("");
+      const links = t.talents.filter(x => x.requires).map(x => {
+        const from = byName[x.requires];
+        return `<div class="link ${spent[x.requires] === from.ranks ? "met" : ""}" style="grid-column:${x.col + 1};grid-row:${from.row + 1} / ${x.row}"></div>`;
+      }).join("");
+      const sel = byName[selected[i]];
+      const s = spent[sel.name];
+      const needs = why(sel);
+      return `<div class="tree tint-${t.tint}">
+        <header><h3>${esc(t.name)}</h3><span class="pts num">${treePoints(i)}</span></header>
+        <div class="sub">${esc(t.role)}</div>
+        <div class="board">${links}${cells}</div>
+        <div class="detail">
+          <div class="row">
+            <h4>${esc(sel.name)} <span class="muted num" style="font-family:var(--body);font-size:.85rem">${s}/${sel.ranks}${sel.ability ? " · ability" : ""}</span></h4>
+            <div class="ctl"><button type="button" data-minus="${esc(sel.name)}" aria-label="Remove a point" ${canRemove(sel) ? "" : "disabled"}>−</button><button type="button" data-plus="${esc(sel.name)}" aria-label="Add a point" ${canAdd(sel) ? "" : "disabled"}>+</button></div>
+          </div>
+          ${s > 0 ? `<p class="now">${textFor(sel, s)}</p>` : ""}
+          ${s < sel.ranks ? `<p class="${s > 0 ? "next" : "now"}">${s > 0 ? "Next rank: " : ""}${textFor(sel, s + 1)}</p>` : ""}
+          ${needs.map(n => `<p class="need">${esc(n)}</p>`).join("")}
+          <p class="muted" style="font-size:.85rem">Row ${sel.row}${sel.requires ? " · after " + esc(sel.requires) : ""}</p>
+        </div>
+      </div>`;
+    }).join("")}</div>`;
+  const root = $("#v-talents");
+  root.querySelectorAll(".cell").forEach(b => {
+    const x = byName[b.dataset.t];
+    b.addEventListener("click", () => { selected[+b.dataset.tree] = x.name; if (canAdd(x)) spent[x.name]++; renderTalents(); });
+    b.addEventListener("contextmenu", e => { e.preventDefault(); selected[+b.dataset.tree] = x.name; if (canRemove(x)) spent[x.name]--; renderTalents(); });
+    b.addEventListener("mouseenter", () => { if (selected[+b.dataset.tree] !== x.name) { selected[+b.dataset.tree] = x.name; renderTalentsKeepFocus(b.dataset.t); } });
+  });
+  root.querySelectorAll("[data-plus]").forEach(b => b.addEventListener("click", () => { const x = byName[b.dataset.plus]; if (canAdd(x)) spent[x.name]++; renderTalents(); }));
+  root.querySelectorAll("[data-minus]").forEach(b => b.addEventListener("click", () => { const x = byName[b.dataset.minus]; if (canRemove(x)) spent[x.name]--; renderTalents(); }));
+  root.querySelectorAll("[data-build]").forEach(b => b.addEventListener("click", () => {
+    const build = D.builds[+b.dataset.build];
+    Object.keys(spent).forEach(k => spent[k] = 0);
+    if (level < 60) { level = 60; lvl.value = 60; lvlout.textContent = 60; renderAbilities(); }
+    Object.entries(build.talents).forEach(([k, v]) => spent[k] = v);
+    renderTalents();
+  }));
+  root.querySelector("[data-reset]").addEventListener("click", () => { Object.keys(spent).forEach(k => spent[k] = 0); renderTalents(); });
+}
+function renderTalentsKeepFocus(name) {
+  renderTalents();
+}
+
+// Polearms: the new weapons, by required level, the ones usable at the
+// chosen level marked.
+function renderPolearms() {
+  if (!D.items) return;
+  $("#itemstab").hidden = false;
+  $("#itemstab").textContent = D.items.tab || "Items";
+  const list = D.items.list;
+  const top = Math.max(...list.map(x => x.dps));
+  const stats = s => Object.entries(s).map(([k, v]) => `+${v} ${k}`).join(", ") || "—";
+  const quality = ["Poor", "Common", "Uncommon", "Rare"];
+  $("#v-items").innerHTML = `
+    <div class="panel" style="display:grid;gap:10px">
+      <h2>${esc(D.items.title)}</h2>
+      <p>${esc(D.items.why)}</p>
+      <p class="muted">${esc(D.items.how)}</p>
+    </div>
+    <div class="panel scroll">
+      <table class="weapons">
+        <thead><tr><th>Level</th><th>Polearm</th><th>Item level</th><th>Damage</th><th>Speed</th><th>DPS</th><th>Stats</th><th>Where to get it</th></tr></thead>
+        <tbody>${list.map(x => `<tr class="${x.required_level <= level ? "reached" : ""}">
+          <td class="num">${x.required_level}</td>
+          <td class="name q${x.quality}" title="${quality[x.quality]}">${esc(x.name)}</td>
+          <td class="num">${x.item_level}</td>
+          <td class="num">${x.min}–${x.max}</td>
+          <td class="num">${x.speed.toFixed(2)}</td>
+          <td><div class="dpsbar"><i style="width:${(x.dps / top * 6).toFixed(2)}rem"></i><span class="num">${x.dps.toFixed(1)}</span></div></td>
+          <td>${esc(stats(x.stats))}</td>
+          <td class="where">${esc(x.source)}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <p class="hint">Rows at or below the level slider's level are shaded. Grey, white, green and blue names are poor, common, uncommon and rare, as in the game.</p>`;
+}
+
+// Mechanics
+$("#v-mechanics").innerHTML = `
+  <div class="grid2">${D.mechanics.map(m => `<div class="panel mech">${img(m.icon)}<div style="min-width:0"><h3>${esc(m.name)}</h3><div class="muted">${esc(m.summary)}</div><ul>${m.text.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div></div>`).join("")}</div>
+  <div class="panel" style="display:grid;gap:12px">
+    <h2>Class passives</h2>
+    <div class="passives">${D.passives.map(p => `<div class="passive">${img(p.icon, "icon sm")}<div><b>${esc(p.name)}</b> <span class="muted num">· level ${p.level}</span><p>${esc(p.text)}</p></div></div>`).join("")}</div>
+  </div>
+  <div style="display:grid;gap:10px">
+    <h2>Example builds</h2>
+    <div class="build-cards">${D.builds.map(b => { const sum = b.points.reduce((a, c) => a + c, 0); return `<div class="panel"><h3>${esc(b.name)}</h3><div class="num muted">${b.role ? esc(b.role) + " · " : ""}${b.points.join(" / ")}</div><div class="split">${b.points.map(p => `<i style="width:${p / sum * 100}%"></i>`).join("")}</div><p>${esc(b.text)}</p></div>`; }).join("")}</div>
+    <p class="hint">Load any of them on the Talents tab.</p>
+  </div>`;
+
+// Playerbots
+$("#v-bots").innerHTML = `
+  <div class="panel" style="display:grid;gap:10px">
+    <h2>As a playerbot</h2>
+    <p class="muted">${esc(D.bots_intro || "How a " + C.name + " playerbot would fight.")}</p>
+    <ul class="plain">${D.bots.map(b => `<li>${esc(b)}</li>`).join("")}</ul>
+  </div>`;
+
+// Building it
+$("#v-build").innerHTML = `
+  <div class="panel" style="display:grid;gap:10px">
+    <h2>What adding it would take</h2>
+    <p class="muted">Classic has no data for this class, so every part is our own. Here is where each would go in the game as it stands.</p>
+    <div class="scroll"><table><tbody>${D.implementation.map(r => `<tr><th style="width:11rem">${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")}</tbody></table></div>
+  </div>`;
+
+// Tabs, by hash.
+const VIEWS = ["overview", "abilities", "talents", "items", "mechanics", "bots", "build"];
+function show() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview";
+  VIEWS.forEach(n => $("#v-" + n).hidden = n !== v);
+  document.querySelectorAll("#tabbar a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === "#" + v ? "page" : "false"));
+}
+window.addEventListener("hashchange", () => { show(); window.scrollTo(0, 0); });
+renderAbilities();
+renderPolearms();
+D.builds.length && Object.entries(D.builds[0].talents).forEach(([k, v]) => spent[k] = v);
+clampTalents();
+renderTalents();
+show();
+})();
+</script>

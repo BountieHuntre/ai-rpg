@@ -1,0 +1,1699 @@
+{
+  "class": {
+    "name": "Spellsword",
+    "plural": "Spellswords",
+    "crest": "sword",
+    "tagline": "A swordsman who writes spells into the edge of the blade.",
+    "fantasy": "Spellswords learned their letters in the hedge-mages' towers and then picked up a sword. They inscribe sigils along the blade before a fight, so every cut carries fire, frost or storm, and when enough of that power has built up in the steel they release it all at once. Woven differently, the same sigils become wards that turn blows aside, and a Spellsword in that form holds the front of a fight like any shield-bearer.",
+    "role": [
+      "Tank",
+      "Melee damage"
+    ],
+    "role_text": "Two forms make two roles from one kit. In Wardweave Form the Spellsword wears its Intellect as armor, builds threat with every spell and soaks damage in runic wards. In Bladesong Form the same Edges and Releases hit hard instead. The third tree, Arcana, leans further into spells for a damage dealer who fights at sword's length and a little beyond.",
+    "races": [
+      "Human",
+      "Night Elf",
+      "Gnome",
+      "Undead",
+      "Troll"
+    ],
+    "armor": [
+      "Cloth",
+      "Leather",
+      "Mail (from level 40)",
+      "Shields"
+    ],
+    "weapons": [
+      "One-Handed Swords",
+      "Two-Handed Swords",
+      "Daggers"
+    ],
+    "resource": "Mana, with Resonance (0 to 5)",
+    "resource_short": "Mana and Resonance",
+    "stats": "Strength and Intellect, with Stamina for tanking. Attack power from Strength as a Man-at-Arms; a quarter of attack power adds to the damage of Edges and Releases (Bladecraft); in Wardweave Form each point of Intellect is worth 2 armor.",
+    "starting_gear": [
+      "Apprentice's Blade (one-handed sword)",
+      "Inscriber's Jerkin",
+      "Worn Boots",
+      "Hearthbread x4"
+    ],
+    "compare": [
+      [
+        "Man-at-Arms",
+        "The other tank and melee fighter. A Man-at-Arms runs on rage and plate; a Spellsword runs on mana, wears mail at most and turns Intellect into armor and wards."
+      ],
+      [
+        "Templar",
+        "Also mixes weapon and spell, but heals and buffs the party. The Spellsword has no heals: its magic goes into the blade and its own wards."
+      ],
+      [
+        "Magus",
+        "Also an arcane, fire and frost caster, from range in cloth. The Spellsword casts mostly through the sword, at melee range or a few yards off."
+      ]
+    ]
+  },
+  "ability_categories": [
+    {
+      "name": "Strike",
+      "tint": "gules"
+    },
+    {
+      "name": "Edge",
+      "tint": "or"
+    },
+    {
+      "name": "Spell",
+      "tint": "purpure"
+    },
+    {
+      "name": "Form",
+      "tint": "azure"
+    },
+    {
+      "name": "Defence",
+      "tint": "vert"
+    },
+    {
+      "name": "Utility",
+      "tint": "argent"
+    }
+  ],
+  "overview_counts": [
+    [
+      "Edges",
+      "Edge"
+    ],
+    [
+      "Spells",
+      "Spell"
+    ],
+    [
+      "Forms",
+      "Form"
+    ]
+  ],
+  "mechanics": [
+    {
+      "name": "Edges",
+      "icon": "flame_orange",
+      "summary": "A sigil on the blade: one at a time.",
+      "text": [
+        "An Edge is inscribed on your weapon for 60 minutes (instant, off the global cooldown). Your melee hits then deal extra damage of its school and carry its effect: Flame Edge burns, Frost Edge chills, Storm Edge arcs to another enemy, Warding Edge gives you a small absorb shield.",
+        "The Edge also decides what Release does."
+      ]
+    },
+    {
+      "name": "Resonance",
+      "icon": "orb",
+      "summary": "Power built up in the steel, 0 to 5.",
+      "text": [
+        "Each melee hit while you have an Edge gives 1 Resonance (2 on a critical strike), up to 5. It fades 10 seconds after combat.",
+        "Release spends all of it, for an effect per point that depends on your Edge. Hold it for 5 or spend it early: the choice is the class's rhythm."
+      ]
+    },
+    {
+      "name": "Release",
+      "icon": "bolt_white",
+      "summary": "One button, four effects.",
+      "text": [
+        "Flame Edge: Flame Burst, fire damage to every enemy within 8 yards.",
+        "Frost Edge: Rime Lance, frost damage to one enemy up to 20 yards away, rooting it for 1 second per Resonance.",
+        "Storm Edge: Thunderclap, nature damage to the target and up to 3 enemies near it, interrupting their spells.",
+        "Warding Edge: Bulwark of Runes, an absorb shield on you per Resonance, and high threat on every enemy within 10 yards."
+      ]
+    },
+    {
+      "name": "Forms",
+      "icon": "stance_bastion",
+      "summary": "Bladesong for damage, Wardweave for tanking.",
+      "text": [
+        "Bladesong Form: you deal 10% more damage and your critical strikes give an extra Resonance.",
+        "Wardweave Form: each point of Intellect gives 2 armor, you cause 45% more threat, take 10% less damage and deal 10% less, and your absorb shields are 20% stronger.",
+        "Changing form costs no mana and keeps your Resonance, but has a 1.5 second cooldown."
+      ]
+    },
+    {
+      "name": "Bladecraft",
+      "icon": "sword_rare",
+      "summary": "Strength feeds the spells.",
+      "text": [
+        "A quarter of your attack power is added to the damage of your Edges and Releases, so the same Strength-and-Intellect gear serves both halves of the class."
+      ]
+    }
+  ],
+  "abilities": [
+    {
+      "name": "Arcane Strike",
+      "icon": "strike",
+      "category": "Strike",
+      "level": 1,
+      "cost": "5% of base mana",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "6 sec",
+      "text": "A cut charged with arcane force: weapon damage plus {0} arcane damage, and 1 Resonance.",
+      "ranks": [
+        [
+          1,
+          [
+            6
+          ]
+        ],
+        [
+          8,
+          [
+            14
+          ]
+        ],
+        [
+          16,
+          [
+            26
+          ]
+        ],
+        [
+          24,
+          [
+            40
+          ]
+        ],
+        [
+          32,
+          [
+            57
+          ]
+        ],
+        [
+          40,
+          [
+            77
+          ]
+        ],
+        [
+          48,
+          [
+            99
+          ]
+        ],
+        [
+          56,
+          [
+            124
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Flame Edge",
+      "icon": "flame_orange",
+      "category": "Edge",
+      "level": 1,
+      "cost": "8% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Inscribe flame on your blade for 60 minutes: your melee hits deal {0} extra fire damage. Release: Flame Burst.",
+      "ranks": [
+        [
+          1,
+          [
+            3
+          ]
+        ],
+        [
+          12,
+          [
+            7
+          ]
+        ],
+        [
+          22,
+          [
+            12
+          ]
+        ],
+        [
+          32,
+          [
+            18
+          ]
+        ],
+        [
+          42,
+          [
+            25
+          ]
+        ],
+        [
+          52,
+          [
+            33
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Spark",
+      "icon": "bolt_blue",
+      "category": "Spell",
+      "level": 4,
+      "cost": "10% of base mana",
+      "range": "20 yd",
+      "cast": "1.5 sec",
+      "cooldown": "None",
+      "text": "A snapping bolt of arcane force for {0} damage. Usable to pull, or on an enemy that won't come to you.",
+      "ranks": [
+        [
+          4,
+          [
+            14
+          ]
+        ],
+        [
+          14,
+          [
+            32
+          ]
+        ],
+        [
+          24,
+          [
+            55
+          ]
+        ],
+        [
+          34,
+          [
+            84
+          ]
+        ],
+        [
+          44,
+          [
+            118
+          ]
+        ],
+        [
+          54,
+          [
+            158
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Release",
+      "icon": "bolt_white",
+      "category": "Spell",
+      "level": 6,
+      "cost": "All Resonance (1 or more)",
+      "range": "By Edge",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Let the blade's power out. With Flame Edge, {0} fire damage per Resonance to every enemy within 8 yards; with Frost Edge, {1} frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, {2} nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing {3} damage per Resonance and high threat on enemies within 10 yards.",
+      "ranks": [
+        [
+          6,
+          [
+            8,
+            11,
+            9,
+            20
+          ]
+        ],
+        [
+          16,
+          [
+            17,
+            23,
+            19,
+            42
+          ]
+        ],
+        [
+          26,
+          [
+            28,
+            38,
+            31,
+            70
+          ]
+        ],
+        [
+          36,
+          [
+            41,
+            56,
+            46,
+            102
+          ]
+        ],
+        [
+          46,
+          [
+            56,
+            76,
+            63,
+            140
+          ]
+        ],
+        [
+          56,
+          [
+            73,
+            99,
+            82,
+            182
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Bladesong Form",
+      "icon": "stance_fury",
+      "category": "Form",
+      "level": 8,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "1.5 sec (forms)",
+      "text": "A form for fighting: you deal 10% more damage, and critical strikes give an extra Resonance.",
+      "ranks": [
+        [
+          8,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Wardweave Form",
+      "icon": "stance_bastion",
+      "category": "Form",
+      "level": 10,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "1.5 sec (forms)",
+      "text": "A form for holding the line: each point of Intellect gives 2 armor, you cause 45% more threat, take 10% less damage, deal 10% less, and your absorb shields are 20% stronger. Learned from a class quest at level 10.",
+      "ranks": [
+        [
+          10,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Frost Edge",
+      "icon": "frost",
+      "category": "Edge",
+      "level": 10,
+      "cost": "8% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Inscribe frost on your blade for 60 minutes: your melee hits deal {0} extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+      "ranks": [
+        [
+          10,
+          [
+            5
+          ]
+        ],
+        [
+          20,
+          [
+            10
+          ]
+        ],
+        [
+          30,
+          [
+            16
+          ]
+        ],
+        [
+          40,
+          [
+            23
+          ]
+        ],
+        [
+          50,
+          [
+            31
+          ]
+        ],
+        [
+          60,
+          [
+            40
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Runic Ward",
+      "icon": "ward",
+      "category": "Defence",
+      "level": 12,
+      "cost": "15% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "30 sec",
+      "text": "A shield of runes absorbs the next {0} damage, for up to 30 seconds.",
+      "ranks": [
+        [
+          12,
+          [
+            90
+          ]
+        ],
+        [
+          22,
+          [
+            180
+          ]
+        ],
+        [
+          32,
+          [
+            290
+          ]
+        ],
+        [
+          42,
+          [
+            420
+          ]
+        ],
+        [
+          52,
+          [
+            570
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Phase Step",
+      "icon": "feather",
+      "category": "Utility",
+      "level": 14,
+      "cost": "8% of base mana",
+      "range": "8-20 yd",
+      "cast": "Instant",
+      "cooldown": "20 sec",
+      "text": "Step through the space between, appearing beside your target. Your next melee attack within 5 seconds gives 1 more Resonance.",
+      "ranks": [
+        [
+          14,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Severing Sigil",
+      "icon": "hex",
+      "category": "Strike",
+      "level": 16,
+      "cost": "6% of base mana",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "12 sec",
+      "text": "Cut the threads of a spell: interrupts spellcasting and locks out that school for 4 seconds.",
+      "ranks": [
+        [
+          16,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Storm Edge",
+      "icon": "bolt_gold",
+      "category": "Edge",
+      "level": 18,
+      "cost": "8% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Inscribe storm on your blade for 60 minutes: your melee hits deal {0} extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+      "ranks": [
+        [
+          18,
+          [
+            7
+          ]
+        ],
+        [
+          28,
+          [
+            13
+          ]
+        ],
+        [
+          38,
+          [
+            20
+          ]
+        ],
+        [
+          48,
+          [
+            28
+          ]
+        ],
+        [
+          58,
+          [
+            37
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Mark of Challenge",
+      "icon": "taunt",
+      "category": "Defence",
+      "level": 20,
+      "cost": "None",
+      "range": "20 yd",
+      "cast": "Instant",
+      "cooldown": "10 sec",
+      "text": "Brand an enemy with a sigil that demands your attention: it attacks you for 3 seconds and you become its highest threat.",
+      "ranks": [
+        [
+          20,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Mirror Guard",
+      "icon": "presence_focused",
+      "category": "Defence",
+      "level": 22,
+      "cost": "10% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "30 sec",
+      "text": "For 5 seconds your chance to parry is increased by 50%, and the next harmful spell cast on you is turned back on its caster.",
+      "ranks": [
+        [
+          22,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Arc Cleave",
+      "icon": "cyclone",
+      "category": "Strike",
+      "level": 24,
+      "cost": "12% of base mana",
+      "range": "8 yd frontal arc",
+      "cast": "Instant",
+      "cooldown": "8 sec",
+      "text": "A wide arc that strikes up to 3 enemies in front of you for weapon damage plus {0} of your Edge's school, giving 1 Resonance for each enemy hit.",
+      "ranks": [
+        [
+          24,
+          [
+            18
+          ]
+        ],
+        [
+          36,
+          [
+            38
+          ]
+        ],
+        [
+          48,
+          [
+            62
+          ]
+        ],
+        [
+          60,
+          [
+            90
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Sap Edge",
+      "icon": "potion_blue",
+      "category": "Utility",
+      "level": 26,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "2 min",
+      "text": "For 15 seconds your melee hits restore mana equal to 20% of the damage they deal.",
+      "ranks": [
+        [
+          26,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Warding Edge",
+      "icon": "aegis",
+      "category": "Edge",
+      "level": 28,
+      "cost": "8% of base mana",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Inscribe a ward on your blade for 60 minutes: your melee hits give you a shield absorbing {0} damage, stacking up to 5 times, and cause 20% more threat. Release: Bulwark of Runes.",
+      "ranks": [
+        [
+          28,
+          [
+            12
+          ]
+        ],
+        [
+          38,
+          [
+            20
+          ]
+        ],
+        [
+          48,
+          [
+            30
+          ]
+        ],
+        [
+          58,
+          [
+            42
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Binding Glyph",
+      "icon": "ground",
+      "category": "Spell",
+      "level": 30,
+      "cost": "12% of base mana",
+      "range": "30 yd",
+      "cast": "1 sec",
+      "cooldown": "30 sec",
+      "text": "Draw a glyph on the ground for 20 seconds. The first 3 enemies to cross it are rooted for 4 seconds.",
+      "ranks": [
+        [
+          30,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Hurl Blade",
+      "icon": "sword_uncommon",
+      "category": "Spell",
+      "level": 32,
+      "cost": "8% of base mana",
+      "range": "25 yd",
+      "cast": "Instant",
+      "cooldown": "10 sec",
+      "text": "Throw a spectral copy of your sword for weapon damage, carrying your Edge's effect. It causes extra threat, for pulling from range.",
+      "ranks": [
+        [
+          32,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Challenging Glyph",
+      "icon": "shout_dark",
+      "category": "Defence",
+      "level": 36,
+      "cost": "15% of base mana",
+      "range": "10 yd",
+      "cast": "Instant",
+      "cooldown": "10 min",
+      "text": "Every enemy within 10 yards attacks you for 6 seconds.",
+      "ranks": [
+        [
+          36,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Arcane Surge",
+      "icon": "flame_blue",
+      "category": "Spell",
+      "level": 38,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "3 min",
+      "text": "For 15 seconds your melee and spell damage are increased by 20%, and your Edges cost no mana.",
+      "ranks": [
+        [
+          38,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Spell Shatter",
+      "icon": "cleanse",
+      "category": "Spell",
+      "level": 40,
+      "cost": "10% of base mana",
+      "range": "Melee",
+      "cast": "Instant",
+      "cooldown": "None",
+      "text": "Strike away an enemy's magic: removes one magic effect from it.",
+      "ranks": [
+        [
+          40,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Last Sigil",
+      "icon": "ward_dread",
+      "category": "Defence",
+      "level": 44,
+      "cost": "None",
+      "range": "Self",
+      "cast": "Instant",
+      "cooldown": "5 min",
+      "text": "Carve a final sigil on yourself: damage you take is reduced by 50% for 8 seconds.",
+      "ranks": [
+        [
+          44,
+          []
+        ]
+      ]
+    },
+    {
+      "name": "Glyph Storm",
+      "icon": "stars",
+      "category": "Spell",
+      "level": 52,
+      "cost": "25% of base mana",
+      "range": "10 yd",
+      "cast": "Channeled, 6 sec",
+      "cooldown": "1 min",
+      "text": "Sigils whirl around you, dealing {0} arcane damage to every enemy within 10 yards each second. In Wardweave Form it causes three times the threat.",
+      "ranks": [
+        [
+          52,
+          [
+            52
+          ]
+        ],
+        [
+          60,
+          [
+            64
+          ]
+        ]
+      ]
+    }
+  ],
+  "passives": [
+    {
+      "name": "Resonance",
+      "icon": "orb",
+      "level": 1,
+      "text": "Spellswords build Resonance with Edged melee hits and spend it with Release. See Mechanics."
+    },
+    {
+      "name": "Bladecraft",
+      "icon": "sword_rare",
+      "level": 1,
+      "text": "A quarter of attack power adds to Edge and Release damage."
+    },
+    {
+      "name": "Mail",
+      "icon": "chest_mail_common",
+      "level": 40,
+      "text": "Learns to wear mail at level 40."
+    },
+    {
+      "name": "Shield Training",
+      "icon": "shield_common",
+      "level": 10,
+      "text": "Learns to use shields with Wardweave Form at level 10."
+    }
+  ],
+  "trees": [
+    {
+      "name": "Bladesong",
+      "tint": "gules",
+      "role": "Melee damage with Edges",
+      "text": "Harder-hitting Edges, more Resonance and the sword skills of a duelist: the melee damage tree.",
+      "talents": [
+        {
+          "name": "Keen Edges",
+          "icon": "sword_common",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your chance to land a critical strike in melee is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Honed Sigils",
+          "icon": "flame_gold",
+          "row": 1,
+          "col": 2,
+          "ranks": 5,
+          "text": "Your Edges deal {0}% more damage.",
+          "values": [
+            [
+              4,
+              8,
+              12,
+              16,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Quick Draw",
+          "icon": "strike",
+          "row": 2,
+          "col": 0,
+          "ranks": 2,
+          "text": "Arcane Strike's cooldown is {0} seconds shorter.",
+          "values": [
+            [
+              0.5,
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Resonant Steel",
+          "icon": "orb",
+          "row": 2,
+          "col": 1,
+          "ranks": 3,
+          "text": "Your melee hits have a {0}% chance to give an extra Resonance.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Bladesong Cadence",
+          "icon": "stance_fury",
+          "row": 2,
+          "col": 2,
+          "ranks": 2,
+          "text": "In Bladesong Form you attack {0}% faster.",
+          "values": [
+            [
+              3,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Searing Edge",
+          "icon": "burn",
+          "row": 3,
+          "col": 0,
+          "ranks": 3,
+          "text": "Flame Edge also burns the target for {0}% of its damage over 4 seconds.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Sigil Flurry",
+          "icon": "dual",
+          "row": 3,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Strike (15% of base mana, 20 sec): three quick cuts at 60% weapon damage, each carrying your Edge and giving Resonance."
+        },
+        {
+          "name": "Biting Frost",
+          "icon": "frost",
+          "row": 3,
+          "col": 2,
+          "ranks": 2,
+          "text": "Frost Edge slows by {0}% more.",
+          "values": [
+            [
+              10,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Blade Mastery",
+          "icon": "sword_uncommon",
+          "row": 4,
+          "col": 0,
+          "ranks": 5,
+          "text": "You deal {0}% more damage with swords.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Overflow",
+          "icon": "potion_blue",
+          "row": 4,
+          "col": 2,
+          "ranks": 3,
+          "text": "Resonance you gain beyond 5 restores {0}% of your mana instead.",
+          "values": [
+            [
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "name": "Twin Edge",
+          "icon": "flame_blue",
+          "row": 5,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Sigil Flurry",
+          "text": "You can keep two different Edges on your blade. Each deals 60% of its damage; Release uses the one inscribed last."
+        },
+        {
+          "name": "Stormcaller",
+          "icon": "bolt_gold",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "Storm Edge arcs {0}% more often.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Duelist's Footing",
+          "icon": "feather",
+          "row": 5,
+          "col": 0,
+          "ranks": 2,
+          "text": "Phase Step's cooldown is {0} seconds shorter.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Spellsteel Fury",
+          "icon": "strike_red",
+          "row": 6,
+          "col": 1,
+          "ranks": 5,
+          "text": "Critical strikes with your Edges and Releases deal {0}% more damage.",
+          "values": [
+            [
+              6,
+              12,
+              18,
+              24,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Momentum",
+          "icon": "charge",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "Killing an enemy gives {0} Resonance.",
+          "values": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Thousand Cuts",
+          "icon": "cyclone",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Strike (25% of base mana, 1 min): for 6 seconds you whirl, striking every enemy within 8 yards each second for weapon damage and your Edge, moving at half speed."
+        }
+      ]
+    },
+    {
+      "name": "Wardweave",
+      "tint": "azure",
+      "role": "Tanking",
+      "text": "Wards, armor from Intellect, parries and threat: the tree that holds the front of a fight.",
+      "talents": [
+        {
+          "name": "Woven Mail",
+          "icon": "chest_mail_common",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your armor is increased by {0}%.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Steady Mind",
+          "icon": "mind_calm",
+          "row": 1,
+          "col": 2,
+          "ranks": 5,
+          "text": "Wardweave Form gives {0}% more armor from Intellect.",
+          "values": [
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ]
+          ]
+        },
+        {
+          "name": "Parrying Sigils",
+          "icon": "parry",
+          "row": 2,
+          "col": 0,
+          "ranks": 5,
+          "text": "Your chance to parry is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Thick Wards",
+          "icon": "ward",
+          "row": 2,
+          "col": 1,
+          "ranks": 3,
+          "text": "Runic Ward absorbs {0}% more damage.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Commanding Glyphs",
+          "icon": "taunt",
+          "row": 2,
+          "col": 2,
+          "ranks": 2,
+          "text": "Mark of Challenge's cooldown is {0} seconds shorter.",
+          "values": [
+            [
+              2,
+              4
+            ]
+          ]
+        },
+        {
+          "name": "Hardened Spirit",
+          "icon": "heart",
+          "row": 3,
+          "col": 0,
+          "ranks": 3,
+          "text": "Your Stamina is increased by {0}%.",
+          "values": [
+            [
+              2,
+              4,
+              6
+            ]
+          ]
+        },
+        {
+          "name": "Reprisal",
+          "icon": "parry_red",
+          "row": 3,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Strike (5% of base mana, 6 sec): usable after you parry or block; weapon damage plus your Edge, with high threat and 2 Resonance."
+        },
+        {
+          "name": "Spell Turning",
+          "icon": "presence_focused",
+          "row": 3,
+          "col": 2,
+          "ranks": 2,
+          "text": "Mirror Guard's cooldown is {0} seconds shorter.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Bulwark Weave",
+          "icon": "aegis",
+          "row": 4,
+          "col": 0,
+          "ranks": 5,
+          "text": "Warding Edge's shields absorb {0}% more and stack {1} more times.",
+          "values": [
+            [
+              5,
+              10,
+              15,
+              20,
+              25
+            ],
+            [
+              0,
+              1,
+              1,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Unyielding",
+          "icon": "stance_bastion",
+          "row": 4,
+          "col": 2,
+          "ranks": 3,
+          "text": "Damage you take from area attacks is reduced by {0}%.",
+          "values": [
+            [
+              5,
+              10,
+              15
+            ]
+          ]
+        },
+        {
+          "name": "Aegis of Runes",
+          "icon": "ward_umbral",
+          "row": 5,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Reprisal",
+          "text": "Defence (1 min): a shield absorbing 30% of your maximum health for 10 seconds; while it holds you can't be knocked back."
+        },
+        {
+          "name": "Steadfast Glyphs",
+          "icon": "ward_shadow",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "Stuns and fears on you last {0}% shorter.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Glyph Echo",
+          "icon": "shout_dark",
+          "row": 5,
+          "col": 0,
+          "ranks": 2,
+          "text": "Challenging Glyph's cooldown is {0} minutes shorter.",
+          "values": [
+            [
+              2,
+              4
+            ]
+          ]
+        },
+        {
+          "name": "Runic Retaliation",
+          "icon": "zeal",
+          "row": 6,
+          "col": 1,
+          "ranks": 5,
+          "text": "When your shields absorb damage, {0}% of it is dealt back to the attacker as arcane damage.",
+          "values": [
+            [
+              4,
+              8,
+              12,
+              16,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Rooted Stance",
+          "icon": "ground",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "In Wardweave Form you take {0}% less damage from critical strikes.",
+          "values": [
+            [
+              15,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Bastion of Glyphs",
+          "icon": "presence_hallowed",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Defence (2 min): a shield absorbing 50% of your maximum health for 12 seconds; while it holds, 30% of the damage taken by party members within 10 yards goes to it instead."
+        }
+      ]
+    },
+    {
+      "name": "Arcana",
+      "tint": "purpure",
+      "role": "Spell damage",
+      "text": "The spell half of the class: Spark, Release and a long-range Arcane Lance for a damage dealer who fights at sword's length and beyond.",
+      "talents": [
+        {
+          "name": "Arcane Insight",
+          "icon": "eye",
+          "row": 1,
+          "col": 1,
+          "ranks": 5,
+          "text": "Your chance to land a critical strike with spells is increased by {0}%.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Focused Study",
+          "icon": "book",
+          "row": 1,
+          "col": 2,
+          "ranks": 5,
+          "text": "Your Intellect is increased by {0}%.",
+          "values": [
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Quickened Spark",
+          "icon": "bolt_blue",
+          "row": 2,
+          "col": 0,
+          "ranks": 3,
+          "text": "Spark's cast time is {0} seconds shorter.",
+          "values": [
+            [
+              0.2,
+              0.4,
+              0.5
+            ]
+          ]
+        },
+        {
+          "name": "Mana Edge",
+          "icon": "potion_blue",
+          "row": 2,
+          "col": 1,
+          "ranks": 2,
+          "text": "Sap Edge's cooldown is {0} seconds shorter.",
+          "values": [
+            [
+              30,
+              60
+            ]
+          ]
+        },
+        {
+          "name": "Far Reach",
+          "icon": "eye",
+          "row": 2,
+          "col": 2,
+          "ranks": 2,
+          "text": "Spark, Hurl Blade and Rime Lance reach {0} yards further.",
+          "values": [
+            [
+              5,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Clear Mind",
+          "icon": "mind",
+          "row": 3,
+          "col": 0,
+          "ranks": 3,
+          "text": "Your spells and Edges cost {0}% less mana.",
+          "values": [
+            [
+              3,
+              6,
+              10
+            ]
+          ]
+        },
+        {
+          "name": "Arcane Lance",
+          "icon": "bolt_white",
+          "row": 3,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Spell (15% of base mana, 2 sec cast, 30 yd): a lance of force for high arcane damage, 20% more for each Resonance, which it spends."
+        },
+        {
+          "name": "Silencing Sigil",
+          "icon": "hex",
+          "row": 3,
+          "col": 2,
+          "ranks": 2,
+          "text": "Severing Sigil also silences the target for {0} seconds.",
+          "values": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Empowered Release",
+          "icon": "flame_gold",
+          "row": 4,
+          "col": 0,
+          "ranks": 5,
+          "text": "Release deals {0}% more damage and its shields absorb {0}% more.",
+          "values": [
+            [
+              4,
+              8,
+              12,
+              16,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Warding Mana",
+          "icon": "ward_shadow",
+          "row": 4,
+          "col": 2,
+          "ranks": 3,
+          "text": "In Bladesong Form, {0}% of damage you take is drained from your mana instead.",
+          "values": [
+            [
+              10,
+              20,
+              30
+            ]
+          ]
+        },
+        {
+          "name": "Overload",
+          "icon": "flame_blue",
+          "row": 5,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "requires": "Arcane Lance",
+          "text": "Spell (no mana, 1 min): your next Release or Arcane Lance acts as if you had 5 Resonance."
+        },
+        {
+          "name": "Arcane Momentum",
+          "icon": "stars",
+          "row": 5,
+          "col": 2,
+          "ranks": 3,
+          "text": "After a spell, your next melee attack within 6 seconds deals {0}% more damage.",
+          "values": [
+            [
+              5,
+              10,
+              15
+            ]
+          ]
+        },
+        {
+          "name": "Glyph Mastery",
+          "icon": "ground",
+          "row": 5,
+          "col": 0,
+          "ranks": 2,
+          "text": "Binding Glyph roots {0} more enemies and Glyph Storm's cooldown is {1} seconds shorter.",
+          "values": [
+            [
+              1,
+              2
+            ],
+            [
+              10,
+              20
+            ]
+          ]
+        },
+        {
+          "name": "Spellweaver's Haste",
+          "icon": "feather",
+          "row": 6,
+          "col": 1,
+          "ranks": 5,
+          "text": "You cast and attack {0}% faster.",
+          "values": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Resonant Surge",
+          "icon": "orb",
+          "row": 6,
+          "col": 2,
+          "ranks": 2,
+          "text": "Arcane Surge also gives {0} Resonance and lasts {1} seconds longer.",
+          "values": [
+            [
+              2,
+              5
+            ],
+            [
+              3,
+              5
+            ]
+          ]
+        },
+        {
+          "name": "Arc of Ruin",
+          "icon": "verdict",
+          "row": 7,
+          "col": 1,
+          "ranks": 1,
+          "ability": true,
+          "text": "Spell (25% of base mana, 2.5 sec cast, 1 min): hurl a crescent of force in a 20-yard cone for very high arcane damage, 10% more for each Resonance, which it spends."
+        }
+      ]
+    }
+  ],
+  "builds": [
+    {
+      "name": "Warden",
+      "role": "Tank",
+      "points": [
+        5,
+        31,
+        15
+      ],
+      "text": "The tank: Wardweave Form, Warding Edge, Reprisal off parries, Aegis of Runes and Bastion of Glyphs for big pulls, with Arcana for cheaper spells and longer reach.",
+      "talents": {
+        "Keen Edges": 5,
+        "Woven Mail": 5,
+        "Steady Mind": 5,
+        "Parrying Sigils": 5,
+        "Commanding Glyphs": 1,
+        "Reprisal": 1,
+        "Hardened Spirit": 3,
+        "Bulwark Weave": 5,
+        "Aegis of Runes": 1,
+        "Runic Retaliation": 4,
+        "Bastion of Glyphs": 1,
+        "Focused Study": 5,
+        "Far Reach": 2,
+        "Mana Edge": 2,
+        "Quickened Spark": 1,
+        "Clear Mind": 3,
+        "Silencing Sigil": 2
+      }
+    },
+    {
+      "name": "Bladedancer",
+      "role": "Melee damage",
+      "points": [
+        31,
+        0,
+        20
+      ],
+      "text": "Melee damage: Bladesong Form with Twin Edge (Flame and Storm), Sigil Flurry for Resonance and Thousand Cuts for packs.",
+      "talents": {
+        "Keen Edges": 5,
+        "Honed Sigils": 5,
+        "Resonant Steel": 3,
+        "Bladesong Cadence": 2,
+        "Sigil Flurry": 1,
+        "Searing Edge": 3,
+        "Blade Mastery": 5,
+        "Twin Edge": 1,
+        "Spellsteel Fury": 5,
+        "Thousand Cuts": 1,
+        "Arcane Insight": 5,
+        "Focused Study": 5,
+        "Mana Edge": 2,
+        "Clear Mind": 3,
+        "Empowered Release": 5
+      }
+    },
+    {
+      "name": "Arcblade",
+      "role": "Spell damage",
+      "points": [
+        10,
+        0,
+        41
+      ],
+      "text": "Spell damage at a few yards: Arcane Lance and Overload for burst, Release from range with Frost Edge, Arc of Ruin to finish.",
+      "talents": {
+        "Keen Edges": 5,
+        "Honed Sigils": 5,
+        "Arcane Insight": 5,
+        "Focused Study": 5,
+        "Quickened Spark": 3,
+        "Mana Edge": 2,
+        "Far Reach": 2,
+        "Clear Mind": 3,
+        "Arcane Lance": 1,
+        "Empowered Release": 5,
+        "Warding Mana": 3,
+        "Overload": 1,
+        "Arcane Momentum": 3,
+        "Spellweaver's Haste": 5,
+        "Resonant Surge": 2,
+        "Arc of Ruin": 1
+      }
+    }
+  ],
+  "bots": [
+    "Takes Wardweave Form and Warding Edge when it's the party's tank (the only member with a shield, or when told), Bladesong Form with Flame or Storm Edge otherwise.",
+    "Tanking: Hurl Blade to pull, Reprisal whenever it can, Release at 3 Resonance or more for threat and a shield, Mark of Challenge on anything attacking someone else, Challenging Glyph when three or more are loose, Last Sigil below 30% health.",
+    "Damage: Arcane Strike on cooldown, Release at 5 Resonance (Flame Burst when crowded, Thunderclap on casters), Arc Cleave against several enemies, Arcane Surge on elites and bosses.",
+    "Interrupts casting creatures with Severing Sigil, as other bots do with Hilt Strike and Hush.",
+    "Party bar buff categories: Edge (Auto, Flame, Frost, Storm, Warding) and Form (Auto, Bladesong, Wardweave)."
+  ],
+  "implementation": [
+    [
+      "New class slot",
+      "A class id of our own in ClassicData (classic's nine are taken), a trainer list, race pairings and talent data from our own files, as for any new class."
+    ],
+    [
+      "Spells",
+      "Every ability is new, in our own spell file. Most map to classic effect and aura types: Edges are weapon imbues like classic's Rockbiter and Flametongue, Runic Ward an absorb, Mark of Challenge a taunt, Severing Sigil an interrupt, Phase Step a blink to the target, Binding Glyph a trap."
+    ],
+    [
+      "Resonance",
+      "A second resource beside mana, kept on the Combatant like combo points but on the caster, with a counter on the player frame. Release reads the active Edge to pick its effect."
+    ],
+    [
+      "Forms",
+      "Two shapeshift auras on the stance bar, as Man-at-Arms stances are. Wardweave's armor from Intellect and threat multiplier are stat and threat auras CharacterStats and Enemy already read."
+    ],
+    [
+      "Talents",
+      "Our talent rules cover the trees; Twin Edge needs two imbues at once, the one new piece."
+    ],
+    [
+      "Bots and the party bar",
+      "Bot logic for both roles, choosing the role by the party, and the Edge and Form categories on the party bar."
+    ],
+    [
+      "Items",
+      "No new item types: swords, mail and shields with Strength, Intellect and Stamina exist. The game would want a few more Strength-and-Intellect pieces at low levels."
+    ]
+  ],
+  "bots_intro": "How a Spellsword bot would fight in either role, and how it picks one."
+}

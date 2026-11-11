@@ -12,6 +12,24 @@ extends StaticBody3D
 @export var vendor := 0
 
 
+## How the NPC looks (HumanoidModel); empty for a look of its own from its
+## name.
+@export var appearance: Dictionary = {}
+
+
+func _ready() -> void:
+	# NPCs are Humans: the model in clothes for their trade, in place of the
+	# placeholder capsule.
+	for part in ["Body", "Tabard"]:
+		if has_node(part):
+			get_node(part).visible = false
+	var model := HumanoidModel.new()
+	add_child(model)
+	model.set_appearance(appearance if not appearance.is_empty() else HumanoidModel.random_appearance(hash(npc_name)))
+	model.outfit = HumanoidModel.outfit_for(trainer, hash(npc_name))
+	model.show_equipment({})
+
+
 ## The id quests use for this NPC: its node name.
 func npc_id() -> String:
 	return String(name)

@@ -171,6 +171,9 @@ static func spell_key(spell: Dictionary) -> String:
 	if spell.is_empty():
 		return "unknown"
 	var spell_name := str(spell.get("SpellName", ""))
+	# The game's own classes' spells name their icon (ClassicData.CLASS_FILES).
+	if spell.has("Icon"):
+		return str(spell.Icon)
 	if CLASS_SPELLS.has(spell_name):
 		return CLASS_SPELLS[spell_name]
 	if WEAPON_SKILLS.has(spell_name):
@@ -210,7 +213,7 @@ static func spell_key(spell: Dictionary) -> String:
 ## A class's emblem, for the portraits of the player and playerbots.
 const CLASS_PORTRAITS := {
 	1: "stance_vanguard", 2: "boon_radiance", 3: "bow_common", 4: "dagger_common", 5: "heal_white",
-	7: "frost", 8: "fire", 9: "shadow", 11: "renew",
+	7: "frost", 8: "fire", 9: "shadow", 10: "sword_rare", 11: "renew",
 }
 ## Words in a creature's name and its portrait, then its kind.
 const CREATURE_PORTRAITS := [

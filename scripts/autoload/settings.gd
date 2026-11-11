@@ -58,7 +58,6 @@ const DEFAULTS := {
 	"bot_count": 8,
 	"bot_min_level": 1,
 	"bot_max_level": 10,
-	"bot_classes": "Classes With Spells",
 	"bot_quests": true,
 	"bot_chat": "Normal",
 	"bot_accept_invites": "Always",
@@ -187,7 +186,7 @@ func _ready() -> void:
 
 
 ## Choices saved under an older name.
-const RENAMED_CHOICES := { "Templars Only": "Classes With Spells" }
+const RENAMED_CHOICES := {}
 
 
 ## Reads an options file's [options] and [keys] into values and bindings,

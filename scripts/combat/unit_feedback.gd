@@ -51,6 +51,9 @@ func reset() -> void:
 	_flash_left = 0.0
 	if _tween:
 		_tween.kill()
+	if _model():
+		_apply_material()
+		return
 	_visual.position = Vector3.ZERO
 	_visual.rotation.x = 0.0
 	_visual.rotation.z = 0.0
@@ -62,6 +65,10 @@ func show_dead() -> void:
 	_dead = true
 	if _tween:
 		_tween.kill()
+	if _model():
+		_model().show_dead()
+		_apply_material()
+		return
 	_visual.position = Vector3.ZERO
 	_visual.set_indexed("rotation:" + fall_axis, -PI / 2.0)
 	_apply_material()
@@ -90,6 +97,9 @@ func _play(sound: String) -> void:
 
 func _on_swung(target: Combatant) -> void:
 	_play("swing")
+	# A character model swings its weapon instead of lunging.
+	if _model():
+		return
 	var offset := target.body.global_position - _combatant.body.global_position
 	offset.y = 0.0
 	if _tween:
@@ -105,6 +115,8 @@ func _on_died() -> void:
 	_apply_material()
 	if _tween:
 		_tween.kill()
+	if _model():
+		return
 	_visual.position = Vector3.ZERO
 	_tween = create_tween()
 	_tween.tween_property(_visual, "rotation:" + fall_axis, -PI / 2.0, FALL_TIME).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
@@ -118,6 +130,15 @@ func _apply_material() -> void:
 		material = _corpse_material
 	for mesh in _meshes:
 		mesh.material_override = material
+	var model := _model()
+	if model:
+		model.set_flash(_flash_left > 0.0)
+		model.set_corpse(_dead and _flash_left <= 0.0)
+
+
+## The unit's character model, when it has one (HumanoidModel).
+func _model() -> HumanoidModel:
+	return _visual.get_node_or_null("HumanoidModel") as HumanoidModel
 
 
 func _build_stars() -> void:

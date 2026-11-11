@@ -63,6 +63,9 @@ var _player_health: Control
 var _player_health_text: Label
 var _player_mana: Control
 var _player_mana_text: Label
+## The Spellsword's Resonance: five gems along the player frame's foot.
+var _resonance: Control
+const RESONANCE_GEM := 4.2
 var _player_level: Label
 var _player_xp: Control
 var _player_xp_text: Label
@@ -141,7 +144,8 @@ var _tooltip: ItemTooltip
 var _unit_tooltip: ItemTooltip
 var _unit_lines: Array = []
 var _chat: ChatFrame
-## Show Frame Rate: frames per second, above the minimap.
+## Show Frame Rate: frames per second, in the top right corner of the screen.
+const FPS_WIDTH := 30.0
 var _fps: Label
 ## Recent loot messages as [text, seconds left].
 ## Party frames: { "bot", "frame", "name", "level", "health", "mana" }.
@@ -274,6 +278,8 @@ func _process(delta: float) -> void:
 	(_player_mana as ColorRect).color = power_color(me)
 	_set_bar(_player_mana, me.mana, me.max_mana)
 	_player_mana_text.text = "%d/%d" % [int(me.mana), me.max_mana]
+	if _resonance:
+		_resonance.queue_redraw()
 	_player_level.text = "Lv %d" % me.level
 	# No XP bar at the level cap, as in classic.
 	_player_xp.get_parent().visible = me.level < ClassicData.MAX_LEVEL
@@ -412,8 +418,11 @@ func _build() -> void:
 	_banner.size.x = window.x
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.visible = false
-	_fps = _label(self, Vector2(map_corner.x - 30, map_corner.y), "", Color(0.6, 1, 0.6))
+	# In the very top right corner of the screen.
+	_fps = _label(self, Vector2(_width - FPS_WIDTH - 1, 0), "", Color(0.6, 1, 0.6))
 	_fps.add_theme_font_size_override("font_size", roundi(SHEET_FONT_SIZE * _ui_scale))
+	_fps.size.x = FPS_WIDTH * _ui_scale
+	_fps.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_fps.visible = false
 	_minimap = Minimap.new()
 	add_child(_minimap)
@@ -608,7 +617,25 @@ func _build_player_frame() -> void:
 	_trough(frame, Vector2(x0, 23), Vector2(inner, 9))
 	_player_mana = _bar(frame, Vector2(x0, 23), Vector2(inner, 9), Color(0.2, 0.4, 0.85))
 	_player_mana_text = _bar_text(frame, Vector2(x0, 23), Vector2(inner, 9))
+	if _player.profile.char_class == ClassicData.CharClass.SPELLSWORD:
+		_resonance = Control.new()
+		_resonance.position = Vector2(x0 + 2, 32.0) * _ui_scale
+		_resonance.size = Vector2(5 * (RESONANCE_GEM + 1.6), RESONANCE_GEM + 1) * _ui_scale
+		_resonance.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_resonance.draw.connect(_draw_resonance)
+		frame.add_child(_resonance)
 	_build_xp_bar()
+
+
+## Lit gems for each point of Resonance, dark ones for the rest.
+func _draw_resonance() -> void:
+	var have := _player.combatant.resonance
+	var r := RESONANCE_GEM * _ui_scale / 2.0
+	for i in 5:
+		var center := Vector2((i * (RESONANCE_GEM + 1.6) + RESONANCE_GEM / 2.0) * _ui_scale, r + 0.5 * _ui_scale)
+		var gem := PackedVector2Array([center + Vector2(0, -r), center + Vector2(r, 0), center + Vector2(0, r), center + Vector2(-r, 0)])
+		_resonance.draw_colored_polygon(gem, Color(0.75, 0.55, 1.0) if i < have else Color(0.12, 0.1, 0.16))
+		_resonance.draw_polyline(gem + PackedVector2Array([gem[0]]), UiStyle.GOLD, maxf(_ui_scale * 0.5, 1.0))
 
 
 ## Width in HUD units a frame's top row needs for a name, a gap and a level

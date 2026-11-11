@@ -19,8 +19,11 @@ const HORDE := [ClassicData.Race.ORC, ClassicData.Race.UNDEAD, ClassicData.Race.
 ## make and remove bots at every step.
 const SYNC_DELAY := 0.4
 ## Options that change which bots are in the world.
-const WORLD_OPTIONS := ["bots_enabled", "bot_count", "bot_min_level", "bot_max_level", "bot_classes"]
+const WORLD_OPTIONS := ["bots_enabled", "bot_count", "bot_min_level", "bot_max_level"]
 
+## player_needs(), and when it was worked out (msec).
+var _player_needs: Dictionary = {}
+var _player_needs_at := 0
 var _player: Player
 var _world: World
 ## Saved bots: { "name", "race", "class", "level", "xp", "state" }, the
@@ -165,7 +168,8 @@ func randomize_bots() -> int:
 ## Whether a saved bot can be a random bot under the current options. Bots
 ## below the level range move up to it; ones above it wait in the roster.
 func _fits(entry: Dictionary) -> bool:
-	if Settings.get_value("bot_classes") != "All Classes" and not int(entry["class"]) in SpellDB.classes_with_spells():
+	# Bots of races and classes not finished yet wait in the roster.
+	if not ClassicData.is_playable(int(entry.race), int(entry["class"])):
 		return false
 	if int(entry.race) not in _races():
 		return false
@@ -175,23 +179,19 @@ func _fits(entry: Dictionary) -> bool:
 	return int(entry.level) <= max_level()
 
 
+## The playable races of the player's faction (all playable ones for a
+## player of a race nobody can make now).
 func _races() -> Array:
-	return HORDE if GameState.race in HORDE else ALLIANCE
+	var faction: Array = HORDE if GameState.race in HORDE else ALLIANCE
+	var playable := faction.filter(func(r: int) -> bool: return r in ClassicData.PLAYABLE_RACES)
+	return playable if not playable.is_empty() else ClassicData.PLAYABLE_RACES
 
 
-## A new bot of the player's faction: a random race and an allowed class,
-## a level in the range, and a name nobody has.
+## A new bot of the player's faction: a random playable race and class
+## (ClassicData.is_playable), a level in the range, and a name nobody has.
 func _new_entry() -> Dictionary:
 	var race: int = _races().pick_random()
-	var classes: Array = ClassicData.CLASS_NAMES.keys().filter(func(c: int) -> bool: return ClassicData.is_allowed(race, c))
-	if Settings.get_value("bot_classes") != "All Classes":
-		# A race that can be one of the classes with spells (Horde Templars don't exist).
-		var casters := _races().filter(func(r: int) -> bool:
-			return SpellDB.classes_with_spells().any(func(c: int) -> bool: return ClassicData.is_allowed(r, c)))
-		race = casters.pick_random() if not casters.is_empty() else race
-		classes = ClassicData.CLASS_NAMES.keys().filter(func(c: int) -> bool: return ClassicData.is_allowed(race, c))
-		var with_spells := classes.filter(func(c: int) -> bool: return c in SpellDB.classes_with_spells())
-		classes = with_spells if not with_spells.is_empty() else classes
+	var classes: Array = ClassicData.CLASS_NAMES.keys().filter(func(c: int) -> bool: return ClassicData.is_playable(race, c))
 	var entry := {
 		"name": _new_name(), "race": race, "class": classes.pick_random(),
 		"level": randi_range(min_level(), max_level()), "xp": 0,
@@ -227,6 +227,8 @@ func _spawn(entry: Dictionary, at: Vector3) -> Bot:
 	profile.char_class = int(entry["class"]) as ClassicData.CharClass
 	profile.level = clampi(int(entry.level), 1, ClassicData.MAX_LEVEL)
 	profile.xp = int(entry.xp)
+	if entry.get("appearance") is Dictionary:
+		profile.appearance = entry.appearance
 	_equip_starting_gear(profile)
 	_restore_equipment(profile, entry.get("equipment", {}))
 	var bot: Bot = BOT_SCENE.instantiate()
@@ -313,6 +315,8 @@ func _store(bot: Bot) -> void:
 		entry.quests = bot.quests.to_dict()
 		entry.bag = bot.bag.to_dict()
 		entry.equipment = _saved_equipment(bot.profile)
+		if not bot.profile.appearance.is_empty():
+			entry.appearance = bot.profile.appearance
 
 
 func _number_party() -> void:
@@ -581,6 +585,35 @@ func _places() -> Array:
 
 
 ## Creature entries the zone spawns.
+## What the player's quests underway still need: { "creatures": creature
+## entries to kill or that drop a wanted item, "items": quest items } as sets.
+## Random bots leave these alone (Bot._can_hunt, _nearest_chest); party bots
+## help. Worked out at most once a second.
+func player_needs() -> Dictionary:
+	var now := Time.get_ticks_msec()
+	if not _player_needs.is_empty() and now - _player_needs_at < 1000:
+		return _player_needs
+	_player_needs_at = now
+	var creatures := {}
+	var items := {}
+	for id: int in GameState.quests:
+		var quest := QuestDB.get_quest(id)
+		var lines := QuestLog.objective_lines(id)
+		for i in quest.kills.size():
+			if not lines[i][1]:
+				creatures[int(quest.kills[i][0])] = true
+		for j in quest.items.size():
+			if not lines[quest.kills.size() + j][1]:
+				items[int(quest.items[j][0])] = true
+	if not items.is_empty():
+		for entry: int in spawn_entries():
+			var loot := int(Enemy.creature_data(entry).get("LootId", 0))
+			if LootTable.quest_items(loot).any(func(item: int) -> bool: return items.has(item)):
+				creatures[entry] = true
+	_player_needs = { "creatures": creatures, "items": items }
+	return _player_needs
+
+
 func spawn_entries() -> Array:
 	if _spawn_entries.is_empty():
 		for spawn: Array in _spawns():
@@ -669,6 +702,7 @@ func _load_roster() -> void:
 				"quests": entry.get("quests", {}),
 				"bag": entry.get("bag", {}),
 				"equipment": entry.get("equipment", {}),
+				"appearance": entry.get("appearance", {}),
 			})
 
 

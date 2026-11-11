@@ -5,6 +5,8 @@ extends Node
 ## Must be a direct child of the unit's body.
 
 signal swung(target: Combatant)
+## The off hand swung at its target (Two-Weapon Fighting).
+signal off_hand_swung(target: Combatant)
 signal took_damage(amount: int, source: Combatant, crit: bool)
 ## A hit that was turned away entirely, such as a miss, dodge or resist.
 signal avoided(text: String, source: Combatant)
@@ -34,6 +36,8 @@ signal cast_interrupted
 ## unit's side) and procEx (how it went: PROC_EX_*). `other` is the other
 ## unit, `spell` the ability or spell ({} for a plain swing).
 signal proc_event(flags: int, ex: int, other: Combatant, spell: Dictionary, amount: int)
+## A shield soaked some damage (Runic Retaliation strikes back with it).
+signal absorbed(amount: int, source: Combatant)
 
 ## ProcFlags (SpellDefines.h).
 const PROC_KILL := 0x2
@@ -113,6 +117,15 @@ var off_swing_interval := 0.0
 ## Called with the target before a main-hand swing; returns true if it made
 ## the attack itself (Mighty Blow and Sweeping Cut replace the swing).
 var swing_replacer: Callable
+## The Spellsword's power built up in the blade, 0 to 5 (SpellswordAbilities).
+var resonance := 0
+## Changes damage before shields take it: (amount, school, source) -> amount
+## (the Spellsword's Mirror Guard and Warding Mana).
+var damage_filter: Callable
+## A unit that takes a share of this one's damage while it's near (Bastion of
+## Glyphs), and the share.
+var guardian: Combatant
+var guardian_share := 0.0
 ## Swings owed right away (Swordsman's Craft, Reckoner's Fury).
 var extra_attacks := 0
 var invulnerable := false
@@ -146,6 +159,7 @@ func reset() -> void:
 	invulnerable = false
 	_stun_left = 0.0
 	_combat_left = 0.0
+	resonance = 0
 	clear_auras()
 
 
@@ -211,6 +225,9 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 	# The caster's talents may lengthen it or strengthen its effects, and its
 	# damage over time (SpellMods DURATION, ALL_EFFECTS, DOT).
 	var length := SpellDB.duration(spell, caster)
+	# Steadfast Glyphs shortens fears and stuns put on the unit.
+	if length > 0.0 and caster != self and (SpellDB.has_effect(spell, SpellDB.AURA_MOD_FEAR, true) or SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true)):
+		length *= 1.0 - minf(aura_total(SpellDB.AURA_CONTROL_DURATION_PCT), 100.0) / 100.0
 	var amounts := []
 	for i in 3:
 		var amount := SpellDB.effect_value(spell, i, caster.level, caster) * stacks
@@ -560,7 +577,17 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	var percent := 1.0 + aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_TAKEN, 1 << school) / 100.0
 	if source and is_instance_valid(source):
 		percent *= 1.0 + source.damage_done_percent(school) / 100.0
+	# Rooted Stance: critical strikes on the unit hurt less.
+	if crit:
+		percent *= 1.0 - aura_total(SpellDB.AURA_CRIT_DAMAGE_TAKEN_PCT) / 100.0
 	amount = maxi(roundi(amount * percent), 0)
+	if damage_filter.is_valid():
+		amount = int(damage_filter.call(amount, school, source))
+	# Bastion of Glyphs: a guardian close by takes a share.
+	if guardian and is_instance_valid(guardian) and guardian != self and guardian.is_alive() and amount > 0 			and guardian.guardian_share > 0.0 and distance_to(guardian) <= 10.0:
+		var share := roundi(amount * guardian.guardian_share)
+		amount -= share
+		guardian.take_damage(share, source, false, school)
 	amount = _absorb(amount, school, source)
 	enter_combat()
 	if amount <= 0:
@@ -593,6 +620,8 @@ func _absorb(amount: int, school: int, source: Combatant) -> int:
 			var soaked := mini(amount, int(aura.amounts[i]))
 			aura.amounts[i] -= soaked
 			amount -= soaked
+			if soaked > 0:
+				absorbed.emit(soaked, source)
 			if amount <= 0:
 				avoid("Absorb", source)
 			if aura.amounts[i] <= 0:
@@ -652,6 +681,8 @@ func stun(duration: float) -> void:
 	if randf() * 100.0 < aura_total_exact(AURA_MECHANIC_RESISTANCE, MECHANIC_STUN):
 		avoid("Resist", null)
 		return
+	# Steadfast Glyphs shortens them.
+	duration *= 1.0 - minf(aura_total(SpellDB.AURA_CONTROL_DURATION_PCT), 100.0) / 100.0
 	_stun_left = maxf(_stun_left, duration)
 	stunned.emit()
 
@@ -688,6 +719,7 @@ func _physics_process(delta: float) -> void:
 		# The off hand swings on its own timer, for half damage.
 		if off_swing_interval > 0.0 and _off_swing_left == 0.0 and attack_target:
 			var target := attack_target
+			off_hand_swung.emit(target)
 			# Two-Weapon Craft raises the off hand's share (SPELL_AURA_MOD_OFFHAND_DAMAGE_PCT).
 			var share := OFF_HAND_DAMAGE * (1.0 + aura_total(AURA_MOD_OFFHAND_DAMAGE_PCT) / 100.0)
 			var damage := (randf_range(off_min_damage, off_max_damage) + attack_power / 14.0 * off_swing_interval) * share

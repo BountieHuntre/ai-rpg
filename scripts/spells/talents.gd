@@ -255,17 +255,23 @@ static func _requirement_met(spell: Dictionary, equipment: Dictionary, form: int
 	return false
 
 
-## The trees a playerbot spends in, main tree first: Men-at-Arms tank in
-## Bulwark with a shield in a party, else fight in Blademastery; Templars and
-## Clerics heal (Grace, Mercy).
-static func bot_trees(char_class: int, tanking: bool) -> Array[int]:
+## The trees a playerbot spends in for its role (Bot.current_role: "Tank",
+## "Healer" or "Damage"), main tree first: Men-at-Arms tank in Bulwark and
+## fight in Blademastery; Templars heal in Grace, tank in Aegis, fight in
+## Zeal; Clerics heal in Mercy, fight in Umbra; Spellswords tank in
+## Wardweave, fight in Bladesong.
+static func bot_trees(char_class: int, role: String) -> Array[int]:
 	var order: Array[int] = [0, 1, 2]
 	match char_class:
 		ClassicData.CharClass.WARRIOR:
-			if tanking:
-				order = [2, 0, 1]
+			if role == "Tank":
+				order.assign([2, 0, 1])
+		ClassicData.CharClass.PALADIN:
+			order.assign({ "Tank": [1, 0, 2], "Damage": [2, 0, 1] }.get(role, [0, 1, 2]))
 		ClassicData.CharClass.PRIEST:
-			order = [1, 0, 2]
+			order.assign([2, 0, 1] if role == "Damage" else [1, 0, 2])
+		ClassicData.CharClass.SPELLSWORD:
+			order.assign([1, 2, 0] if role == "Tank" else [0, 2, 1])
 	return order
 
 

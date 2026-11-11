@@ -16,7 +16,8 @@ const FLYOUTS := {
 	GREATER_BOONS: { "name": "Greater Boons", "prefix": "Greater Boon of" },
 }
 ## SpellFamilyName of the classes' own spells (mage to paladin and shaman).
-const CLASS_SPELL_FAMILIES := [3, 4, 5, 6, 7, 8, 9, 10, 11]
+## 12 is the Spellsword's, the game's own class (ClassicData.CLASS_FILES).
+const CLASS_SPELL_FAMILIES := [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 const LONG_BUFF_FROM := 300.0
 const LONG_BUFF := 3600.0
 const LONG_BUFF_DURATION_INDEX := 42
@@ -134,6 +135,12 @@ const CREATURE_UNDEAD := 6
 const ATTR_EX2_CANT_CRIT := 0x20000000
 const ATTR_EX3_ALWAYS_HIT := 0x40000
 const ATTR_EX3_DEATH_PERSISTENT := 0x100000
+## The game's own aura types (no classic number), for the Spellsword's
+## talents: stuns and fears on the unit last this many percent shorter
+## (Steadfast Glyphs), and critical strikes on it deal this many percent less
+## (Rooted Stance). Read by Combatant.
+const AURA_CONTROL_DURATION_PCT := 1001
+const AURA_CRIT_DAMAGE_TAKEN_PCT := 1002
 ## SPELL_AURA_MOD_SHAPESHIFT: stances and forms.
 const AURA_MOD_SHAPESHIFT := 36
 
@@ -155,9 +162,10 @@ const DURATIONS := {
 	28: 5.0, 29: 12.0, 30: 1800.0, 31: 8.0, 32: 6.0, 35: 4.0, 39: 2.0, 42: 3600.0, 64: 40.0, 85: 18.0,
 	86: 21.0, 106: 24.0, 205: 27.0, 347: 900.0,
 }
-const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 12: 5.0, 13: 50000.0, 35: 35.0, 95: 25.0 }
+## The Spellsword's own: 901 (25 yards: Hurl Blade), 902 (8 to 20 yards: Phase Step).
+const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 12: 5.0, 13: 50000.0, 35: 35.0, 95: 25.0, 901: 25.0, 902: 20.0 }
 ## Least ranges: Rush needs room to run.
-const MIN_RANGES := { 95: 8.0 }
+const MIN_RANGES := { 95: 8.0, 902: 8.0 }
 const RADII := { 0: 0.0, 7: 2.0, 9: 20.0, 10: 30.0, 12: 100.0, 13: 10.0, 14: 8.0 }
 
 static var _data: Dictionary
@@ -387,6 +395,7 @@ const TRAINER_CLASSES := {
 	"warrior": ClassicData.CharClass.WARRIOR,
 	"paladin": ClassicData.CharClass.PALADIN,
 	"priest": ClassicData.CharClass.PRIEST,
+	"spellsword": ClassicData.CharClass.SPELLSWORD,
 }
 
 
@@ -469,6 +478,10 @@ static func book_tab(char_class: int, id: int) -> int:
 static func _get_data() -> Dictionary:
 	if _data.is_empty():
 		_data = JSON.parse_string(FileAccess.get_file_as_string(SPELLS_PATH))
+		# The game's own classes, over classic's.
+		for extra: Dictionary in ClassicData.class_files():
+			for key in ["spells", "chains", "start_spells", "talents", "book_tabs", "links", "trainers"]:
+				(_data[key] as Dictionary).merge(extra.get(key, {}), true)
 		_lengthen_buffs()
 	return _data
 

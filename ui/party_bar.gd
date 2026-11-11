@@ -31,6 +31,13 @@ const MODE_TEXT := {
 	"Passive": "Passive: only fights back.",
 }
 const EVERYONE := "Everyone"
+## A role's picture and what it does.
+const ROLE_ICONS := { "Tank": "shield_common", "Healer": "heal_gold", "Damage": "strike_red" }
+const ROLE_TEXT := {
+	"Tank": "Tank: holds the enemies' attention and takes the hits.",
+	"Healer": "Healer: keeps the party alive first.",
+	"Damage": "Damage: fights all out, healing only in an emergency.",
+}
 const DIM := Color(0.45, 0.45, 0.45)
 const LIT := Color(1, 0.85, 0.4)
 
@@ -132,7 +139,7 @@ func _snapshot() -> String:
 		var options := PackedStringArray()
 		for category: String in Bot.BUFF_CATEGORIES.get(bot.profile.char_class, []):
 			options.append("%s=%s:%s" % [category, bot.buff_choice(category), ",".join(bot.buff_options(category))])
-		parts.append("%s %d %d %s %s %s %d %s %s" % [bot.profile.char_name, bot.profile.level, bot.command, bot.fight_mode(),
+		parts.append("%s %s %s %d %d %s %s %s %d %s %s" % [bot.role, bot.current_role(), bot.profile.char_name, bot.profile.level, bot.command, bot.fight_mode(),
 			bot.errand(), str(bot == _picked), bot.spells_to_train().size(), str(_near_trainer(bot) != null), ";".join(options)])
 	return "|".join(parts)
 
@@ -169,6 +176,9 @@ func _rebuild() -> void:
 		var next: String = Bot.BEHAVIORS[(Bot.BEHAVIORS.find(mode) + (Bot.BEHAVIORS.size() - 1 if right_click else 1)) % Bot.BEHAVIORS.size()]
 		for bot in _targets():
 			bot.behavior = next)
+	# Its role, for one member whose class has more than one.
+	if one and one.roles().size() > 1:
+		x = _role_slot(one, x, y)
 	var vendor := _near_vendor()
 	x = _slot(x, y, "coin", false, vendor != null,
 		["Sell", "Sell junk to %s.\nRight-click: sell everything in the bag." % vendor.npc_name if vendor else "Stand near a vendor to sell."], _sell)
@@ -257,6 +267,24 @@ func _finish(box: Control, view: Control, lit: bool, enabled: bool, lines: Array
 		if enabled:
 			pressed.call(click.button_index == MOUSE_BUTTON_RIGHT)
 			_rebuild.call_deferred())
+
+
+## The member's role: click for the next its class can play (Auto, then
+## each), right-click for Auto. Auto shows the role it takes, marked A.
+func _role_slot(bot: Bot, x: float, y: float) -> float:
+	var shown := bot.current_role()
+	var box := _slot_box(x, y)
+	var choices: Array = [""] + bot.roles()
+	var lines := ["Role: %s%s" % [shown, " (Auto)" if bot.role.is_empty() else ""], ROLE_TEXT.get(shown, ""),
+		"Click for the next role, right-click for Auto. Its talents follow its role."]
+	x = _slot(x, y, ROLE_ICONS.get(shown, "strike"), false, true, lines, func(right_click: bool) -> void:
+		if right_click:
+			bot.set_role("")
+		else:
+			bot.set_role(choices[(choices.find(bot.role) + 1) % choices.size()]), box)
+	if bot.role.is_empty():
+		_corner(box, "A")
+	return x
 
 
 func _portrait(bot: Bot, x: float, y: float) -> float:

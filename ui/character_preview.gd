@@ -16,7 +16,10 @@ var _dragging := false
 
 var _model := Node3D.new()
 var _body := MeshInstance3D.new()
+var _nose := MeshInstance3D.new()
 var _material := StandardMaterial3D.new()
+## The Human model, made when first shown.
+var _human: HumanoidModel
 
 
 func _ready() -> void:
@@ -60,7 +63,7 @@ func _ready() -> void:
 	_body.position.y = 0.9
 	_body.material_override = _material
 	_model.add_child(_body)
-	var nose := MeshInstance3D.new()
+	var nose := _nose
 	var box := BoxMesh.new()
 	box.size = Vector3(0.3, 0.25, 0.4)
 	nose.mesh = box
@@ -73,9 +76,37 @@ func _ready() -> void:
 	viewport.add_child(_model)
 
 
-func show_race(race: ClassicData.Race) -> void:
+## Shows a race: Humans as the model, with an appearance and what they wear
+## (Inventory.Slot -> item stack); other races as the placeholder.
+func show_race(race: ClassicData.Race, appearance := {}, equipment := {}) -> void:
+	var human := race == ClassicData.Race.HUMAN
+	_body.visible = not human
+	_nose.visible = not human
+	if human:
+		_model.scale = Vector3.ONE
+		if not _human:
+			_human = HumanoidModel.new()
+			_model.add_child(_human)
+		_human.visible = true
+		_human.set_appearance(appearance if not appearance.is_empty() else HumanoidModel.random_appearance(0))
+		_human.show_equipment(equipment)
+		return
+	if _human:
+		_human.visible = false
 	_model.scale = Player.race_scale(race)
 	_material.albedo_color = Player.race_color(race)
+
+
+## What a new character of a race and class starts out wearing.
+static func kit_equipment(race: ClassicData.Race, char_class: ClassicData.CharClass) -> Dictionary:
+	var equipment := {}
+	for entry: Array in ClassicData.starting_kit(race, char_class).items:
+		var item := ItemDB.get_item(int(entry[0]))
+		for slot: int in Inventory.SLOTS_FOR_TYPE.get(int(item.get("InventoryType", 0)), []):
+			if not equipment.has(slot):
+				equipment[slot] = { "id": int(entry[0]), "count": 1 }
+				break
+	return equipment
 
 
 func _gui_input(event: InputEvent) -> void:

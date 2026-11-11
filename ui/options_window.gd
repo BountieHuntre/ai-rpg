@@ -64,7 +64,6 @@ const CATEGORIES := {
 		["bot_count", "Random Bots in the World", "number", [0, 400, 5, ""]],
 		["bot_min_level", "Random Bot Lowest Level", "number", [1, 60, 1, ""]],
 		["bot_max_level", "Random Bot Highest Level", "number", [1, 60, 1, ""]],
-		["bot_classes", "Bot Classes", "choice", ["All Classes", "Classes With Spells"]],
 		["bot_quests", "Random Bots Do Quests", "check", null],
 		["bot_chat", "Bot Chat", "choice", ["Off", "Quiet", "Normal", "Chatty"]],
 		["bot_accept_invites", "Accept Party Invitations", "choice", ["Always", "Near My Level", "Never"]],

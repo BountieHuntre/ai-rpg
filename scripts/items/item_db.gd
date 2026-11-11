@@ -29,7 +29,8 @@ const ARMOR_TYPES := { 1: "Cloth", 2: "Leather", 3: "Mail", 4: "Plate", 5: "Buck
 const STAT_MODS := { 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "Intellect", 6: "Spirit", 7: "Stamina" }
 ## Every playable class in an AllowableClass mask. Items allowing all of them
 ## show no "Classes:" line.
-const ALL_CLASSES_MASK := 1503
+## Every class, the Spellsword (10) included.
+const ALL_CLASSES_MASK := 2015
 ## Unmet requirements show in this red, as in the classic tooltip.
 const UNMET := Color(1, 0.13, 0.13)
 ## Stat changes when comparing items.

@@ -140,6 +140,7 @@ func list_characters() -> Array[Dictionary]:
 			characters.append({
 				"name": str(data.name), "race": int(data.race), "class": int(data["class"]),
 				"level": int(data.level), "path": path, "created": int(data.get("created", 0)),
+				"appearance": data.get("appearance", {}), "equipment": _read_equipment(data.get("equipment", {})),
 			})
 	characters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.created < b.created)
 	return characters
@@ -169,13 +170,14 @@ func check_name(name: String) -> String:
 
 
 ## Makes a new level 1 character and saves it. Returns an error message, or "".
-func create_character(name: String, new_race: ClassicData.Race, new_class: ClassicData.CharClass) -> String:
+func create_character(name: String, new_race: ClassicData.Race, new_class: ClassicData.CharClass, look := {}) -> String:
 	var error := check_name(name)
 	if not error.is_empty():
 		return error
 	char_name = format_name(name)
 	race = new_race
 	char_class = new_class
+	appearance = look.duplicate()
 	_created = int(Time.get_unix_time_from_system())
 	save_path = _character_path(char_name)
 	_start_fresh()
@@ -263,10 +265,11 @@ func _start_spells() -> void:
 	action_bar.clear()
 	action_bar.resize(ALL_SLOTS)
 	action_bar.fill(0)
-	# Stances have the stance bar.
+	# Stances have the stance bar, and passives (Parry) no button.
 	var slot := 0
 	for id in known_spells:
-		if not SpellDB.is_stance_bar_spell(SpellDB.get_spell(id)):
+		var spell := SpellDB.get_spell(id)
+		if not SpellDB.is_stance_bar_spell(spell) and not SpellDB.is_passive(spell):
 			action_bar[slot] = id
 			slot += 1
 
@@ -295,6 +298,7 @@ func save_to_disk() -> bool:
 		"created": _created,
 		"race": race,
 		"class": char_class,
+		"appearance": appearance,
 		"level": level,
 		"xp": xp,
 		"money": money,
@@ -367,6 +371,7 @@ func _apply_save(data: Dictionary) -> void:
 	buyback.clear()
 	race = int(data.race) as ClassicData.Race
 	char_class = int(data["class"]) as ClassicData.CharClass
+	appearance = data.get("appearance", {}) if data.get("appearance") is Dictionary else {}
 	level = clampi(int(data.level), 1, ClassicData.MAX_LEVEL)
 	xp = int(data.xp)
 	money = int(data.money)
@@ -398,6 +403,10 @@ func _apply_save(data: Dictionary) -> void:
 			action_bar.resize(ALL_SLOTS)
 			for i in range(had, ALL_SLOTS):
 				action_bar[i] = 0
+		# Older characters started with passives (Parry) on the bar.
+		for i in action_bar.size():
+			if action_bar[i] > 0 and SpellDB.is_passive(SpellDB.get_spell(action_bar[i])):
+				action_bar[i] = 0
 	else:
 		_start_spells()
 	# Ranks in each talent; saves from before talents have none.
@@ -407,6 +416,15 @@ func _apply_save(data: Dictionary) -> void:
 		talents[key] = int(saved_talents[key])
 	talent_reset_cost = int(data.get("talent_reset_cost", 0))
 	Talents.validate(self)
+
+
+## Saved equipment ({ "slot": stack }) as Inventory.Slot -> stack.
+func _read_equipment(saved) -> Dictionary:
+	var out := {}
+	if saved is Dictionary:
+		for slot: String in saved:
+			out[int(slot)] = _read_stack(saved[slot])
+	return out
 
 
 func _read_stack(stack: Dictionary) -> Dictionary:
