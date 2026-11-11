@@ -1,5 +1,15 @@
 [
 	{
+		"version": "0.10.0",
+		"date": "11-11-2026",
+		"notes": [
+			"Every race is now playable: Orcs, Wood Elves, the Undead, Trolls and Hornkin join Humans, Dwarves and Gnomes, each with a model of its own.",
+			"Orcs have tusks and a heavy jaw, Wood Elves long ears, the Undead bare bone and glowing eyes, Trolls great tusks and long noses, and Hornkin horns, a snout and a tail.",
+			"Each race has its own skin and hair colours to choose from at character creation.",
+			"Playerbots of the Horde races now come into the world alongside a Horde character."
+		]
+	},
+	{
 		"version": "0.9.1",
 		"date": "11-11-2026",
 		"notes": [
