@@ -1,5 +1,22 @@
 [
 	{
+		"version": "0.7.0",
+		"date": "11-11-2026",
+		"notes": [
+			"New class: the Spellsword, a fighter who inscribes Edges of flame, frost, storm or warding on their blade and releases the Resonance their hits build. Tank in Wardweave Form or deal damage in Bladesong Form. Train with Magister Ilsabet Rhee in the priory or Tamsin Vey in Wexford.",
+			"Humans now have real 3D models, male and female, with animations for walking, running, strafing, jumping, sitting, attacking, blocking, casting, getting hit, being stunned, dying and emotes (/wave, /bow, /cheer, /laugh, /cry, /dance, /thank).",
+			"Your weapon and shield show in your hands, and your armour's colours show on your character.",
+			"Choose your body, skin, hair, hair colour and beard when making a Human character.",
+			"Human playerbots and townsfolk use the new models too, dressed for their trade.",
+			"Party bar: set a party member's role (Tank, Healer or Damage). They respec their talents and fight to match.",
+			"For now, new characters and playerbots can only be Humans of the classes with spells (Man-at-Arms, Templar, Cleric and Spellsword). Other races and classes return when they're finished; characters you already made still play.",
+			"Playerbots outside your party leave the creatures and chests your quests need to you.",
+			"Passive abilities such as Parry no longer go on your action bar, and say Passive in the spellbook.",
+			"Deleting a character accepts \"delete\" in any case, and Enter confirms.",
+			"The frame rate counter now sits in the top right corner."
+		]
+	},
+	{
 		"version": "0.6.1",
 		"date": "11-06-2026",
 		"notes": [
