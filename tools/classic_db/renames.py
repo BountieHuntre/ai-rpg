@@ -203,6 +203,7 @@ ITEMS = {
     "Kobold Mining Shovel": "Burrowling Shovel",
     "Pitted Defias Shortsword": "Pitted Brigand Shortsword",
     "Red Burlap Bandana": "Red Sackcloth Mask",
+    "Red Defias Mask": "Red Brigand Mask",
     "Slitherskin Mackerel": "Slick Mackerel",
     "Beatstick": "Knobbed Cudgel",
     "Long Bo Staff": "Long Quarterstaff",

@@ -4,6 +4,8 @@ extends RefCounted
 ## tooltip, quality colors and money formatting.
 
 const ITEMS_PATH := "res://data/classic/items.json"
+## The game's own items (and vendors' stock of them, VendorWindow).
+const OWN_ITEMS_PATH := "res://data/items.json"
 
 enum Quality { POOR, COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 const QUALITY_COLORS := {
@@ -47,12 +49,23 @@ static var _items: Dictionary
 const MAX_STACK := 20
 
 
+static var _own: Dictionary
+
+
+## data/items.json: the game's own items and what vendors sell of them.
+static func own_items() -> Dictionary:
+	if _own.is_empty() and FileAccess.file_exists(OWN_ITEMS_PATH):
+		_own = JSON.parse_string(FileAccess.get_file_as_string(OWN_ITEMS_PATH))
+	return _own
+
+
 static func get_item(id: int) -> Dictionary:
 	if _items.is_empty():
 		_items = JSON.parse_string(FileAccess.get_file_as_string(ITEMS_PATH))
 		# The game's own classes' items (the Spellsword's starting sword).
 		for extra: Dictionary in ClassicData.class_files():
 			_items.merge(extra.get("items", {}), true)
+		_items.merge(own_items().get("items", {}), true)
 		for key: String in _items:
 			if int(_items[key].get("stackable", 1)) > 1:
 				_items[key].stackable = MAX_STACK

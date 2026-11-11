@@ -114,7 +114,7 @@ const MAIN_PROPS := {
 }
 const OFF_PROPS := { 0: "axe", 4: "mace", 7: "sword", 13: "fist", 15: "dagger" }
 ## Head armour subclass -> helm (cloth hood, leather cap, mail coif, plate helm).
-const HELMS := { 0: "Helm_cap", 1: "Helm_hood", 2: "Helm_cap", 3: "Helm_coif", 4: "Helm_plate" }
+const HELMS := { 0: "Helm_hood", 1: "Helm_hood", 2: "Helm_cap", 3: "Helm_coif", 4: "Helm_plate" }
 ## Races whose faces stick out of a closed plate helm wear it open-faced.
 const OPEN_HELM_RACES := ["troll", "hornkin"]
 ## Ranged weapon subclass -> the prop drawn while shooting, and how it's shot.

@@ -109,3 +109,7 @@ creature_template ExtraFlags lack CREATURE_EXTRA_FLAG_NO_AGGRO_ON_SIGHT (0x2).
 
 The CMaNGOS projects are GPL-licensed. Check the licensing of this data before
 shipping the game commercially.
+
+Unlike classic, `EXTRA_LOOT` in `extract.py` adds the Red Defias Mask (7997)
+to the Defias Bandit's and Defias Rogue Wizard's loot at 2%, about what
+classic's level 10+ Defias drop it at (1.4-2.6%), so a low-level helm exists.

@@ -33,6 +33,11 @@ var _rebuild_queued := false
 static func vendor_data(entry: int) -> Dictionary:
 	if _vendors.is_empty():
 		_vendors = JSON.parse_string(FileAccess.get_file_as_string(VENDORS_PATH))
+		# The game's own items some vendors sell too (data/items.json).
+		var own: Dictionary = ItemDB.own_items().get("vendors", {})
+		for key: String in own:
+			if _vendors.has(key):
+				_vendors[key].items = _vendors[key].items + own[key]
 	return _vendors.get(str(entry), {})
 
 

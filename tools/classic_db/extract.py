@@ -43,6 +43,13 @@ AI_ACTIONS = {1, 11, 25, 39, 44, 54, 57}
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire; Innkeeper Farley
 # and Kurran Steele (Cloth & Leather Armor) from Goldshire.
 VENDORS = [152, 1213, 295, 74, 54]
+# Loot added to creatures that classic didn't give it (unlike classic): the
+# Red Defias Mask (7997), which every Defias of level 10 and up drops about 2%
+# of the time in classic (creature_loot_template: 1.4-2.6%, mostly about 2),
+# also drops from Harrowfield's level 8-10 brigands, the Defias Bandit and
+# Defias Rogue Wizard, the only helm a low-level character can find.
+# creature_template entry -> [(item, chance)].
+EXTRA_LOOT = {116: [(7997, 2.0)], 474: [(7997, 2.0)]}
 
 # Quests whose rules (objectives, level, XP, money, rewards, chain) the game's
 # own quests are built on. Titles, text and quest givers are the game's own,
@@ -330,6 +337,9 @@ def main(path):
         loot_id = str(creature["LootId"])
         if loot_id != "0" and loot_id in loot_rows:
             creature_loot[loot_id] = loot_entries(loot_rows[loot_id])
+            for item, chance in EXTRA_LOOT.get(int(creature["Entry"]), []):
+                creature_loot[loot_id].append({"item": item, "chance": chance, "group": 0,
+                                               "min_or_ref": 1, "max": 1, "condition": 0})
             pending.extend(creature_loot[loot_id])
     while pending:
         entry = pending.pop()
