@@ -20,8 +20,11 @@ func can_take(id: int, level: int) -> bool:
 	# Grey quests are taken too: they open the chains behind them.
 	if int(quest.min_level) > level:
 		return false
+	# A negative PrevQuestId is a quest to have underway (QuestLog.can_take).
 	var prev := int(quest.prev)
-	return prev <= 0 or prev in done
+	if prev < 0:
+		return active.has(-prev)
+	return prev == 0 or prev in done
 
 
 func accept(id: int) -> void:

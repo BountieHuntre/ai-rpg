@@ -67,6 +67,10 @@ RACES = {
 	"burrowling": {"legs": 0.5, "torso": 0.6, "width": 0.85, "head": 1.15, "hands": 1.15, "props": 0.7, "species": "burrowling"},
 	"mirefin": {"legs": 0.45, "torso": 0.62, "width": 1.0, "head": 1.45, "hands": 1.1, "props": 0.75, "species": "mirefin"},
 	"ditchjaw": {"legs": 1.04, "torso": 1.0, "width": 1.06, "head": 1.05, "hands": 1.1, "props": 1.05, "species": "ditchjaw"},
+	"tuskfolk": {"legs": 0.78, "torso": 0.92, "width": 1.32, "head": 1.12, "hands": 1.2, "props": 0.95, "limbs": 1.2,
+				 "species": "tuskfolk"},
+	"imp": {"legs": 0.52, "torso": 0.5, "width": 0.68, "head": 1.45, "hands": 1.15, "props": 0.6, "limbs": 0.62,
+			"species": "imp"},
 }
 RACE = RACES["human"]
 HIP_Z = 0.96
@@ -440,7 +444,9 @@ def _limbs(b, f):
 def species_parts(species):
 	"""A humanoid creature's head (on the Head bone, in place of the human
 	head) and tail: burrowlings rat-snouted with round ears and a thin tail,
-	mirefin a great fish head with fins, ditchjaw a hyena's head and mane."""
+	mirefin a great fish head with fins, ditchjaw a hyena's head and mane,
+	tuskfolk a boar's head with tusks and a bristly ridge down the back, imps
+	big-eared and horned with a thin barbed tail."""
 	head = Builder("Species_head")
 	tail = Builder("Species_tail")
 	if species == "burrowling":
@@ -473,6 +479,47 @@ def species_parts(species):
 		head.box((0, 0.2, 1.6), (0.06, 0.12, 0.02), "Head", "trim")
 		head.box((0, -0.11, 1.6), (0.07, 0.07, 0.34), "Head", "hair", top=(1.0, 1.4))
 		tail.beam((0, -0.13, 0.98), (0, -0.38, 0.78), 0.08, 0.08, "Hips", "hair", taper=0.6)
+	elif species == "tuskfolk":
+		# A boar's head: broad skull, a long snout ending in a flat nose, tusks
+		# curving up from the jaw, small drooping ears and a bristly crown.
+		head.loft([((0, -0.1, 1.7), 0.11, 0.11, "Head"), ((0, 0.01, 1.72), 0.14, 0.14, "Head"),
+				   ((0, 0.14, 1.66), 0.095, 0.09, "Head"), ((0, 0.27, 1.62), 0.07, 0.062, "Head")],
+				  ["skin", "skin", "skin"], sides=8, cap_slots=("skin", "skin"))
+		head.box((0, 0.285, 1.62), (0.11, 0.025, 0.09), "Head", "skin", shade=0.7)
+		head.box((0, 0.3, 1.62), (0.06, 0.01, 0.03), "Head", "eyes")
+		head.box((0, 0.17, 1.575), (0.13, 0.16, 0.04), "Head", "skin", top=(0.9, 0.9), shade=0.85)
+		for x in (-1, 1):
+			head.box((0.075 * x, 0.11, 1.75), (0.03, 0.03, 0.025), "Head", "eyes")
+			head.box((0.07 * x, 0.12, 1.775), (0.05, 0.03, 0.02), "Head", "hair")
+			head.beam((0.06 * x, 0.2, 1.59), (0.11 * x, 0.25, 1.7), 0.035, 0.035, "Head", "tusk", taper=0.35)
+			head.beam((0.12 * x, -0.02, 1.8), (0.19 * x, 0.02, 1.74), 0.07, 0.03, "Head", "skin", taper=0.4, shade=0.85)
+		for y, z in ((0.08, 1.86), (-0.03, 1.88), (-0.13, 1.82)):
+			head.beam((0, y, z - 0.06), (0, y - 0.04, z + 0.06), 0.06, 0.03, "Head", "hair", taper=0.25)
+		# The bristly ridge down the back, neck to hips, and a short tail.
+		for bone, y, z, h in (("Chest", -0.12, 1.52, 0.13), ("Chest", -0.16, 1.43, 0.15), ("Chest", -0.17, 1.33, 0.14),
+							  ("Spine", -0.14, 1.22, 0.12), ("Spine", -0.12, 1.12, 0.1), ("Hips", -0.12, 1.02, 0.08)):
+			tail.beam((0, y + 0.04, z), (0, y - h, z + h * 0.6), 0.05, 0.035, bone, "hair", taper=0.2)
+		tail.beam((0, -0.12, 0.95), (0, -0.22, 0.9), 0.03, 0.03, "Hips", "skin", taper=0.6)
+		tail.beam((0, -0.22, 0.9), (0, -0.25, 0.82), 0.022, 0.022, "Hips", "hair", taper=0.4)
+	elif species == "imp":
+		# A big round head, wide pointed ears, horns sweeping back, a sharp
+		# chin and a grin; a long thin tail ending in a barb.
+		head.loft([((0, 0.03, 1.56), 0.04, 0.04, "Head"), ((0, 0.05, 1.6), 0.09, 0.085, "Head"),
+				   ((0, 0.02, 1.7), 0.125, 0.12, "Head"), ((0, -0.01, 1.8), 0.11, 0.11, "Head"),
+				   ((0, -0.02, 1.86), 0.05, 0.05, "Head")],
+				  ["skin", "skin", "skin", "skin"], sides=8)
+		head.box((0, 0.12, 1.63), (0.1, 0.02, 0.015), "Head", "trim")
+		head.box((0, 0.14, 1.69), (0.03, 0.04, 0.04), "Head", "skin", top=(0.6, 0.5), shade=0.9)
+		for x in (-1, 1):
+			head.box((0.05 * x, 0.11, 1.73), (0.04, 0.03, 0.03), "Head", "eyes")
+			head.box((0.05 * x, 0.11, 1.765), (0.05, 0.02, 0.012), "Head", "skin", shade=0.6)
+			head.beam((0.11 * x, 0.0, 1.73), (0.3 * x, -0.04, 1.8), 0.09, 0.02, "Head", "skin", taper=0.15, shade=0.85)
+			head.beam((0.06 * x, 0.0, 1.83), (0.11 * x, -0.08, 1.95), 0.035, 0.035, "Head", "tusk", taper=0.6)
+			head.beam((0.11 * x, -0.08, 1.95), (0.13 * x, -0.2, 1.98), 0.025, 0.025, "Head", "tusk", taper=0.2)
+		tail.beam((0, -0.08, 0.95), (0, -0.26, 0.82), 0.025, 0.025, "Hips", "skin", taper=0.8)
+		tail.beam((0, -0.26, 0.82), (0, -0.4, 0.55), 0.02, 0.02, "Hips", "skin", taper=0.8)
+		tail.beam((0, -0.4, 0.55), (0, -0.44, 0.38), 0.016, 0.016, "Hips", "skin", taper=0.9)
+		tail.beam((0, -0.43, 0.42), (0, -0.46, 0.3), 0.07, 0.02, "Hips", "skin", taper=0.1, up=(1, 0, 0))
 	return [head] + ([tail] if tail.faces else [])
 
 

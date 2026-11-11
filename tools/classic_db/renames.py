@@ -10,6 +10,33 @@ classic names in unnoticed.
 """
 
 ITEMS = {
+    # Kareth: Emberhollow's and the Redsand Coast's.
+    "Admiral Proudmoore's Orders": "The Admiral's Sealed Orders",
+    'Aged Envelope': 'Salt-Stained Envelope',
+    "Benedict's Key": "Harwick's Key",
+    "Fizzle's Claw": "Grizzle's Claw",
+    "Kron's Amulet": "Durn's Amulet",
+    "Minshina's Skull": "Old Mother Wazi's Skull",
+    "Sarkoth's Mangled Claw": "Rustpincer's Mangled Claw",
+    "Ukor's Burden": "Gruk's Burden",
+    "Zalazane's Head": "Vazzar's Head",
+    'Burning Blade Medallion': 'Ember Cult Medallion',
+    'Cactus Apple Surprise': 'Cactus Apple Bake',
+    'Crawler Mucus': 'Shore Crab Slime',
+    'Durotar Tiger Fur': 'Redsand Tiger Fur',
+    'Eye of Burning Shadow': 'Eye of the Ember Cult',
+    'Gnomish Tools': "Tinker's Tools",
+    'Intact Makrura Eye': 'Intact Clawfolk Eye',
+    'Scorpid Worker Tail': 'Sand Scorpion Tail',
+    'Taillasher Egg': 'Lasher Egg',
+    'Vile Familiar Head': 'Ember Imp Head',
+    'Scorpid Stinger': 'Scorpion Stinger',
+    'Broken Scorpid Leg': 'Broken Scorpion Leg',
+    'Dry Scorpid Eye': 'Dry Scorpion Eye',
+    'Light Scorpid Armor': 'Light Scorpion-Shell Armor',
+    'Felstalker Hoof': 'Ashstalker Hoof',
+    'Crocolisk Meat': 'Crocodile Meat',
+    'Crocolisk Skin': 'Crocodile Skin',
     "Squire's Boots": "Postulant's Boots",
     "Squire's Pants": "Postulant's Breeches",
     "Squire's Shirt": "Postulant's Undershirt",
@@ -307,11 +334,67 @@ RECIPE_PREFIXES = ("Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: 
 
 # Item flavor text, replaced whole.
 DESCRIPTIONS = {
+    # Kareth.
+    'This small rune marks the bearer as a lieutenant in the Burning Blade.': 'This small rune marks the bearer as a lieutenant in the Ember Cult.',
     "Princess - First Prize": "Duchess - First Prize",
     "Engraved with the words 'For years of service: -EVC.'": "Engraved with the words 'For long service: -W.T.'",
 }
 
 CREATURES = {
+    # Kareth: Emberhollow's and the Redsand Coast's.
+    'Mottled Boar': 'Dustback Boar',
+    'Dire Mottled Boar': 'Dire Dustback Boar',
+    'Elder Mottled Boar': 'Elder Dustback Boar',
+    'Scorpid Worker': 'Sand Scorpion',
+    'Clattering Scorpid': 'Clattering Scorpion',
+    'Armored Scorpid': 'Armored Scorpion',
+    'Venomtail Scorpid': 'Venomtail Scorpion',
+    'Death Flayer': 'Deathsting',
+    'Vile Familiar': 'Ember Imp',
+    'Felstalker': 'Ashstalker',
+    'Sarkoth': 'Rustpincer',
+    'Yarrog Baneshadow': 'Vurrok Cinderhand',
+    'Pygmy Surf Crawler': 'Small Shore Crab',
+    'Surf Crawler': 'Shore Crab',
+    'Encrusted Surf Crawler': 'Barnacled Shore Crab',
+    'Makrura Clacker': 'Clawfolk Clacker',
+    'Makrura Shellhide': 'Clawfolk Shellback',
+    'Makrura Snapclaw': 'Clawfolk Snapper',
+    'Makrura Elder': 'Clawfolk Elder',
+    'Razormane Quilboar': 'Thornhide Tuskfolk',
+    'Razormane Scout': 'Thornhide Scout',
+    'Razormane Dustrunner': 'Thornhide Dustrunner',
+    'Razormane Battleguard': 'Thornhide Warguard',
+    'Geolord Mottle': 'Earthspeaker Grubb',
+    'Captain Flat Tusk': 'Captain Brokentusk',
+    'Dustwind Harpy': 'Galecry Harpy',
+    'Dustwind Pillager': 'Galecry Raider',
+    'Dustwind Savage': 'Galecry Savage',
+    'Dustwind Storm Witch': 'Galecry Stormcaller',
+    'Kolkar Drudge': 'Dunestride Drudge',
+    'Kolkar Outrunner': 'Dunestride Outrider',
+    'Warlord Kolkanis': 'Warlord Hask',
+    'Durotar Tiger': 'Redsand Tiger',
+    'Bloodtalon Taillasher': 'Redclaw Lasher',
+    'Bloodtalon Scythemaw': 'Redclaw Reaver',
+    'Kul Tiras Sailor': 'Saltmarch Sailor',
+    'Kul Tiras Marine': 'Saltmarch Marine',
+    'Lieutenant Benedict': 'Lieutenant Harwick',
+    'Watch Commander Zalaphil': 'Watch Commander Pellam',
+    'Thunder Lizard': 'Stormback Lizard',
+    'Lightning Hide': 'Sparkhide Lizard',
+    'Burning Blade Thug': 'Ember Cult Thug',
+    'Burning Blade Neophyte': 'Ember Cult Neophyte',
+    'Burning Blade Fanatic': 'Ember Cult Zealot',
+    'Burning Blade Apprentice': 'Ember Cult Acolyte',
+    'Burning Blade Cultist': 'Ember Cult Pyromancer',
+    'Fizzle Darkstorm': 'Grizzle Ashtongue',
+    "Gazz'uz": 'Vozgul',
+    'Felweaver Scornn': 'Hexweaver Skarn',
+    'Zalazane': 'Vazzar',
+    'Voodoo Troll': 'Cursecaller Troll',
+    'Hexed Troll': 'Thralled Troll',
+    'Dreadmaw Crocolisk': 'Mudjaw Crocodile',
     "Kobold Vermin": "Burrowling Runt",
     "Kobold Worker": "Burrowling Digger",
     "Kobold Laborer": "Burrowling Hauler",
@@ -342,10 +425,23 @@ CREATURES = {
 # Vendor names and titles, by creature entry.
 # Game objects (gameobject_template names).
 OBJECTS = {
+    # Kareth's chests.
+    'Gnomish Toolbox': "Tinker's Toolbox",
+    'Imprisoned Darkspear': 'Imprisoned Tidebone Troll',
+    'Taillasher Eggs': 'Lasher Eggs',
     "Rolf's corpse": "Aldous's corpse",
 }
 
 VENDORS = {
+    # Kareth: Emberhollow's, then the Redsand Coast's at Spikewall.
+    "3158": ("Grashka", "Provisioner"),
+    "3161": ("Torruk Stonehide", "Armorer"),
+    "3160": ("Mazga", "Clothier & Tanner"),
+    "3164": ("Brokk Saltgrin", "Provisioner"),
+    "3166": ("Ushka", "Clothier & Tanner"),
+    "3167": ("Durgash Ironjaw", "Armorer"),
+    "3163": ("Rakka Bloodfang", "Weaponsmith"),
+    "6928": ("Zarga Emberbrew", "Innkeeper"),
     "152": ("Friar Osric", "Provisioner"),
     "1213": ("Hugh Stannard", "Armorer"),
     "295": ("Hilde Barrow", "Innkeeper"),
@@ -356,6 +452,26 @@ VENDORS = {
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
 # "Verdict" judgements, "Boon of" blessings and "... Presence" auras.
 SPELLS = {
+    # Kareth's creatures' spells.
+    "Opening Benedict's Chest": "Opening Harwick's Chest",
+    'Corruption': 'Festering Curse',
+    'Demon Skin': 'Fiendhide',
+    'Drain Life': 'Lifedrain',
+    'Fanatic Blade': "Zealot's Blade",
+    'Fanatic Blade Effect': "Zealot's Blade Effect",
+    'Healing Wave': 'Mending Tide',
+    'Immolate': 'Searing Brand',
+    'Improved Blocking': 'Steady Guard',
+    'Lightning Bolt': 'Sky Bolt',
+    'Lightning Shield': 'Crackling Ward',
+    'Lizard Bolt': 'Static Spit',
+    'Razor Mane': 'Bristle Hide',
+    'Rejuvenation': 'Renewal',
+    'Shadow Bolt': 'Gloom Bolt',
+    'Soul Siphon': 'Spirit Drain',
+    'Summon Imp': 'Summon Ember Imp',
+    'Summon Voidwalker': 'Summon Void Shade',
+    'Thunderclap': 'Stormstomp',
     # Item spells from quest rewards: Tallow Taper and Pouch of Glass Beads.
     "Faerie Fire": "Glimmer Mark",
     "Fumble": "Slipping Beads",
@@ -513,6 +629,10 @@ def talent_tree(class_id, name):
 
 # Plain names that are kept as they are.
 KEEP = {
+    # Kareth's creatures' plain spell names.
+    'Boar Charge', 'Claw Grasp', 'Dust Cloud', 'Muscle Tear', 'Quick Sidestep', 'Rend Flesh', 'Shoot', 'Shrink', 'Sleep', 'Trap', 'Venom Sting', 'Weak Poison Proc', 'Weak Poison', 'Well Fed',
+    # Kareth's plain names.
+    "Lieutenant's Insignia", 'Cactus Apple', 'Canvas Scraps', 'Sack of Supplies', 'Searing Collar', 'Venomtail Antidote', 'Venomtail Poison Sac', 'Harpy Wing Clipper', 'Stolen Supply Sack', "Bard's Boots", "Bard's Buckler", "Bard's Gloves", "Mystic's Belt", "Mystic's Bracelets", "Outrunner's Cloak", "Prospector's Cloak", "Prospector's Cuffs", "Raider's Bracers", "Raider's Cloak", "Seer's Boots", "Seer's Cape", "Seer's Cuffs", "Sergeant's Warhammer", "Soldier's Boots", "Soldier's Gauntlets", "Soldier's Girdle", "Soldier's Leggings", "Soldier's Shield", 'Balanced Throwing Dagger', 'Barbaric Loincloth', 'Battered Leather Belt', 'Battered Leather Boots', 'Battered Leather Bracers', 'Battered Leather Gloves', 'Battered Leather Harness', 'Battered Leather Pants', 'Battleworn Cape', 'Battleworn Chain Leggings', 'Battleworn Leather Gloves', 'Blazing Wand', 'Blemished Wooden Staff', 'Bloodspattered Sabatons', 'Bloody Leather Boot', 'Broken Bloodstained Bow', 'Broken Spear', 'Brown Leather Satchel', 'Bug Eye', 'Ceremonial Leather Ankleguards', 'Ceremonial Leather Loincloth', 'Charging Buckler', 'Clam Meat', 'Clean Fishbones', 'Coal', 'Cracked Bill', 'Dented Buckler', 'Dirt-trodden Boots', 'Dirty Leather Belt', 'Dirty Leather Boots', 'Dirty Leather Bracers', 'Dirty Leather Gloves', 'Dirty Leather Pants', 'Dirty Leather Vest', 'Discolored Fang', 'Dry Hardened Barnacle', 'Dust-covered Leggings', 'Faintly Glowing Skull', 'Feral Bindings', 'Feral Cord', 'Flint and Tinder', 'Handmade Leather Bag', 'Handsewn Cloak', 'Hickory Shortbow', 'Hunting Pants', 'Hunting Tunic', 'Inscribed Cloak', 'Inscribed Leather Belt', 'Inscribed Leather Bracers', 'Jagged Chain Vest', 'Jagged Dagger', 'Large Wooden Shield', 'Light Chain Belt', 'Light Chain Boots', 'Light Chain Bracers', 'Light Chain Gloves', 'Light Chain Leggings', 'Light Feather', 'Lightweight Boots', 'Lupine Buckler', 'Lupine Handwraps', 'Lupine Slippers', 'Magic Dust', 'Merc Sword', 'Mining Pick', 'Primitive Club', 'Primitive Hand Blade', 'Primitive Hatchet', 'Primitive Walking Stick', 'Raider Shortsword', 'Reagent Pouch', 'Really Sticky Glue', 'Red Ribboned Wrapping Paper', 'Ripped Pants', 'Ritual Cape', 'Round Buckler', 'Ruffled Feather', 'Rusted Chain Belt', 'Rusted Chain Boots', 'Rusted Chain Bracers', 'Rusted Chain Gloves', 'Rusted Chain Leggings', 'Rusted Chain Vest', 'Sandrunner Wristguards', 'Severed Pincer', 'Simple Wood', 'Singed Scale', 'Slimy Bone', 'Small Leather Collar', 'Small Venom Sac', 'Soft Wool Belt', 'Soft Wool Boots', 'Soft Wool Vest', 'Splintered Tusk', 'Squashed Rabbit Carcass', 'Steady Bastard Sword', 'Sticky Ichor', 'Stinging Mace', 'Stone Arrowhead', 'Strong Flux', 'Tattered Cloth Belt', 'Tattered Cloth Boots', 'Tattered Cloth Bracers', 'Tattered Cloth Gloves', 'Tattered Cloth Pants', 'Tattered Cloth Vest', 'Tiger Hide Boots', 'Twin-bladed Axe', 'Veiled Grips', 'Veteran Armor', 'War Knife', 'War Paint Anklewraps', 'War Paint Bindings', 'War Paint Cloak', 'War Paint Waistband', 'Weak Flux', 'Weighted Throwing Axe', 'Wide Metal Girdle', 'Willow Belt', 'Willow Gloves', 'Worn Heater Shield', 'Woven Belt', 'Woven Boots', 'Woven Bracers', 'Woven Gloves', 'Woven Pants', 'Woven Vest', 'Miners need a mining pick for digging.', 'Used by Blacksmiths to remove impurities.', 'Used by blacksmiths to remove impurities.',
     "A half-eaten body", "Bundle of Wood",
     # Weapon skills, plain words.
     "One-Handed Swords", "Two-Handed Swords", "One-Handed Axes", "Two-Handed Axes", "One-Handed Maces",

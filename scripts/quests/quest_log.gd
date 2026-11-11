@@ -39,8 +39,12 @@ static func can_take(id: int) -> bool:
 		return false
 	if int(quest.min_level) > GameState.level:
 		return false
+	# PrevQuestId: a quest to have done first, or, negative, one to have
+	# underway (CMaNGOS's rule; Finding the Antidote while Need for a Cure is).
 	var prev := int(quest.prev)
-	return prev <= 0 or prev in GameState.quests_done
+	if prev < 0:
+		return GameState.quests.has(-prev)
+	return prev == 0 or prev in GameState.quests_done
 
 
 ## Classic greys out quests five or more levels below the player.

@@ -221,8 +221,8 @@ pause={
 [physics]
 
 common/max_physics_steps_per_frame=3
-common/physics_interpolation=true
 3d/physics_engine="Jolt Physics"
+common/physics_interpolation=true
 
 [rendering]
 

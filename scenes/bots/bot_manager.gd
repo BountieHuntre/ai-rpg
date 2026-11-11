@@ -675,7 +675,7 @@ func hunting_spot(level: int, wanted: Array[int] = []) -> Vector3:
 	if not quest_spawns.is_empty():
 		pool = quest_spawns
 	if pool.is_empty():
-		return AshfordVale.SPAWN
+		return _world.zones[0].graveyard
 	var spawn: Array = pool.pick_random()
 	var center: Vector2 = spawn[1]
 	var reach: float = spawn[2] * sqrt(randf()) * 0.8

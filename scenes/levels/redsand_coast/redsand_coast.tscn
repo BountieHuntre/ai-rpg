@@ -1,0 +1,208 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/redsand_coast/redsand_coast.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="RedsandCoast" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="CommanderThrogg" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2060, 5, -1804)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Commander Throgg"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="SeerHrolga" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2052, 5, -1802)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Seer Hrolga"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="SkragOilhand" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2066, 5, -1774)
+npc_name = "Skrag Oilhand"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="CookGrunda" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2056, 5, -1777)
+npc_name = "Cook Grunda"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="ZargaEmberbrew" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2075, 5, -1792)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Zarga Emberbrew"
+subname = "Innkeeper"
+vendor = 6928
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="HunterZekka" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2070, 5, -1778)
+npc_name = "Hunter Zekka"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "troll"
+
+[node name="TorgSkullsplitter" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2054, 5, -1794)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Torg Skullsplitter"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Jinwazi" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2068, 5, -1802)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Jin'wazi"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "troll"
+
+[node name="VashkaRuneblade" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2072, 5, -1798)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Vashka Runeblade"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="Grakkar" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2050, 5, -1798)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Grakkar"
+subname = "Weapon Master"
+trainer = "weapons"
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="BrokkSaltgrin" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2062, 5, -1782)
+npc_name = "Brokk Saltgrin"
+subname = "Provisioner"
+vendor = 3164
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Ushka" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2034, 5, -1792)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Ushka"
+subname = "Clothier & Tanner"
+vendor = 3166
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="DurgashIronjaw" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2046, 5, -1786)
+npc_name = "Durgash Ironjaw"
+subname = "Armorer"
+vendor = 3167
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="RakkaBloodfang" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2052, 5, -1788)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Rakka Bloodfang"
+subname = "Weaponsmith"
+vendor = 3163
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="ElderRokaji" parent="." instance=ExtResource("2_npc")]
+position = Vector3(1470, 2.8, -1631)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Elder Rokaji"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "troll"
+
+[node name="HealerVashi" parent="." instance=ExtResource("2_npc")]
+position = Vector3(1476, 2.8, -1618)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Healer Vashi"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "troll"
+
+[node name="Tazgo" parent="." instance=ExtResource("2_npc")]
+position = Vector3(1464, 2.8, -1619)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Tazgo"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "troll"
+
+[node name="OldRuzga" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2025, 9, -2014)
+npc_name = "Old Ruzga"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="OldBreka" parent="." instance=ExtResource("2_npc")]
+position = Vector3(1855, 2.6, -1608)
+npc_name = "Old Breka"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="RezzikCoppergear" parent="." instance=ExtResource("2_npc")]
+position = Vector3(1624, 6, -2055)
+npc_name = "Rezzik Coppergear"
+subname = "Tinker"
+appearance = {
+"body": 0
+}
+race = "gnome"

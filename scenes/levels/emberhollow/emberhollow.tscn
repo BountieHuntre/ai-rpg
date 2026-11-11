@@ -1,0 +1,129 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/emberhollow/emberhollow.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="Emberhollow" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="GorzaIronhand" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2510, 6, -1699)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Commander Gorza Ironhand"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="GruntTarrok" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2492, 6, -1694)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Grunt Tarrok"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="CookGalbrak" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2506, 6, -1675.5)
+npc_name = "Cook Galbrak"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="SeerMorgha" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2523, 6, -1699)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Seer Morgha"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="BrakkaBonecrusher" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2497, 6, -1699)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Brakka Bonecrusher"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Mojinzi" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2518, 6, -1680)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Mojinzi"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "troll"
+
+[node name="RajakBladeweaver" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2500, 6, -1681)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Rajak Bladeweaver"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 0
+}
+race = "troll"
+
+[node name="Grashka" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2521, 6, -1672)
+npc_name = "Grashka"
+subname = "Provisioner"
+vendor = 3158
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="TorrukStonehide" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2527.5, 6, -1683.5)
+npc_name = "Torruk Stonehide"
+subname = "Armorer"
+vendor = 3161
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Mazga" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2490, 6, -1684)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Mazga"
+subname = "Clothier & Tanner"
+vendor = 3160
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="Gruk" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2462, 6, -1711)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Gruk"
+subname = "Peon"
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Tazula" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2532, 7, -1789)
+npc_name = "Tazula"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "troll"

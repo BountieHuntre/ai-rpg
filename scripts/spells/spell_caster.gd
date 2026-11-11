@@ -922,14 +922,16 @@ func restore_item_cooldowns(saved: Dictionary) -> void:
 			_item_cooldowns[int(category)] = left
 
 
-## The Homing Token's teleport: back to the zone's start point, the camera
-## jumping along, and its cooldown starting once the cast lands.
+## The Homing Token's teleport: back to the start point of the race's
+## starting zone (its graveyard; on this continent, else its first zone), the
+## camera jumping along, and its cooldown starting once the cast lands.
 func _go_home(spell: Dictionary) -> void:
 	_item_cooldowns[_spell_category(spell)] = HOMING_TOKEN_COOLDOWN
 	_unit.combatant.attack_target = null
 	_unit.velocity = Vector3.ZERO
-	_unit.global_position = AshfordVale.SPAWN
-	_unit.facing = AshfordVale.SPAWN_FACING
+	var home := World.current.start_zone_here(_unit.profile.race) if World.current else null
+	_unit.global_position = home.graveyard if home else AshfordVale.SPAWN
+	_unit.facing = home.graveyard_facing if home else AshfordVale.SPAWN_FACING
 	var camera := _unit.get_viewport().get_camera_3d() as OrbitCamera
 	if camera and _unit is Player:
 		camera.snap_to_target()

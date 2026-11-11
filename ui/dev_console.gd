@@ -26,7 +26,7 @@ const COMMANDS := {
 	"bis": ["", "Put on the best gear in the game for your class and level (BiS)."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
-	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, the start, or a zone's graveyard (ashford, harrowfield)."],
+	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, your race's start, or a zone's graveyard (ashford, harrowfield, emberhollow, redsand); a zone on the other continent reloads the game there."],
 	"pos": ["", "Show your position."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
@@ -419,7 +419,7 @@ func _cmd_speed(args: PackedStringArray) -> String:
 
 
 func _cmd_tele(args: PackedStringArray) -> String:
-	var at := AshfordVale.SPAWN
+	var at := _world.start_zone_here(GameState.race).graveyard + Vector3.UP * 0.5
 	if args.size() == 2 and args[0].is_valid_float() and args[1].is_valid_float():
 		var x := float(args[0])
 		var z := float(args[1])
@@ -431,6 +431,11 @@ func _cmd_tele(args: PackedStringArray) -> String:
 			if zone.zone_name.to_lower().begins_with(wanted):
 				found = zone
 		if found == null:
+			# A zone on the other continent: saved there, and the game
+			# reloaded to build it.
+			for zone_name in World.all_zone_names():
+				if zone_name.to_lower().begins_with(wanted) and World.zone_exists(zone_name):
+					return _change_continent(zone_name)
 			return "!Usage: tele <x> <z>, tele spawn, or tele <zone>"
 		at = found.graveyard + Vector3.UP * 0.5
 	elif args.size() != 1:
@@ -577,6 +582,22 @@ func _cmd_save(_args: PackedStringArray) -> String:
 ## `--resume` for this character, and quits, so every change on disk (scripts,
 ## scenes, data, settings) is picked up. Runs started from the editor lose
 ## their debugger connection.
+## Saves the player at a zone's graveyard on another continent and reloads
+## the game, which builds that continent.
+func _change_continent(zone_name: String) -> String:
+	_save.call()
+	GameState.player_state = {
+		"continent": World.continent_of(zone_name), "graveyard": zone_name,
+		"auras": GameState.player_state.get("auras", []), "item_cooldowns": GameState.player_state.get("item_cooldowns", {}),
+	}
+	GameState.save_to_disk()
+	var pid := OS.create_process(OS.get_executable_path(), restart_args())
+	if pid <= 0:
+		return "!Couldn't start a new copy of the game."
+	get_tree().quit.call_deferred()
+	return "Travelling to %s..." % zone_name
+
+
 func _cmd_reload(_args: PackedStringArray) -> String:
 	_save.call()
 	var pid := OS.create_process(OS.get_executable_path(), restart_args())

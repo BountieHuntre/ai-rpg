@@ -342,5 +342,275 @@
 		"objectives": "Kill Odo the Collector at Thornwick Tower, and bring The Collector's Signet to Marshal Edric Thorne in Wexford.",
 		"progress": "Is the Collector still breathing?",
 		"completion": "His signet. The farmers will sleep easier tonight, and so will I.\n\nThe watch's armory is open to you. Take what suits you."
+	},
+	"787": {
+		"title": "The Proving Ground",
+		"giver": "GruntTarrok",
+		"ender": "GorzaIronhand",
+		"details": "So you are the new blood. Good. The Horde has no use for the soft, and that is what the Proving Ground is for.\n\nCommander Gorza Ironhand runs things here. You will find her in the yard, by the war drum. Go and show her you can walk that far without help.",
+		"objectives": "Speak with Commander Gorza Ironhand at the Proving Ground.",
+		"progress": "",
+		"completion": "Tarrok sent you? Then you can follow an order. That is a start.\n\nLook around you. This canyon is hard, and it will teach you to be hard. Listen, fight, and come back alive, and the Horde will find a place for you."
+	},
+	"788": {
+		"title": "Blooding the Blade",
+		"giver": "GorzaIronhand",
+		"ender": "GorzaIronhand",
+		"details": "Every warrior's first blood is drawn on something that bites back. The dustback boars root in the flats around the Proving Ground, and they have gored two of our peons this week.\n\nKill ten of them. Then come back and tell me what you learned.",
+		"objectives": "Kill 10 Dustback Boars, then return to Commander Gorza Ironhand.",
+		"progress": "The boars are still in the flats. Are you?",
+		"completion": "Ten boars, and you still have all your fingers. Good.\n\nTake one of these. You will need better than rags before long."
+	},
+	"789": {
+		"title": "Tails of the Sand",
+		"giver": "GorzaIronhand",
+		"ender": "GorzaIronhand",
+		"details": "The sand scorpions crawl over the rocks east of here, and their sting makes a grown orc sick for a day. Our healers grind the tails into a salve against the poison.\n\nBring me ten sand scorpion tails. Mind the stingers.",
+		"objectives": "Bring 10 Sand Scorpion Tails to Commander Gorza Ironhand.",
+		"progress": "The salve doesn't make itself. Have you got the tails?",
+		"completion": "Ten tails. The healers will be glad of these, and so will the next fool who gets stung.\n\nHere, for your trouble."
+	},
+	"4402": {
+		"title": "Cactus Apple Bake",
+		"giver": "CookGalbrak",
+		"ender": "CookGalbrak",
+		"details": "You look hungry. Everyone looks hungry. Peons, grunts, the commander herself. And what do I have to cook with? Boar, boar, and more boar.\n\nThe cactus round the canyon bears a fat red apple, if you can pick it without losing a hand. Bring me ten, and I will make something that isn't boar.",
+		"objectives": "Gather 10 Cactus Apples from the cactus groves and bring them to Cook Galbrak.",
+		"progress": "No apples, no bake. Off you go.",
+		"completion": "Look at these! Ripe, every one. Here, take some of the first batch, and come back when you want more. Everyone will want more."
+	},
+	"790": {
+		"title": "The Old Pincer",
+		"giver": "Tazula",
+		"ender": "Tazula",
+		"details": "You see this leg? A scorpion did this. Not one of the little ones on the rocks. A great old thing, red with age, the size of a cart. We call him Rustpincer.\n\nHe lairs on the ridge north of the cave. Kill him and bring me his claw, and I will know he is dead.",
+		"objectives": "Kill Rustpincer on the ridge north of the Ember Cult Cave and bring his Mangled Claw to Tazula.",
+		"progress": "Rustpincer still walks the ridge, mon. I can feel it.",
+		"completion": "His claw. You did it. Now I can sleep, and maybe walk again before long.\n\nTake this to the commander. She will want to hear it from you."
+	},
+	"804": {
+		"title": "Rustpincer's End",
+		"giver": "Tazula",
+		"ender": "GorzaIronhand",
+		"details": "Commander Gorza sent me out to the ridge to scout, and Rustpincer found me first. She will want to know the beast is dead, and who killed it.\n\nGo and tell her. She will reward you better than I can.",
+		"objectives": "Tell Commander Gorza Ironhand that Rustpincer is dead.",
+		"progress": "",
+		"completion": "Rustpincer, dead? That old scorpion has crippled three of my scouts.\n\nYou have done the Proving Ground a service. Take your pick of these."
+	},
+	"792": {
+		"title": "Ember Imps",
+		"giver": "SeerMorgha",
+		"ender": "SeerMorgha",
+		"details": "Something walks the far end of the canyon that does not belong in this world. Small burning things, all claws and laughter. Imps, called up by the cult that hides in the cave.\n\nThe cult is weak while its imps are few. Kill twelve of them, and come back to me.",
+		"objectives": "Kill 12 Ember Imps in the east of Emberhollow, then return to Seer Morgha.",
+		"progress": "I still hear them laughing in the dark. Twelve, I said.",
+		"completion": "The air is cleaner already. The spirits thank you, and so do I.\n\nChoose a weapon. You will need one where you are going next."
+	},
+	"794": {
+		"title": "The Cult's Medallion",
+		"giver": "SeerMorgha",
+		"ender": "SeerMorgha",
+		"details": "The imps were the servants. Their master is an orc who calls himself Vurrok Cinderhand, and he leads the Ember Cult's few here from the cave east of the Proving Ground.\n\nKill him. He wears a medallion of the cult; bring it to me, so I may learn what it is they serve.",
+		"objectives": "Kill Vurrok Cinderhand in the Ember Cult Cave and bring his Medallion to Seer Morgha.",
+		"progress": "Vurrok still breathes. I can smell his fires from here.",
+		"completion": "This is it. Cold, though it was worn against a living chest. There is old power in it, and none of it good.\n\nYou have done well. Take this."
+	},
+	"805": {
+		"title": "To the Tidebone Village",
+		"giver": "SeerMorgha",
+		"ender": "ElderRokaji",
+		"details": "The medallion speaks of more of the cult than one cave can hold. They are on the coast too, I am sure of it, and the trolls of the Tidebone village have seen fires on the cliffs.\n\nGo west through the pass to the Redsand Coast and find Elder Rokaji in the Tidebone village by the sea. Tell him what you found here.",
+		"objectives": "Travel to the Tidebone village on the Redsand Coast and speak with Elder Rokaji.",
+		"progress": "",
+		"completion": "Seer Morgha sends you? Then the cult is moving, as the spirits told me.\n\nYou have come far from the canyon, young one. Rest. The coast has work enough for you."
+	},
+	"2161": {
+		"title": "Gruk's Burden",
+		"giver": "Gruk",
+		"ender": "ZargaEmberbrew",
+		"details": "Me work, work, work. Now foreman want me carry this all the way to Spikewall. Too far! Me got work here.\n\nYou go that way? You take it. Give to Zarga at the inn. She know what it is.",
+		"objectives": "Take Gruk's Burden to Zarga Emberbrew at the inn in Spikewall.",
+		"progress": "",
+		"completion": "Gruk sent this all the way out with you? Lazy, that one, but honest.\n\nHere, sit and have something. The road from the canyon is long."
+	},
+	"784": {
+		"title": "Saltmarch Betrayers",
+		"giver": "CommanderThrogg",
+		"ender": "CommanderThrogg",
+		"details": "Humans landed on our coast south of here, sailors and marines from Saltmarch, and they have built themselves a keep. They say they are stranded. I say they are spies, and their lieutenant, Harwick, is the worst of them.\n\nGo to the Stranded Keep. Kill ten sailors, eight marines, and Lieutenant Harwick himself.",
+		"objectives": "Kill 10 Saltmarch Sailors, 8 Saltmarch Marines and Lieutenant Harwick at the Stranded Keep, then return to Commander Throgg.",
+		"progress": "The humans are still on our coast. Why are you here?",
+		"completion": "Harwick is dead? Good. Let Saltmarch learn what it costs to sail where it is not welcome.\n\nThe Horde pays its warriors. Here."
+	},
+	"825": {
+		"title": "Wreckage on the Beach",
+		"giver": "SkragOilhand",
+		"ender": "SkragOilhand",
+		"details": "The humans' ship broke on the rocks, and half its hold washed up on the beach by the keep. There were tinkers aboard, and tinkers carry tools. Good tools. I want them.\n\nBring me three of their tool kits from the wreckage.",
+		"objectives": "Bring 3 Tinker's Tools from the wreckage on the beach below the Stranded Keep to Skrag Oilhand.",
+		"progress": "No tools yet? The tide will take them if you wait.",
+		"completion": "Look at these! Fine work, every one. Saltmarch knows how to make a wrench, I'll give them that.\n\nTake something from the pile. You earned it."
+	},
+	"830": {
+		"title": "The Admiral's Orders",
+		"giver": "",
+		"ender": "CommanderThrogg",
+		"details": "The envelope is stained with salt and sealed with an admiral's mark. Inside are orders to the keep's lieutenant: hold the beach, learn the Horde's strength, and wait for the fleet.\n\nThe commander in Spikewall should see this.",
+		"objectives": "Bring the Admiral's Sealed Orders to Commander Throgg in Spikewall.",
+		"progress": "",
+		"completion": "Orders, sealed with the Saltmarch admiral's own mark. So they are not stranded at all.\n\nYou have done the Horde a great service by bringing this to me. It will go to Ironmaw Hold at once."
+	},
+	"791": {
+		"title": "Canvas for the Walls",
+		"giver": "SkragOilhand",
+		"ender": "SkragOilhand",
+		"details": "Spikewall needs new awnings before the sand storms come, and we have no canvas. The humans at the keep have plenty, and so do the centaurs, who steal it from everyone.\n\nBring me eight canvas scraps, from whichever of them you like.",
+		"objectives": "Bring 8 Canvas Scraps to Skrag Oilhand in Spikewall.",
+		"progress": "The wind is coming, and the walls are bare.",
+		"completion": "Good, good. Enough for the gate and the inn at least. Here."
+	},
+	"823": {
+		"title": "Report to Spikewall",
+		"giver": "GorzaIronhand",
+		"ender": "SeerHrolga",
+		"details": "You have outgrown the Proving Ground. The Redsand Coast is beyond the pass to the west, and Spikewall stands where the road comes down.\n\nSeer Hrolga keeps the town's spirits and its secrets. Report to her. She has been asking for fighters.",
+		"objectives": "Go west through the pass to Spikewall on the Redsand Coast and report to Seer Hrolga.",
+		"progress": "",
+		"completion": "Gorza sent you? Then you have learned something already.\n\nSit. There is a darkness on this coast, and I need eyes and blades to find it."
+	},
+	"806": {
+		"title": "Storms Over the Ridge",
+		"giver": "SeerHrolga",
+		"ender": "SeerHrolga",
+		"details": "Storms gather over Stormcrag Ridge, north of here, and they are not natural. The Ember Cult has a sorcerer there, Grizzle Ashtongue, who calls the lightning down.\n\nKill him, and bring me his claw. It is the source of his power.",
+		"objectives": "Kill Grizzle Ashtongue on Stormcrag Ridge and bring Grizzle's Claw to Seer Hrolga.",
+		"progress": "The storms still gather. Ashtongue still lives.",
+		"completion": "The claw. It still crackles. I will bury it where it can do no more harm.\n\nThe cult is bigger than one sorcerer, though. Speak with me again."
+	},
+	"828": {
+		"title": "Old Ruzga",
+		"giver": "SeerHrolga",
+		"ender": "OldRuzga",
+		"details": "An old shaman lives alone in a hut on the hills north of Spikewall. Ruzga. She fought the cult when I was a child, and she knows their ways better than anyone living.\n\nGo to her. Tell her the cult is back.",
+		"objectives": "Speak with Old Ruzga in her hut north of Spikewall.",
+		"progress": "",
+		"completion": "Back, are they? I told them the cult was never gone. Nobody listens to old women.\n\nWell, you came. That is something."
+	},
+	"827": {
+		"title": "The Cave in the Skull",
+		"giver": "OldRuzga",
+		"ender": "OldRuzga",
+		"details": "The cult hides in a cave in the hills north of here, under a rock shaped like a skull. Its members wear searing collars, iron bands that burn with their master's fire.\n\nKill them and bring me six of those collars. I will learn who they serve from them.",
+		"objectives": "Bring 6 Searing Collars from the Ember Cult at the Skull Rock cave to Old Ruzga.",
+		"progress": "Six collars. The cult has many more than that.",
+		"completion": "These collars burn with a demon's fire. I feared as much.\n\nTake a weapon. You will need it before this is done."
+	},
+	"832": {
+		"title": "The Eye of the Cult",
+		"giver": "",
+		"ender": "SeerHrolga",
+		"details": "The eye is a smooth black stone, warm to the touch, with a flame burning somewhere deep inside it. The Ember Cult's sign is carved round its rim.\n\nSeer Hrolga in Spikewall would know what it is.",
+		"objectives": "Bring the Eye of the Ember Cult to Seer Hrolga in Spikewall.",
+		"progress": "",
+		"completion": "Where did you find this? Vozgul carried it? Then the cult's leaders on this coast are fewer by one.\n\nI will study this eye. You have my thanks, and the Horde's."
+	},
+	"808": {
+		"title": "Old Mother Wazi's Skull",
+		"giver": "ElderRokaji",
+		"ender": "ElderRokaji",
+		"details": "When Vazzar took the islands, he took the skull of Old Mother Wazi, our wisest seer, and caged it in his village to keep her spirit from us.\n\nGo out to the islands, find the cage, and bring her skull home.",
+		"objectives": "Bring Old Mother Wazi's Skull from the Tidebone Isles to Elder Rokaji.",
+		"progress": "Her spirit cries out still. Bring her home, mon.",
+		"completion": "Old Mother Wazi. Home at last. Her spirit will guide us again.\n\nThank you. The Tidebone remember."
+	},
+	"812": {
+		"title": "A Cure for Tazgo",
+		"giver": "Tazgo",
+		"ender": "Tazgo",
+		"details": "Ah, the poison. It burns, mon. A venomtail scorpion got me, out on the flats, and the healer says I have days, maybe less.\n\nHealer Vashi can make an antidote, if someone brings her the poison sacs. Please. Help me.",
+		"objectives": "Get a Venomtail Antidote from Healer Vashi and bring it to Tazgo.",
+		"progress": "The fever is worse. Did Vashi make the cure?",
+		"completion": "The cure... I can feel it working already. You saved my life, stranger.\n\nTake whatever you want of my things. I owe you more."
+	},
+	"813": {
+		"title": "The Venomtail Antidote",
+		"giver": "HealerVashi",
+		"ender": "HealerVashi",
+		"details": "Tazgo will die without the antidote, and I cannot make it without venom. The venomtail scorpions on the flats south of the village carry poison sacs.\n\nBring me four, quickly.",
+		"objectives": "Bring 4 Venomtail Poison Sacs to Healer Vashi.",
+		"progress": "Tazgo does not have long. The sacs, mon.",
+		"completion": "Four sacs. Good. Give me a moment, and you can take the antidote to Tazgo yourself."
+	},
+	"815": {
+		"title": "Lasher Eggs",
+		"giver": "CookGrunda",
+		"ender": "CookGrunda",
+		"details": "The redclaw lashers lay their eggs in nests along the coast, and a lasher egg makes the best breakfast on the coast. Just ask anyone who's had one.\n\nBring me three.",
+		"objectives": "Bring 3 Lasher Eggs from the lashers' nests to Cook Grunda in Spikewall.",
+		"progress": "No eggs? No breakfast.",
+		"completion": "Three fine eggs! Here's your pay, and come by the inn in the morning."
+	},
+	"816": {
+		"title": "Durn's Amulet",
+		"giver": "OldBreka",
+		"ender": "OldBreka",
+		"details": "My mate Durn went fishing on the river mouth south of here, and he never came back. The crocodiles took him. Mudjaws.\n\nHe wore an amulet I made him when we were young. If one of those mudjaws has it in its belly, bring it back to me.",
+		"objectives": "Bring Durn's Amulet from the Mudjaw Crocodiles to Old Breka.",
+		"progress": "Have you found it? The amulet?",
+		"completion": "His amulet. I can lay him to rest now, in my heart.\n\nThank you. Take this, and remember him."
+	},
+	"817": {
+		"title": "Tiger Hunt",
+		"giver": "HunterZekka",
+		"ender": "HunterZekka",
+		"details": "The redsand tigers stalk the dry hills inland. A tiger's fur makes a fine cloak, and Spikewall's hunters need four more before the cold nights.\n\nBring me four furs.",
+		"objectives": "Bring 4 Redsand Tiger Furs to Hunter Zekka.",
+		"progress": "Tigers are clever. Are you?",
+		"completion": "Four furs, clean cuts. You're a hunter after all. Here."
+	},
+	"818": {
+		"title": "A Healer's Ingredients",
+		"giver": "HealerVashi",
+		"ender": "HealerVashi",
+		"details": "My salves need two things the shore is full of: the eyes of the clawfolk, intact mind you, and the slime of the shore crabs.\n\nBring me four eyes and eight measures of slime.",
+		"objectives": "Bring 4 Intact Clawfolk Eyes and 8 Shore Crab Slime to Healer Vashi.",
+		"progress": "Still need my eyes and slime, mon.",
+		"completion": "Good! These will keep the village healthy for a season. Take this."
+	},
+	"826": {
+		"title": "Vazzar",
+		"giver": "ElderRokaji",
+		"ender": "ElderRokaji",
+		"details": "Vazzar was one of us, before he turned to the dark. Now he holds the Tidebone Isles and his curses have bound our own people to him.\n\nGo to the isles. Kill eight of his cursecallers, and free eight of the thralls the only way left. Then bring me Vazzar's head.",
+		"objectives": "Kill 8 Cursecaller Trolls, 8 Thralled Trolls and Vazzar on the Tidebone Isles, and bring Vazzar's Head to Elder Rokaji.",
+		"progress": "Vazzar still holds the isles.",
+		"completion": "It is done. The isles will be ours again, and our people can rest.\n\nYou have the thanks of the Tidebone, friend."
+	},
+	"834": {
+		"title": "Stolen Supplies",
+		"giver": "RezzikCoppergear",
+		"ender": "RezzikCoppergear",
+		"details": "Those harpies on the cliffs raided my wagon! Five sacks of supplies, gone. Rope, wrenches, spare cogs, everything.\n\nThey stash what they steal round their nests. Get my sacks back, would you?",
+		"objectives": "Recover 5 Sacks of Supplies from the harpies' cliffs and bring them to Rezzik Coppergear.",
+		"progress": "My supplies, pal. Still waiting.",
+		"completion": "Ha! My sacks! You're a lifesaver. Here's a little something."
+	},
+	"835": {
+		"title": "Clipping Their Wings",
+		"giver": "RezzikCoppergear",
+		"ender": "RezzikCoppergear",
+		"details": "Getting my sacks back is one thing. Making sure those harpies don't take them again is another.\n\nKill twelve galecry savages and eight of their stormcallers. That ought to keep them off my wagon.",
+		"objectives": "Kill 12 Galecry Savages and 8 Galecry Stormcallers on the harpies' cliffs, then return to Rezzik Coppergear.",
+		"progress": "The harpies still screech over my wagon.",
+		"completion": "Quiet at last. Pick something, pal. You've earned it."
+	},
+	"837": {
+		"title": "Tuskfolk Encroachment",
+		"giver": "CommanderThrogg",
+		"ender": "CommanderThrogg",
+		"details": "The Thornhide tuskfolk are moving in from the dry gulch west of Spikewall, closer every week. They raid our caravans and drive off our herds.\n\nPush them back. Four of each: their warriors, scouts, dustrunners and warguards.",
+		"objectives": "Kill 4 Thornhide Tuskfolk, 4 Thornhide Scouts, 4 Thornhide Dustrunners and 4 Thornhide Warguards, then return to Commander Throgg.",
+		"progress": "The tuskfolk still come.",
+		"completion": "That will teach them to keep to their gulch. The Horde thanks you."
 	}
 }

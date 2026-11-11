@@ -63,6 +63,61 @@ const LOOKS := {
 	478: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.4, 0.25)],
 	117: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.36, 0.22)],
 	448: [Vector3(1.4, 1.4, 1.4), Color(0.45, 0.3, 0.2)],
+	# Kareth: Emberhollow.
+	3098: [Vector3(0.9, 0.8, 0.9), Color(0.52, 0.38, 0.28)],
+	3124: [Vector3(0.7, 0.45, 0.8), Color(0.62, 0.42, 0.2)],
+	3101: [Vector3(0.6, 0.6, 0.6), Color(0.7, 0.3, 0.15)],
+	3102: [Vector3(0.95, 0.9, 1.0), Color(0.35, 0.25, 0.3)],
+	3281: [Vector3(1.3, 0.8, 1.4), Color(0.6, 0.3, 0.15)],
+	3183: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.15, 0.12)],
+	# The Redsand Coast.
+	3099: [Vector3(1.05, 0.9, 1.05), Color(0.48, 0.34, 0.25)],
+	3100: [Vector3(1.15, 0.95, 1.15), Color(0.42, 0.3, 0.22)],
+	3106: [Vector3(0.55, 0.35, 0.6), Color(0.75, 0.4, 0.25)],
+	3107: [Vector3(0.7, 0.45, 0.75), Color(0.72, 0.36, 0.22)],
+	3108: [Vector3(0.85, 0.5, 0.9), Color(0.55, 0.5, 0.4)],
+	3103: [Vector3(0.9, 0.9, 0.9), Color(0.6, 0.35, 0.3)],
+	3104: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.4, 0.32)],
+	3105: [Vector3(1.0, 1.0, 1.0), Color(0.65, 0.3, 0.25)],
+	3141: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.42, 0.38)],
+	3125: [Vector3(0.75, 0.5, 0.85), Color(0.6, 0.45, 0.25)],
+	3126: [Vector3(0.85, 0.55, 0.95), Color(0.4, 0.35, 0.3)],
+	3127: [Vector3(0.9, 0.55, 1.0), Color(0.35, 0.45, 0.25)],
+	5823: [Vector3(1.1, 0.7, 1.2), Color(0.25, 0.35, 0.2)],
+	3111: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.36, 0.3)],
+	3112: [Vector3(0.95, 0.95, 0.95), Color(0.48, 0.38, 0.3)],
+	3113: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.4, 0.32)],
+	3114: [Vector3(1.1, 1.1, 1.1), Color(0.45, 0.32, 0.26)],
+	5826: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.5, 0.35)],
+	5824: [Vector3(1.2, 1.2, 1.2), Color(0.4, 0.3, 0.25)],
+	3115: [Vector3(0.95, 0.95, 0.95), Color(0.6, 0.5, 0.4)],
+	3116: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.45, 0.38)],
+	3117: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.42, 0.35)],
+	3118: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.45, 0.6)],
+	3119: [Vector3(1.15, 1.15, 1.15), Color(0.5, 0.38, 0.25)],
+	3120: [Vector3(1.2, 1.2, 1.2), Color(0.55, 0.4, 0.26)],
+	5808: [Vector3(1.35, 1.35, 1.35), Color(0.45, 0.32, 0.2)],
+	3121: [Vector3(1.0, 0.85, 1.1), Color(0.78, 0.5, 0.2)],
+	3122: [Vector3(0.95, 1.0, 1.0), Color(0.6, 0.25, 0.2)],
+	3123: [Vector3(1.05, 1.1, 1.1), Color(0.5, 0.22, 0.18)],
+	3128: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
+	3129: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
+	3192: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
+	5809: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
+	3130: [Vector3(1.2, 0.9, 1.4), Color(0.45, 0.5, 0.55)],
+	3131: [Vector3(1.25, 0.95, 1.45), Color(0.4, 0.48, 0.65)],
+	3195: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3196: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3197: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3198: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3199: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3203: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3204: [Vector3(1.1, 1.1, 1.1), Color(0.3, 0.08, 0.08)],
+	5822: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
+	3205: [Vector3(1.05, 1.05, 1.05), Color(0.35, 0.2, 0.45)],
+	3206: [Vector3(1.0, 1.0, 1.0), Color(0.35, 0.2, 0.45)],
+	3207: [Vector3(1.0, 1.0, 1.0), Color(0.35, 0.2, 0.45)],
+	3110: [Vector3(1.2, 0.6, 1.6), Color(0.3, 0.38, 0.25)],
 }
 
 @export var acceleration := 60.0
@@ -386,6 +441,38 @@ const HUMAN_CREATURES := {
 	116: { "main": "dagger", "off": "Off_dagger", "helm": "Helm_hood" },
 	473: { "main": "sword", "off": "Shield_round" },
 	474: { "main": "staff", "helm": "Helm_hood" },
+	# Kareth: the Saltmarch sailors and marines of the Stranded Keep.
+	3128: { "main": "sword" },
+	3129: { "main": "sword", "off": "Shield_round", "helm": "Helm_cap" },
+	3192: { "main": "sword", "off": "Shield_kite", "helm": "Helm_plate" },
+	5809: { "main": "mace", "off": "Shield_kite", "helm": "Helm_coif" },
+	# The Ember Cult's orcs.
+	3183: { "main": "staff", "helm": "Helm_hood" },
+	3195: { "main": "mace" },
+	3196: { "main": "dagger" },
+	3197: { "main": "axe2h" },
+	3198: { "main": "staff", "helm": "Helm_hood" },
+	3199: { "main": "staff", "helm": "Helm_hood" },
+	3203: { "main": "staff", "helm": "Helm_hood" },
+	3204: { "main": "axe", "off": "Off_axe" },
+	5822: { "main": "staff", "helm": "Helm_hood" },
+	# Vazzar's trolls.
+	3205: { "main": "staff" },
+	3206: { "main": "staff" },
+	3207: { "main": "axe" },
+}
+## The race and colours of HUMAN_CREATURES that aren't brigands: entry ->
+## [model race, colour of their hoods and coats, whether they wear a cloak].
+const CREATURE_RACES := {
+	3128: ["human", Color(0.2, 0.3, 0.55), false], 3129: ["human", Color(0.2, 0.3, 0.55), false],
+	3192: ["human", Color(0.2, 0.3, 0.55), true], 5809: ["human", Color(0.2, 0.3, 0.55), true],
+	3183: ["orc", Color(0.3, 0.08, 0.08), false], 3195: ["orc", Color(0.3, 0.08, 0.08), false],
+	3196: ["orc", Color(0.3, 0.08, 0.08), false], 3197: ["orc", Color(0.3, 0.08, 0.08), true],
+	3198: ["orc", Color(0.3, 0.08, 0.08), false], 3199: ["orc", Color(0.3, 0.08, 0.08), false],
+	3203: ["orc", Color(0.3, 0.08, 0.08), true], 3204: ["orc", Color(0.3, 0.08, 0.08), true],
+	5822: ["orc", Color(0.3, 0.08, 0.08), true],
+	3205: ["troll", Color(0.35, 0.2, 0.45), true], 3206: ["troll", Color(0.35, 0.2, 0.45), false],
+	3207: ["troll", Color(0.35, 0.2, 0.45), false],
 }
 ## Other creatures with models: entry -> [model, props]. Beasts (wolf, boar,
 ## bear, spider) are BeastModels coloured by their LOOKS colour; humanoid
@@ -403,11 +490,25 @@ const CREATURE_MODELS := {
 	46: ["mirefin", { "main": "" }],
 	97: ["ditchjaw", { "main": "axe" }], 117: ["ditchjaw", { "main": "axe2h" }], 478: ["ditchjaw", { "main": "polearm" }],
 	448: ["ditchjaw", { "main": "axe2h" }],
+	# Kareth's boars, scorpions, crabs (the clawfolk too), tigers (and the
+	# ashstalker), lizards (and the crocodile), tuskfolk and imps.
+	3098: ["boar", {}], 3099: ["boar", {}], 3100: ["boar", {}],
+	3124: ["scorpion", {}], 3125: ["scorpion", {}], 3126: ["scorpion", {}], 3127: ["scorpion", {}],
+	5823: ["scorpion", {}], 3281: ["scorpion", {}],
+	3106: ["crab", {}], 3107: ["crab", {}], 3108: ["crab", {}],
+	3103: ["crab", {}], 3104: ["crab", {}], 3105: ["crab", {}], 3141: ["crab", {}],
+	3121: ["tiger", {}], 3102: ["tiger", {}],
+	3130: ["thunder_lizard", {}], 3131: ["thunder_lizard", {}], 3110: ["thunder_lizard", {}],
+	3111: ["tuskfolk", { "main": "axe" }], 3112: ["tuskfolk", { "main": "polearm" }],
+	3113: ["tuskfolk", { "main": "staff" }], 3114: ["tuskfolk", { "main": "axe", "off": "Shield_round" }],
+	5826: ["tuskfolk", { "main": "staff" }], 5824: ["tuskfolk", { "main": "axe2h" }],
+	3101: ["imp", { "main": "" }],
 }
 ## How big each model is at scale 1, in LOOKS' terms, so a creature's model
 ## is scaled by its LOOKS size over this.
-const MODEL_BASE_SIZE := { "wolf": 0.9, "boar": 1.0, "bear": 1.15, "spider": 0.75, "burrowling": 0.75, "mirefin": 0.9, "ditchjaw": 1.0 }
-const BEASTS := ["wolf", "boar", "bear", "spider"]
+const MODEL_BASE_SIZE := { "wolf": 0.9, "boar": 1.0, "bear": 1.15, "spider": 0.75, "burrowling": 0.75, "mirefin": 0.9, "ditchjaw": 1.0,
+	"scorpion": 0.8, "crab": 0.75, "tiger": 1.0, "thunder_lizard": 1.2, "tuskfolk": 0.95, "imp": 0.6 }
+const BEASTS := ["wolf", "boar", "bear", "spider", "scorpion", "crab", "tiger", "thunder_lizard"]
 const BRIGAND_RED := Color(0.55, 0.12, 0.1)
 ## The creature's model (HumanoidModel or BeastModel), for HUMAN_CREATURES
 ## and CREATURE_MODELS.
@@ -479,7 +580,9 @@ func _apply_human_look() -> void:
 	if model:
 		return
 	var gear: Dictionary = HUMAN_CREATURES[creature_entry]
+	var kind: Array = CREATURE_RACES.get(creature_entry, ["human", BRIGAND_RED, true])
 	var human := HumanoidModel.new()
+	human.race = kind[0]
 	# Each brigand its own face: seeded by its place in the world.
 	var seed_value := hash(str(name) + str(creature_entry))
 	var look := HumanoidModel.random_appearance(seed_value)
@@ -487,11 +590,12 @@ func _apply_human_look() -> void:
 	human.set_appearance(look)
 	human.creature_gear = gear
 	var outfit := HumanoidModel.outfit_for("", seed_value)
-	outfit[HumanoidModel.HEAD] = BRIGAND_RED
-	outfit[HumanoidModel.CHEST] = HumanoidModel.LEATHER[absi(seed_value) % HumanoidModel.LEATHER.size()]
+	var band: Color = kind[1]
+	outfit[HumanoidModel.HEAD] = band
+	outfit[HumanoidModel.CHEST] = HumanoidModel.LEATHER[absi(seed_value) % HumanoidModel.LEATHER.size()] if band == BRIGAND_RED else band
 	outfit[HumanoidModel.LEGS] = Color(0.22, 0.2, 0.2)
-	if not gear.has("helm"):
-		outfit[HumanoidModel.BACK] = BRIGAND_RED
+	if not gear.has("helm") and kind[2]:
+		outfit[HumanoidModel.BACK] = band
 	human.outfit = outfit
 	model = human
 	_visual.add_child(human)

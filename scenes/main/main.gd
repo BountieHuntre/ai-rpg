@@ -104,7 +104,7 @@ func save_game() -> void:
 	if c.is_alive():
 		var p := _player.global_position
 		GameState.player_state = {
-			"zone": _world.zone_at(p).zone_name, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
+			"continent": _world.continent, "zone": _world.zone_at(p).zone_name, "position": [p.x, p.y, p.z], "facing": _player.facing, "health": c.health, "mana": c.mana,
 			"auras": c.saved_auras(),
 			"item_cooldowns": _player.spells.saved_item_cooldowns(),
 		}
@@ -138,14 +138,14 @@ func _notification(what: int) -> void:
 
 ## Puts the player back where the save left them. The dead come back at the
 ## graveyard of the zone they died in; new characters and saves from a zone
-## that isn't there start at the priory.
+## that isn't there start at their race's starting zone (World.START_ZONES).
 func _restore_player() -> void:
 	var state := GameState.player_state
 	var zone := _world.zone_named(str(state.get("zone", "")))
 	if zone == null or not state.has("position"):
 		var graveyard := _world.zone_named(str(state.get("graveyard", "")))
 		if graveyard == null:
-			graveyard = _world.zone_named(AshfordVale.ZONE_NAME)
+			graveyard = _world.start_zone_here(GameState.race)
 		_player.global_position = graveyard.graveyard
 		_player.facing = graveyard.graveyard_facing
 	else:
@@ -265,7 +265,7 @@ func _on_player_died() -> void:
 	# Only the auras that outlast death come back with you, and cooldowns keep running.
 	GameState.player_state = {
 		"auras": _player.combatant.saved_auras(), "item_cooldowns": _player.spells.saved_item_cooldowns(),
-		"graveyard": _world.zone_at(_player.global_position).zone_name,
+		"continent": _world.continent, "graveyard": _world.zone_at(_player.global_position).zone_name,
 	}
 	_store_corpses()
 	_bots.save_roster()

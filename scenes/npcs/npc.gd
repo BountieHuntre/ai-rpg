@@ -15,16 +15,19 @@ extends StaticBody3D
 ## How the NPC looks (HumanoidModel); empty for a look of its own from its
 ## name.
 @export var appearance: Dictionary = {}
+## Its race's model (HumanoidModel.RACE_MODELS' names: "human", "orc", "troll"...).
+@export var race := "human"
 
 
 func _ready() -> void:
-	# NPCs are Humans: the model in clothes for their trade, in place of the
-	# placeholder capsule.
+	# NPCs wear their race's model (Humans unless set) in clothes for their
+	# trade, in place of the placeholder capsule.
 	for part in ["Body", "Tabard"]:
 		if has_node(part):
 			get_node(part).visible = false
 	Targeting.mark_unit(self)
 	var model := HumanoidModel.new()
+	model.race = race
 	add_child(model)
 	model.set_appearance(appearance if not appearance.is_empty() else HumanoidModel.random_appearance(hash(npc_name)))
 	model.outfit = HumanoidModel.outfit_for(trainer, hash(npc_name))

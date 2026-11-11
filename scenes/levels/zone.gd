@@ -1,19 +1,29 @@
 class_name Zone
 extends Node3D
-## What every zone shares. Zones sit side by side in one world (World), each
-## a square SIZE yards across around its center, in world coordinates, with
-## mountains along its edges. Where two zones meet, both use the same
-## mountain shape from the same noise, so the ground joins up, and a pass
-## (PASSES) is cut through the mountains on both sides. -Z is north.
+## What every zone shares. Zones sit side by side in their continent's world
+## (World), each a square SIZE yards across around its center, in world
+## coordinates, with mountains along its edges. Where two zones meet, both use
+## the same mountain shape from the same noise, so the ground joins up, and a
+## pass (PASSES) is cut through the mountains on both sides. -Z is north.
 
 ## Mountain noise shared by every zone, in world coordinates.
 const LAND_SEED := 1077
-## Passes between zones: lines of points in world coordinates, the first end
-## in one zone and the last in the other. The mountains are cut down along
-## them and the edge walls open where they cross.
-const PASSES := [
-	[Vector2(2, 112), Vector2(-18, 150), Vector2(-30, 200), Vector2(-24, 250), Vector2(-8, 290)],
-]
+## Passes between zones, per continent (the two worlds' coordinates overlap,
+## so a continent's passes never touch the other's ground): "line", points in
+## world coordinates, the first end in one zone and the last in the other; and
+## the border it crosses, where it climbs highest: "z" for a border running
+## east-west at that z, "x" for one running north-south. The mountains are
+## cut down along them and the edge walls open where they cross.
+const PASSES := {
+	"aldmark": [
+		# Ashford Vale's bridge road south to Wexford.
+		{ "line": [Vector2(2, 112), Vector2(-18, 150), Vector2(-30, 200), Vector2(-24, 250), Vector2(-8, 290)], "z": 200.0 },
+	],
+	"kareth": [
+		# The Redsand Coast's road east up to Emberhollow.
+		{ "line": [Vector2(2235, -1745), Vector2(2270, -1745), Vector2(2300, -1735), Vector2(2335, -1712), Vector2(2370, -1690)], "x": 2300.0 },
+	],
+}
 ## Half the width of a pass's flat floor, and how far its sides run up.
 const PASS_FLOOR := 7.0
 const PASS_SIDES := 13.0
@@ -29,6 +39,8 @@ const EDGE_INSET := 4.0
 
 static var _land: FastNoiseLite
 
+## The continent the zone is on (World.CONTINENTS), for its passes.
+var continent := "aldmark"
 ## The zone's name, its center (x, z) and width in yards, set by each zone.
 var zone_name := ""
 var center := Vector2.ZERO
@@ -84,11 +96,17 @@ static func mountain_height(x: float, z: float, ring: float) -> float:
 	return ring * (MOUNTAIN_HEIGHT + land_noise().get_noise_2d(x * 3.1, z * 3.1) * MOUNTAIN_ROUGHNESS)
 
 
+## This zone's continent's passes (PASSES).
+func passes() -> Array:
+	return PASSES.get(continent, [])
+
+
 ## Cuts the passes into a height: a road-wide floor a little above the land
-## around, its sides easing up into the mountains.
-static func carve_passes(x: float, z: float, height: float) -> float:
+## around, its sides easing up into the mountains, highest at the border.
+func carve_passes(x: float, z: float, height: float) -> float:
 	var point := Vector2(x, z)
-	for line: Array in PASSES:
+	for each: Dictionary in passes():
+		var line: Array = each.line
 		var along := Vector2.ZERO
 		var distance := INF
 		for i in line.size() - 1:
@@ -101,7 +119,8 @@ static func carve_passes(x: float, z: float, height: float) -> float:
 				along = a + (b - a) * t
 		if distance > PASS_FLOOR + PASS_SIDES:
 			continue
-		var crest := PASS_CREST * _bump(absf(along.y - 200.0) / 70.0)
+		var from_border := absf(along.y - float(each.z)) if each.has("z") else absf(along.x - float(each.x))
+		var crest := PASS_CREST * _bump(from_border / 70.0)
 		var floor_height := base_height(along.x, along.y) + crest
 		var cut := lerpf(floor_height, height, smoothstep(PASS_FLOOR, PASS_FLOOR + PASS_SIDES, distance))
 		height = minf(height, cut)
@@ -124,10 +143,10 @@ static func distance_to_line(point: Vector2, line: Array) -> float:
 
 
 ## Distance to the nearest pass.
-static func distance_to_pass(point: Vector2) -> float:
+func distance_to_pass(point: Vector2) -> float:
 	var best := INF
-	for line: Array in PASSES:
-		best = minf(best, distance_to_line(point, line))
+	for each: Dictionary in passes():
+		best = minf(best, distance_to_line(point, each.line))
 	return best
 
 
@@ -187,7 +206,8 @@ func build_edges() -> void:
 		var a: Vector2 = center + corners[side]
 		var b: Vector2 = center + corners[(side + 1) % 4]
 		var gaps: Array[float] = []
-		for line: Array in PASSES:
+		for each: Dictionary in passes():
+			var line: Array = each.line
 			for i in line.size() - 1:
 				var hit: Variant = Geometry2D.segment_intersects_segment(a, b, line[i], line[i + 1])
 				if hit != null:
@@ -235,6 +255,31 @@ func plank(parent: Node3D, from: Vector3, to: Vector3) -> void:
 	collision.position.y = -thickness / 2.0
 	body.add_child(collision)
 	parent.add_child(body)
+
+
+## A row of sharpened logs from one point to another, `height` tall (the
+## Horde's palisades).
+func palisade(parent: Node3D, from: Vector2, to: Vector2, y: float, color: Color, height := 4.5) -> void:
+	var length := from.distance_to(to)
+	var direction := (to - from) / length
+	Props.box(parent, Vector3((from.x + to.x) / 2, y, (from.y + to.y) / 2), Vector3(length, height, 0.9), color, -direction.angle())
+	var steps := int(length / 1.5)
+	var tips: Array[Transform3D] = []
+	for i in steps + 1:
+		var at := from.lerp(to, float(i) / maxf(steps, 1))
+		tips.append(Transform3D(Basis(), Vector3(at.x, y + height + 0.5, at.y)))
+	Props.scatter(parent, Props.cone(0.5, 1.2, 5), color, tips)
+
+
+## A round Horde hut: low log walls under a tall hide roof, a bone spike on top.
+func round_hut(parent: Node3D, at: Vector2, radius: float, y: float, wall: Color, roof_color: Color, spike: Color) -> void:
+	Props.cylinder(parent, Vector3(at.x, y, at.y), radius, 2.6, wall)
+	var roof := MeshInstance3D.new()
+	roof.mesh = Props.cone(radius * 1.25, radius * 1.1, 8)
+	roof.material_override = Props.material(roof_color)
+	roof.position = Vector3(at.x, y + 2.6 + radius * 0.55, at.y)
+	parent.add_child(roof)
+	Props.box(parent, Vector3(at.x, y + 2.6 + radius * 1.1, at.y), Vector3(0.25, 1.6, 0.25), spike, 0.0, false)
 
 
 func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:

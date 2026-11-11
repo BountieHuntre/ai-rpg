@@ -29,7 +29,22 @@ import renames
 # Lurker, Murloc Forager, Riverpaw Outrunner, Hogger and Riverpaw Gnoll.
 CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94,
              525, 30, 285, 735, 524, 390, 1922, 822, 116, 327, 43, 97, 474, 330, 118, 732, 46, 478, 448, 117,
-             473]
+             473,
+             # Kareth: Emberhollow (Valley of Trials): Mottled Boar, Scorpid
+             # Worker, Vile Familiar, Felstalker, Sarkoth, Yarrog Baneshadow.
+             3098, 3124, 3101, 3102, 3281, 3183,
+             # The Redsand Coast (Durotar): boars, surf crawlers, makrura,
+             # scorpids, the Razormane quilboar, the Dustwind harpies, the
+             # Kolkar, the tiger, raptors, Kul Tiras sailors and marines,
+             # thunder lizards, the Burning Blade, Zalazane's trolls, the
+             # crocolisk, and their named ones (Lieutenant Benedict, Fizzle
+             # Darkstorm, Gazz'uz, Zalazane) and rares (Geolord Mottle,
+             # Captain Flat Tusk, Warlord Kolkanis, Watch Commander Zalaphil,
+             # Felweaver Scornn, Death Flayer).
+             3099, 3100, 3106, 3107, 3108, 3103, 3104, 3105, 3141, 3125, 3126, 3127,
+             3111, 3112, 3113, 3114, 3115, 3116, 3117, 3118, 3119, 3120, 3121, 3122, 3123,
+             3128, 3129, 3192, 3130, 3131, 3195, 3196, 3197, 3198, 3199, 3203, 3204, 3205,
+             3206, 3207, 3110, 5826, 5824, 5808, 5809, 5822, 5823]
 # Respawn time and wander distance for creatures the dump spawns only through
 # spawn groups (no plain creature rows): classic's usual 5 minutes and 5 yards.
 DEFAULT_RESPAWN = 300
@@ -42,7 +57,13 @@ AI_ACTIONS = {1, 11, 25, 39, 44, 54, 57}
 # Vendors whose stock is exported: Brother Danil (General Supplies) and
 # Godric Rothgar (Armorer & Shieldcrafter) from Northshire; Innkeeper Farley
 # and Kurran Steele (Cloth & Leather Armor) from Goldshire.
-VENDORS = [152, 1213, 295, 74, 54]
+VENDORS = [152, 1213, 295, 74, 54,
+           # Emberhollow (Valley of Trials): Duokna (General Goods), Rarc
+           # (Armorer & Shieldcrafter), Huklah (Cloth & Leather Armor). The
+           # Redsand Coast's Spikewall (Razor Hill): Jark (General Goods),
+           # Cutac (Cloth & Leather Armor), Wuark (Armorer & Shieldcrafter),
+           # Uhgar (Weaponsmith) and Innkeeper Grosk.
+           3158, 3161, 3160, 3164, 3166, 3167, 3163, 6928]
 # Loot added to creatures that classic didn't give it (unlike classic): the
 # Red Defias Mask (7997), which every Defias of level 10 and up drops about 2%
 # of the time in classic (creature_loot_template: 1.4-2.6%, mostly about 2),
@@ -63,11 +84,34 @@ EXTRA_LOOT = {116: [(7997, 2.0)], 474: [(7997, 2.0)]}
 # Gramma, Note to William, Collecting Kelp, The Escape and Wanted: "Hogger".
 QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           2158, 40, 11, 46, 52, 83, 88, 85, 86, 84, 87, 106, 111, 107, 112, 114, 176,
-          62, 76, 239, 35, 37, 45, 71, 39, 59, 5545, 123, 147]
+          62, 76, 239, 35, 37, 45, 71, 39, 59, 5545, 123, 147,
+          # Kareth. Emberhollow's, from the Valley of Trials: The New Horde,
+          # Cutting Teeth, Sting of the Scorpid, Galgar's Cactus Apple
+          # Surprise, Sarkoth (both), Vile Familiars, Burning Blade Medallion,
+          # Report to Sen'jin Village and A Peon's Burden. Left out: Lazy Peons
+          # and Thazz'ril's Pick (waking peons with an item), Your Place In The
+          # World (The New Horde for every Horde race instead) and Welcome!
+          787, 788, 789, 4402, 790, 804, 792, 794, 805, 2161,
+          # The Redsand Coast's, from Durotar: Vanquish the Betrayers, From
+          # The Wreckage...., The Admiral's Orders (its first part), Carry Your
+          # Weight, Report to Orgnil, Dark Storms, Margoz, Skull Rock, Burning
+          # Shadows, Minshina's Skull, Need for a Cure, Finding the Antidote,
+          # Break a Few Eggs, Lost But Not Forgotten, Practical Prey, A Solvent
+          # Spirit, Zalazane, Winds in the Desert, Securing the Lines and
+          # Encroachment. Left out: those leading to Orgrimmar or the Barrens
+          # (Neeru Fireblade, Ak'Zeloth, The Demon Seed, Flawed Power Stone,
+          # The Admiral's Orders' second part, Conscript of the Horde,
+          # Crossroads Conscription), Thwarting Kolkar Aggression (objects to
+          # use, which quests don't have yet) and the level-60 raptor ones.
+          784, 825, 830, 791, 823, 806, 828, 827, 832, 808, 812, 813, 815, 816, 817, 818,
+          826, 834, 835, 837]
 # Game objects exported to gameobjects.json (gameobject_template): quest
 # givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
 # loot (type 3: Bundle of Wood), with their loot and usual respawn time.
-GAMEOBJECTS = [55, 56, 176793]
+GAMEOBJECTS = [55, 56, 176793,
+               # Kareth's chests: Cactus Apple, Gnomish Toolbox, Imprisoned
+               # Darkspear (Minshina's Skull), Taillasher Eggs, Stolen Supply Sack.
+               171938, 3236, 3237, 3240, 3290]
 GO_TYPE_QUESTGIVER = 2
 GO_TYPE_CHEST = 3
 

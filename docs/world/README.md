@@ -40,6 +40,11 @@ Change the plan there and rerun it:
 
     python tools/world/plan_world.py
 
+## Built so far
+
+- Aldmark: Ashford Vale and Harrowfield.
+- Kareth: Emberhollow and the Redsand Coast (the Orcs' and Trolls' start; every Horde race begins there for now).
+
 ## Building order
 
 1. The Horde's starting areas: Emberhollow and the Redsand Coast (Orcs and

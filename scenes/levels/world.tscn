@@ -1,8 +1,6 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/levels/world.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://scenes/levels/ashford_vale/ashford_vale.tscn" id="2_vale"]
-[ext_resource type="PackedScene" path="res://scenes/levels/harrowfield/harrowfield.tscn" id="3_harrowfield"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial_1"]
 sky_top_color = Color(0.4, 0.58, 0.82, 1)
@@ -35,7 +33,3 @@ transform = Transform3D(0.866025, 0.353553, -0.353553, 0, 0.707107, 0.707107, 0.
 shadow_enabled = true
 directional_shadow_mode = 0
 directional_shadow_max_distance = 90.0
-
-[node name="AshfordVale" parent="." instance=ExtResource("2_vale")]
-
-[node name="Harrowfield" parent="." instance=ExtResource("3_harrowfield")]
