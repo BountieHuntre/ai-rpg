@@ -16,6 +16,10 @@ signal quests_changed
 signal friends_changed
 ## Quest progress lines ("Burrowling Runt slain: 3/10") for the HUD.
 signal quest_message(text: String)
+## A quest taken and one handed in (escorts set off on the first; the Thunder
+## Ale barrel goes unguarded on the second).
+signal quest_accepted(id: int)
+signal quest_turned_in(id: int)
 
 ## The classic backpack has 16 slots, plus four bag slots.
 const BACKPACK_SLOTS := 16

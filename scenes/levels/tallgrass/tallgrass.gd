@@ -28,6 +28,9 @@ const GRAVEYARD := Vector3(-772, TOWN_HEIGHT, 668)
 const GRAVEYARD_FACING := 0.0
 
 const PLACES := [
+	["Coldhoof Well", Vector2(-640, 700), 12.0],
+	["Stormhide Well", Vector2(-1080, 560), 12.0],
+	["the Tallmane Water Pump", Vector2(-620, 260), 12.0],
 	["the Seers' wells", Vector2(-900, 185), 16.0],
 	["the Ochre Stones", Vector2(-430, 270), 24.0],
 	["the Goldtooth Derrick", Vector2(-450, -60), 26.0],
@@ -46,6 +49,15 @@ const FLATS := [
 	[Vector2(-450, -60), 22.0, 6.0],    # the Goldtooth Derrick
 	[Vector2(-1300, 820), 18.0, 7.0],   # Ashmane Rock
 	[Vector2(-1200, -40), 14.0, 6.0],   # the Windspire lifts
+	[Vector2(-640, 700), 8.0, 6.0],     # Coldhoof Well
+	[Vector2(-1080, 560), 8.0, 6.0],    # Stormhide Well
+	[Vector2(-620, 260), 8.0, 6.0],     # the Tallmane Water Pump
+]
+## The wells cleansed with totems: their spell focus objects.
+const SPELL_FOCUSES := [
+	[2913, Vector2(-640, 700)],
+	[2911, Vector2(-1080, 560)],
+	[2909, Vector2(-620, 260)],
 ]
 const WELLS := 0
 const STONES := 1
@@ -139,6 +151,7 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	spell_focuses = SPELL_FOCUSES
 
 
 func _ready() -> void:
@@ -147,6 +160,7 @@ func _ready() -> void:
 	build_edges()
 	_build_village()
 	_build_wells()
+	_build_cleansing_wells()
 	_build_stones()
 	_build_derrick()
 	_build_ashmane()
@@ -238,6 +252,26 @@ func _build_village() -> void:
 		Props.cylinder(village, _near(t, cairn, y), 0.7, 0.8, ROCK, false, 0.3)
 	for fire in [Vector2(-6, 12), Vector2(12, -12)]:
 		torch(village, _near(t, fire, y + 0.6), 7.0)
+
+
+## Coldhoof and Stormhide Wells, stone rings under little roofs, and the
+## Tallmane Water Pump; the poison has fouled them all.
+func _build_cleansing_wells() -> void:
+	var wells := Node3D.new()
+	wells.name = "CleansingWells"
+	add_child(wells)
+	for spec: Array in SPELL_FOCUSES:
+		var at: Vector2 = spec[1]
+		var y := 6.0
+		Props.cylinder(wells, Vector3(at.x, y, at.y), 1.4, 1.0, ROCK)
+		Props.cylinder(wells, Vector3(at.x, y + 0.95, at.y), 1.1, 0.06, Color(0.32, 0.4, 0.2), false)
+		if int(spec[0]) == 2909:
+			Props.box(wells, Vector3(at.x + 1.6, y, at.y), Vector3(0.4, 2.0, 0.4), IRON)
+			Props.box(wells, Vector3(at.x + 1.6, y + 2.0, at.y - 0.5), Vector3(0.15, 0.15, 1.2), IRON, 0.0, false)
+			continue
+		for side in [-1, 1]:
+			Props.box(wells, Vector3(at.x + side * 1.1, y, at.y), Vector3(0.2, 2.4, 0.2), POLE, 0.0, false)
+		Props.roof(wells, Vector3(at.x, y + 2.4, at.y), Vector3(3, 0.9, 2.4), HIDE)
 
 
 func _build_wells() -> void:

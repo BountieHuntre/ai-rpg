@@ -197,11 +197,32 @@ appearance = {
 race = "wood_elf"
 
 [node name="SentinelArwyn" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2350, 9, -3800)
+position = Vector3(-2150, 5, -4008)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Sentinel Arwyn Cloudsong"
 subname = ""
 appearance = {
 "body": 1
 }
+race = "wood_elf"
+
+[node name="CorivanMoonshade" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2084, 6, -4366)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Corivan Moonshade"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="Mist" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2400, 9, -3745)
+rotation = Vector3(0, 0.60000, 0)
+npc_name = "Mist"
+subname = ""
+beast = "tiger"
+beast_color = Color(0.3, 0.3, 0.38, 1)
+beast_size = 0.55
+escort = 938
 race = "wood_elf"

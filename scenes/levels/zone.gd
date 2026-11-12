@@ -69,6 +69,9 @@ var spawns: Array = []
 ## loot scattered round a spot [object entry, center, radius, count].
 var quest_objects: Array = []
 var chests: Array = []
+## Spell focus objects (gameobjects.json "focus"): [object entry, point (x, z)],
+## invisible, beside what they stand for (a moonwell, a well).
+var spell_focuses: Array = []
 ## Walled places bots go in and out of by the gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 var enclosures: Array = []

@@ -306,6 +306,7 @@ func _process(delta: float) -> void:
 	_update_drag_shield()
 	_check_zone()
 	# Exploration quests: walking into the place they send you to.
+	QuestLog.tick(delta)
 	_explore_left -= delta
 	if _explore_left <= 0.0:
 		_explore_left = 0.25

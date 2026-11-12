@@ -1572,9 +1572,216 @@
 		"title": "The Enchanted Glade",
 		"giver": "SentinelArwyn",
 		"ender": "SentinelArwyn",
-		"details": "The Crimsonwing harpies have taken the Seers' Glade, a holy place.\n\nBring me six of their belts.",
-		"objectives": "Bring 6 Crimsonwing Belts to Sentinel Arwyn Cloudsong at the Seers' Glade.",
+		"details": "The Crimsonwing harpies have taken the Seers' Glade, a holy place south-west of here.\n\nBring me six of their belts.",
+		"objectives": "Bring 6 Crimsonwing Belts to Sentinel Arwyn Cloudsong at the Moonwells.",
 		"progress": "Six belts.",
 		"completion": "The glade is cleansed. Thank you."
+	},
+	"5441": {
+		"title": "Lazy Peons",
+		"giver": "ForemanThazgar",
+		"ender": "ForemanThazgar",
+		"details": "Look at them. Asleep! In the middle of the day, with the hold half built and the woodpiles empty.\n\nTake this blackjack. When you find a peon sleeping on the job, give him a good whack. Wake five of them, then bring the blackjack back.",
+		"objectives": "Use the Foreman's Blackjack on 5 Lazy Peons, then bring it back to Foreman Thazgar.",
+		"progress": "Still snoring out there. I can hear them from here.",
+		"completion": "Five of them back at work, and complaining. Good. Complaining peons are working peons.",
+		"objective_text": {
+			"10556": "Lazy Peons woken"
+		}
+	},
+	"6394": {
+		"title": "Thazgar's Pick",
+		"giver": "ForemanThazgar",
+		"ender": "ForemanThazgar",
+		"details": "My pick. My good pick! I left it by the cave in the cult's hill, east of here, before the Ember Cult moved in.\n\nGet it back for me. Mind the imps.",
+		"objectives": "Bring Thazgar's Pick from the Ember Cult Cave to Foreman Thazgar.",
+		"progress": "My pick, peon. I mean, friend.",
+		"completion": "There she is. Not a scratch on her. You've earned this."
+	},
+	"786": {
+		"title": "Thwarting Dunestride Aggression",
+		"giver": "CommanderThrogg",
+		"ender": "CommanderThrogg",
+		"details": "The Dunestride centaurs camp in the west, and our scouts say they're planning raids: on Emberhollow, on the Tidebone village, even on Ironmaw Hold.\n\nTheir war leaders keep the plans in the camp. Go there and take all three.",
+		"objectives": "Take the attack plans for Emberhollow, the Tidebone Village and Ironmaw Hold from the Dunestride camp, then return to Commander Throgg.",
+		"progress": "The centaurs still have their plans.",
+		"completion": "All three. Now we know where they'll strike, and we'll be waiting."
+	},
+	"6395": {
+		"title": "Maren's Last Wish",
+		"giver": "AcolyteRennick",
+		"ender": "AcolyteRennick",
+		"details": "Before the plague, a woman called Maren lived in the hamlet. She's buried by the chapel. Her husband Samuel wasn't so lucky: he rose, empty, and wanders the ruined hamlet still.\n\nI found a letter in her grave. All she wanted was to lie beside him. Put him to rest, bring his remains, and bury them in her grave.",
+		"objectives": "Kill Samuel Pell in the ruined hamlet and bury his remains in Maren's Grave by the chapel, then return to Acolyte Rennick.",
+		"progress": "Samuel still wanders.",
+		"completion": "They're together again. Even we can do one kindness."
+	},
+	"754": {
+		"title": "Coldhoof Cleansing",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "The poison in the water comes from the wells themselves. Something has fouled them at the source.\n\nTake this totem to Coldhoof Well, east of Longhorn Village, and use it there. The earth's blessing will cleanse the water.",
+		"objectives": "Use the Coldhoof Cleansing Totem at Coldhoof Well, then return to Elder Thunderhoof.",
+		"progress": "The well is east of the village.",
+		"completion": "The water runs clean again. The Earthmother is pleased.",
+		"event": "Coldhoof Well cleansed"
+	},
+	"756": {
+		"title": "Thunderhoof Totem",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "Stormhide Well is fouled too, and its totem needs stronger stuff: the claws of the prairie stalkers and the flatland cougars.\n\nBring me six of each, and I will make it.",
+		"objectives": "Bring 6 Stalker Claws and 6 Cougar Claws to Elder Thunderhoof.",
+		"progress": "Six of each.",
+		"completion": "These will do. The totem is ready."
+	},
+	"758": {
+		"title": "Stormhide Cleansing",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "Take this totem to Stormhide Well, west of Longhorn Village, and use it there.",
+		"objectives": "Use the Thunderhoof Cleansing Totem at Stormhide Well, then return to Elder Thunderhoof.",
+		"progress": "Stormhide Well is west of the village.",
+		"completion": "Two wells clean. One remains.",
+		"event": "Stormhide Well cleansed"
+	},
+	"759": {
+		"title": "Tallmane Totem",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "The last well, the Tallmane Water Pump, needs the strongest totem of all, made with the teeth of the prairie wolf alphas.\n\nBring me eight.",
+		"objectives": "Bring 8 Prairie Alpha Teeth to Elder Thunderhoof.",
+		"progress": "Eight teeth.",
+		"completion": "The totem is ready. One more task."
+	},
+	"760": {
+		"title": "Tallmane Cleansing",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "Take this totem to the Tallmane Water Pump, north-east of Longhorn Village, and use it there.",
+		"objectives": "Use the Tallmane Cleansing Totem at the Tallmane Water Pump, then return to Elder Thunderhoof.",
+		"progress": "The pump is north-east of the village.",
+		"completion": "All three wells run clean. The Tallgrass thanks you, and so do I.",
+		"event": "Tallmane Water Pump cleansed"
+	},
+	"308": {
+		"title": "Distracting Jarvik",
+		"giver": "JarvikKegsworth",
+		"ender": "JarvikKegsworth",
+		"details": "Move along. I'm guarding the Kegsworths' Thunder Ale and nobody's touching it while I'm here.\n\nThough... it's thirsty work, guarding. If someone brought me a mug of Thunder Ale from Belva at the inn, I might step away for a moment to enjoy it.",
+		"objectives": "Bring a Thunder Ale to Jarvik Kegsworth.",
+		"progress": "Thirsty work, guarding.",
+		"completion": "Ahh, that's the stuff. I'll just... drink this by the door. Don't touch anything."
+	},
+	"310": {
+		"title": "Bitter Rivals",
+		"giver": "MaddocBarleyhall",
+		"ender": "UnguardedBarrel",
+		"details": "The Kegsworths think their Thunder Ale is the finest brew in Highpeak. I say it's swill. So here's a prank: swap one of their barrels for a barrel of my Barleyhall Scalder and let them serve it without knowing!\n\nTheir barrel's by the inn in Kettlefold, and Jarvik Kegsworth guards it. You'll have to get him away first.",
+		"objectives": "Swap the Barrel of Barleyhall Scalder for the Kegsworths' Thunder Ale barrel by the inn in Kettlefold.",
+		"progress": "",
+		"completion": "You roll the Kegsworths' barrel aside and set the Scalder in its place. Nobody will know until they taste it."
+	},
+	"311": {
+		"title": "Return to Maddoc",
+		"giver": "UnguardedBarrel",
+		"ender": "MaddocBarleyhall",
+		"details": "The barrel of Thunder Ale is heavy, and it sloshes. Maddoc Barleyhall will want to see it in Barleyhall.",
+		"objectives": "Bring the Barrel of Thunder Ale to Maddoc Barleyhall in Barleyhall.",
+		"progress": "",
+		"completion": "Ha! You did it! The Kegsworths are serving my Scalder and I've got their ale.\n\nLet's see what all the fuss is about. Hmm. Not bad. Don't tell them I said so."
+	},
+	"920": {
+		"title": "Tenaris's Summons",
+		"giver": "GilthanWindstride",
+		"ender": "TenarisStormbough",
+		"details": "You have done well here. Tenaris Stormbough, who keeps watch at the Elderbough's roots, has asked to speak with you.",
+		"objectives": "Speak with Tenaris Stormbough at the Elderbough.",
+		"progress": "",
+		"completion": "Welcome. I have watched your progress. There is a task I would give you."
+	},
+	"921": {
+		"title": "Crown of the Earth",
+		"giver": "TenarisStormbough",
+		"ender": "TenarisStormbough",
+		"details": "The moonwells of the isle hold the blessing of the moon, but some say the water is sickening. I must know.\n\nTake this crystal phial and fill it at the moonwell at the Elderbough's roots.",
+		"objectives": "Fill the Crystal Phial at the Mossglen Moonwell and bring it back to Tenaris Stormbough.",
+		"progress": "The moonwell is just south of the tree.",
+		"completion": "The water seems pure, but I can feel something wrong in it. Faint, but there."
+	},
+	"928": {
+		"title": "Crown of the Earth",
+		"giver": "TenarisStormbough",
+		"ender": "CorivanMoonshade",
+		"details": "Corivan Moonshade in Fernwatch studies the moonwells. Take him this vessel with the water, and do as he asks.",
+		"objectives": "Bring the Partially Filled Vessel to Corivan Moonshade in Fernwatch.",
+		"progress": "",
+		"completion": "Tenaris sent this? Good. I will need water from every moonwell on the isle."
+	},
+	"929": {
+		"title": "Crown of the Earth",
+		"giver": "CorivanMoonshade",
+		"ender": "CorivanMoonshade",
+		"details": "The moonwell at Starbreeze, north-east of here, is the next. The bearfolk have overrun the village, so be careful.\n\nFill this jade phial there.",
+		"objectives": "Fill the Jade Phial at the Starbreeze Moonwell and bring it back to Corivan Moonshade.",
+		"progress": "Starbreeze is north-east.",
+		"completion": "The Starbreeze water is darker still. This is worse than I feared."
+	},
+	"933": {
+		"title": "Crown of the Earth",
+		"giver": "CorivanMoonshade",
+		"ender": "CorivanMoonshade",
+		"details": "Next, the Pale Pools at the Moonwells, south of Fernwatch. Fill this tourmaline phial there.",
+		"objectives": "Fill the Tourmaline Phial at the Pale Pools Moonwell and bring it back to Corivan Moonshade.",
+		"progress": "The Moonwells are south.",
+		"completion": "The same taint. Something is poisoning the isle's moonwells."
+	},
+	"7383": {
+		"title": "Crown of the Earth",
+		"giver": "CorivanMoonshade",
+		"ender": "CorivanMoonshade",
+		"details": "One more: the moonwell in the Seers' Glade, south-west, where the harpies roost. Fill this amethyst phial there.",
+		"objectives": "Fill the Amethyst Phial at the Seers' Glade Moonwell and bring it back to Corivan Moonshade.",
+		"progress": "The Seers' Glade is south-west.",
+		"completion": "Every moonwell tainted. I will take this to the Arch Druid in Silverbough when the way is open. You have done more than enough."
+	},
+	"2561": {
+		"title": "Druid of the Claw",
+		"giver": "OrvelWildclaw",
+		"ender": "OrvelWildclaw",
+		"details": "The shamans' charm showed me where my body is: deeper in the den, possessed by their magic. It fights as a beast now.\n\nDefeat it, then use the charm on it. That will free me.",
+		"objectives": "Defeat Wildclaw in the Thornbarrow Den and use the Voodoo Charm on his body, then return to Orvel Wildclaw.",
+		"progress": "My body still walks.",
+		"completion": "I am free. I can feel my body again... thank you, friend.",
+		"event": "Wildclaw released"
+	},
+	"938": {
+		"title": "Mist",
+		"giver": "Mist",
+		"ender": "SentinelArwyn",
+		"details": "A young shadecat cub, lost among the harpies. It looks at you and mews, then pads to your side.\n\nSentinel Arwyn Cloudsong at the Moonwells might know where it belongs. Lead it there, and keep it close.",
+		"objectives": "Lead Mist from the Seers' Glade to Sentinel Arwyn Cloudsong at the Moonwells.",
+		"progress": "",
+		"completion": "Mist! We thought you were lost. Thank you for bringing her home.",
+		"event": "Mist brought to Sentinel Arwyn",
+		"escort": true
+	},
+	"927": {
+		"title": "The Moss-twined Heart",
+		"giver": "",
+		"ender": "Denalor",
+		"details": "The heart is overgrown with moss and still faintly beating, with the corruption of the barklings in it.\n\nDenalor, by Lake Aleth, studies the barklings. He would want to see this.",
+		"objectives": "Bring the Moss-twined Heart to Denalor at Lake Aleth.",
+		"progress": "",
+		"completion": "Where did you find this? Mossrot? Then the corruption runs deeper than I thought."
+	},
+	"941": {
+		"title": "Planting the Heart",
+		"giver": "Denalor",
+		"ender": "DenalorsPlanter",
+		"details": "I have cleansed what I can of the heart. Now it must be planted in good earth to heal. Put it in my planter, here by the camp.",
+		"objectives": "Plant the Tainted Heart in Denalor's Planter.",
+		"progress": "",
+		"completion": "You bury the heart in the planter's earth. A green shoot pushes up through the soil almost at once."
 	}
 }

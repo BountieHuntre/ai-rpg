@@ -138,6 +138,12 @@ func _update_state(delta: float) -> void:
 	_play_loop("ready" if c.is_in_combat() else "idle")
 
 
+## Poses a beast with no creature (an NPC's, such as Mist): "idle" or "walk".
+func pose(anim: String) -> void:
+	if not _combatant:
+		_play_loop(anim)
+
+
 func _play_loop(anim: String) -> void:
 	if anim == _loop and _player.current_animation == anim:
 		return

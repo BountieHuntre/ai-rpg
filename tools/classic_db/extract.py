@@ -87,7 +87,11 @@ CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94,
              # Duskstalker, Threggil, Fury Shelda).
              1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2038, 2006, 2007, 2008, 2009,
              2010, 2011, 2012, 2013, 2014, 2152, 7235, 7234, 2039, 2022, 2025, 2027, 2029, 2030, 2166, 2042,
-             2043, 2033, 2034, 14428, 14429, 14430, 14432, 2015, 2017, 2018, 2019, 2020, 2021, 14431]
+             2043, 2033, 2034, 14428, 14429, 14430, 14432, 2015, 2017, 2018, 2019, 2020, 2021, 14431,
+             # For quests with items to use: the Lazy Peons of Emberhollow,
+             # Samuel Fipps in Gravesend, Rageclaw in the Thornbarrow Den,
+             # Mist (escorted) and Blackmoss the Fetid (the Moss-twined Heart).
+             10556, 1919, 7318, 3568, 3535]
 # Respawn time and wander distance for creatures the dump spawns only through
 # spawn groups (no plain creature rows): classic's usual 5 minutes and 5 yards.
 DEFAULT_RESPAWN = 300
@@ -147,9 +151,9 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # Kareth. Emberhollow's, from the Valley of Trials: The New Horde,
           # Cutting Teeth, Sting of the Scorpid, Galgar's Cactus Apple
           # Surprise, Sarkoth (both), Vile Familiars, Burning Blade Medallion,
-          # Report to Sen'jin Village and A Peon's Burden. Left out: Lazy Peons
-          # and Thazz'ril's Pick (waking peons with an item), Your Place In The
-          # World (The New Horde for every Horde race instead) and Welcome!
+          # Report to Sen'jin Village and A Peon's Burden. Left out: Your Place
+          # In The World (The New Horde for every Horde race instead) and
+          # Welcome!
           787, 788, 789, 4402, 790, 804, 792, 794, 805, 2161,
           # The Redsand Coast's, from Durotar: Vanquish the Betrayers, From
           # The Wreckage...., The Admiral's Orders (its first part), Carry Your
@@ -160,15 +164,13 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # Encroachment. Left out: those leading to Orgrimmar or the Barrens
           # (Neeru Fireblade, Ak'Zeloth, The Demon Seed, Flawed Power Stone,
           # The Admiral's Orders' second part, Conscript of the Horde,
-          # Crossroads Conscription), Thwarting Kolkar Aggression (objects to
-          # use, which quests don't have yet) and the level-60 raptor ones.
+          # Crossroads Conscription) and the level-60 raptor ones.
           784, 825, 830, 791, 823, 806, 828, 827, 832, 808, 812, 813, 815, 816, 817, 818,
           826, 834, 835, 837,
           # Gravesend's, from Deathknell: Rude Awakening, The Mindless Ones,
           # Rattling the Rattlecages, The Damned, Scavenging Deathknell, Night
           # Web's Hollow, The Scarlet Crusade, The Red Messenger and Vital
-          # Intelligence. Left out: the rogue's letter, Welcome! and Marla's
-          # Last Wish (a grave to use).
+          # Intelligence. Left out: the rogue's letter and Welcome!
           363, 364, 3901, 376, 3902, 380, 381, 382, 383,
           # Duskmoor Glades', from Tirisfal Glades: the war with the Scarlet
           # Crusade and Proof of Demise, Graverobbers, Fields of Grief, A
@@ -188,31 +190,30 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # The Tallgrass's, from Mulgore: Dangers of the Windfury, Sharing
           # the Land, Poison Water, Swoop Hunting, Mazzranache, the first two
           # Rites of Vision, The Demon Scarred Cloak, A Sacred Burial and The
-          # Hunter's Way. Left out: the well cleansings (totems to use), the
+          # Hunter's Way. Left out: the
           # Venture Co. chain (from a search of a caravan), Dwarven Digging
           # and those leading to Windspire Mesa or the Steppe.
           743, 745, 748, 761, 766, 767, 771, 770, 833, 861,
           # Frosthollow's, from Coldridge Valley: Dwarven Outfitters, A New
           # Threat, The Boar Hunter, the mail delivery, A Refugee's Quandary,
           # The Troll Cave, The Stolen Journal, Senir's Observations,
-          # Scalding Mornbrew Delivery and Bring Back the Mug (no time limit,
-          # unlike classic) and Supplies to Tannok. Left out: Welcome!
+          # Scalding Mornbrew Delivery (five minutes, as classic) and Bring Back the Mug
+          # and Supplies to Tannok. Left out: Welcome!
           179, 170, 183, 233, 234, 3361, 182, 218, 282, 420, 3364, 3365, 2160,
           # Highpeak's, from Dun Morogh: Tools for Steelgrill, the Evershine
           # chain, Beer Basted Boar Ribs, The Grizzled Den, Protecting the
           # Herd, The Perfect Stout and Shimmer Stout,
           # Operation Recombobulation, the Gol'Bolar quarry's two, Frostmane
           # Hold, The Lost Pilot and A Pilot's Revenge, Tundra MacGrann's
-          # Stolen Stash and Ammo for Rumbleshot. Left out: Bitter Rivals and
-          # Distracting Jarven (barrels to use), The Reports and Stout to Kadrell
+          # Stolen Stash and Ammo for Rumbleshot. Left out: Guarded Thunderbrew
+          # Barrel (the guarded barrel's note), The Reports and Stout to Kadrell
           # (to Ironforge and Loch Modan),
           # the level-20 Incendicite and the mount exchanges.
           400, 317, 318, 319, 320, 384, 313, 314, 315, 413, 412, 432, 433, 287, 419, 417, 312, 5541,
           # Mossglen's, from Shadowglen: The Woodland Protector, The Balance
           # of Nature, Webwood Venom and Webwood Egg, A Good Friend, A Friend
-          # in Need, Iverron's Antidote (no time limit, unlike classic) and
-          # Dolanaar Delivery. Left out: Welcome! and the Crown of the Earth
-          # chain (phials filled at moonwells, items to use).
+          # in Need, Iverron's Antidote (the cure in five minutes, as classic) and
+          # Dolanaar Delivery. Left out: Welcome!
           458, 459, 456, 457, 916, 917, 4495, 3519, 3521, 3522, 2159,
           # Eldergrove Isle's, from Teldrassil: Zenn's Bidding and Seek
           # Redemption!, Denalan's Earth, Timberling Seeds and Sprouts, the
@@ -220,9 +221,20 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # Wakening, Ursal the Mauler), The Emerald Dreamcatcher, The Road to
           # Darnassus, Twisted Hatred, The Sleeping Druid and The Enchanted
           # Glade. Left out: those leading to Darnassus, Ferocitas (a necklace
-          # to open), Druid of the Claw and Planting the Heart (items to use),
-          # Mist (an escort) and the fruit and frond (items found by chance).
-          488, 489, 997, 918, 919, 475, 476, 483, 486, 2438, 487, 932, 2541, 937]
+          # to open) and the fruit and frond (found by chance in classic, from
+          # no drop the data has).
+          488, 489, 997, 918, 919, 475, 476, 483, 486, 2438, 487, 932, 2541, 937,
+          # Quests with items and objects to use, escorts and events: Lazy
+          # Peons and Thazz'ril's Pick (Emberhollow); Thwarting Kolkar
+          # Aggression (the Redsand Coast); Marla's Last Wish (Gravesend); the
+          # Tallgrass's well cleansings and the totem quests between them;
+          # Distracting Jarven, Bitter Rivals and Return to Marleth
+          # (Highpeak); Tenaron's Summons and the Crown of the Earth phials up
+          # to the amethyst (Mossglen and Eldergrove Isle; the older amethyst
+          # quest, 934, and the one to Darnassus left out); Druid of the Claw,
+          # Mist, The Moss-twined Heart and Planting the Heart (Eldergrove).
+          5441, 6394, 786, 6395, 754, 756, 758, 759, 760, 308, 310, 311,
+          920, 921, 928, 929, 933, 7383, 2561, 938, 927, 941]
 # Game objects exported to gameobjects.json (gameobject_template): quest
 # givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
 # loot (type 3: Bundle of Wood), with their loot and usual respawn time.
@@ -240,9 +252,17 @@ GAMEOBJECTS = [55, 56, 176793,
                # Moonpetal Lilies; Fel Cones, Timberling Sprouts, the four
                # chests of the Relics of Wakening and Tallonkai's Dresser.
                148499, 178084, 178085, 272, 276, 176785, 2059, 4406, 152094, 152095, 1673, 4608,
-               2739, 2740, 2741, 2742, 126158]
+               2739, 2740, 2741, 2742, 126158,
+               # Spell focus objects (type 8): the Tallgrass's three wells and
+               # the four moonwells of Crown of the Earth. Objects to use (type
+               # 10): the Kolkar attack plans and Marla's Grave. Thazz'ril's
+               # Pick (a chest). Quest givers and enders: the guarded and
+               # unguarded Thunder Ale barrels and Denalan's Planter.
+               2909, 2911, 2913, 19549, 19550, 19551, 19552, 3189, 3190, 3192, 178090, 178087,
+               269, 270, 7923]
 GO_TYPE_QUESTGIVER = 2
 GO_TYPE_CHEST = 3
+GO_TYPE_SPELL_FOCUS = 8
 
 # Class trainers whose spell lists are exported. 927 is Brother Wilhelm, Paladin
 # Trainer. Priests have racial spells, so their list merges one trainer per race
@@ -335,7 +355,10 @@ SPELL_FIELDS = [
     "EffectRadiusIndex", "EffectApplyAuraName", "EffectAmplitude", "EffectMiscValue",
     "EffectTriggerSpell", "EffectMultipleValue", "DmgMultiplier",
 )] + ["TargetCreatureType", "Stances", "EffectItemType1", "EffectItemType2", "EffectItemType3",
-     "EquippedItemClass", "EquippedItemSubClassMask", "EquippedItemInventoryTypeMask"]
+     "EquippedItemClass", "EquippedItemSubClassMask", "EquippedItemInventoryTypeMask",
+     # The spell focus object it must be cast near (gameobjects.json "focus"),
+     # or 0: a moonwell for Crown of the Earth's phials.
+     "RequiresSpellFocus"]
 SPELL_EFFECT_LEARN = 36
 SPELL_EFFECT_DUMMY = 3
 SPELL_EFFECT_PROFICIENCY = 60
@@ -549,6 +572,9 @@ def main(path):
         gameobjects[r["entry"]] = {
             "name": r["name"], "type": int(r["type"]), "size": float(r["size"]),
             "loot": int(r["data1"]) if int(r["type"]) == GO_TYPE_CHEST else 0,
+            # Spell focus objects (type 8): the focus id spells require
+            # (RequiresSpellFocus) and how near it they must be cast.
+            **({"focus": int(r["data0"]), "radius": float(r["data1"])} if int(r["type"]) == GO_TYPE_SPELL_FOCUS else {}),
             "respawn": most_common(int(g["spawntimesecsmin"]) for g in spawns) if spawns else DEFAULT_RESPAWN,
         }
         loot_id = r["data1"]
@@ -601,8 +627,25 @@ def export_quests(db):
         quests[r["entry"]] = {
             "level": int(r["QuestLevel"]), "min_level": int(r["MinLevel"]),
             "prev": int(r["PrevQuestId"]), "flags": int(r["QuestFlags"]),
-            "kills": pairs("ReqCreatureOrGOId", "ReqCreatureOrGOCount", 4),
+            # Creatures to kill; objects to use and spells to cast on a
+            # creature or object (ReqSpellCast) are "objects", below.
+            "kills": [[int(r[f"ReqCreatureOrGOId{i}"]), int(r[f"ReqCreatureOrGOCount{i}"])] for i in range(1, 5)
+                      if int(r[f"ReqCreatureOrGOId{i}"]) > 0 and int(r[f"ReqSpellCast{i}"]) == 0],
+            # [target, count, spell]: a game object (negative id) used, or a
+            # creature or object a spell is cast on (Player::CastedCreatureOrGO).
+            "objects": [[int(r[f"ReqCreatureOrGOId{i}"]), int(r[f"ReqCreatureOrGOCount{i}"]), int(r[f"ReqSpellCast{i}"])]
+                        for i in range(1, 5) if int(r[f"ReqCreatureOrGOId{i}"]) != 0
+                        and (int(r[f"ReqCreatureOrGOId{i}"]) < 0 or int(r[f"ReqSpellCast{i}"]) != 0)],
+            # LimitTime: seconds to finish it in, or 0.
+            "time_limit": int(r["LimitTime"]),
+            # SpecialFlags: 1 repeatable, 2 finished by an event (a spell's
+            # Quest Complete effect, an escort's end) rather than objectives.
+            "special": int(r["SpecialFlags"]),
             "items": pairs("ReqItemId", "ReqItemCount", 4),
+            # ReqSourceId: items a quest needs carried to use, not handed in
+            # (Samuel's Remains, buried with their own spell): quest drops
+            # for it, as Player::HasQuestForItem.
+            "sources": pairs("ReqSourceId", "ReqSourceCount", 4),
             "reward_choices": pairs("RewChoiceItemId", "RewChoiceItemCount", 6),
             "reward_items": pairs("RewItemId", "RewItemCount", 4),
             "money": int(r["RewOrReqMoney"]), "money_max_level": int(r["RewMoneyMaxLevel"]),

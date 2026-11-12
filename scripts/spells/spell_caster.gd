@@ -84,6 +84,11 @@ var _spellsword := SpellswordAbilities.new()
 @onready var _unit: PlayerUnit = get_parent()
 
 
+## A quest item's spell being cast (QuestSpells), and what it's used on.
+var _quest_spell := 0
+var _quest_target: Node3D
+
+
 func _ready() -> void:
 	# The Player's own @onready references aren't set yet while children are readied.
 	var combatant: Combatant = $"../Combatant"
@@ -472,6 +477,12 @@ func _has_line_of_sight(target: Combatant) -> bool:
 
 func _finish(spell: Dictionary, target: Combatant) -> void:
 	var me := _unit.combatant
+	if _quest_spell != 0 and int(spell.Id) == _quest_spell:
+		_quest_spell = 0
+		spell_finished.emit(spell)
+		QuestSpells.land(_unit, spell, _quest_target)
+		_quest_target = null
+		return
 	# Mighty Blow and Sweeping Cut wait for the next swing, paying then.
 	if _warrior.queue(spell):
 		return
@@ -824,6 +835,10 @@ func use_item(ref: Dictionary) -> String:
 		return ERR_ITEM_NOT_READY
 	if not casting.is_empty():
 		return ERR_IN_PROGRESS
+	# Quest items: a phial filled at a moonwell, a totem at a well, a charm on
+	# a body (QuestSpells).
+	if QuestSpells.is_quest_spell(spell):
+		return _use_quest_item(ref, item, spell)
 	# Items thrown at an enemy (the Hedge-Witch Candle's fire) take your
 	# target and are used up when the spell lands.
 	if SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
@@ -852,6 +867,26 @@ func use_item(ref: Dictionary) -> String:
 	if int(spell.AuraInterruptFlags) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
 		_unit.sitting = true
 	Sfx.play_at("eat", _unit.global_position)
+	return ""
+
+
+## Uses a quest item (QuestSpells): checks it can be used here, then casts
+## its spell, using the item up afterwards if it has charges to spend.
+func _use_quest_item(ref: Dictionary, item: Dictionary, spell: Dictionary) -> String:
+	var problem: String = QuestSpells.problem(_unit, spell)
+	if not problem.is_empty():
+		return problem
+	_quest_spell = int(spell.Id)
+	_quest_target = QuestSpells.find_target(_unit, spell)
+	_item_ref = ref if int(item.spellcharges_1) < 0 else {}
+	if SpellDB.cast_time(spell) > 0.0:
+		var err := _cast_item_spell(spell)
+		if not err.is_empty():
+			_item_ref = {}
+			_quest_spell = 0
+		return err
+	_finish(spell, _unit.combatant)
+	_use_up_item()
 	return ""
 
 

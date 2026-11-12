@@ -10,6 +10,14 @@ classic names in unnoticed.
 """
 
 ITEMS = {
+    # Quests with items and objects to use.
+    "Thazz'ril's Pick": "Thazgar's Pick",
+    'Barrel of Barleybrew Scalder': 'Barrel of Barleyhall Scalder',
+    'Cleansed Timberling Heart': 'Cleansed Barkling Heart',
+    'Thunderhorn Cleansing Totem': 'Thunderhoof Cleansing Totem',
+    'Winterhoof Cleansing Totem': 'Coldhoof Cleansing Totem',
+    'Wildmane Cleansing Totem': 'Tallmane Cleansing Totem',
+    'Thunderhorn Cloak': 'Thunderhoof Cloak',
     # Aldmark's mountains and Kareth's north-west.
     "Durnan's Scalding Mornbrew": "Dunstan's Scalding Mornbrew",
     "Felix's Box": "Fenwick's Box",
@@ -431,6 +439,10 @@ DESCRIPTIONS = {
 }
 
 CREATURES = {
+    # Quests with items and objects to use.
+    'Blackmoss the Fetid': 'Mossrot the Fetid',
+    'Rageclaw': 'Wildclaw',
+    'Samuel Fipps': 'Samuel Pell',
     # Aldmark's mountains (Frosthollow, Highpeak) and Kareth's north-west (Mossglen, Eldergrove Isle).
     "Grik'nir the Cold": 'Grisknar the Cold',
     'Bjarn': 'Rimeclaw',
@@ -654,6 +666,20 @@ CREATURES = {
 # Vendor names and titles, by creature entry.
 # Game objects (gameobject_template names).
 OBJECTS = {
+    # Quests with items and objects to use.
+    "Attack Plan: Sen'jin Village": 'Attack Plan: Tidebone Village',
+    'Attack Plan: Orgrimmar': 'Attack Plan: Ironmaw Hold',
+    'Attack Plan: Valley of Trials': 'Attack Plan: Emberhollow',
+    "Denalan's Planter": "Denalor's Planter",
+    "Marla's Grave": "Maren's Grave",
+    "Thazz'ril's Pick": "Thazgar's Pick",
+    'Oracle Glade Moonwell': "Seers' Glade Moonwell",
+    'Pools of Arlithrien Moonwell': 'Pale Pools Moonwell',
+    'Shadowglen Moonwell': 'Mossglen Moonwell',
+    'Starbreeze Village Moonwell': 'Starbreeze Moonwell',
+    'Stormbull Water Well': 'Stormhide Well',
+    'Wildmane Water Pump': 'Tallmane Water Pump',
+    'Winterhoof Water Well': 'Coldhoof Well',
     # Aldmark's mountains and Kareth's north-west.
     "Felix's Box": "Fenwick's Box",
     "Felix's Bucket of Bolts": "Fenwick's Bucket of Bolts",
@@ -727,6 +753,13 @@ VENDORS = {
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
 # "Verdict" judgements, "Boon of" blessings and "... Presence" auras.
 SPELLS = {
+    # Quest items' spells.
+    'Bear Form': 'Bear Shape',
+    'Cleanse Thunderhorn Well': 'Cleanse Stormhide Well',
+    'Cleanse Wildmane Well': 'Cleanse Tallmane Water Pump',
+    'Cleanse Winterhoof Well': 'Cleanse Coldhoof Well',
+    'Release Rageclaw': 'Release Wildclaw',
+    'Summon Timberling': 'Summon Barkling',
     # Aldmark's mountains' and Kareth's north-west's creatures.
     'Cat Form': 'Prowling Shape',
     'Curse of Weakness': 'Hex of Feebleness',
@@ -920,6 +953,8 @@ def talent_tree(class_id, name):
 
 # Plain names that are kept as they are.
 KEEP = {
+    "Bury Samuel's Remains", 'Awaken Peon', 'Fill Amethyst Phial', 'Filling',
+    'Lazy Peon', 'Mist', "Foreman's Blackjack", "Samuel's Remains", "Scout's Cloak", "Seasoned Fighter's Cloak", 'Amethyst Phial', 'Barrel of Thunder Ale', 'Brushwood Blade', 'Ceremonial Tomahawk', 'Cord Bracers', 'Crag Buckler', 'Crystal Phial', 'Deadman Blade', 'Dreamwatcher Staff', 'Filled Amethyst Phial', 'Filled Crystal Phial', 'Filled Jade Phial', 'Filled Tourmaline Phial', 'Heavy Cord Bracers', 'Jade Phial', 'Moss-twined Heart', 'Partially Filled Vessel', 'Sleeping Robes', 'Tainted Heart', 'Tourmaline Phial', 'Voodoo Charm', 'Guarded Thunder Ale Barrel', 'Unguarded Thunder Ale Barrel',
     'Blood Leech', 'Crazed Hunger', 'Darken Vision', 'Daunting Growl', 'Deafening Screech', 'Decayed Strength', 'Frost Breath', 'Glacial Roar', 'Ice Claw', 'Icy Grasp', 'Knockdown Proc', 'Knockdown', 'Maul', 'Miring Mud', 'Rabies', 'Rake', 'Savagery', 'Thorns', 'Throw', 'Trample', 'Vicious Bite', 'Voodoo Hex', 'Weak Alcohol', 'Web',
     # Aldmark's mountains' and Kareth's north-west's plain names.
     'A Dwarven Corpse', 'A Stack of Letters', 'Ammo Crate', 'Archery Training Gloves', 'Barkmail Leggings', 'Barkmail Vest', 'Barrel of Shimmer Stout', 'Bastard Sword', 'Bean Soup', 'Bear Shawl', 'Beer Basted Boar Ribs', 'Black Bear Hide Vest', 'Black Feather Quill', 'Blackened Leather Belt', 'Blindweed', 'Bloodstained Knife', 'Bloody Bear Paw', 'Bloody Chain Boots', 'Boar Handler Gloves', 'Bog Boots', 'Broad Axe', 'Cabbage Kimchi', 'Camping Knife', 'Canopy Leggings', 'Cask of Evershine', 'Cask of Shimmer Stout', 'Chest of Nesting', 'Chest of the Black Feather', 'Chest of the Raven Claw', 'Chest of the Sky', 'Club', 'Compact Hammer', 'Cracked Leather Belt', 'Cracked Leather Boots', 'Cracked Leather Bracers', 'Cracked Leather Gloves', 'Cracked Leather Pants', 'Cracked Leather Vest', "Craftsman's Dagger", 'Crag Boar', 'Crag Boar Rib', 'Crate of Inn Supplies', 'Crisp Spider Meat', 'Dark Sprite', 'Defender Axe', 'Dirk', 'Dirty Trogg Cloth', 'Draped Cloak', 'Driftwood Branch', 'Driving Gloves', 'Dull Heater Shield', 'Dwarven Cloth Britches', 'Dwarven Kite Shield', 'Dwarven Leather Pants', 'Earthroot', 'Elder Crag Boar', 'Emerald Dreamcatcher', 'Feather Charm', 'Fel Cone', 'Fel Moss', 'Feral Bracers', 'Foreman Pants', 'Foreman Vest', 'Frostbit Staff', 'Gardening Gloves', 'Gargantuan Tumor', 'Gnarled Short Staff', 'Goat Fur Cloak', 'Graystone Bracers', 'Gritroot Staff', 'Gyromechanic Gear', 'Hand Axe', 'Healing Herb', 'Heaven Peach', 'Hyacinth Mushroom', 'Ice Claw Bear', 'Ice-covered Bracers', 'Icepane Warhammer', 'Ironwrought Bracers', 'Ivy-weave Bracers', 'Juvenile Snow Leopard', 'Keen Machete', 'Large Club', 'Large Crag Boar', 'Light Magesmith Robe', 'Light Mail Armor', 'Light Mail Belt', 'Light Mail Boots', 'Light Mail Gloves', 'Light Mail Leggings', 'Lumberjack Jerkin', 'Mangy Claw', 'Moonpetal Lily', 'Mossy Tumor', 'Mountaineer Chestpiece', 'Oil-stained Cloak', 'Rabbit Handler Gloves', 'Radish Kimchi', 'Ragged Timber Wolf', 'Ragged Young Wolf', 'Rain-spotted Cape', "Rancher's Trousers", 'Rare Earth', 'Rascal Sprite', 'Raven Claw Talisman', 'Restabilization Cog', 'Rhapsody Malt', 'Rotting Bear Carcass', 'Rune of Nesting', 'Rustic Belt', 'Sapphire of Sky', 'Scarred Crag Boar', 'Scroll of Protection IV', 'Scroll of Stamina IV', 'Sedgeweed Britches', 'Severed Talon', 'Severed Voodoo Claw', 'Shackled Girdle', 'Shadow Sprite', 'Shaman Voodoo Charm', 'Sharp Axe', 'Shimmerweed', 'Shimmerweed Basket', 'Short Staff', 'Shortsword', 'Siege Brigade Vest', 'Silver-lined Bracers', 'Skull Hatchet', 'Small Crag Boar', 'Small Targe', 'Smooth Walking Staff', 'Snow Boots', 'Snow Leopard', 'Snow Tracker Wolf', 'Snowy Robe', 'Soft Leather Tunic', 'Starving Winter Wolf', 'Steamed Mandu', 'Stemleaf Bracers', 'Stone Buckler', 'Strigid Hunter', 'Strigid Owl', 'Strigid Owl Feather', 'Strigid Screecher', 'The glowing emerald just needs to be pulled out...', 'Thick Bear Fur', 'Thin Cloth Armor', 'Thin Cloth Belt', 'Thin Cloth Bracers', 'Thin Cloth Gloves', 'Thin Cloth Pants', 'Thin Cloth Shoes', 'Thistle Boar', 'Thistlewood Blade', 'Thistlewood Dagger', 'Thistlewood Maul', 'Thistlewood Staff', 'Thornroot Club', 'Thunder Ale', 'Tracking Boots', 'Trogg Club', 'Trogg Dagger', 'Trogg Hand Axe', 'Versicolor Treat', 'Viny Gloves', 'Viny Wrappings', 'Violet Robes', 'Warm Winter Robe', 'Wendigo', 'Wendigo Collar', 'Wendigo Fur Cloak', 'Wendigo Mane', 'White Wolf Gloves', 'Wild Ricecake', 'Winter Wolf', 'Wolf Handler Gloves', 'Woodland Robes', 'Woodland Shield', 'Woodland Tunic', 'Wooly Mittens', 'Young Black Bear', 'Young Thistle Boar', 'Young Wendigo',

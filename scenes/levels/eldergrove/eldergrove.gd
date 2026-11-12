@@ -136,6 +136,19 @@ const SPAWNS := [
 	[14431, Vector2(-2372, -3748), 1.0, 1],    # Fury Selka (8, rare)
 	[14428, Vector2(-1600, -4300), 40.0, 1],   # Urgrum (7, rare)
 	[14430, Vector2(-2200, -3850), 60.0, 1],   # Gloomprowl (9, rare)
+	[7318, Vector2(-2428, -4162), 1.0, 1],     # Wildclaw, in the Thornbarrow Den (10)
+	[3535, Vector2(-1690, -4300), 30.0, 1],    # Mossrot the Fetid, by Lake Aleth (13, rare)
+]
+## Denalor's Planter, by his camp (Planting the Heart).
+const QUEST_OBJECTS := [
+	[7923, "DenalorsPlanter", Vector2(-1792, -4243), 0.0],
+]
+## The moonwells Crown of the Earth's phials are filled at: Starbreeze's, the
+## Pale Pools at the Moonwells, and the Seers' Glade's.
+const SPELL_FOCUSES := [
+	[19550, Vector2(-1568, -4552)],
+	[19551, Vector2(-2150, -4000)],
+	[19552, Vector2(-2380, -3770)],
 ]
 ## Fel Cones through the woods round Fernwatch, Barkling Sprouts on the lake
 ## shore, the four chests of the Relics of Wakening in the Thornbarrow Den and
@@ -187,6 +200,8 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	quest_objects = QUEST_OBJECTS
+	spell_focuses = SPELL_FOCUSES
 
 
 func _ready() -> void:
@@ -354,6 +369,7 @@ func _build_starbreeze() -> void:
 		else:
 			Props.cylinder(village, Vector3(at.x, flat[2], at.y), 3.2, 0.4, PALE_WOOD.darkened(0.3))
 	_log_hut(village, _near(flat[0], Vector2(0, 0), flat[2]), 3.0)
+	_moonwell(village, _near(flat[0], Vector2(-8, 8), flat[2]), 2.6)
 	torch(village, _near(flat[0], Vector2(4, 4), flat[2] + 0.5), 6.0)
 
 

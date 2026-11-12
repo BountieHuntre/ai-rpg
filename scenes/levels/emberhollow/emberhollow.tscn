@@ -127,3 +127,109 @@ appearance = {
 "body": 1
 }
 race = "troll"
+
+[node name="ForemanThazgar" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2466, 6, -1710)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Foreman Thazgar"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon1" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2457, 6, -1720)
+rotation = Vector3(0, 0.40000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon2" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2463, 6, -1724)
+rotation = Vector3(0, 2.00000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon3" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2470, 6, -1718)
+rotation = Vector3(0, -1.20000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon4" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2455, 6, -1709)
+rotation = Vector3(0, 3.00000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon5" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2489, 6, -1712)
+rotation = Vector3(0, 1.00000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon6" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2486, 6, -1668)
+rotation = Vector3(0, -0.50000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon7" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2531, 6, -1712)
+rotation = Vector3(0, 2.50000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="LazyPeon8" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2530, 6, -1668)
+rotation = Vector3(0, -2.20000, 0)
+npc_name = "Lazy Peon"
+subname = ""
+creature_entry = 10556
+sleeping = true
+appearance = {
+"body": 0
+}
+race = "orc"

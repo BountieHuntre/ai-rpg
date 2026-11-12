@@ -196,6 +196,17 @@ func zone_at(point: Vector3) -> Zone:
 	return best
 
 
+## Whether a spell focus (RequiresSpellFocus) is within its reach of a
+## point: a moonwell for filling a phial, a well for cleansing it.
+func spell_focus_near(focus: int, point: Vector3) -> bool:
+	for zone in zones:
+		for spec: Array in zone.spell_focuses:
+			var data := GameObject.data(int(spec[0]))
+			if int(data.get("focus", -1)) == focus and Vector2(point.x, point.z).distance_to(spec[1]) <= float(data.get("radius", 10.0)):
+				return true
+	return false
+
+
 func zone_named(zone_name: String) -> Zone:
 	for zone in zones:
 		if zone.zone_name.to_lower() == zone_name.to_lower():

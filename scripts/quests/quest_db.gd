@@ -17,6 +17,42 @@ static func race_allowed(quest: Dictionary, race: int) -> bool:
 	return races == 0 or races & (1 << (race - 1)) != 0
 
 
+## SpecialFlags (CMaNGOS QUEST_SPECIAL_FLAGS): taken again and again
+## (Distracting Jarvik), and finished by an event (a spell's Quest Complete
+## effect, an escort reaching the end) rather than by its objectives alone.
+const SPECIAL_REPEATABLE := 1
+const SPECIAL_EVENT := 2
+## Item spell effects that make an item for a quest (Crown of the Earth's
+## phials filled at a moonwell).
+const EFFECT_CREATE_ITEM := 24
+
+
+static func is_repeatable(quest: Dictionary) -> bool:
+	return int(quest.get("special", 0)) & SPECIAL_REPEATABLE != 0
+
+
+static func has_event(quest: Dictionary) -> bool:
+	return int(quest.get("special", 0)) & SPECIAL_EVENT != 0
+
+
+## Whether playerbots can do a quest by themselves: not one with things to use
+## or cast on, an event, an escort or a time limit, nor one whose item is made
+## by using the item it starts with (a phial filled at a moonwell), nor a
+## repeatable one.
+static func bots_can_do(quest: Dictionary) -> bool:
+	if not quest.get("objects", []).is_empty() or has_event(quest) or is_repeatable(quest):
+		return false
+	if int(quest.get("time_limit", 0)) > 0 or quest.has("escort"):
+		return false
+	var source := ItemDB.get_item(int(quest.get("source_item", 0)))
+	var spell := SpellDB.get_spell(int(source.get("spellid_1", 0))) if not source.is_empty() else {}
+	for need: Array in quest.get("items", []):
+		for i in [1, 2, 3]:
+			if int(spell.get("Effect%d" % i, 0)) == EFFECT_CREATE_ITEM and int(spell.get("EffectItemType%d" % i, 0)) == int(need[0]):
+				return false
+	return true
+
+
 static func get_quest(id: int) -> Dictionary:
 	return _get_quests().get(id, {})
 

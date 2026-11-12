@@ -275,3 +275,23 @@ appearance = {
 "body": 0
 }
 race = "dwarf"
+
+[node name="MaddocBarleyhall" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-337, 4, -1206)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Maddoc Barleyhall"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="JarvikKegsworth" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-130, 7, -805)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Jarvik Kegsworth"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"

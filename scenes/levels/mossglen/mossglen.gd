@@ -113,6 +113,8 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	# The moonwell at the Elderbough's roots (Crown of the Earth).
+	spell_focuses = [[19549, Vector2(-2200, -4992)]]
 
 
 func _ready() -> void:

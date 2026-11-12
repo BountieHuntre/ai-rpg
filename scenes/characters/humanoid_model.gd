@@ -975,6 +975,18 @@ func _update_loco(delta: float) -> void:
 	_set_loco(state)
 
 
+## Poses a model with no unit (an NPC): "sit" sits down (a sleeping peon),
+## "idle" stands, "walk" walks in place while its NPC moves it (an escort).
+func pose(state: String) -> void:
+	if _body:
+		return
+	if state == "sit" and _loco != "sit":
+		_full("sit_down")
+	elif state != "sit" and _loco == "sit":
+		_full("stand_up")
+	_set_loco(state)
+
+
 func _set_loco(state: String) -> void:
 	if state == _loco:
 		return

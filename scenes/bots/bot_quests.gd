@@ -19,6 +19,8 @@ func can_take(id: int, level: int, race := 0) -> bool:
 		return false
 	if race > 0 and not QuestDB.race_allowed(quest, race):
 		return false
+	if not QuestDB.bots_can_do(quest):
+		return false
 	# Grey quests are taken too: they open the chains behind them.
 	if int(quest.min_level) > level:
 		return false

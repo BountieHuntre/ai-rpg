@@ -12,6 +12,9 @@ extends StaticBody3D
 const DATA_PATH := "res://data/classic/gameobjects.json"
 const TYPE_QUESTGIVER := 2
 const TYPE_CHEST := 3
+## Objects to use (classic's goobers): the Kolkar attack plans, taken by
+## clicking; Maren's Grave, where remains are buried with an item's spell.
+const TYPE_GOOBER := 10
 
 static var _data: Dictionary
 
@@ -26,9 +29,23 @@ var _model: Node3D
 
 
 static func data(id: int) -> Dictionary:
+	_load()
+	return _data.get(str(id), {})
+
+
+## Every object entry in the data.
+static func all_ids() -> Array:
+	_load()
+	return _data.keys().map(func(key: String) -> int: return int(key))
+
+
+static func _load() -> void:
 	if _data.is_empty():
 		_data = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
-	return _data.get(str(id), {})
+
+
+func object_type() -> int:
+	return int(data(entry).get("type", TYPE_CHEST))
 
 
 func object_name() -> String:
@@ -55,9 +72,25 @@ func _ready() -> void:
 	add_child(_sparkle)
 
 
-## A bundle of short logs tied with rope.
+## A bundle of short logs tied with rope; for objects to use, by their name:
+## a headstone, rolled plans on a crate, a pick in a rock.
 func _build_model() -> Node3D:
 	var model := Node3D.new()
+	var thing := object_name()
+	if "Grave" in thing:
+		Props.box(model, Vector3(0, 0, -0.5), Vector3(0.9, 1.2, 0.25), Color(0.5, 0.5, 0.52), 0.0, false)
+		Props.box(model, Vector3(0, 0, 0.4), Vector3(1.0, 0.2, 1.8), Color(0.32, 0.26, 0.2), 0.0, false)
+		return model
+	if "Attack Plan" in thing:
+		Props.box(model, Vector3.ZERO, Vector3(0.9, 0.6, 0.7), Color(0.45, 0.32, 0.2), 0.0, false)
+		Props.box(model, Vector3(0, 0.6, 0), Vector3(0.7, 0.05, 0.5), Color(0.85, 0.8, 0.65), 0.2, false)
+		return model
+	if "Pick" in thing:
+		Props.cylinder(model, Vector3.ZERO, 0.6, 0.5, Color(0.42, 0.4, 0.38), false, 0.4)
+		var handle := Props.box(model, Vector3(0, 0.5, 0), Vector3(0.08, 1.1, 0.08), Color(0.45, 0.31, 0.2), 0.0, false)
+		handle.rotation.z = 0.4
+		Props.box(model, Vector3(-0.25, 1.05, 0), Vector3(0.7, 0.1, 0.1), Color(0.35, 0.35, 0.38), 0.4, false)
+		return model
 	for i in 3:
 		var log_mesh := CylinderMesh.new()
 		log_mesh.top_radius = 0.18
@@ -108,6 +141,8 @@ func is_spawned() -> bool:
 func is_usable() -> bool:
 	if not is_spawned():
 		return false
+	if object_type() == TYPE_GOOBER:
+		return QuestLog.needs_object(-entry, 0)
 	if _rolled:
 		return not loot.is_empty()
 	for item in LootTable.object_items(loot_id()):
@@ -121,8 +156,14 @@ func has_loot() -> bool:
 
 
 ## Opens it: rolls its loot the first time. Returns whether there's loot.
+## An object to use is used instead: a quest counts it, and it's gone until
+## it respawns.
 func open() -> bool:
 	if not is_usable():
+		return false
+	if object_type() == TYPE_GOOBER:
+		QuestLog.credit_object(-entry, 0)
+		_despawn()
 		return false
 	if not _rolled:
 		loot = LootTable.roll_object(loot_id())
@@ -138,6 +179,14 @@ func holds(item_id: int) -> bool:
 ## A playerbot takes it: it's gone until it respawns.
 func take_for_bot() -> void:
 	_despawn()
+
+
+func _wanted_by_spell() -> bool:
+	for id: int in GameState.quests:
+		for wanted: Array in QuestDB.get_quest(id).get("objects", []):
+			if int(wanted[0]) == -entry and int(wanted[2]) != 0 and QuestLog.needs_object(-entry, int(wanted[2])):
+				return true
+	return false
 
 
 func _despawn() -> void:
@@ -160,6 +209,7 @@ func _process(delta: float) -> void:
 	if _rolled and loot.is_empty():
 		_despawn()
 		return
-	_sparkle.visible = is_usable()
+	# Objects a quest wants a spell cast on (Maren's Grave) sparkle too.
+	_sparkle.visible = is_usable() or (object_type() == TYPE_GOOBER and _wanted_by_spell())
 	if _sparkle.visible:
 		_sparkle.rotate_y(2.0 * delta)

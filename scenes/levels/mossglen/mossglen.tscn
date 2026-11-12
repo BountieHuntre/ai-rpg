@@ -164,3 +164,13 @@ appearance = {
 "body": 0
 }
 race = "wood_elf"
+
+[node name="TenarisStormbough" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2216, 5, -5022)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Tenaris Stormbough"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"

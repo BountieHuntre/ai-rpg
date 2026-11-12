@@ -184,6 +184,10 @@ const SPAWNS := [
 ## Stolen Supply Sacks, and the Imprisoned Tidebone Troll's cage (Old Mother
 ## Wazi's Skull) by Vazzar's hut.
 const CHESTS := [
+	# The Kolkar attack plans (Thwarting Kolkar Aggression), in the Dunestride camp.
+	[3189, Vector2(1400, -1880), 14.0, 1],
+	[3190, Vector2(1400, -1880), 14.0, 1],
+	[3192, Vector2(1400, -1880), 14.0, 1],
 	[3236, Vector2(2140, -1590), 35.0, 8],
 	[3240, Vector2(1700, -1600), 55.0, 8],
 	[3290, Vector2(1440, -2190), 60.0, 8],

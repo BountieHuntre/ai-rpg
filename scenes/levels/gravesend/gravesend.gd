@@ -75,10 +75,13 @@ const SPAWNS := [
 	[1506, Vector2(-2405, -4085), 18.0, 6],  # Sunward Convert, the Sunward camp (3-4)
 	[1507, Vector2(-2396, -4078), 12.0, 5],  # Sunward Initiate (4-5)
 	[1667, Vector2(-2400, -4074), 1.0, 1],   # Merrick Vossen (5)
+	[1919, Vector2(-2455, -4235), 16.0, 1],  # Samuel Pell, the ruined hamlet (5)
 ]
 ## Equipment Boxes in the ruined hamlet (Scavenging Gravesend).
 const CHESTS := [
 	[164662, Vector2(-2450, -4225), 32.0, 8],
+	# Maren's Grave (Maren's Last Wish), among the chapel's graves.
+	[178090, Vector2(-2536, -4176), 1.0, 1],
 ]
 
 const GRASS := Color(0.4, 0.45, 0.33)

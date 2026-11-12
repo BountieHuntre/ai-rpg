@@ -100,6 +100,7 @@ const SPAWNS := [
 ]
 ## Cactus Apples to pick (Cactus Apple Bake): [object entry, center, radius, count].
 const CHESTS := [
+	[178087, Vector2(2606, -1793), 1.0, 1],
 	[171938, Vector2(2425, -1640), 50.0, 9],
 	[171938, Vector2(2465, -1790), 35.0, 6],
 ]

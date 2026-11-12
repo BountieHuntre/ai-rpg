@@ -143,7 +143,17 @@ const SPAWNS := [
 ## A Dwarven Corpse: the lost pilot, by her wrecked flying machine.
 const QUEST_OBJECTS := [
 	[2059, "HildrasCorpse", Vector2(404, -986), 0.6],
+	[269, "GuardedBarrel", BARREL, 0.0],
+	[270, "UnguardedBarrel", BARREL, 0.0],
 ]
+## The Thunder Ale barrel beside the inn: guarded by Jarvik Kegsworth until a
+## Thunder Ale (Distracting Jarvik) draws him off to the inn door for
+## UNGUARDED_TIME, while the unguarded barrel (Bitter Rivals' end, Return to
+## Maddoc's start) stands there instead, as classic's script swaps them.
+const BARREL := Vector2(-134, -808)
+const JARVIK_POST := Vector3(-130, 7, -805)
+const JARVIK_DRINKING := Vector3(-146, 7, -797)
+const UNGUARDED_TIME := 90.0
 ## Mackellen's Meat Locker in Old Rimebeard's cave, the Shimmerweed Baskets on
 ## Shimmer Ridge and the Ammo Crate in the quarry.
 const CHESTS := [
@@ -211,6 +221,34 @@ func _ready() -> void:
 	_build_clutter()
 	spawn_creatures(SEED + 3, "Highpeak", [], WATER_LEVEL)
 	spawn_objects(SEED + 6, WATER_LEVEL)
+	_guard_barrel(true)
+	GameState.quest_turned_in.connect(func(id: int) -> void:
+		if id == 308:
+			_unguarded_left = UNGUARDED_TIME
+			_guard_barrel(false))
+
+
+var _unguarded_left := 0.0
+
+
+func _process(delta: float) -> void:
+	if _unguarded_left > 0.0:
+		_unguarded_left -= delta
+		if _unguarded_left <= 0.0:
+			_guard_barrel(true)
+
+
+## Jarvik at his post with the guarded barrel, or off drinking at the inn door
+## with the unguarded one there.
+func _guard_barrel(guarded: bool) -> void:
+	var objects := get_node_or_null("Objects")
+	if objects:
+		objects.get_node("GuardedBarrel").set_present(guarded)
+		objects.get_node("UnguardedBarrel").set_present(not guarded)
+	var jarvik := get_node_or_null("JarvikKegsworth") as Node3D
+	if jarvik:
+		jarvik.position = JARVIK_POST if guarded else JARVIK_DRINKING
+		jarvik.rotation.y = PI / 2 if guarded else PI
 
 
 func height_at(x: float, z: float) -> float:

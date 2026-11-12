@@ -24,7 +24,7 @@ static var _item_counts: Dictionary
 
 
 static func status(id: int) -> Status:
-	if id in GameState.quests_done:
+	if id in GameState.quests_done and not GameState.quests.has(id) and not (QuestDB.is_repeatable(QuestDB.get_quest(id)) and can_take(id)):
 		return Status.DONE
 	if GameState.quests.has(id):
 		return Status.COMPLETE if is_complete(id) else Status.ACTIVE
@@ -35,7 +35,9 @@ static func status(id: int) -> Status:
 ## every race here, unlike classic's Alliance-only starting quests.
 static func can_take(id: int) -> bool:
 	var quest := QuestDB.get_quest(id)
-	if quest.is_empty() or id in GameState.quests_done or GameState.quests.has(id):
+	if quest.is_empty() or GameState.quests.has(id):
+		return false
+	if id in GameState.quests_done and not QuestDB.is_repeatable(quest):
 		return false
 	if int(quest.min_level) > GameState.level or not QuestDB.race_allowed(quest, GameState.race):
 		return false
@@ -63,11 +65,19 @@ static func accept(id: int) -> String:
 	var kills := []
 	kills.resize(quest.kills.size())
 	kills.fill(0)
-	GameState.quests[id] = { "kills": kills }
+	var objects := []
+	objects.resize(quest.get("objects", []).size())
+	objects.fill(0)
+	GameState.quests[id] = { "kills": kills, "objects": objects }
 	if not explore_place(id).is_empty():
 		GameState.quests[id].explored = false
+	if QuestDB.has_event(quest):
+		GameState.quests[id].event = false
+	if int(quest.get("time_limit", 0)) > 0:
+		GameState.quests[id].time_left = float(quest.time_limit)
 	_remember_item_counts()
 	GameState.quest_message.emit("Quest accepted: %s" % quest.title)
+	GameState.quest_accepted.emit(id)
 	GameState.quests_changed.emit()
 	return ""
 
@@ -81,10 +91,19 @@ static func is_complete(id: int) -> bool:
 	if not GameState.quests.has(id):
 		return false
 	var quest := QuestDB.get_quest(id)
-	var kills: Array = GameState.quests[id].kills
+	var state: Dictionary = GameState.quests[id]
+	if state.get("failed", false):
+		return false
+	var kills: Array = state.kills
 	for i in quest.kills.size():
 		if int(kills[i]) < int(quest.kills[i][1]):
 			return false
+	var objects: Array = state.get("objects", [])
+	for i in quest.get("objects", []).size():
+		if i >= objects.size() or int(objects[i]) < int(quest.objects[i][1]):
+			return false
+	if QuestDB.has_event(quest) and not state.get("event", false):
+		return false
 	for need: Array in quest.items:
 		if Inventory.count_item(int(need[0])) < int(need[1]):
 			return false
@@ -144,16 +163,117 @@ static func objective_lines(id: int) -> Array:
 	for i in quest.kills.size():
 		var needed := int(quest.kills[i][1])
 		var have := mini(int(kills[i]) if i < kills.size() else 0, needed)
-		lines.append(["%s slain: %d/%d" % [creature_name(int(quest.kills[i][0])), have, needed], have >= needed])
+		lines.append(["%s: %d/%d" % [kill_text(quest, int(quest.kills[i][0])), have, needed], have >= needed])
 	for need: Array in quest.items:
 		var needed := int(need[1])
 		var have := mini(Inventory.count_item(int(need[0])), needed)
 		lines.append(["%s: %d/%d" % [ItemDB.get_item(int(need[0])).name, have, needed], have >= needed])
+	var objects: Array = GameState.quests.get(id, {}).get("objects", [])
+	for i in quest.get("objects", []).size():
+		var needed := int(quest.objects[i][1])
+		var have := mini(int(objects[i]) if i < objects.size() else 0, needed)
+		lines.append(["%s: %d/%d" % [target_name(int(quest.objects[i][0])), have, needed], have >= needed])
 	var place := explore_place(id)
 	if not place.is_empty():
 		var explored: bool = GameState.quests.get(id, {}).get("explored", false)
 		lines.append(["%s explored" % place_title(place), explored])
+	# An event's line comes from the quest text ("Mist brought home").
+	if QuestDB.has_event(quest) and quest.has("event"):
+		lines.append([str(quest.event), GameState.quests.get(id, {}).get("event", false)])
+	var state: Dictionary = GameState.quests.get(id, {})
+	if state.get("failed", false):
+		lines.append(["Failed", false])
+	elif state.has("time_left"):
+		var left := ceili(float(state.time_left))
+		lines.append(["Time left: %d:%02d" % [left / 60, left % 60], false])
 	return lines
+
+
+## A kill objective's line: "Burrowling Runt slain", or the quest text's own
+## words for it (classic's ObjectiveText: "Lazy Peons woken").
+static func kill_text(quest: Dictionary, creature_entry: int) -> String:
+	var own: Dictionary = quest.get("objective_text", {})
+	return str(own[str(creature_entry)]) if own.has(str(creature_entry)) else "%s slain" % creature_name(creature_entry)
+
+
+## A quest objective's target: a game object (negative) or creature by name.
+static func target_name(target: int) -> String:
+	return str(GameObject.data(-target).get("name", "Object")) if target < 0 else creature_name(target)
+
+
+## Credit for using a game object, or casting a spell on a creature or object
+## (`spell` 0 for an object used by hand), as Player::CastedCreatureOrGO.
+## Returns whether any quest counted it.
+static func credit_object(target: int, spell: int) -> bool:
+	var counted := false
+	for id: int in GameState.quests:
+		var quest := QuestDB.get_quest(id)
+		var state: Dictionary = GameState.quests[id]
+		var objects: Array = state.get("objects", [])
+		for i in quest.get("objects", []).size():
+			var wanted: Array = quest.objects[i]
+			var needed := int(wanted[1])
+			if int(wanted[0]) != target or int(wanted[2]) != spell or i >= objects.size():
+				continue
+			if int(objects[i]) >= needed or state.get("failed", false):
+				continue
+			objects[i] = int(objects[i]) + 1
+			GameState.quest_message.emit("%s: %d/%d" % [target_name(target), objects[i], needed])
+			_announce_if_complete(id)
+			GameState.quests_changed.emit()
+			counted = true
+	return counted
+
+
+## Whether a quest underway still needs an object used, or a spell cast on a
+## creature or object.
+static func needs_object(target: int, spell: int) -> bool:
+	for id: int in GameState.quests:
+		var quest := QuestDB.get_quest(id)
+		var objects: Array = GameState.quests[id].get("objects", [])
+		for i in quest.get("objects", []).size():
+			var wanted: Array = quest.objects[i]
+			if int(wanted[0]) == target and int(wanted[2]) == spell and i < objects.size() and int(objects[i]) < int(wanted[1]):
+				return true
+	return false
+
+
+## A quest's event happened (a well cleansed, Mist brought home): the
+## spell's Quest Complete effect, as Player::AreaExploredOrEventHappens.
+static func complete_event(id: int) -> void:
+	if not GameState.quests.has(id) or GameState.quests[id].get("failed", false):
+		return
+	GameState.quests[id].event = true
+	_announce_if_complete(id)
+	GameState.quests_changed.emit()
+
+
+## A quest can't be finished any more: its time ran out, or its escort was
+## lost. It stays in the log, failed, until abandoned (and taken again), as
+## in classic.
+static func fail(id: int) -> void:
+	if not GameState.quests.has(id) or GameState.quests[id].get("failed", false):
+		return
+	GameState.quests[id].failed = true
+	GameState.quests[id].erase("time_left")
+	GameState.quest_message.emit("%s failed." % QuestDB.get_quest(id).title)
+	GameState.quests_changed.emit()
+
+
+## Counts down timed quests (LimitTime), failing those that run out, finished
+## or not, as classic. The tracker shows the time left, so it's told every
+## whole second.
+static func tick(delta: float) -> void:
+	for id: int in GameState.quests.keys():
+		var state: Dictionary = GameState.quests[id]
+		if not state.has("time_left"):
+			continue
+		var before := ceili(float(state.time_left))
+		state.time_left = float(state.time_left) - delta
+		if float(state.time_left) <= 0.0:
+			fail(id)
+		elif ceili(float(state.time_left)) != before:
+			GameState.quests_changed.emit()
 
 
 ## Credit for a kill, as Player::KilledMonsterCredit.
@@ -165,7 +285,7 @@ static func on_kill(creature_entry: int) -> void:
 			var needed := int(quest.kills[i][1])
 			if int(quest.kills[i][0]) == creature_entry and int(kills[i]) < needed:
 				kills[i] = int(kills[i]) + 1
-				GameState.quest_message.emit("%s slain: %d/%d" % [creature_name(creature_entry), kills[i], needed])
+				GameState.quest_message.emit("%s: %d/%d" % [kill_text(quest, creature_entry), kills[i], needed])
 				_announce_if_complete(id)
 				GameState.quests_changed.emit()
 
@@ -175,6 +295,10 @@ static func needs_item(item_id: int) -> bool:
 	for id: int in GameState.quests:
 		for need: Array in QuestDB.get_quest(id).items:
 			if int(need[0]) == item_id and Inventory.count_item(item_id) < int(need[1]):
+				return true
+		# Items carried to use (ReqSourceId), while the quest isn't done.
+		for need: Array in QuestDB.get_quest(id).get("sources", []):
+			if int(need[0]) == item_id and Inventory.count_item(item_id) < maxi(int(need[1]), 1) and not is_complete(id):
 				return true
 	return false
 
@@ -213,7 +337,8 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 		return ERR_BAGS_FULL
 	var xp := QuestDB.xp_value(quest, GameState.level)
 	GameState.quests.erase(id)
-	GameState.quests_done.append(id)
+	if not id in GameState.quests_done:
+		GameState.quests_done.append(id)
 	for need: Array in quest.items:
 		Inventory.remove_items(int(need[0]), int(need[1]))
 	for reward: Array in rewards:
@@ -225,6 +350,7 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 		progression.add_xp(xp)
 	# Unlike classic, the party's bots get the same XP.
 	Party.share_quest_xp(xp)
+	GameState.quest_turned_in.emit(id)
 	GameState.quests_changed.emit()
 	return ""
 
