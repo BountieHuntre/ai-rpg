@@ -446,25 +446,38 @@ func _build_create() -> void:
 	races_panel.add_child(races)
 	races.add_child(_label("Race", GOLD, 10))
 	var race_group := ButtonGroup.new()
-	for race: ClassicData.Race in ClassicData.RACE_NAMES:
-		var button := Button.new()
-		button.text = ClassicData.RACE_NAMES[race]
-		button.toggle_mode = true
-		button.button_group = race_group
-		button.button_pressed = race == _race
-		# Races without a model yet can't be made (ClassicData.PLAYABLE_RACES).
-		button.disabled = not race in ClassicData.PLAYABLE_RACES
-		button.tooltip_text = "Coming in a later update." if button.disabled else ""
-		button.pressed.connect(func() -> void:
-			_race = race
-			if not ClassicData.is_playable(_race, _class):
-				_class = _first_allowed_class()
-			_rebuild()
-		)
-		races.add_child(button)
+	# The Alliance's races, then the Horde's, each under its name.
+	for faction: Array in [["Alliance", ClassicData.ALLIANCE, Color(0.45, 0.62, 0.95)], ["Horde", ClassicData.HORDE, Color(0.9, 0.35, 0.28)]]:
+		var heading := _label(faction[0], faction[2], 9)
+		heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		races.add_child(heading)
+		for race: ClassicData.Race in faction[1]:
+			_race_button(races, race, race_group)
 	var race_text := _label(RACE_TEXT[_race], Color.WHITE)
 	race_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	races.add_child(race_text)
+	_build_classes()
+
+
+func _race_button(races: VBoxContainer, race: ClassicData.Race, race_group: ButtonGroup) -> void:
+	var button := Button.new()
+	button.text = ClassicData.RACE_NAMES[race]
+	button.toggle_mode = true
+	button.button_group = race_group
+	button.button_pressed = race == _race
+	# Races without a model yet can't be made (ClassicData.PLAYABLE_RACES).
+	button.disabled = not race in ClassicData.PLAYABLE_RACES
+	button.tooltip_text = "Coming in a later update." if button.disabled else ""
+	button.pressed.connect(func() -> void:
+		_race = race
+		if not ClassicData.is_playable(_race, _class):
+			_class = _first_allowed_class()
+		_rebuild()
+	)
+	races.add_child(button)
+
+
+func _build_classes() -> void:
 	var classes_panel := _panel()
 	_place(classes_panel, Vector2(_width() - 116, 20), Vector2(110, 0))
 	var classes := VBoxContainer.new()
@@ -531,8 +544,11 @@ func _build_create() -> void:
 	name_edit.grab_focus.call_deferred()
 
 
-## Body and look choices for the model, at the preview's lower left, as
-## classic's arrows: Male and Female, then each choice with < and >.
+## Body and look choices for the model, at the preview's lower left:
+## Male and Female, then a dropdown for each choice the race's model offers
+## (HumanoidModel.appearance_choices: skin, hair, hair colour, beard, and the
+## new races' feature and markings). Hovering an option shows it on the
+## preview; picking it keeps it.
 func _build_appearance() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", roundi(2 * _ui_scale))
@@ -552,27 +568,15 @@ func _build_appearance() -> void:
 		)
 		bodies.add_child(button)
 	box.add_child(bodies)
-	var choices := [["skin", "Skin", HumanoidModel.SKIN_COLORS.size()],
-		["hair", "Hair", HumanoidModel.HAIR_STYLES[int(_look.body)].size()],
-		["hair_color", "Hair Color", HumanoidModel.HAIR_COLORS.size()]]
-	if HumanoidModel.FACES[int(_look.body)].size() > 1:
-		choices.append(["face", "Beard", HumanoidModel.FACES[int(_look.body)].size()])
-	for choice in choices:
-		var row := HBoxContainer.new()
-		for step in [-1, 1]:
-			var arrow := Button.new()
-			arrow.text = "<" if step < 0 else ">"
-			arrow.pressed.connect(func() -> void:
-				_look[choice[0]] = posmod(int(_look[choice[0]]) + step, int(choice[2]))
-				_layer.get_node("Preview").show_race(_race, _look, CharacterPreview.kit_equipment(_race, _class))
-			)
-			row.add_child(arrow)
-			if step < 0:
-				var label := _label(choice[1], Color.WHITE)
-				label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				row.add_child(label)
-		box.add_child(row)
+	_look = HumanoidModel.clean_appearance(_look)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", roundi(4 * _ui_scale))
+	grid.add_theme_constant_override("v_separation", roundi(2 * _ui_scale))
+	for choice: Array in HumanoidModel.appearance_choices(HumanoidModel.model_race(_race), int(_look.body)):
+		grid.add_child(_label(choice[1], Color.WHITE))
+		grid.add_child(_look_menu(choice[0], choice[2]))
+	box.add_child(grid)
 	var random := Button.new()
 	random.text = "Randomize"
 	random.pressed.connect(func() -> void:
@@ -580,7 +584,57 @@ func _build_appearance() -> void:
 		_rebuild()
 	)
 	box.add_child(random)
-	_place(box, Vector2(_width() / 2 - 150, 128), Vector2(80, 80), Anchor.BOTTOM)
+	_place(box, Vector2(_width() / 2 - 236, 128), Vector2(100, 80), Anchor.BOTTOM)
+
+
+## A dropdown for one look choice (appearance key, [[name, swatch], ...]).
+func _look_menu(key: String, options: Array) -> OptionButton:
+	var menu := OptionButton.new()
+	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	menu.fit_to_longest_item = false
+	var swatch_size := maxi(roundi(8 * _ui_scale), 8)
+	for option: Array in options:
+		if option[1] is Color:
+			var image := Image.create(swatch_size, swatch_size, false, Image.FORMAT_RGBA8)
+			image.fill(option[1])
+			menu.add_icon_item(ImageTexture.create_from_image(image), option[0])
+		else:
+			menu.add_item(option[0])
+	menu.select(clampi(int(_look.get(key, 0)), 0, options.size() - 1))
+	menu.item_selected.connect(func(index: int) -> void:
+		_look[key] = index
+		_preview_look(_look)
+	)
+	# While the list is open, the option under the mouse is shown on the
+	# preview; closing it shows what's picked again.
+	var popup := menu.get_popup()
+	var shown := [-1]
+	var follow := func() -> void:
+		var hovered := popup.get_focused_item()
+		if hovered >= 0 and hovered != shown[0]:
+			shown[0] = hovered
+			var look := _look.duplicate()
+			look[key] = hovered
+			_preview_look(look)
+	popup.about_to_popup.connect(func() -> void:
+		shown[0] = -1
+		if not get_tree().process_frame.is_connected(follow):
+			get_tree().process_frame.connect(follow)
+	)
+	popup.popup_hide.connect(func() -> void:
+		if get_tree().process_frame.is_connected(follow):
+			get_tree().process_frame.disconnect(follow)
+		_preview_look(_look)
+	)
+	menu.tree_exiting.connect(func() -> void:
+		if get_tree().process_frame.is_connected(follow):
+			get_tree().process_frame.disconnect(follow)
+	)
+	return menu
+
+
+func _preview_look(look: Dictionary) -> void:
+	_layer.get_node("Preview").show_race(_race, look, CharacterPreview.kit_equipment(_race, _class))
 
 
 func _first_allowed_class() -> ClassicData.CharClass:

@@ -13,8 +13,8 @@ signal bots_changed
 const FILE_NAME := "playerbots.json"
 const BOT_SCENE := preload("res://scenes/bots/bot.tscn")
 ## Bots are of the player's faction, so they're friendly.
-const ALLIANCE := [ClassicData.Race.HUMAN, ClassicData.Race.DWARF, ClassicData.Race.NIGHT_ELF, ClassicData.Race.GNOME]
-const HORDE := [ClassicData.Race.ORC, ClassicData.Race.UNDEAD, ClassicData.Race.TAUREN, ClassicData.Race.TROLL]
+const ALLIANCE := ClassicData.ALLIANCE
+const HORDE := ClassicData.HORDE
 ## Seconds to wait after an option changes, so dragging a slider doesn't
 ## make and remove bots at every step.
 const SYNC_DELAY := 0.4

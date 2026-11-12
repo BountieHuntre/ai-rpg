@@ -36,7 +36,7 @@ FPS = 30
 SLOT_NAMES = [
 	"skin", "hair", "eyes", "chest", "legs", "feet", "hands", "waist",
 	"shoulders", "wrists", "head", "trim", "blade", "handle", "shield", "shield_trim",
-	"back", "ranged", "ranged_trim", "helm_trim", "tusk",
+	"back", "ranged", "ranged_trim", "helm_trim", "tusk", "paint",
 ]
 SLOT = {name: i for i, name in enumerate(SLOT_NAMES)}
 # U steps: room for this many slots (shaders/character.gdshader's array).
@@ -52,16 +52,29 @@ RACES = {
 	# The rest of the playable races: reshaped, `limbs` scaling the arms' and
 	# legs' thickness, with `features` of their own on the head and body
 	# (race_features): tusks, ears, horns, snout...
+	# `variants` are the race's feature as chosen at character creation
+	# (Feature0-2 and FeatureF0-2 for women, HumanoidModel.RACE_OPTIONS), and
+	# `marks` its markings (Marks0-2, MarksF0-2: war paint, runes, scars).
 	"orc": {"legs": 0.96, "torso": 1.02, "width": 1.2, "head": 1.0, "hands": 1.22, "props": 1.05, "limbs": 1.15,
-			"features": ["jaw", "tusks", "brow", "ears_short"]},
+			"features": ["jaw", "brow", "ears_short"],
+			"variants": [["tusks"], ["tusks_large"], ["tusks_broken"]],
+			"marks": [["stripes"], ["eyes", "chin"], ["stripes", "chest"]]},
 	"wood_elf": {"legs": 1.14, "torso": 1.08, "width": 0.97, "head": 0.97, "hands": 1.0, "props": 1.05, "limbs": 0.93,
-			"features": ["ears_long", "brow_tufts"]},
+			"features": ["brow_tufts"],
+			"variants": [["ears_long"], ["ears_swept"], ["ears_tall"]],
+			"marks": [["dots"], ["cheeks"], ["dots", "cheeks", "brow_rune"]]},
 	"undead": {"legs": 0.98, "torso": 0.96, "width": 0.9, "head": 0.97, "hands": 1.0, "props": 1.0, "limbs": 0.72,
-			"features": ["bare_jaw", "brow", "ribs"]},
+			"features": ["brow", "ribs"],
+			"variants": [["bare_jaw"], ["whole_jaw"], ["fanged_jaw"]],
+			"marks": [["scar"], ["stitches"], ["scar", "chest_stitches"]]},
 	"troll": {"legs": 1.16, "torso": 1.06, "width": 1.02, "head": 1.05, "hands": 1.2, "props": 1.08, "limbs": 0.95,
-			"features": ["jaw", "big_tusks", "long_nose", "ears_wide"]},
+			"features": ["jaw", "long_nose", "ears_wide"],
+			"variants": [["big_tusks"], ["tusks_straight"], ["tusks_short"]],
+			"marks": [["stripes"], ["eyes", "chin"], ["stripes", "chest"]]},
 	"hornkin": {"legs": 1.12, "torso": 1.12, "width": 1.42, "head": 1.2, "hands": 1.35, "props": 1.15, "limbs": 1.2,
-			"features": ["snout", "horns", "ears_side", "tail"]},
+			"features": ["snout", "ears_side", "tail"],
+			"variants": [["horns"], ["horns_swept"], ["horns_short"]],
+			"marks": [["eyes"], ["stripes", "chin"], ["eyes", "chest"]]},
 	# Humanoid creatures: the same body and animations with a head and tail
 	# of their own (species_parts), and only the parts creatures use.
 	"burrowling": {"legs": 0.5, "torso": 0.6, "width": 0.85, "head": 1.15, "hands": 1.15, "props": 0.7, "species": "burrowling"},
@@ -389,6 +402,26 @@ def race_features(b, f, features):
 		if "horns" in features:
 			b.beam((0.09 * x, -0.0, 1.8), (0.24 * x, 0.0, 1.84), 0.06 * k, 0.06 * k, "Head", "tusk", taper=0.7)
 			b.beam((0.24 * x, 0.0, 1.84), (0.3 * x, 0.06, 1.96 * k + 1.84 * (1 - k)), 0.045 * k, 0.045 * k, "Head", "tusk", taper=0.3)
+		if "horns_swept" in features:
+			b.beam((0.09 * x, -0.02, 1.81), (0.2 * x, -0.1, 1.86), 0.055 * k, 0.055 * k, "Head", "tusk", taper=0.75)
+			b.beam((0.2 * x, -0.1, 1.86), (0.24 * x, -0.25, 1.82 + 0.05 * k), 0.042 * k, 0.042 * k, "Head", "tusk", taper=0.3)
+		if "horns_short" in features:
+			b.beam((0.09 * x, 0.0, 1.81), (0.17 * x, 0.02, 1.87 + 0.02 * k), 0.06 * k, 0.06 * k, "Head", "tusk", taper=0.4)
+		if "tusks_large" in features:
+			b.beam((0.05 * x, 0.12, 1.595), (0.075 * x, 0.165, 1.68 + 0.03 * k), 0.034 * k, 0.034 * k, "Head", "tusk", taper=0.4)
+		if "tusks_broken" in features:
+			if x > 0:
+				b.beam((0.045 * x, 0.12, 1.595), (0.065 * x, 0.155, 1.67 + 0.02 * k), 0.028 * k, 0.028 * k, "Head", "tusk", taper=0.45)
+			else:
+				b.beam((0.045 * x, 0.12, 1.595), (0.05 * x, 0.13, 1.625), 0.028 * k, 0.028 * k, "Head", "tusk", taper=0.9)
+		if "tusks_straight" in features:
+			b.beam((0.05 * x, 0.12, 1.6), (0.07 * x, 0.25, 1.64 + 0.02 * k), 0.032 * k, 0.032 * k, "Head", "tusk", taper=0.35)
+		if "tusks_short" in features:
+			b.beam((0.05 * x, 0.12, 1.595), (0.07 * x, 0.15, 1.645), 0.032 * k, 0.032 * k, "Head", "tusk", taper=0.5)
+		if "ears_swept" in features:
+			b.beam((0.12 * x, -0.015, 1.71), (0.27 * x, -0.17, 1.76), 0.07, 0.022, "Head", "skin", taper=0.2, shade=0.9)
+		if "ears_tall" in features:
+			b.beam((0.12 * x, -0.01, 1.72), (0.2 * x, -0.05, 1.93), 0.065, 0.022, "Head", "skin", taper=0.2, shade=0.9)
 		if "brow_tufts" in features:
 			b.beam((0.06 * x, 0.13, 1.745), (0.13 * x, 0.11, 1.8), 0.02, 0.02, "Head", "hair", taper=0.3)
 		if "ribs" in features:
@@ -399,6 +432,13 @@ def race_features(b, f, features):
 	if "bare_jaw" in features:
 		b.box((0, 0.1, 1.585), (0.12, 0.06, 0.04), "Head", "tusk", top=(1.1, 1.0))
 		b.box((0, 0.12, 1.612), (0.09, 0.02, 0.014), "Head", "eyes")
+	if "whole_jaw" in features:
+		b.box((0, 0.098, 1.588), (0.13, 0.06, 0.04), "Head", "skin", top=(1.1, 1.0), shade=0.85)
+	if "fanged_jaw" in features:
+		b.box((0, 0.1, 1.585), (0.12, 0.06, 0.04), "Head", "tusk", top=(1.1, 1.0))
+		b.box((0, 0.12, 1.612), (0.09, 0.02, 0.014), "Head", "eyes")
+		for x in (-1, 1):
+			b.beam((0.035 * x, 0.128, 1.615), (0.04 * x, 0.132, 1.585), 0.014, 0.012, "Head", "tusk", taper=0.4)
 	if "brow" in features:
 		b.box((0, 0.13, 1.742), (0.2, 0.035, 0.028), "Head", "skin", shade=0.8)
 	if "long_nose" in features:
@@ -410,6 +450,62 @@ def race_features(b, f, features):
 	if "tail" in features:
 		b.beam((0, -0.12, 0.98), (0, -0.2, 0.62), 0.04, 0.04, "Hips", "skin", taper=0.6)
 		b.box((0, -0.21, 0.58), (0.06, 0.06, 0.1), "Hips", "hair")
+
+
+def markings(b, f, marks):
+	"""Markings drawn on the face and chest in the paint slot: war paint
+	(stripes, bars by the eyes, a chin band, chest stripes), a Wood Elf's
+	glowing runes (dots, cheek lines, a brow rune) and an Undead's scars and
+	stitches. They stand a little proud of the skin, in the Human's
+	measurements like the features."""
+	chest_y = 0.152 if f else 0.178
+	chest_z = 1.4 if f else 1.37
+	for x in (-1, 1):
+		if "stripes" in marks:
+			b.box((0.075 * x, 0.128, 1.665), (0.022, 0.03, 0.085), "Head", "paint")
+		if "eyes" in marks:
+			b.box((0.1 * x, 0.12, 1.705), (0.045, 0.03, 0.03), "Head", "paint")
+		if "chest" in marks:
+			b.beam((0.06 * x, chest_y, chest_z + 0.07), (0.15 * x, chest_y - 0.01, chest_z - 0.05), 0.035, 0.02, "Chest", "paint", up=(1, 0, 0))
+		if "dots" in marks:
+			for dz in (0.0, 0.025):
+				b.box((0.06 * x, 0.137, 1.74 + dz), (0.014, 0.012, 0.014), "Head", "paint")
+		if "cheeks" in marks:
+			b.box((0.06 * x, 0.132, 1.655), (0.012, 0.014, 0.06), "Head", "paint")
+		if "chest_stitches" in marks and x > 0:
+			b.box((0.04, chest_y, chest_z), (0.012, 0.02, 0.2), "Chest", "paint")
+			for dz in (-0.07, 0.0, 0.07):
+				b.box((0.04, chest_y + 0.004, chest_z + dz), (0.05, 0.02, 0.01), "Chest", "paint")
+	if "stripes" in marks:
+		b.box((0, 0.138, 1.775), (0.022, 0.03, 0.06), "Head", "paint")
+	if "chin" in marks:
+		b.box((0, 0.118, 1.595), (0.14, 0.035, 0.022), "Head", "paint")
+	if "brow_rune" in marks:
+		b.box((0, 0.14, 1.79), (0.05, 0.012, 0.012), "Head", "paint")
+		b.box((0, 0.14, 1.8), (0.012, 0.012, 0.035), "Head", "paint")
+	if "scar" in marks:
+		b.beam((0.03, 0.135, 1.79), (0.1, 0.115, 1.63), 0.016, 0.018, "Head", "paint", up=(1, 0, 0))
+	if "stitches" in marks:
+		b.box((-0.07, 0.128, 1.65), (0.012, 0.022, 0.09), "Head", "paint")
+		for dz in (-0.03, 0.0, 0.03):
+			b.box((-0.07, 0.131, 1.65 + dz), (0.04, 0.02, 0.008), "Head", "paint")
+
+
+def race_parts():
+	"""The race's chosen feature and markings as parts of their own, each in a
+	man's and a woman's shape (Feature0, FeatureF0... Marks0, MarksF0...)."""
+	out = []
+	for i, variant in enumerate(RACE.get("variants", [])):
+		for f, prefix in ((False, "Feature"), (True, "FeatureF")):
+			b = Builder(f"{prefix}{i}")
+			race_features(b, f, variant)
+			out.append(b)
+	for i, marks in enumerate(RACE.get("marks", [])):
+		for f, prefix in ((False, "Marks"), (True, "MarksF")):
+			b = Builder(f"{prefix}{i}")
+			markings(b, f, marks)
+			out.append(b)
+	return out
 
 
 def _limbs(b, f):
@@ -1274,7 +1370,7 @@ def build(race):
 	if RACE.get("species"):
 		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + props()[:len(WEAPONS) + len(OFF_HAND) + 2]
 	else:
-		parts = [body("BodyMale", False), body("BodyFemale", True), shoulders()] + hairs() + props()
+		parts = [body("BodyMale", False), body("BodyFemale", True), shoulders()] + race_parts() + hairs() + props()
 	tris = {}
 	for builder in parts:
 		obj = builder.build(arm, material)

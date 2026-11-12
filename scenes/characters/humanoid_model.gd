@@ -22,7 +22,7 @@ const RACE_MODELS := {
 const SLOT_COUNT := 32
 
 enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
-	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK }
+	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT }
 
 const SKIN_COLORS := [
 	Color(0.96, 0.8, 0.68), Color(0.9, 0.71, 0.56), Color(0.8, 0.59, 0.43),
@@ -84,6 +84,51 @@ const RACE_HAIRS := {
 const RACE_EYES := { "undead": Color(1.0, 0.85, 0.35), "wood_elf": Color(0.85, 0.95, 1.0), "orc": Color(0.5, 0.1, 0.08) }
 const TUSK_COLORS := { "undead": Color(0.8, 0.78, 0.68) }
 const TUSK_COLOR := Color(0.9, 0.86, 0.72)
+## The races' own choices at character creation, beyond skin and hair: their
+## feature (appearance.feature: the model's Feature0-2 / FeatureF0-2 parts)
+## and markings (appearance.marks: none, or Marks0-2 / MarksF0-2), each
+## named, with the markings' colour.
+const RACE_OPTIONS := {
+	"orc": { "feature": ["Tusks", ["Small", "Large", "Broken"]], "marks": ["War Paint", ["None", "Stripes", "Bands", "Warrior"]], "paint": Color(0.62, 0.1, 0.08) },
+	"troll": { "feature": ["Tusks", ["Curved", "Straight", "Short"]], "marks": ["War Paint", ["None", "Stripes", "Bands", "Warrior"]], "paint": Color(0.88, 0.86, 0.8) },
+	"hornkin": { "feature": ["Horns", ["Curved", "Swept", "Short"]], "marks": ["War Paint", ["None", "Eyes", "Stripes", "Chieftain"]], "paint": Color(0.92, 0.9, 0.84) },
+	"wood_elf": { "feature": ["Ears", ["Long", "Swept", "Tall"]], "marks": ["Runes", ["None", "Brow", "Cheeks", "Full"]], "paint": Color(0.45, 0.95, 1.0) },
+	"undead": { "feature": ["Jaw", ["Bare", "Whole", "Fanged"]], "marks": ["Scars", ["None", "Scar", "Stitches", "Both"]], "paint": Color(0.32, 0.07, 0.07) },
+}
+const FEATURE_COUNT := 3
+const MARKS_COUNT := 4
+## What character creation calls each hair style and beard mesh.
+const STYLE_NAMES := {
+	"": "None", "HairShort": "Short", "HairLong": "Long", "HairCrest": "Crest", "HairFLong": "Long", "HairFTail": "Tail",
+	"HairFBun": "Bun", "HairMohawk": "Mohawk", "HairTopknot": "Topknot", "HairStringy": "Stringy", "HairElfLong": "Flowing",
+	"ManeShort": "Mane", "ManeBraids": "Braided Mane", "BeardShort": "Short", "BeardLong": "Long", "BeardGoatee": "Goatee",
+	"BeardHornkin": "Chin Beard", "BeardHornkinLong": "Long Chin Beard",
+}
+
+
+## The look choices a race's model offers for a body, as character creation
+## shows them: [[appearance key, title, [[name, swatch colour or null], ...]], ...].
+static func appearance_choices(race_name: String, body: int) -> Array:
+	var swatches := func(colors: Array, word: String) -> Array:
+		var out := []
+		for i in colors.size():
+			out.append(["%s %d" % [word, i + 1], colors[i]])
+		return out
+	var named := func(parts: Array) -> Array:
+		return parts.map(func(part: String) -> Array: return [STYLE_NAMES.get(part, part), null])
+	var choices := [
+		["skin", "Skin", swatches.call(RACE_SKINS.get(race_name, SKIN_COLORS), "Skin")],
+		["hair", "Hair", named.call(RACE_HAIR_STYLES.get(race_name, HAIR_STYLES)[body])],
+		["hair_color", "Hair Color", swatches.call(RACE_HAIRS.get(race_name, HAIR_COLORS), "Color")],
+	]
+	var faces: Array = RACE_FACES.get(race_name, FACES)[body]
+	if faces.size() > 1:
+		choices.append(["face", "Beard", named.call(faces)])
+	var options: Dictionary = RACE_OPTIONS.get(race_name, {})
+	for key in ["feature", "marks"]:
+		if options.has(key):
+			choices.append([key, options[key][0], options[key][1].map(func(n: String) -> Array: return [n, null])])
+	return choices
 ## Bare legs show smallclothes.
 const SMALLCLOTHES := Color(0.62, 0.58, 0.5)
 const TRIM_COLOR := Color(0.72, 0.56, 0.26)
@@ -350,6 +395,8 @@ static func random_appearance(seed_value: int) -> Dictionary:
 		"hair": rng.randi_range(0, HAIR_STYLES[body].size() - 1),
 		"hair_color": rng.randi_range(0, HAIR_COLORS.size() - 1),
 		"face": rng.randi_range(0, FACES[body].size() - 1),
+		"feature": rng.randi_range(0, FEATURE_COUNT - 1),
+		"marks": rng.randi_range(0, MARKS_COUNT - 1),
 	}
 
 
@@ -362,6 +409,8 @@ static func clean_appearance(look: Dictionary) -> Dictionary:
 		"hair": clampi(int(look.get("hair", 0)), 0, HAIR_STYLES[body].size() - 1),
 		"hair_color": clampi(int(look.get("hair_color", 0)), 0, HAIR_COLORS.size() - 1),
 		"face": clampi(int(look.get("face", 0)), 0, FACES[body].size() - 1),
+		"feature": clampi(int(look.get("feature", 0)), 0, FEATURE_COUNT - 1),
+		"marks": clampi(int(look.get("marks", 0)), 0, MARKS_COUNT - 1),
 	}
 
 
@@ -382,6 +431,15 @@ func _apply_appearance() -> void:
 	# Humanoid creatures' own head and tail (burrowlings, mirefin, ditchjaw).
 	for part in ["Species_head", "Species_tail"]:
 		_show(part, _parts.has(part))
+	# The race's chosen feature and markings (RACE_OPTIONS), in the body's shape.
+	var woman := "F" if body == 1 else ""
+	for i in FEATURE_COUNT:
+		_show("Feature%d" % i, i == int(appearance.feature) and woman == "")
+		_show("FeatureF%d" % i, i == int(appearance.feature) and woman == "F")
+	for i in MARKS_COUNT - 1:
+		_show("Marks%d" % i, i == int(appearance.marks) - 1 and woman == "")
+		_show("MarksF%d" % i, i == int(appearance.marks) - 1 and woman == "F")
+	_colors[PAINT] = RACE_OPTIONS.get(race, {}).get("paint", Color(0.6, 0.1, 0.08))
 	var hairs: Array = RACE_HAIRS.get(race, HAIR_COLORS)
 	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
 	_colors[EYES] = RACE_EYES.get(race, EYE_COLOR)
