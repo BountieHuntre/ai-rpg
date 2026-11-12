@@ -464,6 +464,8 @@ func _think() -> void:
 		_quest_check_left = QUEST_CHECK
 		_sell_trash_nearby()
 		var questing: bool = manager != null and not in_party and Settings.get_value("bot_quests")
+		if questing:
+			_drop_unreachable_quests()
 		_wanted = quests.wanted_creatures(manager.spawn_entries()) if questing else ([] as Array[int])
 		# What the player's quests need is theirs: a random bot doesn't hunt it.
 		if questing:
@@ -840,7 +842,7 @@ func _solo_idle() -> void:
 	_roam_left -= THINK_INTERVAL
 	var arrived := not _has_destination or global_position.distance_to(_destination) < 2.0
 	if (arrived or _roam_left <= 0.0) and manager:
-		_go_to(manager.hunting_spot(profile.level, _wanted))
+		_go_to(manager.hunting_spot(profile.level, _wanted, global_position))
 		_roam_left = 20.0
 
 
@@ -900,6 +902,8 @@ func _nearest_chest() -> GameObject:
 	for node in get_tree().get_nodes_in_group("game_objects"):
 		var chest := node as GameObject
 		if not chest.is_spawned() or not needed.any(func(item: int) -> bool: return chest.holds(item)):
+			continue
+		if manager and not manager.reachable(global_position, chest.global_position):
 			continue
 		var distance := global_position.distance_to(chest.global_position)
 		if distance < best_distance:
@@ -961,7 +965,7 @@ func _quest_npc() -> Npc:
 		if quests.active.has(id):
 			if quests.is_complete(id):
 				business[quest.get("ender")] = true
-		elif quests.can_take(id, profile.level):
+		elif quests.can_take(id, profile.level, profile.race):
 			business[quest.get("giver")] = true
 	if business.is_empty():
 		return null
@@ -970,9 +974,25 @@ func _quest_npc() -> Npc:
 		var npc := node as Npc
 		if not business.has(npc.npc_id()):
 			continue
+		if manager and not manager.reachable(global_position, npc.global_position):
+			continue
 		if best == null or global_position.distance_to(npc.global_position) < global_position.distance_to(best.global_position):
 			best = npc
 	return best
+
+
+## Gives up quests it can't hand in from here: their ender isn't in this
+## world (zones not built, as after moving between unjoined zones) or can't
+## be walked to.
+func _drop_unreachable_quests() -> void:
+	var enders := {}
+	for node in get_tree().get_nodes_in_group("npcs"):
+		var npc := node as Npc
+		if manager.reachable(global_position, npc.global_position):
+			enders[npc.npc_id()] = true
+	for id: int in quests.active.keys():
+		if not enders.has(str(QuestDB.get_quest(id).get("ender", ""))):
+			quests.active.erase(id)
 
 
 func _has_business(npc_id: String) -> bool:
@@ -980,7 +1000,7 @@ func _has_business(npc_id: String) -> bool:
 		var quest := QuestDB.get_quest(id)
 		if quest.get("ender") == npc_id and quests.is_complete(id):
 			return true
-		if quest.get("giver") == npc_id and quests.can_take(id, profile.level):
+		if quest.get("giver") == npc_id and quests.can_take(id, profile.level, profile.race):
 			return true
 	return false
 
@@ -996,7 +1016,7 @@ func _talk_to(npc: Npc) -> void:
 			progression.add_xp(quests.turn_in(id, profile.level))
 			_quest_check_left = 0.0
 	for id: int in QuestDB.all_ids():
-		if QuestDB.get_quest(id).get("giver") == npc_id and quests.can_take(id, profile.level):
+		if QuestDB.get_quest(id).get("giver") == npc_id and quests.can_take(id, profile.level, profile.race):
 			quests.accept(id)
 			_quest_check_left = 0.0
 	_talk_left = TALK_TIME

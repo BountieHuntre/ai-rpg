@@ -136,11 +136,11 @@ func sync() -> void:
 		if random.size() >= wanted:
 			break
 		if not _bots.has(entry.name) and _fits(entry):
-			_spawn(entry, hunting_spot(int(entry.level)))
+			_spawn(entry, hunting_spot(int(entry.level), [], _player.global_position))
 			random.append(entry.name)
 	while random.size() < wanted:
 		var entry := _new_entry()
-		_spawn(entry, hunting_spot(int(entry.level)))
+		_spawn(entry, hunting_spot(int(entry.level), [], _player.global_position))
 		random.append(entry.name)
 	save_roster()
 	_number_party()
@@ -638,6 +638,11 @@ func has_zone(zone_name: String) -> bool:
 	return _world.zone_named(zone_name) != null
 
 
+## Whether one can walk from one point to the other (World.reachable).
+func reachable(from: Vector3, to: Vector3) -> bool:
+	return _world.reachable(from, to)
+
+
 ## The zone the player is in.
 func player_zone() -> String:
 	return _world.zone_at(_player.global_position).zone_name if _player else ""
@@ -651,8 +656,13 @@ func graveyard_at(point: Vector3) -> Vector3:
 ## Somewhere in a creature spawn area: one of the creatures a quest wants if
 ## given, or else one suited to a level, creatures from three levels below to
 ## one above, or the nearest in level if none fit.
-func hunting_spot(level: int, wanted: Array[int] = []) -> Vector3:
+func hunting_spot(level: int, wanted: Array[int] = [], near := Vector3.INF) -> Vector3:
+	# Only where it can walk to from `near` (every zone if not given).
 	var spawns := _spawns()
+	if near != Vector3.INF:
+		spawns = spawns.filter(func(spawn: Array) -> bool:
+			var at: Vector2 = spawn[1]
+			return _world.reachable(near, Vector3(at.x, 0, at.y)))
 	var quest_spawns := spawns.filter(func(spawn: Array) -> bool: return int(spawn[0]) in wanted)
 	if not quest_spawns.is_empty():
 		spawns = quest_spawns

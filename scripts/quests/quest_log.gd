@@ -37,7 +37,7 @@ static func can_take(id: int) -> bool:
 	var quest := QuestDB.get_quest(id)
 	if quest.is_empty() or id in GameState.quests_done or GameState.quests.has(id):
 		return false
-	if int(quest.min_level) > GameState.level:
+	if int(quest.min_level) > GameState.level or not QuestDB.race_allowed(quest, GameState.race):
 		return false
 	# PrevQuestId: a quest to have done first, or, negative, one to have
 	# underway (CMaNGOS's rule; Finding the Antidote while Need for a Cure is).

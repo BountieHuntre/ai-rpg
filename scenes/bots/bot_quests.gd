@@ -13,9 +13,11 @@ var active: Dictionary = {}
 var done: Array[int] = []
 
 
-func can_take(id: int, level: int) -> bool:
+func can_take(id: int, level: int, race := 0) -> bool:
 	var quest := QuestDB.get_quest(id)
 	if quest.is_empty() or id in done or active.has(id) or active.size() >= MAX_ACTIVE:
+		return false
+	if race > 0 and not QuestDB.race_allowed(quest, race):
 		return false
 	# Grey quests are taken too: they open the chains behind them.
 	if int(quest.min_level) > level:

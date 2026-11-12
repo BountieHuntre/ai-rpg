@@ -1,0 +1,69 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/sunfold/sunfold.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="SunfoldCamp" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="ChiefSkymane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-490, 5, 1180)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Chief Skymane"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="GrullSkymane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-478, 5, 1184)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Grull Skymane"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="BraveWindfeather" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-500, 5, 1165)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Brave Windfeather"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="SeerSunwalker" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-498, 5, 1196)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Seer Sunwalker"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "hornkin"
+
+[node name="HarrokStormhorn" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-474, 5, 1200)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Harrok Stormhorn"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="TahnaSoftstride" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-506, 5, 1204)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Tahna Softstride"
+subname = "Provisioner"
+vendor = 3072
+appearance = {
+"body": 1
+}
+race = "hornkin"

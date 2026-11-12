@@ -1,0 +1,207 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/eldergrove/eldergrove.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="EldergroveIsle" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="AthranBearcloak" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2092, 6, -4396)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Athran Bearcloak"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="SyrinBladeleaf" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2068, 6, -4396)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Syrin Bladeleaf"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="TallonSwiftroot" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2056, 6, -4388)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Tallon Swiftroot"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="ZannRothoof" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2010, 6, -4330)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Zann Rothoof"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="Keldara" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2080, 6, -4398)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Keldara"
+subname = "Innkeeper"
+vendor = 6736
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Aldrea" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2100, 6, -4370)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Aldrea"
+subname = "Provisioner"
+vendor = 3608
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Shalorn" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2062, 6, -4366)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Shalorn"
+subname = "Weaponsmith"
+vendor = 3609
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="MerisIronleaf" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2058, 6, -4373)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Meris Ironleaf"
+subname = "Armorer"
+vendor = 3613
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Sinara" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2104, 6, -4377)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Sinara"
+subname = "Leatherworker"
+vendor = 3612
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="BrannelEaglesong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2096, 6, -4362)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Brannel Eaglesong"
+subname = "Clothier"
+vendor = 3611
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="KyrelWindedge" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2066, 6, -4379)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Kyrel Windedge"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="LaurelMorningsong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2094, 6, -4385)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Laurel Morningsong"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="SaelisDawnblade" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2070, 6, -4360)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Saelis Dawnblade"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="IlyaraMoonsteel" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2090, 6, -4356)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Ilyara Moonsteel"
+subname = "Weapon Master"
+trainer = "weapons"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Denalor" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1786, 3, -4250)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Denalor"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="GaeronTalvesh" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1594, 6, -4552)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Gaeron Talvesh"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="OrvelWildclaw" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2412, 8, -4146)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Orvel Wildclaw"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="SentinelAmaris" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2520, 8, -4205)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Sentinel Amaris Nightstep"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="SentinelArwyn" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2350, 9, -3800)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Sentinel Arwyn Cloudsong"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"

@@ -1,0 +1,166 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/mossglen/mossglen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="Mossglen" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="ConservatorIlanthe" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2212, 5, -5004)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Conservator Ilanthe"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="MelidorOakhelm" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2188, 5, -5004)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Melidor Oakhelm"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="GilthanWindstride" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2178, 5, -5004)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Gilthan Windstride"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="DiranaSilverleaf" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2222, 5, -5004)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Dirana Silverleaf"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Iveran" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2104, 8, -4912)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Iveran"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="Thalindra" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2290, 5, -5020)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Thalindra"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Delyssa" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2216, 5, -4996)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Delyssa"
+subname = "Food & Drink"
+vendor = 6091
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="AliraBladesong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2184, 5, -4996)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Alira Bladesong"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="ShanaraMoonsong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2214, 5, -4988)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Shanara Moonsong"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="ElthasMoonblade" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2186, 5, -4988)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Elthas Moonblade"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="Lyrael" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2226, 5, -5012)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Lyrael"
+subname = "Provisioner"
+vendor = 3587
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="KaldranProudleaf" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2230, 5, -5000)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Kaldran Proudleaf"
+subname = "Weaponsmith"
+vendor = 3588
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="JessaBrightleaf" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2172, 5, -5000)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Jessa Brightleaf"
+subname = "Clothier"
+vendor = 3590
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="FreyaNightfeather" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2170, 5, -5012)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Freya Nightfeather"
+subname = "Leatherworker"
+vendor = 3591
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="Andriel" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2232, 5, -5020)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Andriel"
+subname = "Armorer"
+vendor = 3592
+appearance = {
+"body": 0
+}
+race = "wood_elf"

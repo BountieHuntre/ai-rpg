@@ -1,0 +1,109 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/gravesend/gravesend.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="Gravesend" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="UndertakerVoss" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2520, 5, -4196)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Undertaker Voss"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="DarkPriestHalvard" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2512, 5, -4216)
+npc_name = "Dark Priest Halvard"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="AcolyteRennick" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2498, 5, -4200)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Acolyte Rennick"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="DeathwatchCorvin" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2483, 5, -4205)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Deathwatch Corvin"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="ExecutorVarlan" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2505, 5, -4228)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Executor Varlan"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="GrimwardTeague" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2532, 5, -4228)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Grimward Teague"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="DarkClericAmsel" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2516, 5, -4219)
+npc_name = "Dark Cleric Amsel"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="MaraSable" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2490, 5, -4182)
+npc_name = "Mara Sable"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="MortimerAshgrave" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2486, 5, -4226)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Mortimer Ashgrave"
+subname = "Clothier & Tanner"
+vendor = 2113
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="HollisCrane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2486, 5, -4190)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Hollis Crane"
+subname = "Provisioner"
+vendor = 2115
+appearance = {
+"body": 0
+}
+race = "undead"

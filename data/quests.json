@@ -612,5 +612,969 @@
 		"objectives": "Kill 4 Thornhide Tuskfolk, 4 Thornhide Scouts, 4 Thornhide Dustrunners and 4 Thornhide Warguards, then return to Commander Throgg.",
 		"progress": "The tuskfolk still come.",
 		"completion": "That will teach them to keep to their gulch. The Horde thanks you."
+	},
+	"363": {
+		"title": "Rude Awakening",
+		"giver": "UndertakerVoss",
+		"ender": "DarkPriestHalvard",
+		"details": "Ah. Another one sits up. Don't be alarmed; the grave is a hard place to leave, and the first steps are the worst.\n\nYou are free now. Free of the plague's will, free of the master who raised you. What you do with that freedom is your own affair, but Dark Priest Halvard will want to see you. He waits in the chapel.",
+		"objectives": "Speak with Dark Priest Halvard in the Gravesend Chapel.",
+		"progress": "",
+		"completion": "Undertaker Voss sends another. Good. Every one of us who wakes with a will of their own is one more blow against those who would see us mindless.\n\nListen well. There is work here, and you are fit for it."
+	},
+	"364": {
+		"title": "The Mindless Ones",
+		"giver": "DarkPriestHalvard",
+		"ender": "DarkPriestHalvard",
+		"details": "Not all who rise from the field wake as you did. Some wake empty, without a will, shambling about the old field south-east of the chapel and attacking anything that moves.\n\nThey cannot be saved. Put them down: eight of the mindless and eight of the wretched.",
+		"objectives": "Kill 8 Mindless Zombies and 8 Wretched Zombies in the old field, then return to Dark Priest Halvard.",
+		"progress": "They still shamble out there. Have you done what must be done?",
+		"completion": "It is grim work, but needful. They are at rest now, which is more than their masters ever gave them.\n\nTake this. You will find the dead have little use for coin, but the living still trade."
+	},
+	"3901": {
+		"title": "Rattling Bones",
+		"giver": "DarkPriestHalvard",
+		"ender": "DarkPriestHalvard",
+		"details": "In the old crypts west of the chapel, the bones of the long dead have risen as well, held together by nothing but the old master's spite.\n\nBreak twelve of the Rattlebone skeletons and come back to me.",
+		"objectives": "Kill 12 Rattlebone Skeletons at the old crypts, then return to Dark Priest Halvard.",
+		"progress": "The crypts still rattle.",
+		"completion": "The crypts are quiet again. Well done."
+	},
+	"376": {
+		"title": "The Damned",
+		"giver": "AcolyteRennick",
+		"ender": "AcolyteRennick",
+		"details": "Our scavengers' paws and the gloombats' wings are useful to us, in the making of what keeps our bodies from falling apart. The beasts roam the glade freely.\n\nBring me six scavenger paws and six gloombat wings.",
+		"objectives": "Bring 6 Scavenger Paws and 6 Gloombat Wings to Acolyte Rennick.",
+		"progress": "Six of each. I can't do my work without them.",
+		"completion": "Good, good. These will serve. Your body will thank you, if it can still thank anyone."
+	},
+	"3902": {
+		"title": "Scavenging Gravesend",
+		"giver": "DeathwatchCorvin",
+		"ender": "DeathwatchCorvin",
+		"details": "The hamlet east of the chapel was abandoned in a hurry. Its people left their stores behind: boxes of tools, cloth and food we could use.\n\nSearch the ruined hamlet. Bring me six bundles of whatever you find.",
+		"objectives": "Bring 6 Scavenged Goods from the ruined hamlet to Deathwatch Corvin.",
+		"progress": "The hamlet won't search itself.",
+		"completion": "Not much, but more than we had. Every scrap counts when the living won't trade with you."
+	},
+	"380": {
+		"title": "The Webbed Vault",
+		"giver": "ExecutorVarlan",
+		"ender": "ExecutorVarlan",
+		"details": "Spiders have nested in the cave in the northern hill. We call it the Webbed Vault, though it was a mine once. They grow bold, and they grow many.\n\nThin them out: ten of the young and eight of the grown ones.",
+		"objectives": "Kill 10 Young Duskweb Spiders and 8 Duskweb Spiders at the Webbed Vault, then return to Executor Varlan.",
+		"progress": "The spiders still come out at night.",
+		"completion": "The vault will be quieter for a while. You are useful. I have more for you."
+	},
+	"381": {
+		"title": "The Sunward Crusade",
+		"giver": "ExecutorVarlan",
+		"ender": "ExecutorVarlan",
+		"details": "Zealots of the Sunward Crusade have pitched a camp in the south-east of the glade. They believe the risen are an abomination to be burned, every one, whether or not we have our wills.\n\nShow them otherwise. Bring me twelve of their armbands.",
+		"objectives": "Bring 12 Sunward Armbands from the Sunward camp to Executor Varlan.",
+		"progress": "The crusaders still camp in our glade.",
+		"completion": "Twelve. They will think twice before they burn the next of us."
+	},
+	"382": {
+		"title": "The Red Messenger",
+		"giver": "ExecutorVarlan",
+		"ender": "ExecutorVarlan",
+		"details": "A messenger of the Crusade, one Merrick Vossen, carries orders between the camp and their abbey in Duskmoor. Those orders would tell us much.\n\nKill him and bring me what he carries.",
+		"objectives": "Kill Merrick Vossen at the Sunward camp and bring his documents to Executor Varlan.",
+		"progress": "Vossen still walks.",
+		"completion": "The Crusade's documents. Sealed, but seals are no trouble."
+	},
+	"383": {
+		"title": "Vital Intelligence",
+		"giver": "ExecutorVarlan",
+		"ender": "ExecutorMortlake",
+		"details": "These documents speak of the Crusade's plans for all of Duskmoor. Executor Mortlake in Gallowfield must see them.\n\nTake the road east through the pass. Gallowfield is where it meets the crossroads.",
+		"objectives": "Take the Sunward Crusade Documents to Executor Mortlake in Gallowfield, in Duskmoor Glades.",
+		"progress": "",
+		"completion": "Varlan sent these? Then he has done well, and so have you.\n\nThe Crusade grows bolder. Welcome to Gallowfield. We will need you."
+	},
+	"427": {
+		"title": "At War With the Sunward Crusade",
+		"giver": "ExecutorMortlake",
+		"ender": "ExecutorMortlake",
+		"details": "The Crusade has a watch north of the pass road, and its warriors ride out to burn any of us they catch on the roads.\n\nGo to the Sunward watch and kill ten of their warriors.",
+		"objectives": "Kill 10 Sunward Warriors at the Sunward watch, then return to Executor Mortlake.",
+		"progress": "The watch still stands.",
+		"completion": "Ten. That is a start. The Crusade has captains, though, and the captains are the real threat."
+	},
+	"370": {
+		"title": "At War With the Sunward Crusade",
+		"giver": "ExecutorMortlake",
+		"ender": "ExecutorMortlake",
+		"details": "The first of their captains, Lisette, runs a mission in the south-west where the Crusade's preachers train. She has sent zealots and missionaries to hunt us.\n\nKill her, and three of each of her zealots and missionaries.",
+		"objectives": "Kill Captain Lisette, 3 Sunward Zealots and 3 Sunward Missionaries, then return to Executor Mortlake.",
+		"progress": "Lisette still preaches.",
+		"completion": "Lisette is dead. Her mission will scatter."
+	},
+	"371": {
+		"title": "At War With the Sunward Crusade",
+		"giver": "ExecutorMortlake",
+		"ender": "ExecutorMortlake",
+		"details": "Captain Vossel holds the east watch with friars of the Crusade's abbey. They have blocked the east road.\n\nKill Vossel and five of his friars.",
+		"objectives": "Kill Captain Vossel and 5 Sunward Friars, then return to Executor Mortlake.",
+		"progress": "The east road is still shut.",
+		"completion": "The east road is open again. One captain left."
+	},
+	"372": {
+		"title": "At War With the Sunward Crusade",
+		"giver": "ExecutorMortlake",
+		"ender": "ExecutorMortlake",
+		"details": "The last of them, Captain Merrin, holds the door of the Zealot Abbey in the north-east with two bodyguards at his side.\n\nKill him and both his guards. Then the Crusade will know we are not prey.",
+		"objectives": "Kill Captain Merrin and 2 Sunward Bodyguards at the Zealot Abbey, then return to Executor Mortlake.",
+		"progress": "Merrin still holds the abbey door.",
+		"completion": "Merrin is dead. The Crusade will be some time recovering from this. Gallowfield owes you."
+	},
+	"374": {
+		"title": "Proof of Demise",
+		"giver": "DeathwatchHalloran",
+		"ender": "DeathwatchHalloran",
+		"details": "Every crusader wears a ring of the Sunward order. Bring me ten of them, as proof of how many have fallen.\n\nThe Crusade pays the living to bring in our heads. We pay for theirs.",
+		"objectives": "Bring 10 Sunward Insignia Rings to Deathwatch Halloran.",
+		"progress": "Ten rings. No fewer.",
+		"completion": "Ten rings. Here is your bounty."
+	},
+	"358": {
+		"title": "Graverobbers",
+		"giver": "MagistrateCorvane",
+		"ender": "MagistrateCorvane",
+		"details": "The Grimhide gnolls dig up our dead and carry off the bodies, and the embalming fluids we use to keep them whole.\n\nKill eight of their graverobbers and five of their mongrels, and bring back eight measures of embalming ichor they've stolen.",
+		"objectives": "Kill 8 Grimhide Graverobbers and 5 Grimhide Mongrels and bring 8 Embalming Ichor to Magistrate Corvane.",
+		"progress": "The gnolls still dig.",
+		"completion": "They will think twice before robbing our graves again. Thank you."
+	},
+	"365": {
+		"title": "Fields of Grief",
+		"giver": "GravekeeperHettle",
+		"ender": "GravekeeperHettle",
+		"details": "The Plaguewood farms south of town still grow pumpkins, though no living hand tends them now. We could use them.\n\nBring me ten pumpkins from the fields.",
+		"objectives": "Bring 10 Duskmoor Pumpkins from the Plaguewood farms to Gravekeeper Hettle.",
+		"progress": "Ten pumpkins.",
+		"completion": "Fine ones! Even the dead can appreciate a good pumpkin."
+	},
+	"404": {
+		"title": "A Putrid Task",
+		"giver": "EdwinFarrow",
+		"ender": "EdwinFarrow",
+		"details": "The rotting dead in the Plaguewood farms are not like us. They're mindless, and diseased, and their claws carry the plague.\n\nBring me seven of their putrid claws. I need to study the disease.",
+		"objectives": "Bring 7 Putrid Claws from the dead of the Plaguewood farms to Edwin Farrow.",
+		"progress": "Seven claws.",
+		"completion": "Seven. Thank you. Mind you wash your hands. Well, whatever you have left of them."
+	},
+	"426": {
+		"title": "The Mills Overrun",
+		"giver": "EdwinFarrow",
+		"ender": "EdwinFarrow",
+		"details": "The Ashworth mills to the north-west are overrun by skeletons. I want to know what binds them.\n\nBring me five notched ribs from the soldiers there and three blackened skulls from their bonecasters.",
+		"objectives": "Bring 5 Notched Ribs and 3 Blackened Skulls from the Ashworth mills to Edwin Farrow.",
+		"progress": "The mills, the skeletons...",
+		"completion": "Fascinating. These are bound by something old. Thank you."
+	},
+	"362": {
+		"title": "The Haunted Mills",
+		"giver": "EdwinFarrow",
+		"ender": "EdwinFarrow",
+		"details": "The Ashworths owned the mills before the plague came. Young Dorian Ashworth haunts the mill still. Lay him to rest, and bring me his remains.",
+		"objectives": "Kill Dorian Ashworth at the Ashworth mills and bring his remains to Edwin Farrow.",
+		"progress": "Dorian still haunts the mill.",
+		"completion": "Poor boy. He'll rest now."
+	},
+	"354": {
+		"title": "Deaths in the Family",
+		"giver": "EdwinFarrow",
+		"ender": "EdwinFarrow",
+		"details": "The rest of the Ashworth family haunts their manor north-west of the mills: Gerran, Nessa and Thomas. They knew me once, when they were alive.\n\nPut them to rest, and bring me their remains.",
+		"objectives": "Bring Gerran's, Nessa's and Thomas's Remains from the Ashworth manor to Edwin Farrow.",
+		"progress": "The Ashworths...",
+		"completion": "All three. I knew them, you know. Kind people. They didn't deserve this."
+	},
+	"355": {
+		"title": "Speak with Corvane",
+		"giver": "EdwinFarrow",
+		"ender": "MagistrateCorvane",
+		"details": "The Ashworths had a family crypt beyond their manor, and there is something worse in it. Magistrate Corvane will want to know.\n\nGo and tell him what you've seen.",
+		"objectives": "Speak with Magistrate Corvane in Gallowfield.",
+		"progress": "",
+		"completion": "The Ashworth crypt. I feared as much."
+	},
+	"408": {
+		"title": "The Family Crypt",
+		"giver": "MagistrateCorvane",
+		"ender": "MagistrateCorvane",
+		"details": "Captain Morrow served the Ashworths in life, and now holds their crypt with their ancestors' restless dead.\n\nGo to the crypt. Kill eight of the wailing and eight of the rotting ancestors, and bring me Morrow's skull.",
+		"objectives": "Kill 8 Wailing Ancestors and 8 Rotting Ancestors at the Ashworth crypt and bring Morrow's Skull to Magistrate Corvane.",
+		"progress": "The crypt still stirs.",
+		"completion": "Morrow's skull. The crypt is at peace. Gallowfield thanks you."
+	},
+	"375": {
+		"title": "The Chill of Death",
+		"giver": "MorwenGallow",
+		"ender": "MorwenGallow",
+		"details": "The nights are cold in Duskmoor, even for those of us who don't feel it any more. I'm making cloaks for the deathwatch.\n\nBring me five gloombat pelts and a spool of coarse thread from the provisioner.",
+		"objectives": "Bring 5 Gloombat Pelts and 1 Coarse Thread to Morwen Gallow at the inn.",
+		"progress": "Pelts and thread, love.",
+		"completion": "Lovely. The deathwatch will be warm, whether they can tell or not."
+	},
+	"398": {
+		"title": "Wanted: Rotjaw",
+		"giver": "DeathwatchHalloran",
+		"ender": "DeathwatchHalloran",
+		"details": "Rotjaw leads the Grimhide gnolls from their camp in the east. As long as he lives, they'll keep digging up our dead.\n\nKill him and bring me his paw.",
+		"objectives": "Kill Rotjaw at the Grimhide camp and bring his paw to Deathwatch Halloran.",
+		"progress": "Rotjaw still lives.",
+		"completion": "Rotjaw's paw. Good. The gnolls will scatter now."
+	},
+	"356": {
+		"title": "Rear Guard Patrol",
+		"giver": "DeathwatchHalloran",
+		"ender": "DeathwatchHalloran",
+		"details": "The east barricade holds back what comes from the plagued lands beyond: horrors that bleed without dying and spirits that wander without rest.\n\nGo to the barricade. Kill eight of each.",
+		"objectives": "Kill 8 Bleeding Horrors and 8 Wandering Spirits at the east barricade, then return to Deathwatch Halloran.",
+		"progress": "The barricade needs you.",
+		"completion": "The barricade holds, for now."
+	},
+	"367": {
+		"title": "A New Plague",
+		"giver": "ApothecaryVesk",
+		"ender": "ApothecaryVesk",
+		"details": "The living made a plague to kill us all. I'm making one of my own. It needs the blood of darkhounds.\n\nBring me five vials of darkhound blood.",
+		"objectives": "Bring 5 Darkhound Blood to Apothecary Vesk.",
+		"progress": "Darkhound blood.",
+		"completion": "Five. Excellent. Now we need the next ingredient."
+	},
+	"368": {
+		"title": "A New Plague",
+		"giver": "ApothecaryVesk",
+		"ender": "ApothecaryVesk",
+		"details": "The Murkfin fish-men of Lake Hollowmere have scales that hold a peculiar toxin. Bring me five.",
+		"objectives": "Bring 5 Murkfin Scales from Lake Hollowmere to Apothecary Vesk.",
+		"progress": "The scales.",
+		"completion": "Five scales. Nearly there."
+	},
+	"369": {
+		"title": "A New Plague",
+		"giver": "ApothecaryVesk",
+		"ender": "ApothecaryVesk",
+		"details": "The last ingredient: the venom of the vicious Duskweb spiders in the south-east woods. Four sacs of it.",
+		"objectives": "Bring 4 Vicious Duskweb Spider Venom to Apothecary Vesk.",
+		"progress": "The venom.",
+		"completion": "Perfect. My plague is nearly ready. Thank you, friend. The living will regret making the first one."
+	},
+	"5481": {
+		"title": "Thrum's Task",
+		"giver": "Thrum",
+		"ender": "Thrum",
+		"details": "Thrum hungry. Thrum likes gloom weed. Grows round the graveyard.\n\nYou get three for Thrum?",
+		"objectives": "Bring 3 Gloom Weed from round Gallowfield's graveyard to Thrum.",
+		"progress": "Thrum still hungry.",
+		"completion": "Gloom weed! Thrum happy."
+	},
+	"5482": {
+		"title": "Doom Weed",
+		"giver": "Thrum",
+		"ender": "Thrum",
+		"details": "Thrum still hungry. Doom weed is better than gloom weed. Grows below big abbey, where the crusaders are.\n\nYou get ten?",
+		"objectives": "Bring 10 Doom Weed from below the Zealot Abbey to Thrum.",
+		"progress": "Thrum waits.",
+		"completion": "Ten doom weed! Thrum very happy now."
+	},
+	"747": {
+		"title": "The Hunt Begins",
+		"giver": "GrullSkymane",
+		"ender": "GrullSkymane",
+		"details": "Every young Hornkin proves themselves first in the hunt. The tallbirds graze in the fields round the camp; they are swift but not clever.\n\nBring me seven of their meat and seven of their feathers.",
+		"objectives": "Bring 7 Tallbird Meat and 7 Tallbird Feathers to Grull Skymane.",
+		"progress": "The tallbirds await.",
+		"completion": "A good start. The hunt is in your blood."
+	},
+	"750": {
+		"title": "The Hunt Continues",
+		"giver": "GrullSkymane",
+		"ender": "GrullSkymane",
+		"details": "The cougars of the western hills are a greater test. They hunt the hunters.\n\nBring me ten of their pelts.",
+		"objectives": "Bring 10 Mountain Cougar Pelts from the western hills to Grull Skymane.",
+		"progress": "The cougars still prowl.",
+		"completion": "Ten pelts. You hunt well."
+	},
+	"780": {
+		"title": "The Battleboars",
+		"giver": "GrullSkymane",
+		"ender": "GrullSkymane",
+		"details": "The battleboars of the south-western meadow are fierce. Their snouts and flanks feed the camp through the winter.\n\nBring me eight of each.",
+		"objectives": "Bring 8 Battleboar Snouts and 8 Battleboar Flanks to Grull Skymane.",
+		"progress": "The boars...",
+		"completion": "Eight of each. The camp will eat well."
+	},
+	"752": {
+		"title": "A Humble Task",
+		"giver": "BraveWindfeather",
+		"ender": "ChiefSkymane",
+		"details": "Chief Skymane asked me to send him the next young one who came by. That's you. He is in front of the longhouse.",
+		"objectives": "Speak with Chief Skymane in front of the longhouse.",
+		"progress": "",
+		"completion": "Ah, you've come. Good. There is something I would ask of you."
+	},
+	"753": {
+		"title": "A Humble Task",
+		"giver": "ChiefSkymane",
+		"ender": "ChiefSkymane",
+		"details": "My old bones are thirsty, and the Wellspring north of the camp gives the purest water in all the plains.\n\nBring me a pitcher of it.",
+		"objectives": "Bring a Water Pitcher from the Wellspring to Chief Skymane.",
+		"progress": "The Wellspring is just north.",
+		"completion": "Ahh. Pure as the first morning. Thank you, young one."
+	},
+	"755": {
+		"title": "Rites of the Earthmother",
+		"giver": "ChiefSkymane",
+		"ender": "SeerSunwalker",
+		"details": "You have shown patience. Now you are ready for the rites of our people.\n\nSeer Sunwalker waits by the great totem. Go to her.",
+		"objectives": "Speak with Seer Sunwalker by the great totem.",
+		"progress": "",
+		"completion": "The chief sends you. The Earthmother has her eye on you, young one."
+	},
+	"757": {
+		"title": "Rite of Strength",
+		"giver": "SeerSunwalker",
+		"ender": "SeerSunwalker",
+		"details": "The Briartusk tuskfolk camp in the Thornback Ravine to the south-east. They raid our camp and steal our herds.\n\nProve your strength against them. Bring me twelve of their belts.",
+		"objectives": "Bring 12 Briartusk Belts from the Thornback Ravine to Seer Sunwalker.",
+		"progress": "The tuskfolk still raid.",
+		"completion": "Twelve belts. You are strong. The Earthmother is pleased."
+	},
+	"763": {
+		"title": "Rites of the Earthmother",
+		"giver": "SeerSunwalker",
+		"ender": "ChiefLonghorn",
+		"details": "You are ready to leave the camp. Take this totem to Chief Longhorn in Longhorn Village, up the pass to the north, in the Tallgrass.\n\nHe will know what it means.",
+		"objectives": "Take the Totem of Skymane to Chief Longhorn in Longhorn Village, in the Tallgrass.",
+		"progress": "",
+		"completion": "The totem of Skymane. So the young one has passed the rites of the camp.\n\nWelcome to Longhorn Village."
+	},
+	"781": {
+		"title": "Attack on Sunfold",
+		"giver": "",
+		"ender": "ChiefSkymane",
+		"details": "The plans are drawn on a scrap of hide in the tuskfolk's crude marks: Sunfold Camp, and arrows pointing at it from the ravine.\n\nChief Skymane must see this.",
+		"objectives": "Take the Briartusk Attack Plans to Chief Skymane.",
+		"progress": "",
+		"completion": "They mean to attack the camp? Then we strike first. You have done well to bring this to me."
+	},
+	"3376": {
+		"title": "Break Ragetusk!",
+		"giver": "BraveWindfeather",
+		"ender": "BraveWindfeather",
+		"details": "Chief Ragetusk leads the Briartusk from the depths of the Thornback Ravine. While he lives, the raids will never stop.\n\nKill him. Bring me his head.",
+		"objectives": "Kill Chief Ragetusk in the Thornback Ravine and bring his head to Brave Windfeather.",
+		"progress": "Ragetusk still leads them.",
+		"completion": "His head. The Briartusk will scatter. You are a true brave."
+	},
+	"1656": {
+		"title": "A Task Unfinished",
+		"giver": "TahnaSoftstride",
+		"ender": "MoroPlainsong",
+		"details": "I have a bundle of furs for Moro Plainsong in Longhorn Village, and I can't leave the camp.\n\nWill you take them to him?",
+		"objectives": "Take the Bundle of Furs to Moro Plainsong in Longhorn Village.",
+		"progress": "",
+		"completion": "Tahna's furs! Fine ones. Thank you."
+	},
+	"743": {
+		"title": "Dangers of the Skyrend",
+		"giver": "ChiefLonghorn",
+		"ender": "ChiefLonghorn",
+		"details": "The Skyrend harpies nest on the cliffs to the west and swoop down on our herds and hunters.\n\nBring me eight of their talons.",
+		"objectives": "Bring 8 Skyrend Talons from the Skyrend cliffs to Chief Longhorn.",
+		"progress": "The harpies still nest.",
+		"completion": "Eight talons. Our hunters will walk safer."
+	},
+	"745": {
+		"title": "Sharing the Land",
+		"giver": "BraveStormhide",
+		"ender": "BraveStormhide",
+		"details": "The Dustmane gnolls at Ashmane Rock hunt our herds for their hides. The land is shared, but not with them.\n\nKill ten of their tanners, eight of their skinners and five of their poachers.",
+		"objectives": "Kill 10 Dustmane Tanners, 8 Dustmane Skinners and 5 Dustmane Poachers at Ashmane Rock, then return to Brave Stormhide.",
+		"progress": "The gnolls still hunt our herds.",
+		"completion": "The herds are safer. Well done."
+	},
+	"748": {
+		"title": "Poison Water",
+		"giver": "ElderThunderhoof",
+		"ender": "ElderThunderhoof",
+		"details": "The wells of the plains are being poisoned, and the beasts that drink there sicken. I must know the poison.\n\nBring me six prairie wolf paws and four tallbird talons.",
+		"objectives": "Bring 6 Prairie Wolf Paws and 4 Tallbird Talons to Elder Thunderhoof.",
+		"progress": "The paws and talons.",
+		"completion": "I see it now. Something foul in the water. We will cleanse it."
+	},
+	"761": {
+		"title": "Swoop Hunting",
+		"giver": "HuntressSwiftmane",
+		"ender": "HuntressSwiftmane",
+		"details": "The swoops are great birds of the plains, and their quills make fine trophies.\n\nBring me eight.",
+		"objectives": "Bring 8 Trophy Swoop Quills to Huntress Kenna Swiftmane.",
+		"progress": "The swoops still fly.",
+		"completion": "Eight fine quills. You hunt well."
+	},
+	"766": {
+		"title": "Thunderstrider",
+		"giver": "HuntressSwiftmane",
+		"ender": "HuntressSwiftmane",
+		"details": "There is a beast on the plains we call Thunderstrider, old and huge. To hunt him you must know the plains. Bring me a heart from a prairie wolf, a femur from a flatland cougar, a scale from a tallbird and a gizzard from a swoop.\n\nThen you will be ready.",
+		"objectives": "Bring a Prairie Wolf Heart, a Flatland Cougar Femur, a Tallbird Scale and a Swoop Gizzard to Huntress Kenna Swiftmane.",
+		"progress": "Do you know the plains yet?",
+		"completion": "You know the plains. Now you are a hunter."
+	},
+	"767": {
+		"title": "Rite of Vision",
+		"giver": "ElderThunderhoof",
+		"ender": "SeerTwomoons",
+		"details": "The Rite of Vision is the next of our rites. Seer Twomoons keeps the wells to the north. Go to him.",
+		"objectives": "Speak with Seer Twomoons at the Seers' wells.",
+		"progress": "",
+		"completion": "Thunderhoof sends you. Good. The rite is old, and needs old things."
+	},
+	"771": {
+		"title": "Rite of Vision",
+		"giver": "SeerTwomoons",
+		"ender": "SeerTwomoons",
+		"details": "For the rite I need two well stones from the wells, and two amberseeds from the grass around them.\n\nBring them to me.",
+		"objectives": "Bring 2 Well Stones and 2 Amberseed to Seer Twomoons.",
+		"progress": "Stones and seeds.",
+		"completion": "Good. Now I can prepare the water of the seers. Rest, and the vision will come."
+	},
+	"770": {
+		"title": "The Demon Scarred Cloak",
+		"giver": "",
+		"ender": "HuntressSwiftmane",
+		"details": "The cloak is old and torn, scarred by claws that weren't a beast's. There is a Hornkin hunter's mark sewn inside it.\n\nSomeone in Longhorn Village might know whose it was.",
+		"objectives": "Take the Demon Scarred Cloak to Huntress Kenna Swiftmane in Longhorn Village.",
+		"progress": "",
+		"completion": "That cloak... it belonged to a hunter who went after the Pale Howler and never came back.\n\nYou killed the beast? Then he is avenged. Thank you."
+	},
+	"833": {
+		"title": "A Sacred Burial",
+		"giver": "LorekeeperRainsong",
+		"ender": "LorekeeperRainsong",
+		"details": "The Ochre Stones are our sacred burial ground, and the Briartusk dig among the graves for trinkets.\n\nDrive them out. Kill eight of the interlopers.",
+		"objectives": "Kill 8 Briartusk Interlopers at the Ochre Stones, then return to Lorekeeper Rainsong.",
+		"progress": "They still dig among the graves.",
+		"completion": "The dead rest easier. Thank you."
+	},
+	"861": {
+		"title": "The Hunter's Way",
+		"giver": "HuntressSwiftmane",
+		"ender": "HuntressSwiftmane",
+		"details": "The flatland prowlers are the most cunning cats on the plains. A true hunter can bring down four of them.\n\nBring me their claws.",
+		"objectives": "Bring 4 Flatland Prowler Claws to Huntress Kenna Swiftmane.",
+		"progress": "The prowlers are cunning.",
+		"completion": "Four claws. You walk the hunter's way."
+	},
+	"179": {
+		"title": "Dwarven Outfitters",
+		"giver": "TorviStonearm",
+		"ender": "TorviStonearm",
+		"details": "Welcome to the Hollow Hall, lad. Or lass. Can't tell under all that frost.\n\nFirst thing anyone learns here is to keep warm and keep fed. The ragged wolves out in the snow are tough old things, but their meat makes a fine stew and their hides line a good pair of boots.\n\nBring me eight pieces of tough wolf meat and I'll see you outfitted proper.",
+		"objectives": "Bring 8 Tough Wolf Meat to Torvi Stonearm at the Hollow Hall.",
+		"progress": "Wolves are all about the hall. Don't let them chew on you.",
+		"completion": "Eight! Good work. That'll keep the pot full a week.\n\nHere, take something for the cold. You'll want it before long."
+	},
+	"170": {
+		"title": "A New Threat",
+		"giver": "BaldurFrostbeard",
+		"ender": "BaldurFrostbeard",
+		"details": "Troggs. Stonejaw troggs, digging up out of the mountain north-east of the hall like they own the place. Filthy, stupid, and strong as rams, and more of them every day.\n\nI want them pushed back. Go to their diggings and kill six of the troggs and six of the burly ones.",
+		"objectives": "Kill 6 Stonejaw Troggs and 6 Burly Stonejaw Troggs at the trogg diggings, then return to Baldur Frostbeard.",
+		"progress": "The diggings are north-east of the hall. Mind the burly ones.",
+		"completion": "That'll teach them to come knocking. Well fought."
+	},
+	"183": {
+		"title": "The Boar Hunter",
+		"giver": "TavinSharpeye",
+		"ender": "TavinSharpeye",
+		"details": "The small crag boars are getting into everything: the stores, the traps, my good boots. They root about the slopes south-west of the hall in packs.\n\nThin them out for me. Twelve of them ought to do it.",
+		"objectives": "Kill 12 Small Crag Boars, then return to Tavin Sharpeye at his camp west of the Hollow Hall.",
+		"progress": "Still hearing grunting out there.",
+		"completion": "Twelve boars. You've a hunter's patience. Here, for your trouble."
+	},
+	"233": {
+		"title": "Frosthollow Mail Delivery",
+		"giver": "TorviStonearm",
+		"ender": "TavinSharpeye",
+		"details": "Now you've got your feet under you, make yourself useful. The post's come down from Kettlefold, and Tavin Sharpeye's camp is out west of the hall.\n\nTake him this stack of letters. He'll pass the rest along.",
+		"objectives": "Deliver the stack of letters to Tavin Sharpeye, west of the Hollow Hall.",
+		"progress": "",
+		"completion": "Letters! It's been weeks. Thanks, friend.\n\nThere's one in here for Gerrin, too. Don't suppose you're going that way?"
+	},
+	"234": {
+		"title": "Frosthollow Mail Delivery",
+		"giver": "TavinSharpeye",
+		"ender": "GerrinGreymantle",
+		"details": "This one's for Gerrin Greymantle. He's camped north-west of the hall, under the Troll Caves, keeping an eye on the Icemane.\n\nIt's sealed, so it's important, or he thinks it is.",
+		"objectives": "Deliver the letter to Gerrin Greymantle at his camp below the Troll Caves.",
+		"progress": "",
+		"completion": "From Kettlefold? Ah, at last. They've finally answered.\n\nThank you. Stay a while. I could use someone handy."
+	},
+	"3361": {
+		"title": "A Refugee's Quandary",
+		"giver": "FenwickSprocketbolt",
+		"ender": "FenwickSprocketbolt",
+		"details": "Oh! Oh, you're a dwarf. Or a gnome. Either way, splendid! I'm Fenwick. I fled the trouble in the Cogworks with everything I owned, and then I lost everything I owned in the snow.\n\nMy box is somewhere by the Troll Caves, my chest by the trogg diggings, and my bucket of bolts up on the Frozen Stair. Could you fetch them?",
+		"objectives": "Bring Fenwick's Box, Fenwick's Chest and Fenwick's Bucket of Bolts to Fenwick Sprocketbolt at the Hollow Hall.",
+		"progress": "Any luck? The bolts especially. They're very good bolts.",
+		"completion": "My things! All of them! You're a marvel.\n\nPlease, take this. It's not much, but I insist."
+	},
+	"182": {
+		"title": "The Troll Cave",
+		"giver": "GerrinGreymantle",
+		"ender": "GerrinGreymantle",
+		"details": "I came here to study the Icemane trolls. I've learned they breed fast and fight dirty. Their young swarm out of the caves above my camp day and night.\n\nKill fourteen of the troll whelps. Keep them from growing up into worse.",
+		"objectives": "Kill 14 Icemane Troll Whelps at the Troll Caves, then return to Gerrin Greymantle.",
+		"progress": "The caves are just up the slope. Watch the novices; they throw ice.",
+		"completion": "Fourteen. That should give us some quiet.\n\nBut I fear the worst is still in there."
+	},
+	"218": {
+		"title": "The Stolen Journal",
+		"giver": "GerrinGreymantle",
+		"ender": "GerrinGreymantle",
+		"details": "While I was out, a troll broke into my camp and took my journal: years of notes on the Icemane. His name's Grisknar the Cold. He lords it over the whelps deep in the caves.\n\nKill him and bring my journal back.",
+		"objectives": "Kill Grisknar the Cold in the Troll Caves and bring Gerrin Greymantle's Journal back to him.",
+		"progress": "Grisknar's in the back of the caves. You'll know him by the cold.",
+		"completion": "My journal! And barely torn. You've done me a great turn."
+	},
+	"282": {
+		"title": "Sennar's Observations",
+		"giver": "GerrinGreymantle",
+		"ender": "MountaineerHaldor",
+		"details": "My journal says the Icemane in these caves are only an outpost. Their real hold is out in Highpeak, south-west of Kettlefold.\n\nTake my report to Mountaineer Haldor. He keeps watch at the top of the Frozen Stair, east of the hall, and he'll know where to send it.",
+		"objectives": "Take Gerrin's Report to Mountaineer Haldor at the Frozen Stair.",
+		"progress": "",
+		"completion": "A report from Gerrin? Let's see.\n\nHmm. This is for Sennar's eyes, not mine."
+	},
+	"420": {
+		"title": "Sennar's Observations",
+		"giver": "MountaineerHaldor",
+		"ender": "SennarGreymantle",
+		"details": "Sennar Greymantle, Gerrin's brother, keeps an eye on the trolls from Kettlefold. Take this report to him.\n\nThe Frozen Stair goes east through the mountains and down into Highpeak. Follow the road and you'll walk right into the village.",
+		"objectives": "Take Gerrin's Report to Sennar Greymantle in Kettlefold, in Highpeak.",
+		"progress": "",
+		"completion": "From my brother! He always did write too much.\n\nBut this is useful. Very useful. Thank you."
+	},
+	"3364": {
+		"title": "Scalding Mornbrew Delivery",
+		"giver": "NessaStoutbrew",
+		"ender": "DunstanHidecutter",
+		"details": "Dunstan at the hall's been up since before dawn and hasn't had a drop. I've brewed him my scalding mornbrew, the finest thing to keep a dwarf on his feet.\n\nTake it to him while it's hot, would you? He's the tanner by the hall's door.",
+		"objectives": "Take the Scalding Mornbrew to Dunstan Hidecutter at the Hollow Hall.",
+		"progress": "",
+		"completion": "Is that Nessa's mornbrew? Bless her!\n\nAh. Just the thing. Still warm, too."
+	},
+	"3365": {
+		"title": "Bring Back the Mug",
+		"giver": "DunstanHidecutter",
+		"ender": "NessaStoutbrew",
+		"details": "Nessa'll want her mug back; she's particular about it. Would you take it to her? She's at Gerrin's camp.",
+		"objectives": "Return Nessa's Mug to Nessa Stoutbrew at Gerrin's camp.",
+		"progress": "",
+		"completion": "My mug! He drank it all, I hope? Good. Thank you."
+	},
+	"2160": {
+		"title": "Supplies to Tannar",
+		"giver": "WicketSpringcog",
+		"ender": "TannarFrostbeard",
+		"details": "The Thornbrew inn in Kettlefold is waiting on this crate of supplies, and I'm waiting on someone to carry it. You look strong.\n\nTake it to Tannar Frostbeard at the inn. The road goes east up the Frozen Stair into Highpeak.",
+		"objectives": "Take the Crate of Inn Supplies to Tannar Frostbeard at the inn in Kettlefold, in Highpeak.",
+		"progress": "",
+		"completion": "The supplies! Belva was starting to worry.\n\nCome in, warm yourself. You've earned it."
+	},
+	"400": {
+		"title": "Tools for Steelgrip",
+		"giver": "LodrinRudd",
+		"ender": "BelgarSteelgrip",
+		"details": "Belgar Steelgrip runs the depot east of Kettlefold, where the gnomes keep their flying machines. He sent these tools to me for mending and now they're good as new.\n\nTake them back to him when you go to Highpeak.",
+		"objectives": "Take Steelgrip's Tools to Belgar Steelgrip at Steelgrip's Depot, east of Kettlefold.",
+		"progress": "",
+		"completion": "My tools! Lodrin's done a fine job. Thank you."
+	},
+	"317": {
+		"title": "Stocking the Jetstream",
+		"giver": "PilotPumpwhistle",
+		"ender": "PilotPumpwhistle",
+		"details": "I'm Pilot Pumpwhistle, and that's the Jetstream, the finest flying machine in Highpeak. I'm planning a long flight and I'll need provisions: boar meat for the trip, bear fur to keep me warm up there.\n\nFour chunks of boar meat and two thick bear furs, please.",
+		"objectives": "Bring 4 Chunks of Boar Meat and 2 Thick Bear Furs to Pilot Pumpwhistle at Steelgrip's Depot.",
+		"progress": "Meat and fur. The sky is cold, you know.",
+		"completion": "Splendid! The Jetstream's nearly ready."
+	},
+	"318": {
+		"title": "Evershine",
+		"giver": "PilotPumpwhistle",
+		"ender": "RodvarBarleyhall",
+		"details": "There's one more thing. Nothing keeps a pilot's spirits up like a cask of Evershine, and the only brewer who makes it is Rodvar Barleyhall, up on the shore of the Icewater Tarn north of Kettlefold.\n\nGo and get me a cask.",
+		"objectives": "Get a cask of Evershine from Rodvar Barleyhall in Barleyhall.",
+		"progress": "",
+		"completion": "Evershine? For Pumpwhistle? Ha! He'll have to wait."
+	},
+	"319": {
+		"title": "A Favor for Evershine",
+		"giver": "RodvarBarleyhall",
+		"ender": "RodvarBarleyhall",
+		"details": "I'd give you the cask, but my brewing's gone to pot. The ice claw bears, the elder crag boars and the snow leopards keep raiding my barley and scaring off my help.\n\nThin them out. Six bears, eight boars, eight leopards. Then we'll talk.",
+		"objectives": "Kill 6 Ice Claw Bears, 8 Elder Crag Boars and 8 Snow Leopards, then return to Rodvar Barleyhall.",
+		"progress": "They're still raiding.",
+		"completion": "That's better. A dwarf can brew in peace now."
+	},
+	"320": {
+		"title": "Return to Pumpwhistle",
+		"giver": "RodvarBarleyhall",
+		"ender": "PilotPumpwhistle",
+		"details": "Here's your cask of Evershine. Tell Pumpwhistle it's the good stuff, and not to drink it all before he takes off.",
+		"objectives": "Take the Cask of Evershine to Pilot Pumpwhistle at Steelgrip's Depot.",
+		"progress": "",
+		"completion": "Evershine! You're a hero to pilots everywhere."
+	},
+	"384": {
+		"title": "Beer Basted Boar Ribs",
+		"giver": "RagnorKegsworth",
+		"ender": "RagnorKegsworth",
+		"details": "There's nothing finer than boar ribs basted in malt. I'll cook you some if you bring me what I need: six crag boar ribs and a mug of Rhapsody Malt. Belva sells the malt here at the inn.",
+		"objectives": "Bring 6 Crag Boar Ribs and 1 Rhapsody Malt to Ragnor Kegsworth at the inn in Kettlefold.",
+		"progress": "Ribs and malt, friend.",
+		"completion": "Now that's a meal. Take a few for the road."
+	},
+	"313": {
+		"title": "The Grizzled Den",
+		"giver": "PilotGearbolt",
+		"ender": "PilotGearbolt",
+		"details": "The wendigos lair in the Grizzled Den, north-west of Kettlefold. Their manes make the best lining for a pilot's coat.\n\nBring me eight wendigo manes.",
+		"objectives": "Bring 8 Wendigo Manes to Pilot Gearbolt at Steelgrip's Depot.",
+		"progress": "The wendigos bite hard. Careful.",
+		"completion": "Eight manes. My coat will be the warmest in Highpeak."
+	},
+	"314": {
+		"title": "Protecting the Herd",
+		"giver": "RudhildAmberfield",
+		"ender": "RudhildAmberfield",
+		"details": "Something's been taking my rams. A great yeti, Vaskar, prowls the hills by the ranch. He's taken three this month.\n\nKill him and bring me his fang.",
+		"objectives": "Kill Vaskar near Amberfield Ranch and bring his fang to Rudhild Amberfield.",
+		"progress": "Vaskar's still out there. I can hear him.",
+		"completion": "The fang of Vaskar. My herd is safe. Thank you."
+	},
+	"315": {
+		"title": "The Perfect Stout",
+		"giver": "RodvarBarleyhall",
+		"ender": "RodvarBarleyhall",
+		"details": "I've a new brew in mind: a stout with a shimmer to it. It needs shimmerweed, which only grows on Shimmer Ridge, south-west of Kettlefold, where the Icemane seers pick it.\n\nBring me six.",
+		"objectives": "Bring 6 Shimmerweed to Rodvar Barleyhall in Barleyhall.",
+		"progress": "Shimmerweed, six of it.",
+		"completion": "Lovely. Smell that! This will be my finest brew."
+	},
+	"413": {
+		"title": "Shimmer Stout",
+		"giver": "RodvarBarleyhall",
+		"ender": "MountaineerBarleyhall",
+		"details": "Here it is: my shimmer stout. My cousin, Mountaineer Barleyhall, stands guard at the Anvilhold Gate north of here. He'll want the first barrel.",
+		"objectives": "Take the Barrel of Shimmer Stout to Mountaineer Barleyhall at the Anvilhold Gate.",
+		"progress": "",
+		"completion": "Shimmer stout! My cousin's outdone himself."
+	},
+	"412": {
+		"title": "Operation Recombobulation",
+		"giver": "RazzikSprywrench",
+		"ender": "RazzikSprywrench",
+		"details": "The Cogworks, our great works in the north-west, were lost to a terrible accident. The gnomes who stayed were blighted by it, and they've gone strange.\n\nThey carry the parts I need to fix our machines: restabilization cogs and gyromechanic gears. Bring me eight of each.",
+		"objectives": "Bring 8 Restabilization Cogs and 8 Gyromechanic Gears to Razzik Sprywrench at Steelgrip's Depot.",
+		"progress": "Eight cogs, eight gears.",
+		"completion": "Perfect! With these, we'll be back in the sky in no time."
+	},
+	"432": {
+		"title": "Those Blasted Troggs!",
+		"giver": "ForemanFlintbrow",
+		"ender": "ForemanFlintbrow",
+		"details": "The Grey Quarry was ours until the troggs dug up into it. Now we can't swing a pick without a skullthumper swinging back.\n\nKill six skullthumpers.",
+		"objectives": "Kill 6 Stonejaw Skullthumpers at the Grey Quarry, then return to Foreman Flintbrow.",
+		"progress": "The quarry's still full of them.",
+		"completion": "Six. The lads can get back to work."
+	},
+	"433": {
+		"title": "The Public Servant",
+		"giver": "SenatorStonevale",
+		"ender": "SenatorStonevale",
+		"details": "The bonesnappers are the worst of the troggs at the quarry. As a servant of the people, I must see them dealt with.\n\nBy you. Ten of them.",
+		"objectives": "Kill 10 Stonejaw Bonesnappers at the Grey Quarry, then return to Senator Mehrin Stonevale.",
+		"progress": "Ten bonesnappers, please.",
+		"completion": "Well done! The people thank you, as do I."
+	},
+	"287": {
+		"title": "Icemane Hold",
+		"giver": "SennarGreymantle",
+		"ender": "SennarGreymantle",
+		"details": "My brother's report says the Icemane are gathering at their hold south-west of Kettlefold. I want to know how many there are.\n\nGo to Icemane Hold and look round. And kill five of their headhunters while you're there; they've been hunting our people.",
+		"objectives": "Explore Icemane Hold and kill 5 Icemane Headhunters, then return to Sennar Greymantle in Kettlefold.",
+		"progress": "The hold is south-west, under the cliffs.",
+		"completion": "That many? Then we'll need more than a watch. Thank you.",
+		"explore": "Icemane Hold"
+	},
+	"419": {
+		"title": "The Lost Pilot",
+		"giver": "PilotHammerwick",
+		"ender": "HildrasCorpse",
+		"details": "My friend Hildra flew out over the eastern pines a week ago and never came back. I fear the worst.\n\nShe was headed east, toward the Southgate. Find her.",
+		"objectives": "Find Pilot Hildra, east of Kettlefold near the Southgate.",
+		"progress": "",
+		"completion": "Here, in the snow, is what is left of Pilot Hildra. Her flying machine lies wrecked beside her, and her journal is still in her hand."
+	},
+	"417": {
+		"title": "A Pilot's Revenge",
+		"giver": "HildrasCorpse",
+		"ender": "PilotHammerwick",
+		"details": "Hildra's journal says she came down safely, but something hunted her: a great bear with a mangy hide, Scabclaw.\n\nThe beast must be near. Kill it and bring its claw and Hildra's journal to Pilot Hammerwick at the Grey Quarry.",
+		"objectives": "Kill Scabclaw and bring his Mangy Claw and Hildra's Journal to Pilot Hammerwick at the Grey Quarry.",
+		"progress": "Have you found her?",
+		"completion": "Hildra's journal. And the beast's claw.\n\nShe's avenged, then. Thank you."
+	},
+	"312": {
+		"title": "Mackellen's Stolen Stash",
+		"giver": "HaggarMackellen",
+		"ender": "HaggarMackellen",
+		"details": "Old Rimebeard, the biggest wendigo in the Grizzled Den, broke into my meat locker and dragged the whole thing back to his cave!\n\nGet my dried meats back. The cave's at the back of the den.",
+		"objectives": "Retrieve Haggar Mackellen's dried meats from his meat locker at Old Rimebeard's cave.",
+		"progress": "Old Rimebeard's still got it.",
+		"completion": "My meats! Untouched! You're a true friend."
+	},
+	"5541": {
+		"title": "Ammo for Thundershot",
+		"giver": "TharnBlackstone",
+		"ender": "HegrunThundershot",
+		"details": "Hegrun Thundershot's camped at the Grey Quarry, shooting troggs, and he's run dry. I sent a crate of shot down to him, but the troggs got it first.\n\nFind the crate in the quarry and take it to Hegrun.",
+		"objectives": "Find the ammo crate at the Grey Quarry and bring Thundershot's Ammo to Hegrun Thundershot.",
+		"progress": "The crate's somewhere in the quarry.",
+		"completion": "Ammo! Now I can get back to work. Thank you."
+	},
+	"458": {
+		"title": "The Woodland Protector",
+		"giver": "MelidorOakhelm",
+		"ender": "Thalindra",
+		"details": "Welcome, child of the stars. You have woken beneath the Elderbough, and there is much to learn.\n\nThalindra, a dryad of the glen, watches over the woods to the west. Go and speak with her. She has need of you.",
+		"objectives": "Speak with Thalindra in her grove west of the Elderbough.",
+		"progress": "",
+		"completion": "You have come. Good. The woods are troubled, and I cannot mend them alone."
+	},
+	"459": {
+		"title": "The Woodland Protector",
+		"giver": "Thalindra",
+		"ender": "Thalindra",
+		"details": "The fenlings round the Shadowrock to the south-west carry fel moss, a foul growth that sickens the glen.\n\nGather eight clumps of it from them, so that I may cleanse it.",
+		"objectives": "Bring 8 Fel Moss to Thalindra.",
+		"progress": "The moss spreads.",
+		"completion": "Eight. I will burn it in moonlight. Thank you, young one."
+	},
+	"456": {
+		"title": "The Balance of Nature",
+		"giver": "ConservatorIlanthe",
+		"ender": "ConservatorIlanthe",
+		"details": "The young shadecats and thistle boars of the glen have grown too many, and the balance of nature is upset.\n\nHunt seven young shadecats and four young thistle boars.",
+		"objectives": "Kill 7 Young Shadecats and 4 Young Thistle Boars, then return to Conservator Ilanthe.",
+		"progress": "The balance is still upset.",
+		"completion": "Good. The glen breathes easier."
+	},
+	"457": {
+		"title": "The Balance of Nature",
+		"giver": "ConservatorIlanthe",
+		"ender": "ConservatorIlanthe",
+		"details": "The grown beasts are worse: mangy shadecats and thistle boars in the glades to the north.\n\nSeven of each.",
+		"objectives": "Kill 7 Mangy Shadecats and 7 Thistle Boars, then return to Conservator Ilanthe.",
+		"progress": "Seven of each.",
+		"completion": "The balance is restored. Well done."
+	},
+	"916": {
+		"title": "Silkwood Venom",
+		"giver": "GilthanWindstride",
+		"ender": "GilthanWindstride",
+		"details": "Silkwood spiders nest in the Silkhollow, the cave south-east of here. Their venom is potent, and I would study it.\n\nBring me ten venom sacs.",
+		"objectives": "Bring 10 Silkwood Venom Sacs to Gilthan Windstride at the Elderbough.",
+		"progress": "The spiders are in the Silkhollow.",
+		"completion": "Ten. This will help me understand their poison."
+	},
+	"917": {
+		"title": "Silkwood Egg",
+		"giver": "GilthanWindstride",
+		"ender": "GilthanWindstride",
+		"details": "The venom tells me the spiders are changing. I need to see one of their eggs.\n\nThe eggs are deep in the Silkhollow, guarded by Sissith the Vile. Bring me one.",
+		"objectives": "Bring a Silkwood Egg from the Silkhollow to Gilthan Windstride.",
+		"progress": "An egg, from deep in the cave.",
+		"completion": "An egg. Yes, they are changing. I must think on this."
+	},
+	"4495": {
+		"title": "A Good Friend",
+		"giver": "DiranaSilverleaf",
+		"ender": "Iveran",
+		"details": "My friend Iveran went to watch the spiders at the Silkhollow and hasn't come back. I'm worried.\n\nWould you find him? He'd be near the mouth of the cave, south-east of here.",
+		"objectives": "Find Iveran by the Silkhollow.",
+		"progress": "",
+		"completion": "Dirana sent you? Bless her.\n\nI'm... not well. The spiders bit me."
+	},
+	"3519": {
+		"title": "A Friend in Need",
+		"giver": "Iveran",
+		"ender": "DiranaSilverleaf",
+		"details": "I've been poisoned. I can't walk far. Please, tell Dirana. She knows how to make an antidote.",
+		"objectives": "Tell Dirana Silverleaf at the Elderbough that Iveran is poisoned.",
+		"progress": "",
+		"completion": "Poisoned? Then there is no time to waste."
+	},
+	"3521": {
+		"title": "Iveran's Antidote",
+		"giver": "DiranaSilverleaf",
+		"ender": "DiranaSilverleaf",
+		"details": "To make the antidote I need hyacinth mushrooms, which grow round the Shadowrock, moonpetal lilies from the lily pool east of the Elderbough, and the ichor of a Silkwood spider.\n\nSeven mushrooms, four lilies and one ichor. Quickly.",
+		"objectives": "Bring 7 Hyacinth Mushrooms, 4 Moonpetal Lilies and 1 Silkwood Ichor to Dirana Silverleaf.",
+		"progress": "Hurry.",
+		"completion": "Everything. Let me mix it."
+	},
+	"3522": {
+		"title": "Iveran's Antidote",
+		"giver": "DiranaSilverleaf",
+		"ender": "Iveran",
+		"details": "Here is the antidote. Take it to Iveran by the Silkhollow, and be quick.",
+		"objectives": "Take Iveran's Antidote to Iveran by the Silkhollow.",
+		"progress": "",
+		"completion": "The antidote... already the pain is fading. Thank you, friend."
+	},
+	"2159": {
+		"title": "Fernwatch Delivery",
+		"giver": "Delyssa",
+		"ender": "Keldara",
+		"details": "Keldara, the innkeeper at Fernwatch, has been waiting on this delivery.\n\nFernwatch is south, down the roots of the Elderbough onto Eldergrove Isle. Follow the road.",
+		"objectives": "Take the Fernwatch Delivery to Keldara at the inn in Fernwatch, on Eldergrove Isle.",
+		"progress": "",
+		"completion": "My delivery! Thank you. Rest here a while."
+	},
+	"488": {
+		"title": "Zann's Bidding",
+		"giver": "ZannRothoof",
+		"ender": "ZannRothoof",
+		"details": "You there. Yes, you. I am Zann Rothoof. The elves won't let me into their village, but you might help me.\n\nI need three shadecat fangs, three strigid owl feathers and three swatches of Silkwood spider silk.",
+		"objectives": "Bring 3 Shadecat Fangs, 3 Strigid Owl Feathers and 3 Silkwood Spider Silk to Zann Rothoof outside Fernwatch.",
+		"progress": "Have you got them?",
+		"completion": "Perfect. Now, one more thing."
+	},
+	"489": {
+		"title": "Seek Redemption!",
+		"giver": "ZannRothoof",
+		"ender": "ZannRothoof",
+		"details": "The fel cones that grow in the woods round Fernwatch are what I need now. Bring me three.",
+		"objectives": "Bring 3 Fel Cones to Zann Rothoof outside Fernwatch.",
+		"progress": "Three fel cones.",
+		"completion": "Yes... yes. Thank you."
+	},
+	"997": {
+		"title": "Denalor's Earth",
+		"giver": "SyrinBladeleaf",
+		"ender": "Denalor",
+		"details": "Denalor studies the barklings by Lake Aleth, east of Fernwatch. He asked for this rare earth.\n\nTake it to him.",
+		"objectives": "Take the Rare Earth to Denalor at Lake Aleth.",
+		"progress": "",
+		"completion": "The earth! At last. Now my work can go on."
+	},
+	"918": {
+		"title": "Barkling Seeds",
+		"giver": "Denalor",
+		"ender": "Denalor",
+		"details": "The barklings round the lake have gone wild. Their seeds hold the secret of it.\n\nBring me eight.",
+		"objectives": "Bring 8 Barkling Seeds to Denalor at Lake Aleth.",
+		"progress": "Eight seeds.",
+		"completion": "These seeds are tainted. As I feared."
+	},
+	"919": {
+		"title": "Barkling Sprouts",
+		"giver": "Denalor",
+		"ender": "Denalor",
+		"details": "The barklings' sprouts grow along the lake shore. Gather twelve before they take root.",
+		"objectives": "Bring 12 Barkling Sprouts to Denalor at Lake Aleth.",
+		"progress": "Twelve sprouts.",
+		"completion": "Good. I will plant them in clean earth."
+	},
+	"475": {
+		"title": "A Troubling Breeze",
+		"giver": "AthranBearcloak",
+		"ender": "GaeronTalvesh",
+		"details": "There's trouble in Starbreeze, the village in the north-east. We've heard nothing from them in days.\n\nGo there and speak with Gaeron Talvesh.",
+		"objectives": "Speak with Gaeron Talvesh at Starbreeze.",
+		"progress": "",
+		"completion": "You've come from Fernwatch? Then you've seen what's become of us."
+	},
+	"476": {
+		"title": "Twistbark Corruption",
+		"giver": "GaeronTalvesh",
+		"ender": "AthranBearcloak",
+		"details": "The Twistbark bearfolk overran the village. They were our friends once; now they're mad with rage.\n\nTell Athran Bearcloak in Fernwatch. He'll know what to do.",
+		"objectives": "Return to Athran Bearcloak in Fernwatch.",
+		"progress": "",
+		"completion": "The Twistbark? Corrupted? Then the old fear has come true."
+	},
+	"483": {
+		"title": "The Relics of Wakening",
+		"giver": "AthranBearcloak",
+		"ender": "AthranBearcloak",
+		"details": "Long ago the druids hid four relics in the Thornbarrow Den, west of Fernwatch. The Twistbark hold it now.\n\nRecover the relics. With them we may yet wake the bearfolk from their madness.",
+		"objectives": "Retrieve the four Relics of Wakening from the Thornbarrow Den and bring them to Athran Bearcloak.",
+		"progress": "The relics are in the den.",
+		"completion": "All four. With these we can begin."
+	},
+	"486": {
+		"title": "Borrak the Mauler",
+		"giver": "AthranBearcloak",
+		"ender": "AthranBearcloak",
+		"details": "The relics tell me who is behind it: Borrak the Mauler, chief of the Twistbark, in their hold in the south.\n\nKill him, and their madness may break.",
+		"objectives": "Kill Borrak the Mauler at Twistbark Hold, then return to Athran Bearcloak.",
+		"progress": "Borrak still lives.",
+		"completion": "He's dead? Then the bearfolk may yet be saved."
+	},
+	"2438": {
+		"title": "The Emerald Dreamcatcher",
+		"giver": "TallonSwiftroot",
+		"ender": "TallonSwiftroot",
+		"details": "My emerald dreamcatcher, I've lost it! It must be somewhere in my bower. I'd look myself, but my eyes aren't what they were.",
+		"objectives": "Find the Emerald Dreamcatcher in Tallon Swiftroot's bower.",
+		"progress": "It must be there somewhere.",
+		"completion": "You found it! Thank you."
+	},
+	"487": {
+		"title": "The Road to Silverbough",
+		"giver": "SentinelAmaris",
+		"ender": "SentinelAmaris",
+		"details": "The Twistbark ambushers lie in wait along the road to Silverbough, attacking travellers.\n\nKill six.",
+		"objectives": "Kill 6 Twistbark Ambushers on the road to Silverbough, then return to Sentinel Amaris Nightstep.",
+		"progress": "The road isn't safe yet.",
+		"completion": "The road is clear, for now. Thank you."
+	},
+	"932": {
+		"title": "Twisted Hatred",
+		"giver": "TallonSwiftroot",
+		"ender": "TallonSwiftroot",
+		"details": "Lord Malvenn, a twisted thing of shadow, lairs in the Gloamrock north-east of Fernwatch. He torments the sprites there.\n\nKill him and bring me his head.",
+		"objectives": "Kill Lord Malvenn in the Gloamrock and bring his head to Tallon Swiftroot in Fernwatch.",
+		"progress": "Malvenn still lives.",
+		"completion": "His head. The sprites will rest easier."
+	},
+	"2541": {
+		"title": "The Sleeping Druid",
+		"giver": "OrvelWildclaw",
+		"ender": "OrvelWildclaw",
+		"details": "I am Orvel Wildclaw. My spirit is trapped here; my body was taken by the Twistbark shamans.\n\nBring me one of their voodoo charms.",
+		"objectives": "Bring a Shaman Voodoo Charm to Orvel Wildclaw at the Thornbarrow Den.",
+		"progress": "A voodoo charm.",
+		"completion": "Yes. With this I may find my way back."
+	},
+	"937": {
+		"title": "The Enchanted Glade",
+		"giver": "SentinelArwyn",
+		"ender": "SentinelArwyn",
+		"details": "The Crimsonwing harpies have taken the Seers' Glade, a holy place.\n\nBring me six of their belts.",
+		"objectives": "Bring 6 Crimsonwing Belts to Sentinel Arwyn Cloudsong at the Seers' Glade.",
+		"progress": "Six belts.",
+		"completion": "The glade is cleansed. Thank you."
 	}
 }

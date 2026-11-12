@@ -44,7 +44,50 @@ CREATURES = [299, 6, 69, 257, 80, 38, 113, 475, 476, 40, 94,
              3099, 3100, 3106, 3107, 3108, 3103, 3104, 3105, 3141, 3125, 3126, 3127,
              3111, 3112, 3113, 3114, 3115, 3116, 3117, 3118, 3119, 3120, 3121, 3122, 3123,
              3128, 3129, 3192, 3130, 3131, 3195, 3196, 3197, 3198, 3199, 3203, 3204, 3205,
-             3206, 3207, 3110, 5826, 5824, 5808, 5809, 5822, 5823]
+             3206, 3207, 3110, 5826, 5824, 5808, 5809, 5822, 5823,
+             # Aldmark's north. Gravesend (Deathknell): the zombies, the
+             # Rattlecage skeletons, scavengers, duskbats, Night Web spiders,
+             # the Scarlet converts and initiates and Meven Korgal.
+             1501, 1502, 1890, 1508, 1509, 1512, 1513, 1504, 1505, 1688, 1506, 1507, 1667,
+             # Duskmoor Glades (Tirisfal Glades): the rotting dead, darkhounds,
+             # duskbats, spiders, the mills' skeletons, the Rot Hide gnolls and
+             # Maggot Eye, the Scarlet Crusade and its captains, the Vile Fin
+             # murlocs, the haunted Agamand family and their crypt, the
+             # farmers, and the rares (Bayne, Ressan the Needler, Muad).
+             1525, 1526, 1547, 1548, 1549, 1553, 1554, 1555, 1520, 1522, 1523, 1674, 1675, 1941, 1753,
+             1535, 1536, 1537, 1538, 1539, 1540, 1662, 1664, 1665, 1660, 1543, 1544, 1545, 1909, 1957, 1958,
+             1529, 1532, 1534, 1530, 1658, 1654, 1655, 1656, 1657, 1934, 1935, 1936, 10356, 10357, 1910, 1531,
+             # Kareth's west. Sunfold Camp (Camp Narache): plainstriders,
+             # cougars, battleboars and the Bristleback quilboar with their chief.
+             2955, 2961, 2966, 2952, 2953, 2954, 3229, 8554,
+             # The Tallgrass (Mulgore): prairie wolves, plainstriders, cougars,
+             # swoops, the Palemane gnolls, the Windfury harpies, the
+             # Bristleback interlopers, the Venture Co. goblins at their
+             # derrick, Mazzranache, Ghost Howl and Snagglespear.
+             2958, 2959, 2960, 2956, 2957, 3035, 3566, 2969, 2970, 2971, 2949, 2950, 2951, 5786, 2962, 2963,
+             3232, 3068, 3056, 2978, 2979, 3051,
+             # Aldmark's mountains. Frosthollow (Coldridge Valley): ragged
+             # wolves, the Rockjaw troggs and raiders, crag boars, the
+             # Frostmane whelps and novices and Grik'nir the Cold.
+             705, 704, 707, 724, 706, 946, 708, 808, 1718,
+             # Highpeak (Dun Morogh): crag boars, bears, snow leopards, winter
+             # wolves, wendigos and their den (Edan the Howler, Old Icebeard,
+             # Vagash), the Frostmane trolls and Great Father Arctikus, the
+             # leper gnomes and Gibblewilt, the Rockjaw troggs of the quarry
+             # and Hammerspine, Mangeclaw, Timber and Bjarn.
+             1125, 1126, 1127, 1128, 1196, 1199, 1201, 1131, 1138, 1133, 1132, 1134, 1135, 1137, 1271, 1388,
+             1397, 1120, 1121, 1123, 1122, 1124, 1260, 1211, 8503, 1115, 1116, 1117, 1118, 1119, 1961, 1689, 1130,
+             # Kareth's north-west. Mossglen (Shadowglen): young nightsabers and
+             # thistle boars, the grells and Webwood spiders, Githyiss the Vile.
+             1984, 2031, 1985, 1988, 2032, 1986, 1989, 1994,
+             # Eldergrove Isle (Teldrassil): owls, Webwood spiders, sprites and
+             # grells with Lord Melenas, the Gnarlpine furbolgs (Ferocitas,
+             # Ursal the Mauler), timberlings and Oakenscowl, nightsabers, the
+             # Bloodfeather harpies, and the rares (Uruson, Grimmaw,
+             # Duskstalker, Threggil, Fury Shelda).
+             1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2038, 2006, 2007, 2008, 2009,
+             2010, 2011, 2012, 2013, 2014, 2152, 7235, 7234, 2039, 2022, 2025, 2027, 2029, 2030, 2166, 2042,
+             2043, 2033, 2034, 14428, 14429, 14430, 14432, 2015, 2017, 2018, 2019, 2020, 2021, 14431]
 # Respawn time and wander distance for creatures the dump spawns only through
 # spawn groups (no plain creature rows): classic's usual 5 minutes and 5 yards.
 DEFAULT_RESPAWN = 300
@@ -63,7 +106,23 @@ VENDORS = [152, 1213, 295, 74, 54,
            # Redsand Coast's Spikewall (Razor Hill): Jark (General Goods),
            # Cutac (Cloth & Leather Armor), Wuark (Armorer & Shieldcrafter),
            # Uhgar (Weaponsmith) and Innkeeper Grosk.
-           3158, 3161, 3160, 3164, 3166, 3167, 3163, 6928]
+           3158, 3161, 3160, 3164, 3166, 3167, 3163, 6928,
+           # Gravesend (Deathknell): Archibald Kava and Joshua Kien.
+           # Gallowfield (Brill): Mrs. Winters, Eliza Callen, Abigail Shiel
+           # (Trade Supplies: the Coarse Thread of The Chill of Death) and
+           # Innkeeper Renee. Sunfold Camp (Camp Narache): Kawnie Softbreeze. Longhorn
+           # Village (Bloodhoof Village): Moorat Longstride, Mahnott Roughwound
+           # and Innkeeper Kauth.
+           2113, 2115, 2134, 2137, 2118, 5688, 3072, 3076, 3077, 6747,
+           # Frosthollow (Anvilmar): Adlin Pridedrift, Grundel Harkin, Rybrad
+           # Coldbank and Durnan Furcutter. Highpeak's Kharanos: Innkeeper Belm
+           # (Rhapsody Malt), Kreg Bilmn, Boran Ironclink, Grawn Thromwyn and
+           # Gamili Frosthide. Mossglen (Shadowglen): Lyrai, Khardan
+           # Proudblade, Janna Brightmoon, Freja Nightwing, Andiss and
+           # Dellylah. Eldergrove's Dolanaar: Innkeeper Keldamyr, Aldia,
+           # Shalomon, Meri Ironweave, Sinda and Brannol Eaglemoon.
+           829, 1104, 945, 836, 1247, 1691, 1240, 1273, 1238, 3587, 3588, 3590, 3591, 3592, 6091,
+           6736, 3608, 3609, 3613, 3612, 3611]
 # Loot added to creatures that classic didn't give it (unlike classic): the
 # Red Defias Mask (7997), which every Defias of level 10 and up drops about 2%
 # of the time in classic (creature_loot_template: 1.4-2.6%, mostly about 2),
@@ -104,14 +163,84 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # Crossroads Conscription), Thwarting Kolkar Aggression (objects to
           # use, which quests don't have yet) and the level-60 raptor ones.
           784, 825, 830, 791, 823, 806, 828, 827, 832, 808, 812, 813, 815, 816, 817, 818,
-          826, 834, 835, 837]
+          826, 834, 835, 837,
+          # Gravesend's, from Deathknell: Rude Awakening, The Mindless Ones,
+          # Rattling the Rattlecages, The Damned, Scavenging Deathknell, Night
+          # Web's Hollow, The Scarlet Crusade, The Red Messenger and Vital
+          # Intelligence. Left out: the rogue's letter, Welcome! and Marla's
+          # Last Wish (a grave to use).
+          363, 364, 3901, 376, 3902, 380, 381, 382, 383,
+          # Duskmoor Glades', from Tirisfal Glades: the war with the Scarlet
+          # Crusade and Proof of Demise, Graverobbers, Fields of Grief, A
+          # Putrid Task, The Mills Overrun, The Haunted Mills, Deaths in the
+          # Family, Speak with Sevren, The Family Crypt, The Chill of Death,
+          # Wanted: Maggot Eye, Rear Guard Patrol, A New Plague (its first
+          # three, the Undead's), Gordo's Task and Doom Weed. Left out: those
+          # that lead to the Ossuary or Ashpine Forest, the lich's chain and
+          # the level-55 termites.
+          427, 370, 371, 372, 374, 358, 365, 404, 426, 362, 354, 355, 408, 375, 398, 356, 367, 368, 369,
+          5481, 5482,
+          # Sunfold Camp's, from Camp Narache: The Hunt Begins and Continues,
+          # A Humble Task, the Rites of the Earthmother and Rite of Strength,
+          # The Battleboars, Attack on Camp Narache, Break Sharptusk! and A
+          # Task Unfinished.
+          747, 750, 752, 753, 755, 757, 763, 780, 781, 3376, 1656,
+          # The Tallgrass's, from Mulgore: Dangers of the Windfury, Sharing
+          # the Land, Poison Water, Swoop Hunting, Mazzranache, the first two
+          # Rites of Vision, The Demon Scarred Cloak, A Sacred Burial and The
+          # Hunter's Way. Left out: the well cleansings (totems to use), the
+          # Venture Co. chain (from a search of a caravan), Dwarven Digging
+          # and those leading to Windspire Mesa or the Steppe.
+          743, 745, 748, 761, 766, 767, 771, 770, 833, 861,
+          # Frosthollow's, from Coldridge Valley: Dwarven Outfitters, A New
+          # Threat, The Boar Hunter, the mail delivery, A Refugee's Quandary,
+          # The Troll Cave, The Stolen Journal, Senir's Observations,
+          # Scalding Mornbrew Delivery and Bring Back the Mug (no time limit,
+          # unlike classic) and Supplies to Tannok. Left out: Welcome!
+          179, 170, 183, 233, 234, 3361, 182, 218, 282, 420, 3364, 3365, 2160,
+          # Highpeak's, from Dun Morogh: Tools for Steelgrill, the Evershine
+          # chain, Beer Basted Boar Ribs, The Grizzled Den, Protecting the
+          # Herd, The Perfect Stout and Shimmer Stout,
+          # Operation Recombobulation, the Gol'Bolar quarry's two, Frostmane
+          # Hold, The Lost Pilot and A Pilot's Revenge, Tundra MacGrann's
+          # Stolen Stash and Ammo for Rumbleshot. Left out: Bitter Rivals and
+          # Distracting Jarven (barrels to use), The Reports and Stout to Kadrell
+          # (to Ironforge and Loch Modan),
+          # the level-20 Incendicite and the mount exchanges.
+          400, 317, 318, 319, 320, 384, 313, 314, 315, 413, 412, 432, 433, 287, 419, 417, 312, 5541,
+          # Mossglen's, from Shadowglen: The Woodland Protector, The Balance
+          # of Nature, Webwood Venom and Webwood Egg, A Good Friend, A Friend
+          # in Need, Iverron's Antidote (no time limit, unlike classic) and
+          # Dolanaar Delivery. Left out: Welcome! and the Crown of the Earth
+          # chain (phials filled at moonwells, items to use).
+          458, 459, 456, 457, 916, 917, 4495, 3519, 3521, 3522, 2159,
+          # Eldergrove Isle's, from Teldrassil: Zenn's Bidding and Seek
+          # Redemption!, Denalan's Earth, Timberling Seeds and Sprouts, the
+          # Gnarlpine Corruption chain (A Troubling Breeze, The Relics of
+          # Wakening, Ursal the Mauler), The Emerald Dreamcatcher, The Road to
+          # Darnassus, Twisted Hatred, The Sleeping Druid and The Enchanted
+          # Glade. Left out: those leading to Darnassus, Ferocitas (a necklace
+          # to open), Druid of the Claw and Planting the Heart (items to use),
+          # Mist (an escort) and the fruit and frond (items found by chance).
+          488, 489, 997, 918, 919, 475, 476, 483, 486, 2438, 487, 932, 2541, 937]
 # Game objects exported to gameobjects.json (gameobject_template): quest
 # givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
 # loot (type 3: Bundle of Wood), with their loot and usual respawn time.
 GAMEOBJECTS = [55, 56, 176793,
                # Kareth's chests: Cactus Apple, Gnomish Toolbox, Imprisoned
                # Darkspear (Minshina's Skull), Taillasher Eggs, Stolen Supply Sack.
-               171938, 3236, 3237, 3240, 3290]
+               171938, 3236, 3237, 3240, 3290,
+               # Equipment Boxes (Scavenging Deathknell), Tirisfal Pumpkins,
+               # Gloom Weed and Doom Weed, the Water Pitchers, the Well Stone
+               # and Ambercorn (Rite of Vision).
+               164662, 375, 175566, 176753, 337, 2907, 2910, 2912,
+               # Felix's Box, Chest and Bucket of Bolts; MacGrann's Meat
+               # Locker, the Shimmerweed Baskets, the Ammo Crate and A Dwarven
+               # Corpse (The Lost Pilot); Webwood Eggs, Hyacinth Mushrooms and
+               # Moonpetal Lilies; Fel Cones, Timberling Sprouts, the four
+               # chests of the Relics of Wakening and Tallonkai's Dresser.
+               148499, 178084, 178085, 272, 276, 176785, 2059, 4406, 152094, 152095, 1673, 4608,
+               2739, 2740, 2741, 2742, 126158]
 GO_TYPE_QUESTGIVER = 2
 GO_TYPE_CHEST = 3
 
@@ -398,9 +527,10 @@ def main(path):
     for entry in VENDORS:
         template = next(r for r in db["creature_template"] if int(r["Entry"]) == entry)
         stock = sorted((r for r in db["npc_vendor"] if int(r["entry"]) == entry), key=lambda r: int(r["slot"]))
-        # Some vendors sell a shared list instead (VendorTemplateId, npc_vendor_template).
-        if not stock and int(template.get("VendorTemplateId", 0)):
-            stock = sorted((r for r in db["npc_vendor_template"] if r["entry"] == template["VendorTemplateId"]), key=lambda r: int(r["slot"]))
+        # Many sell a shared list too (VendorTemplateId, npc_vendor_template),
+        # after their own, as CMaNGOS lists both.
+        if int(template.get("VendorTemplateId", 0)):
+            stock += sorted((r for r in db["npc_vendor_template"] if r["entry"] == template["VendorTemplateId"]), key=lambda r: int(r["slot"]))
         # NpcFlags 0x4000 is UNIT_NPC_FLAG_REPAIR: armorers who repair gear.
         vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"],
                                "repair": int(template["NpcFlags"]) & 0x4000 != 0,
@@ -427,6 +557,10 @@ def main(path):
             item_ids.update(entry["item"] for entry in object_loot[loot_id] if entry["min_or_ref"] >= 0)
     write("loot_tables.json", {"creature": creature_loot, "reference": references, "gameobject": object_loot})
     quests = export_quests(db)
+    # No ammo in the game: quests that gave arrows or shot give nothing else instead.
+    for quest in quests.values():
+        quest["reward_items"] = [r for r in quest["reward_items"] if r[0] not in ammo]
+        quest["reward_choices"] = [r for r in quest["reward_choices"] if r[0] not in ammo]
     for quest in quests.values():
         item_ids.update(item for item, _ in quest["reward_choices"] + quest["reward_items"] + quest["items"])
         if quest["source_item"]:
@@ -473,6 +607,9 @@ def export_quests(db):
             "reward_items": pairs("RewItemId", "RewItemCount", 4),
             "money": int(r["RewOrReqMoney"]), "money_max_level": int(r["RewMoneyMaxLevel"]),
             "source_item": int(r["SrcItemId"]),
+            # RequiredRaces: the races (bits by race id - 1) that may take
+            # it, 0 for all (QuestLog.race_allowed).
+            "races": int(r["RequiredRaces"]),
         }
     missing = set(map(str, QUESTS)) - set(quests)
     if missing:

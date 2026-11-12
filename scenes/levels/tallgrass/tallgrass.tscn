@@ -1,0 +1,107 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/tallgrass/tallgrass.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="Tallgrass" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="ChiefLonghorn" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-760, 6, 626)
+npc_name = "Chief Longhorn"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="HuntressSwiftmane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-744, 6, 640)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Huntress Kenna Swiftmane"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "hornkin"
+
+[node name="BraveStormhide" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-772, 6, 650)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Brave Stormhide"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="ElderThunderhoof" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-750, 6, 646)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Elder Thunderhoof"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="KrangBullhide" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-776, 6, 632)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Krang Bullhide"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="MoroPlainsong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-746, 6, 654)
+npc_name = "Moro Plainsong"
+subname = "Provisioner"
+vendor = 3076
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="TarnIronhoof" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-776, 6, 656)
+npc_name = "Tarn Ironhoof"
+subname = "Weaponsmith"
+vendor = 3077
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="HamaWindhorn" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-743, 6, 634)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Hama Windhorn"
+subname = "Innkeeper"
+vendor = 6747
+appearance = {
+"body": 1
+}
+race = "hornkin"
+
+[node name="SeerTwomoons" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-895, 7, 190)
+npc_name = "Seer Twomoons"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="LorekeeperRainsong" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-446, 7, 280)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Lorekeeper Rainsong"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "hornkin"

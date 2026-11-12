@@ -14,21 +14,38 @@ const CONTINENTS := {
 	"aldmark": {
 		"Ashford Vale": "res://scenes/levels/ashford_vale/ashford_vale.tscn",
 		"Harrowfield": "res://scenes/levels/harrowfield/harrowfield.tscn",
+		"Gravesend": "res://scenes/levels/gravesend/gravesend.tscn",
+		"Duskmoor Glades": "res://scenes/levels/duskmoor/duskmoor.tscn",
+		"Frosthollow": "res://scenes/levels/frosthollow/frosthollow.tscn",
+		"Highpeak": "res://scenes/levels/highpeak/highpeak.tscn",
 	},
 	"kareth": {
 		"Emberhollow": "res://scenes/levels/emberhollow/emberhollow.tscn",
 		"Redsand Coast": "res://scenes/levels/redsand_coast/redsand_coast.tscn",
+		"Sunfold Camp": "res://scenes/levels/sunfold/sunfold.tscn",
+		"The Tallgrass": "res://scenes/levels/tallgrass/tallgrass.tscn",
+		"Mossglen": "res://scenes/levels/mossglen/mossglen.tscn",
+		"Eldergrove Isle": "res://scenes/levels/eldergrove/eldergrove.tscn",
 	},
 }
 const DEFAULT_CONTINENT := "aldmark"
-## Where each race begins: the Alliance in Ashford Vale, the Horde in
-## Emberhollow (until the Undead's and Hornkin's own valleys are built).
+## Zones joined by a pass (Zone.PASSES). Only the zones joined to the one the
+## character is in, directly or through others, are built: a continent's
+## other zones can't be walked to until the zones between are built (the
+## dev console's tele reloads the game to reach them).
+const LINKS := [
+	["Ashford Vale", "Harrowfield"], ["Gravesend", "Duskmoor Glades"], ["Frosthollow", "Highpeak"],
+	["Emberhollow", "Redsand Coast"], ["Sunfold Camp", "The Tallgrass"], ["Mossglen", "Eldergrove Isle"],
+]
+## Where each race begins: Humans in Ashford Vale, Dwarves and Gnomes in
+## Frosthollow, Wood Elves in Mossglen on Kareth; Orcs and Trolls in
+## Emberhollow, the Undead in Gravesend and Hornkin at Sunfold Camp.
 ## A start whose zone isn't built yet falls back to Ashford Vale.
 const START_ZONES := {
-	ClassicData.Race.HUMAN: "Ashford Vale", ClassicData.Race.DWARF: "Ashford Vale",
-	ClassicData.Race.GNOME: "Ashford Vale", ClassicData.Race.NIGHT_ELF: "Ashford Vale",
+	ClassicData.Race.HUMAN: "Ashford Vale", ClassicData.Race.DWARF: "Frosthollow",
+	ClassicData.Race.GNOME: "Frosthollow", ClassicData.Race.NIGHT_ELF: "Mossglen",
 	ClassicData.Race.ORC: "Emberhollow", ClassicData.Race.TROLL: "Emberhollow",
-	ClassicData.Race.UNDEAD: "Emberhollow", ClassicData.Race.TAUREN: "Emberhollow",
+	ClassicData.Race.UNDEAD: "Gravesend", ClassicData.Race.TAUREN: "Sunfold Camp",
 }
 const FALLBACK_START := "Ashford Vale"
 
@@ -42,16 +59,40 @@ static var current: World
 func _enter_tree() -> void:
 	current = self
 	if zones.is_empty():
-		build(continent_for(GameState.player_state, GameState.race))
+		build(continent_for(GameState.player_state, GameState.race), zone_for(GameState.player_state, GameState.race))
 
 
-## Makes the zones of a continent (once, before any are there).
-func build(which: String) -> void:
+## Makes the zones of a continent joined to a zone (once, before any are
+## there): all of them if the zone isn't on it.
+func build(which: String, around := "") -> void:
 	continent = which if CONTINENTS.has(which) else DEFAULT_CONTINENT
+	var wanted := region_of(around)
 	for zone_name: String in CONTINENTS[continent]:
 		var path: String = CONTINENTS[continent][zone_name]
-		if ResourceLoader.exists(path):
+		if ResourceLoader.exists(path) and (continent_of(around) != continent or zone_name in wanted):
 			add_child(load(path).instantiate())
+
+
+## The zones joined to a zone by passes (LINKS), itself included.
+static func region_of(zone_name: String) -> Array[String]:
+	var region: Array[String] = [zone_name]
+	var grew := true
+	while grew:
+		grew = false
+		for link: Array in LINKS:
+			if (link[0] in region) != (link[1] in region):
+				region.append(link[1] if link[0] in region else link[0])
+				grew = true
+	return region
+
+
+## The zone a saved player is in: the save's zone, else where the dead come
+## back, else the race's start.
+static func zone_for(player_state: Dictionary, race: int) -> String:
+	for key in ["zone", "graveyard"]:
+		if player_state.has(key) and zone_exists(str(player_state[key])):
+			return str(player_state[key])
+	return start_zone(race)
 
 
 ## Whether a zone's scene exists (it's built).
@@ -94,7 +135,35 @@ static func continent_for(player_state: Dictionary, race: int) -> String:
 	return DEFAULT_CONTINENT
 
 
-## The race's start zone here, or else this continent's first zone.
+## Whether one can walk between two points: their zones joined by passes,
+## directly or through others (a continent's zones aren't all joined yet).
+func reachable(from: Vector3, to: Vector3) -> bool:
+	var a := zone_at(from)
+	var b := zone_at(to)
+	return a == b or _region(a) == _region(b)
+
+
+## The zones joined to a zone by passes, as the first of them (cached).
+var _regions: Dictionary = {}
+
+
+func _region(zone: Zone) -> Zone:
+	if _regions.is_empty():
+		for start in zones:
+			if _regions.has(start):
+				continue
+			var queue: Array[Zone] = [start]
+			_regions[start] = start
+			while not queue.is_empty():
+				var here: Zone = queue.pop_back()
+				for other in zones:
+					if not _regions.has(other) and not pass_between(here, other).is_empty():
+						_regions[other] = start
+						queue.append(other)
+	return _regions.get(zone, zone)
+
+
+## The race's start zone here, or else the first zone built.
 func start_zone_here(race: int) -> Zone:
 	var zone := zone_named(start_zone(race))
 	return zone if zone else zones[0]

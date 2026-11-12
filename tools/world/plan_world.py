@@ -61,11 +61,11 @@ ALDMARK = {
 		"A dammed lake among green hills, mined by dwarves and raided by cave brutes and ogres.",
 		["highpeak", "greymire", "ochre_waste"]),
 	# Undead.
-	"gravesend": ("Gravesend", "Deathknell", (1, 6), "horde", [-2900, -4500, -2500, -4100],
+	"gravesend": ("Gravesend", "Deathknell", (1, 6), "horde", [-2700, -4400, -2300, -4000],
 		"the Gravesend Chapel", ["the Gravesend Chapel", "the Webbed Vault", "the Old Crypts"],
 		"A ruined chapel yard where the risen dead wake to their second life.",
 		["duskmoor"]),
-	"duskmoor": ("Duskmoor Glades", "Tirisfal Glades", (6, 12), "horde", [-2500, -4800, -1100, -3600],
+	"duskmoor": ("Duskmoor Glades", "Tirisfal Glades", (6, 12), "horde", [-2300, -4800, -1100, -3600],
 		"Gallowfield", ["Gallowfield", "the Zealot Abbey", "Lake Hollowmere", "the Plaguewood Farms"],
 		"Grey glades of dead farms and pumpkin fields, hunted by the zealots of a crusading order.",
 		["gravesend", "ossuary", "ashpine", "withering"]),

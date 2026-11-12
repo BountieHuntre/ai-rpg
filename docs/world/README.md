@@ -42,8 +42,10 @@ Change the plan there and rerun it:
 
 ## Built so far
 
-- Aldmark: Ashford Vale and Harrowfield.
-- Kareth: Emberhollow and the Redsand Coast (the Orcs' and Trolls' start; every Horde race begins there for now).
+- Aldmark: Ashford Vale and Harrowfield (Humans); Frosthollow and Highpeak (Dwarves and Gnomes); Gravesend and Duskmoor Glades (the Undead).
+- Kareth: Mossglen and Eldergrove Isle (Wood Elves); Emberhollow and the Redsand Coast (Orcs and Trolls); Sunfold Camp and the Tallgrass (Hornkin).
+
+Every race now begins in its own lands.
 
 ## Building order
 

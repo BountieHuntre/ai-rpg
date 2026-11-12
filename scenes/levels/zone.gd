@@ -18,10 +18,18 @@ const PASSES := {
 	"aldmark": [
 		# Ashford Vale's bridge road south to Wexford.
 		{ "line": [Vector2(2, 112), Vector2(-18, 150), Vector2(-30, 200), Vector2(-24, 250), Vector2(-8, 290)], "z": 200.0 },
+		# Gravesend's road east down into Duskmoor Glades.
+		{ "line": [Vector2(-2370, -4200), Vector2(-2335, -4195), Vector2(-2300, -4190), Vector2(-2265, -4185), Vector2(-2230, -4180)], "x": -2300.0 },
+		# Frosthollow's Frozen Stair east up into Highpeak.
+		{ "line": [Vector2(-770, -955), Vector2(-735, -958), Vector2(-700, -962), Vector2(-665, -966), Vector2(-630, -970)], "x": -700.0 },
 	],
 	"kareth": [
 		# The Redsand Coast's road east up to Emberhollow.
 		{ "line": [Vector2(2235, -1745), Vector2(2270, -1745), Vector2(2300, -1735), Vector2(2335, -1712), Vector2(2370, -1690)], "x": 2300.0 },
+		# Sunfold Camp's trail north up into the Tallgrass.
+		{ "line": [Vector2(-500, 1070), Vector2(-505, 1035), Vector2(-510, 1000), Vector2(-515, 965), Vector2(-520, 930)], "z": 1000.0 },
+		# Mossglen's road south down the great tree's roots onto Eldergrove Isle.
+		{ "line": [Vector2(-2200, -4870), Vector2(-2203, -4835), Vector2(-2206, -4800), Vector2(-2209, -4765), Vector2(-2212, -4730)], "z": -4800.0 },
 	],
 }
 ## Half the width of a pass's flat floor, and how far its sides run up.
@@ -280,6 +288,36 @@ func round_hut(parent: Node3D, at: Vector2, radius: float, y: float, wall: Color
 	roof.position = Vector3(at.x, y + 2.6 + radius * 0.55, at.y)
 	parent.add_child(roof)
 	Props.box(parent, Vector3(at.x, y + 2.6 + radius * 1.1, at.y), Vector3(0.25, 1.6, 0.25), spike, 0.0, false)
+
+
+## A Hornkin tipi: a hide cone round a frame of poles that cross at the top.
+func tipi(parent: Node3D, at: Vector2, y: float, radius: float, hide: Color, pole: Color) -> void:
+	var cone := MeshInstance3D.new()
+	cone.mesh = Props.cone(radius, radius * 2.2, 8)
+	cone.material_override = Props.material(hide)
+	cone.position = Vector3(at.x, y + radius * 1.1, at.y)
+	parent.add_child(cone)
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = radius * 0.8
+	cylinder.height = radius * 1.6
+	shape.shape = cylinder
+	shape.position = Vector3(at.x, y + radius * 0.8, at.y)
+	body.add_child(shape)
+	parent.add_child(body)
+	for i in 4:
+		var angle := TAU * i / 4.0 + 0.4
+		var stick := Props.box(parent, Vector3(at.x, y + radius * 2.2, at.y), Vector3(0.12, 1.4, 0.12), pole, 0.0, false)
+		stick.rotation = Vector3(cos(angle) * 0.4, 0.0, sin(angle) * 0.4)
+
+
+## A carved totem pole of stacked blocks in turn colours.
+func totem(parent: Node3D, at: Vector2, y: float, height: float, colors: Array) -> void:
+	var block := height / 4.0
+	for i in 4:
+		Props.box(parent, Vector3(at.x, y + i * block, at.y), Vector3(1.0 - i * 0.08, block, 1.0 - i * 0.08), colors[i % colors.size()], i * 0.3, i == 0)
+	Props.box(parent, Vector3(at.x, y + height * 0.8, at.y), Vector3(2.6, 0.3, 0.4), colors[0], 0.0, false)
 
 
 func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:

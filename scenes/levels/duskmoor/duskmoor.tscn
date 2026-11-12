@@ -1,0 +1,150 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/duskmoor/duskmoor.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="DuskmoorGlades" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="ExecutorMortlake" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1760, 5, -4198)
+npc_name = "Executor Mortlake"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="DeathwatchHalloran" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1742, 5, -4178)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Deathwatch Halloran"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="MagistrateCorvane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1768, 5, -4200)
+npc_name = "Magistrate Corvane"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="ApothecaryVesk" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1772, 5, -4166)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Apothecary Vesk"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="GravekeeperHettle" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1792, 5, -4166)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Gravekeeper Hettle"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="EdwinFarrow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1750, 5, -4198)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Edwin Farrow"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="Thrum" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1736, 5, -4160)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Thrum"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="MorwenGallow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1750, 5, -4190)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Morwen Gallow"
+subname = "Innkeeper"
+vendor = 5688
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="WidowMarrow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1752, 5, -4164)
+npc_name = "Widow Marrow"
+subname = "Provisioner"
+vendor = 2134
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="ElspethRook" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1780, 5, -4202)
+npc_name = "Elspeth Rook"
+subname = "Tanner"
+vendor = 2137
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="AgathaShale" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1764, 5, -4160)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Agatha Shale"
+subname = "Trade Supplies"
+vendor = 2118
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="SergeantDunmore" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1784, 5, -4190)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Sergeant Kael Dunmore"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "undead"
+
+[node name="DarkClericYsolde" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1776, 5, -4170)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Dark Cleric Ysolde"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 1
+}
+race = "undead"
+
+[node name="CorwinAshe" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1736, 5, -4180)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Corwin Ashe"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 0
+}
+race = "undead"

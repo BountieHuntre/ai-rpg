@@ -1,0 +1,184 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/levels/frosthollow/frosthollow.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc.tscn" id="2_npc"]
+
+[node name="Frosthollow" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="TorviStonearm" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-900, 6, -1012)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Torvi Stonearm"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="BaldurFrostbeard" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-880, 6, -1012)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Baldur Frostbeard"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="WicketSpringcog" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-906, 6, -1017)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Wicket Springcog"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "gnome"
+
+[node name="FenwickSprocketbolt" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-884, 6, -1016)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Fenwick Sprocketbolt"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "gnome"
+
+[node name="LodrinRudd" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-876, 6, -1004)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Lodrin Rudd"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="ThrainHammerfall" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-874, 6, -998)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Thrain Hammerfall"
+subname = "Man-at-Arms Trainer"
+trainer = "warrior"
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="BrotherBromm" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-906, 6, -1000)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Brother Bromm Stonevow"
+subname = "Templar Trainer"
+trainer = "paladin"
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="BranokKettleby" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-908, 6, -992)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Branok Kettleby"
+subname = "Cleric Trainer"
+trainer = "priest"
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="FizzwinGlimmerspark" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-872, 6, -990)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Fizzwin Glimmerspark"
+subname = "Spellsword Trainer"
+trainer = "spellsword"
+appearance = {
+"body": 1
+}
+race = "gnome"
+
+[node name="AdlaKettlebrew" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-924, 6, -996)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Adla Kettlebrew"
+subname = "Provisioner"
+vendor = 829
+appearance = {
+"body": 1
+}
+race = "dwarf"
+
+[node name="GrundarIronhide" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-862, 6, -1007)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Grundar Ironhide"
+subname = "Armorer"
+vendor = 1104
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="RyvarColdforge" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-862, 6, -1000)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Ryvar Coldforge"
+subname = "Weaponsmith"
+vendor = 945
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="DunstanHidecutter" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-920, 6, -1016)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Dunstan Hidecutter"
+subname = "Clothier & Tanner"
+vendor = 836
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="NessaStoutbrew" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-955, 5, -1100)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Nessa Stoutbrew"
+subname = ""
+appearance = {
+"body": 1
+}
+race = "dwarf"
+
+[node name="GerrinGreymantle" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-963, 5, -1101)
+npc_name = "Gerrin Greymantle"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="TavinSharpeye" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1007, 5, -987)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Tavin Sharpeye"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="MountaineerHaldor" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-772, 8, -958)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Mountaineer Haldor"
+subname = ""
+appearance = {
+"body": 0
+}
+race = "dwarf"

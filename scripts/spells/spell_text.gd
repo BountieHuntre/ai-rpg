@@ -121,7 +121,10 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 			return "Run speed raised by %s%% and melee damage by %s." % [t.amount(0), t.amount(1)]
 		"Homing Token":
 			var wait := roundi(SpellCaster.HOMING_TOKEN_COOLDOWN / 60.0)
-			return "After a %d sec cast, returns you to the priory in Ashford Vale. Moving cancels it. Can be used once every %d min." % [roundi(SpellDB.cast_time(spell)), wait]
+			# Home is where the character's race begins, on this continent (World.start_zone_here).
+			var home: Zone = World.current.start_zone_here(GameState.race) if World.current else null
+			var where := "%s in %s" % [home.hub_name, home.zone_name] if home else "where you began"
+			return "After a %d sec cast, returns you to %s. Moving cancels it. Can be used once every %d min." % [roundi(SpellDB.cast_time(spell)), where, wait]
 	return _generic(spell, t)
 
 

@@ -10,6 +10,13 @@ const TEXT_PATH := "res://data/quests.json"
 static var _quests: Dictionary
 
 
+## Whether a race may take a quest: classic's RequiredRaces, a bit per race
+## (race id - 1), none for every race.
+static func race_allowed(quest: Dictionary, race: int) -> bool:
+	var races := int(quest.get("races", 0))
+	return races == 0 or races & (1 << (race - 1)) != 0
+
+
 static func get_quest(id: int) -> Dictionary:
 	return _get_quests().get(id, {})
 

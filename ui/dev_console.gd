@@ -26,7 +26,7 @@ const COMMANDS := {
 	"bis": ["", "Put on the best gear in the game for your class and level (BiS)."],
 	"reset": ["confirm", "Start this character over at level 1 (keeps name, race and class)."],
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
-	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, your race's start, or a zone's graveyard (ashford, harrowfield, emberhollow, redsand); a zone on the other continent reloads the game there."],
+	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, your race's start, or a zone's graveyard (ashford, harrowfield, gravesend, duskmoor, emberhollow, redsand, sunfold, tallgrass); a zone on the other continent reloads the game there."],
 	"pos": ["", "Show your position."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
@@ -428,13 +428,13 @@ func _cmd_tele(args: PackedStringArray) -> String:
 		var wanted := " ".join(args).to_lower()
 		var found: Zone = null
 		for zone in _world.zones:
-			if zone.zone_name.to_lower().begins_with(wanted):
+			if zone.zone_name.to_lower().trim_prefix("the ").begins_with(wanted.trim_prefix("the ")):
 				found = zone
 		if found == null:
-			# A zone on the other continent: saved there, and the game
-			# reloaded to build it.
+			# A zone not built here (another continent, or zones not yet
+			# joined to these): saved there, and the game reloaded to build it.
 			for zone_name in World.all_zone_names():
-				if zone_name.to_lower().begins_with(wanted) and World.zone_exists(zone_name):
+				if zone_name.to_lower().trim_prefix("the ").begins_with(wanted.trim_prefix("the ")) and World.zone_exists(zone_name):
 					return _change_continent(zone_name)
 			return "!Usage: tele <x> <z>, tele spawn, or tele <zone>"
 		at = found.graveyard + Vector3.UP * 0.5
