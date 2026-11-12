@@ -24,6 +24,12 @@ tabs.
 Factions are FactionTemplate, for who is hostile to whom (FactionTemplateEntry
 in CMaNGOS), and each race's template from ChrRaces, into
 data/classic/factions.json.
+
+Pets (the Ranger's): CreatureFamily (each family's name, its two skill lines,
+the abilities it may learn, and its size range) and CreatureSpellData (the
+abilities a wild beast knows, by creature_template's PetSpellDataId, which a
+Ranger learns by taming it), into data/classic/pet_families.json.
+`python tools/classic_db/fetch_client_tables.py pets` fetches only these.
 """
 
 import csv
@@ -78,6 +84,32 @@ def main():
     export_talents()
     export_skill_lines()
     export_weapon_skills()
+
+
+def export_pet_families():
+    """Pet families, each family skill line's abilities, and the spells wild
+    beasts know, into pet_families.json."""
+    families = {}
+    for row in fetch("CreatureFamily"):
+        families[row["ID"]] = {
+            "name": row["Name_lang"], "skill_lines": [int(row[f"SkillLine_{i}"]) for i in range(2) if int(row[f"SkillLine_{i}"]) > 0],
+            "min_scale": float(row["MinScale"]), "max_scale": float(row["MaxScale"]),
+            "min_scale_level": int(row["MinScaleLevel"]), "max_scale_level": int(row["MaxScaleLevel"]),
+        }
+    spell_data = {}
+    for row in fetch("CreatureSpellData"):
+        spells = [int(row[f"Spells_{i}"]) for i in range(4) if int(row[f"Spells_{i}"]) > 0]
+        if spells:
+            spell_data[row["ID"]] = spells
+    # Each family skill line's abilities (a spell can be in several: Bite).
+    lines = {line for family in families.values() for line in family["skill_lines"]}
+    abilities = {}
+    for row in fetch("SkillLineAbility"):
+        if int(row["SkillLine"]) in lines:
+            abilities.setdefault(row["SkillLine"], []).append(int(row["Spell"]))
+    with open(os.path.join(OUT_DIR, "pet_families.json"), "w", encoding="utf8") as out:
+        json.dump({"families": families, "spell_data": spell_data, "abilities": abilities}, out, separators=(",", ":"))
+    print(f"{len(families)} creature families, {len(spell_data)} creature spell lists")
 
 
 def export_skill_lines():
@@ -141,4 +173,9 @@ def export_talents():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if sys.argv[1:] == ["pets"]:
+        export_pet_families()
+    else:
+        main()
+        export_pet_families()

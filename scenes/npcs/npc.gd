@@ -10,6 +10,8 @@ extends StaticBody3D
 @export var trainer := ""
 ## creature_template entry of a vendor in data/classic/vendors.json, or 0.
 @export var vendor := 0
+## A stable master: Rangers keep their pets here (StableWindow).
+@export var stable := false
 
 
 ## How the NPC looks (HumanoidModel); empty for a look of its own from its

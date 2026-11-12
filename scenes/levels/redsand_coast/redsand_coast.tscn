@@ -206,3 +206,36 @@ appearance = {
 "body": 0
 }
 race = "gnome"
+
+[node name="TharkaBloodarrow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2062, 5, -1786)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Tharka Bloodarrow"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 1
+}
+race = "orc"
+
+[node name="GrukkFangtamer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2070, 5, -1780)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Grukk Fangtamer"
+subname = "Pet Trainer"
+trainer = "pet"
+appearance = {
+"body": 0
+}
+race = "orc"
+
+[node name="Zunjari" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2054, 5, -1780)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Zun'jari"
+subname = "Stable Master"
+stable = true
+appearance = {
+"body": 1
+}
+race = "troll"

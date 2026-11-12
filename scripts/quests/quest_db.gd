@@ -44,6 +44,9 @@ static func bots_can_do(quest: Dictionary) -> bool:
 		return false
 	if int(quest.get("time_limit", 0)) > 0 or quest.has("escort"):
 		return false
+	# Class quests (the Ranger's taming) are left to players.
+	if int(quest.get("classes", 0)) != 0:
+		return false
 	var source := ItemDB.get_item(int(quest.get("source_item", 0)))
 	var spell := SpellDB.get_spell(int(source.get("spellid_1", 0))) if not source.is_empty() else {}
 	for need: Array in quest.get("items", []):
@@ -55,6 +58,13 @@ static func bots_can_do(quest: Dictionary) -> bool:
 
 static func get_quest(id: int) -> Dictionary:
 	return _get_quests().get(id, {})
+
+
+## Whether a class may take a quest: classic's RequiredClasses, a bit per
+## class (class id - 1), none for every class (the Ranger's taming quests).
+static func class_allowed(quest: Dictionary, char_class: int) -> bool:
+	var classes := int(quest.get("classes", 0))
+	return classes == 0 or classes & (1 << (char_class - 1)) != 0
 
 
 static func all_ids() -> Array:

@@ -114,6 +114,80 @@ static func _special(spell: Dictionary, level: int) -> String:
 			return "After a critical strike, your Holy and physical damage is raised by %s%% for 8 sec." % t.call(trigger, 0)
 		"Tooth for a Tooth":
 			return "Spell critical hits against you deal %d%% of their damage back to the caster." % roundi(TalentProcs.EYE_FOR_AN_EYE_SHARE * 100.0 * rank)
+	var ranger := _ranger(spell, level, rank, chance, trigger)
+	return ranger
+
+
+## The Ranger's talents: the pet ones change hidden pet passives, so the
+## generic lines would say "your spells".
+static func _ranger(spell: Dictionary, level: int, rank: int, chance: int, trigger: Dictionary) -> String:
+	var t := func(of: Dictionary, effect: int) -> String: return str(roundi(absf(SpellDB.effect_value(of, effect, level))))
+	var lasts := func(of: Dictionary) -> String: return "%d sec" % roundi(SpellDB.duration(of))
+	match str(spell.SpellName):
+		"Improved Hawk Spirit":
+			var quick := SpellDB.get_spell(int(SpellDB.get_spell(13165).get("EffectTriggerSpell2", 0)))
+			return "While Hawk Spirit is active, your Auto Shots have a %s%% chance to raise your ranged attack speed by %s%% for %s." % [t.call(spell, 0), t.call(quick, 0), lasts.call(quick)]
+		"Hardiness Training":
+			return "Increases your pet's health by %s%%." % t.call(spell, 0)
+		"Improved Beast's Eyes":
+			return "Increases the duration of your Beast's Eyes by %d sec. (Beast's Eyes isn't in the game yet.)" % roundi(absf(SpellDB.effect_value(spell, 0, level)) / 1000.0)
+		"Improved Monkey Spirit":
+			return "Increases the dodge bonus of your Monkey Spirit by %s%%." % t.call(spell, 0)
+		"Tough Hide":
+			return "Increases your pet's armor by %s%%." % t.call(spell, 0)
+		"Improved Revive Companion":
+			return "Reduces the casting time of your Revive Pet by %d sec and its mana cost by %s%%, and your pet comes back with %s%% more of its health." % [
+				roundi(absf(SpellDB.effect_value(spell, 0, level)) / 1000.0), t.call(spell, 1), t.call(spell, 2)]
+		"Trailblazing":
+			return "Increases the speed bonus of your Cheetah Spirit and Pack Spirit by %s%%." % t.call(spell, 0)
+		"Beast Swiftness":
+			return "Increases your pet's speed by %s%%." % t.call(spell, 0)
+		"Unbound Fury":
+			return "Increases the damage done by your pet by %s%%." % t.call(spell, 0)
+		"Improved Mend Companion":
+			return "Gives Mend Companion a %s%% chance each time it heals to cleanse your pet of a curse, disease, poison or magic effect." % str(roundi(SpellDB.effect_value(spell, 0, level)))
+		"Wild Ferocity":
+			return "Increases your pet's critical strike chance by %s%%." % t.call(spell, 0)
+		"Kindred Bond":
+			var bond := SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id)))
+			return "While your pet is out, you and your pet regain %s%% of your total health every 10 sec." % t.call(bond, 0)
+		"Beast Discipline":
+			return "Increases your pet's focus regeneration by %s%%." % t.call(spell, 0)
+		"Frenzy":
+			var frenzied := SpellDB.get_spell(int(SpellDB.get_spell(20784).get("EffectTriggerSpell1", 0)))
+			return "Gives your pet a %s%% chance after a critical strike to raise its attack speed by %s%% for %s." % [t.call(spell, 0), t.call(frenzied, 0), lasts.call(frenzied)]
+		"Improved Hobbling Shot":
+			return "Gives your Hobbling Shot a %d%% chance to stun the target for %s." % [chance, lasts.call(trigger)]
+		"Efficiency":
+			return "Reduces the mana cost of your shots and stings by %s%%." % t.call(spell, 0)
+		"Deadly Aim":
+			return "Increases your critical strike chance with ranged weapons by %s%%." % t.call(spell, 0)
+		"Keen Sight":
+			return "Increases the range of your Auto Shot, shots and stings by %s yd." % t.call(spell, 0)
+		"Grievous Shots":
+			return "Increases the critical strike damage bonus of your ranged attacks by %s%%." % t.call(spell, 0)
+		"Improved Stinger Venom":
+			return "Your Asp Sting also lowers the target's Stamina by %d%% of the Strength it takes. (Creatures have no Stamina, so it doesn't change them.)" % (10 * rank)
+		"Ranged Weapon Mastery":
+			return "Increases the damage you deal with ranged weapons by %s%%." % t.call(spell, 0)
+		"Monster Hunter":
+			return "Increases all damage you deal to beasts, giants and dragonkin by %s%%, and your critical strike damage against them by %s%%." % [t.call(spell, 0), t.call(spell, 1)]
+		"Manhunter":
+			return "Increases all damage you deal to humanoids by %s%%, and your critical strike damage against them by %s%%." % [t.call(spell, 0), t.call(spell, 1)]
+		"Ensnaring Traps":
+			return "Gives your Burning Trap, Rime Trap and Blast Trap a %d%% chance to root what they hit for %s." % [chance, lasts.call(trigger)]
+		"Improved Crippling Cut":
+			return "Gives your Crippling Cut a %d%% chance to root the target for %s." % [chance, lasts.call(trigger)]
+		"Cunning Traps":
+			return "Increases the duration of your Frostbind Trap and Rime Trap by %s%%, and the damage of your Burning Trap and Blast Trap by %s%%." % [t.call(spell, 0), t.call(spell, 1)]
+		"Hardy":
+			return "Increases your maximum health by %s%%." % t.call(spell, 0)
+		"Trap Craft":
+			return "Reduces the chance your traps' effects are resisted by %s%%." % t.call(spell, 0)
+		"Sure Step":
+			return "Increases your chance to hit by %s%%, and your chance to resist snares and roots by %s%%." % [t.call(spell, 2), t.call(spell, 0)]
+		"Improved Still as Death":
+			return "Reduces the chance your Still as Death is resisted by %s%%. (It never is yet.)" % t.call(spell, 0)
 	return ""
 
 

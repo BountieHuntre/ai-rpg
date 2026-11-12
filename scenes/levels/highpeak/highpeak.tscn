@@ -295,3 +295,33 @@ appearance = {
 "body": 0
 }
 race = "dwarf"
+
+[node name="HildaIronsight" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-152, 7, -762)
+npc_name = "Hilda Ironsight"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 1
+}
+race = "dwarf"
+
+[node name="BrandtFurmantle" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-144, 7, -760)
+npc_name = "Brandt Furmantle"
+subname = "Pet Trainer"
+trainer = "pet"
+appearance = {
+"body": 0
+}
+race = "dwarf"
+
+[node name="UllaRamsfield" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-160, 7, -760)
+npc_name = "Ulla Ramsfield"
+subname = "Stable Master"
+stable = true
+appearance = {
+"body": 1
+}
+race = "dwarf"

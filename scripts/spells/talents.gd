@@ -12,7 +12,10 @@ extends RefCounted
 
 const FIRST_LEVEL := 10
 ## Talents bots leave alone: not in the game yet, or no use yet (no wands).
-const BOT_SKIPS := ["Lingering Spirit", "Font of Light", "Wandwork"]
+const BOT_SKIPS := ["Lingering Spirit", "Font of Light", "Wandwork",
+	# The Ranger's: Beast's Eyes isn't in the game, creatures have no
+	# Stamina, and Still as Death is never resisted yet.
+	"Improved Beast's Eyes", "Improved Stinger Venom", "Improved Still as Death"]
 ## Unlearning costs 1 gold, then 5, then 10, rising 5 gold each time to 50
 ## (Player::resetTalentsCost in CMaNGOS; the cost there also falls back by
 ## 5 gold a month, which isn't kept here).
@@ -242,6 +245,10 @@ static func _requirement_met(spell: Dictionary, equipment: Dictionary, form: int
 	if item_class < 0:
 		return true
 	var mask := int(spell.get("EquippedItemSubClassMask", 0))
+	# Ranged weapon talents (Deadly Aim) need one in the ranged slot.
+	if Combatant.ranged_only(spell):
+		var ranged: Dictionary = equipment.get(Inventory.Slot.RANGED, {})
+		return not ranged.is_empty() and mask & (1 << int(ItemDB.get_item(int(ranged.id)).get("subclass", 0))) != 0
 	var slots := [Inventory.Slot.MAIN_HAND, Inventory.Slot.OFF_HAND] if item_class == ITEM_CLASS_WEAPON else [Inventory.Slot.OFF_HAND]
 	for slot in slots:
 		var stack: Dictionary = equipment.get(slot, {})
@@ -259,7 +266,8 @@ static func _requirement_met(spell: Dictionary, equipment: Dictionary, form: int
 ## "Healer" or "Damage"), main tree first: Men-at-Arms tank in Bulwark and
 ## fight in Blademastery; Templars heal in Grace, tank in Aegis, fight in
 ## Zeal; Clerics heal in Mercy, fight in Umbra; Spellswords tank in
-## Wardweave, fight in Bladesong.
+## Wardweave, fight in Bladesong; Rangers go down Beastcraft (their pet),
+## then Sharpshooting.
 static func bot_trees(char_class: int, role: String) -> Array[int]:
 	var order: Array[int] = [0, 1, 2]
 	match char_class:

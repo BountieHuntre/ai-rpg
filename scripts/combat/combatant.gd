@@ -46,6 +46,12 @@ const PROC_KILL := 0x2
 const PROC_MELEE_HIT := 0x4
 const PROC_TAKEN_MELEE_HIT := 0x8
 const PROC_MELEE_ABILITY := 0x10
+## Ranged hits: Auto Shot's, and ranged abilities' (CMaNGOS
+## PROC_FLAG_SUCCESSFUL_RANGED_HIT and _RANGED_SPELL_HIT).
+const PROC_RANGED_AUTO := 0x40
+const PROC_DONE_RANGED := 0x100
+## The Ranger's Auto Shot (the spell its talents name for shots).
+const AUTO_SHOT := 75
 const PROC_TAKEN_MELEE_ABILITY := 0x20
 const PROC_POSITIVE_SPELL := 0x4000
 const PROC_TAKEN_POSITIVE_SPELL := 0x8000
@@ -54,6 +60,7 @@ const PROC_TAKEN_NEGATIVE_SPELL := 0x20000
 ## procEx.
 const PROC_EX_NORMAL := 0x1
 const PROC_EX_CRIT := 0x2
+const PROC_EX_CRITICAL_HIT := PROC_EX_CRIT
 const PROC_EX_MISS := 0x4
 const PROC_EX_RESIST := 0x8
 const PROC_EX_DODGE := 0x10
@@ -87,6 +94,8 @@ const AURA_OBS_MOD_HEALTH := 20
 @export var melee_range := 2.5
 
 var is_player := false
+## A pet's owner: its taps and kills are its owner's.
+var owner_combatant: Combatant
 ## True while casting a spell with a cast time. Melee swings wait until the
 ## cast ends, but the swing timer keeps running (Player::Update in CMaNGOS
 ## only swings when no non-melee spell is being cast).
@@ -100,6 +109,9 @@ var max_damage := 2.0
 var swing_interval := 2.0
 ## Chances in percent, before the level-difference adjustments in CombatRules.
 var melee_crit := 0.0
+## Crit chance with ranged attacks, or -1 for the melee one (CharacterStats
+## sets it apart when a talent needs a ranged weapon).
+var ranged_crit := -1.0
 var spell_crit := 0.0
 var dodge := 0.0
 var parry := 0.0
@@ -357,6 +369,17 @@ func is_rooted() -> bool:
 
 
 ## Feared units run from whoever frightened them and can't fight.
+const AURA_MOD_FEIGN_DEATH := 66
+
+
+## Still as Death (SPELL_AURA_FEIGN_DEATH): creatures pay no heed.
+func is_feigning_death() -> bool:
+	for aura in auras:
+		if SpellDB.has_effect(aura.spell, AURA_MOD_FEIGN_DEATH, true):
+			return true
+	return false
+
+
 func is_feared() -> bool:
 	return has_aura_type(SpellDB.AURA_MOD_FEAR)
 
@@ -375,9 +398,53 @@ func speed_multiplier() -> float:
 	return maxf(1.0 + aura_total(SpellDB.AURA_MOD_INCREASE_SPEED) / 100.0 + aura_lowest(SpellDB.AURA_MOD_DECREASE_SPEED) / 100.0, 0.0)
 
 
-## Damage done bonus in percent for a school (Kindled Power, Shroud of Shadow).
+## Damage done bonus in percent for a school (Kindled Power, Shroud of Shadow);
+## ones that need a ranged weapon (Ranged Weapon Mastery) are for ranged
+## attacks only (ranged_damage_percent).
 func damage_done_percent(school: int) -> float:
-	return aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_DONE, 1 << school)
+	return aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_DONE, 1 << school) - aura_total_ranged_only(SpellDB.AURA_MOD_DAMAGE_PERCENT_DONE, 1 << school)
+
+
+## Ranged attacks' own damage bonus in percent, on top of damage_done_percent.
+func ranged_damage_percent() -> float:
+	return aura_total_ranged_only(SpellDB.AURA_MOD_DAMAGE_PERCENT_DONE, 1)
+
+
+## Ranged weapon subclasses: bows, guns, thrown, crossbows and wands.
+const RANGED_SUBCLASSES := (1 << 2) | (1 << 3) | (1 << 16) | (1 << 18) | (1 << 19)
+
+
+## Whether a passive needs a ranged weapon (its EquippedItemSubClassMask
+## names only ranged weapons): its bonus is for ranged attacks.
+static func ranged_only(spell: Dictionary) -> bool:
+	var mask := int(spell.get("EquippedItemSubClassMask", 0))
+	return int(spell.get("EquippedItemClass", -1)) == 2 and mask > 0 and mask & ~RANGED_SUBCLASSES == 0
+
+
+## aura_total of only the auras that need a ranged weapon.
+func aura_total_ranged_only(aura_type: int, misc_mask := -1) -> float:
+	var total := 0.0
+	for aura in auras:
+		if not ranged_only(aura.spell):
+			continue
+		for i in 3:
+			if int(aura.spell["EffectApplyAuraName%d" % (i + 1)]) != aura_type:
+				continue
+			if misc_mask >= 0 and int(aura.spell["EffectMiscValue%d" % (i + 1)]) & misc_mask == 0:
+				continue
+			total += aura.amounts[i]
+	return total
+
+
+## This unit's creature type as a mask bit (1 << (CreatureType - 1)), for
+## Monster Hunter and Manhunter: a creature's own, beasts for pets, and
+## humanoids for player characters.
+func creature_type_mask() -> int:
+	if body is Enemy:
+		return 1 << maxi((body as Enemy).creature_type() - 1, 0)
+	if body is Pet:
+		return 1
+	return 1 << 6
 
 
 func has_aura_type(aura_type: int, misc_mask := -1) -> bool:
@@ -488,10 +555,12 @@ func clear_auras() -> void:
 
 ## A passive talent's aura: permanent, from the unit itself, its amounts at
 ## the unit's level. Talents.sync_passives puts these on and takes them off.
-func add_passive_aura(spell: Dictionary) -> void:
+## `modified_by` is a unit whose talents change it (a pet's passives, by
+## its owner's).
+func add_passive_aura(spell: Dictionary, modified_by: Combatant = null) -> void:
 	var amounts := []
 	for i in 3:
-		amounts.append(SpellDB.effect_value(spell, i, level))
+		amounts.append(SpellDB.effect_value(spell, i, level, modified_by))
 	var aura := { "spell": spell, "caster": self, "remaining": -1.0, "duration": -1.0, "amounts": amounts, "talent": true }
 	if int(spell.get("ProcCharges", 0)) > 0:
 		aura.charges = int(spell.ProcCharges)
@@ -593,6 +662,11 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	var percent := 1.0 + aura_total(SpellDB.AURA_MOD_DAMAGE_PERCENT_TAKEN, 1 << school) / 100.0
 	if source and is_instance_valid(source):
 		percent *= 1.0 + source.damage_done_percent(school) / 100.0
+		# Monster Hunter, Manhunter: more damage, and more on crits, to a kind.
+		var kind := creature_type_mask()
+		percent *= 1.0 + source.aura_total(SpellDB.AURA_MOD_DAMAGE_DONE_VERSUS, kind) / 100.0
+		if crit:
+			percent *= 1.0 + source.aura_total(SpellDB.AURA_MOD_CRIT_DAMAGE_VERSUS, kind) / 100.0
 	# Rooted Stance: critical strikes on the unit hurt less.
 	if crit:
 		percent *= 1.0 - aura_total(SpellDB.AURA_CRIT_DAMAGE_TAKEN_PCT) / 100.0
@@ -695,8 +769,21 @@ func interrupt_cast(lockout := 0.0) -> void:
 		interrupt_requested.emit(lockout)
 
 
+## Whether an aura makes it immune to a mechanic (Beast Fury: stuns).
+func is_immune_to_mechanic(mechanic: int) -> bool:
+	for aura in auras:
+		for i in 3:
+			if int(aura.spell.get("EffectApplyAuraName%d" % (i + 1), 0)) == SpellDB.AURA_MECHANIC_IMMUNITY 					and int(aura.spell.get("EffectMiscValue%d" % (i + 1), 0)) == mechanic:
+				return true
+	return false
+
+
 func stun(duration: float) -> void:
 	if not is_alive() or invulnerable:
+		return
+	# Beast Fury: immune to stuns (SPELL_AURA_MECHANIC_IMMUNITY).
+	if is_immune_to_mechanic(MECHANIC_STUN):
+		avoid("Immune", null)
 		return
 	# Iron Resolve and Unbending Will: a chance to shrug stuns off.
 	if randf() * 100.0 < aura_total_exact(AURA_MECHANIC_RESISTANCE, MECHANIC_STUN):
@@ -846,14 +933,17 @@ func _land_shot(target: Combatant) -> void:
 		var crit := outcome == CombatRules.Outcome.CRIT
 		target.take_damage(roundi(damage * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), self, crit, school)
 		return
-	damage += ranged_attack_power / 14.0 * float(weapon.speed)
+	# Quarry's Mark adds ranged attack power against its target.
+	damage += (ranged_attack_power + target.aura_total(127)) / 14.0 * float(weapon.speed)
 	var shot_outcome := CombatRules.roll_ranged(self, target)
 	match shot_outcome:
 		CombatRules.Outcome.MISS:
 			target.avoid("Miss", self)
 			return
 		CombatRules.Outcome.CRIT:
-			damage *= CombatRules.MELEE_CRIT_MULTIPLIER
+			# Grievous Shots raises Auto Shot's crit bonus.
+			damage *= 1.0 + (CombatRules.MELEE_CRIT_MULTIPLIER - 1.0) * (1.0 + SpellMods.percent(self, SpellDB.get_spell(Combatant.AUTO_SHOT), SpellMods.CRIT_DAMAGE_BONUS) / 100.0)
+	damage *= 1.0 + ranged_damage_percent() / 100.0
 	damage = CombatRules.reduce_by_armor(damage, target, self)
 	if shot_outcome == CombatRules.Outcome.BLOCK:
 		target.blocked_attack.emit(self)
@@ -862,6 +952,8 @@ func _land_shot(target: Combatant) -> void:
 			target.avoid("Block", self)
 			return
 	target.take_damage(roundi(damage), self, shot_outcome == CombatRules.Outcome.CRIT)
+	# Auto Shot's hit, for procs (Hawk Spirit's Quick Shots).
+	proc_event.emit(PROC_RANGED_AUTO, PROC_EX_CRIT if shot_outcome == CombatRules.Outcome.CRIT else PROC_EX_NORMAL, target, SpellDB.get_spell(Combatant.AUTO_SHOT), roundi(damage))
 
 
 ## Ground Slam slows a creature's swings (players' haste is in CharacterStats).

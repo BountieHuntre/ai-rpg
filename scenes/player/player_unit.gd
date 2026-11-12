@@ -22,6 +22,8 @@ const RACE_LOOKS := {
 
 ## Name, race, class, level, gear and spells: GameState for the player.
 var profile: CharacterProfile
+## A Ranger's pet out in the world, or null.
+var pet: Pet
 ## Yaw in radians. Zero faces -Z.
 var facing := 0.0
 ## Sitting: moving, jumping, casting or being hit stands up, and standing ends

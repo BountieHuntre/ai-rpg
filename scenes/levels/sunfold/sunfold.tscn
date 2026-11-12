@@ -67,3 +67,14 @@ appearance = {
 "body": 1
 }
 race = "hornkin"
+
+[node name="YonaSkywatcher" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-468, 5, 1192)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Yona Skywatcher"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 1
+}
+race = "hornkin"

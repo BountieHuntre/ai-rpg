@@ -20,9 +20,14 @@ const ALL_EFFECTS := 8
 const NOT_LOSE_CASTING_TIME := 9
 const CASTING_TIME := 10
 const COOLDOWN := 11
+## 1.12's SPELLMOD_SPEED (later clients' EFFECT2): the speed of a speed aura
+## (Trailblazing on Cheetah and Pack Spirit).
+const SPEED := 12
 const COST := 14
 const CRIT_DAMAGE_BONUS := 15
 const RESIST_MISS_CHANCE := 16
+## A proc's chance (Improved Hawk Spirit, Frenzy).
+const CHANCE_OF_SUCCESS := 18
 const DOT := 22
 
 const AURA_FLAT := 107

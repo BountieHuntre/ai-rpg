@@ -73,6 +73,8 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_bar()
 	_build_stance_bar()
+	_build_pet_bar()
+	_player.spells.ranger().pet_changed.connect(_on_pet_changed)
 	_build_book()
 	_book.visible = book_open
 	_buffs = Control.new()
@@ -102,6 +104,7 @@ func _on_spells_changed() -> void:
 		_draw_bar_slot(i)
 	_stance_bar.queue_free()
 	_build_stance_bar()
+	_on_pet_changed()
 
 
 func is_book_open() -> bool:
@@ -145,6 +148,7 @@ func _process(_delta: float) -> void:
 		_update_slot_state(i)
 	for i in _stance_slots.size():
 		_update_stance_state(i)
+	_update_pet_bar()
 	if _held_icon:
 		_held_icon.position = get_viewport().get_mouse_position() + Vector2(4, 4) * _ui_scale
 	for icon in _buffs.get_children():
@@ -417,6 +421,147 @@ func _build_stance_bar() -> void:
 				_player.spells.cast(id)
 				get_viewport().set_input_as_handled()
 		)
+
+
+# Pet bar.
+
+## Classic's pet action bar, right of the stance bar while a Ranger's pet is
+## out: Attack, Follow and Stay; its abilities (right-click one to turn its
+## autocast on or off, shown by a gold frame); Aggressive, Defensive and
+## Passive.
+const PET_COMMANDS := [
+	["attack", "Attack", "Sends your pet to attack your target."],
+	["follow", "Follow", "Your pet follows you."],
+	["stay", "Stay", "Your pet stays where it is."],
+]
+const PET_MODES := [
+	["aggressive", "Aggressive", "Your pet attacks enemies near you.", "rage"],
+	["defensive", "Defensive", "Your pet attacks whatever attacks you or it.", "aegis"],
+	["passive", "Passive", "Your pet won't attack on its own.", "passive"],
+]
+const PET_ABILITY_SLOTS := 4
+var _pet_bar: Control
+## Each slot: { "box", "kind" ("command", "ability", "mode"), "key" }.
+var _pet_slots: Array[Dictionary] = []
+var _pet_redraw_queued := false
+
+
+func _on_pet_changed() -> void:
+	if not _pet_redraw_queued:
+		_pet_redraw_queued = true
+		(func() -> void:
+			_pet_redraw_queued = false
+			if is_instance_valid(_pet_bar):
+				_pet_bar.queue_free()
+			_build_pet_bar()).call_deferred()
+
+
+func _build_pet_bar() -> void:
+	_pet_slots.clear()
+	_pet_bar = Control.new()
+	_pet_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_pet_bar)
+	var pet := _player.pet
+	_pet_bar.visible = pet != null and is_instance_valid(pet)
+	if not _pet_bar.visible:
+		return
+	var bar_left := (_screen.x - (GameState.ACTION_SLOTS * (SLOT + GAP) - GAP)) / 2.0
+	var left := bar_left + (_stance_ids.size() + 1) * (STANCE_SLOT + GAP)
+	var top := stance_top(_screen.y)
+	var entries: Array = []
+	for command: Array in PET_COMMANDS:
+		entries.append(["command", command[0], command[1], command[2], "attack" if command[0] == "attack" else "token" if command[0] == "follow" else "ward"])
+	var abilities: Array = pet.record.get("spells", []).filter(func(id: Variant) -> bool: return not SpellDB.is_passive(SpellDB.get_spell(int(id))))
+	for i in PET_ABILITY_SLOTS:
+		entries.append(["ability", int(abilities[i]) if i < abilities.size() else 0, "", "", ""])
+	for mode: Array in PET_MODES:
+		entries.append(["mode", mode[0], mode[1], mode[2], mode[3]])
+	for i in entries.size():
+		var entry: Array = entries[i]
+		var box := ColorRect.new()
+		box.position = Vector2(left + i * (STANCE_SLOT + GAP), top) * _ui_scale
+		box.size = Vector2.ONE * STANCE_SLOT * _ui_scale
+		box.mouse_filter = Control.MOUSE_FILTER_STOP
+		_pet_bar.add_child(box)
+		var kind: String = entry[0]
+		if kind == "ability":
+			if int(entry[1]) == 0:
+				box.color = Color(0, 0, 0, 0.35)
+				UiStyle.frame_box(box, _ui_scale)
+				_pet_slots.append({ "box": box, "kind": kind, "key": 0 })
+				continue
+			_draw_icon(box, int(entry[1]))
+		else:
+			box.color = Color.TRANSPARENT
+			UiStyle.frame_box(box, _ui_scale)
+			UiStyle.icon(box, Icons.texture(str(entry[4])), maxf(roundf(_ui_scale * 1.2), 2.0))
+		var lit := ReferenceRect.new()
+		lit.name = "Active"
+		lit.border_color = Color(1, 0.85, 0.3)
+		lit.border_width = maxf(2.0 * _ui_scale, 2.0)
+		lit.editor_only = false
+		lit.size = box.size
+		lit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(lit)
+		var key: Variant = entry[1]
+		var lines: Array = spell_tooltip(int(key)) if kind == "ability" else [[str(entry[2]), "", Color.WHITE], [str(entry[3]), "", UiStyle.GOLD_BRIGHT]]
+		if kind == "ability":
+			lines.append(["Right-click to turn autocast on or off.", "", Color(0.6, 0.6, 0.6)])
+		box.mouse_entered.connect(func() -> void: _tooltip.show_lines(lines))
+		box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+		box.gui_input.connect(_on_pet_slot_input.bind(kind, key))
+		_pet_slots.append({ "box": box, "kind": kind, "key": key })
+
+
+func _on_pet_slot_input(event: InputEvent, kind: String, key: Variant) -> void:
+	var button := event as InputEventMouseButton
+	var pet := _player.pet
+	if button == null or not button.pressed or pet == null or not is_instance_valid(pet):
+		return
+	get_viewport().set_input_as_handled()
+	match kind:
+		"command":
+			match str(key):
+				"attack":
+					pet.order_attack(_player.enemy_target())
+				"follow":
+					pet.order_follow()
+				"stay":
+					pet.order_stay()
+		"mode":
+			pet.set_mode(str(key))
+		"ability":
+			var id := int(key)
+			var autocast: Array = pet.record.get("autocast", [])
+			if button.button_index == MOUSE_BUTTON_RIGHT:
+				if id in autocast:
+					autocast.erase(id)
+				else:
+					autocast.append(id)
+				pet.record.autocast = autocast
+			elif button.button_index == MOUSE_BUTTON_LEFT:
+				var target := _player.enemy_target()
+				if not pet.cast(SpellDB.get_spell(id), target if target else pet.target):
+					Sfx.play("error")
+
+
+## The active order and stance are lit, as are abilities set to autocast.
+func _update_pet_bar() -> void:
+	var pet := _player.pet
+	if _pet_slots.is_empty() or pet == null or not is_instance_valid(pet):
+		return
+	for slot: Dictionary in _pet_slots:
+		var box: Control = slot.box
+		var lit := box.get_node_or_null("Active") as Control
+		if lit == null:
+			continue
+		match str(slot.kind):
+			"command":
+				lit.visible = str(slot.key) == pet.order or (str(slot.key) == "attack" and pet.target != null)
+			"mode":
+				lit.visible = str(slot.key) == pet.mode
+			"ability":
+				lit.visible = int(slot.key) in pet.record.get("autocast", [])
 
 
 ## The active aura's button is lit, the others dimmed, as on the classic bar.

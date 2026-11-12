@@ -105,3 +105,36 @@ appearance = {
 "body": 1
 }
 race = "hornkin"
+
+[node name="TormLongstride" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-780, 6, 642)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Torm Longstride"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 0
+}
+race = "hornkin"
+
+[node name="HelaMossfoot" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-786, 6, 648)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Hela Mossfoot"
+subname = "Pet Trainer"
+trainer = "pet"
+appearance = {
+"body": 1
+}
+race = "hornkin"
+
+[node name="BrannStridewell" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-772, 6, 648)
+rotation = Vector3(0, -1.57080, 0)
+npc_name = "Brann Stridewell"
+subname = "Stable Master"
+stable = true
+appearance = {
+"body": 0
+}
+race = "hornkin"

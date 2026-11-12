@@ -21,6 +21,13 @@ const REACH := 8.0
 ## killing it, as its CMaNGOS script gives; Release Wildclaw frees the druid's
 ## spirit from his body (its Quest Complete effect does the rest).
 const DUMMY_TARGETS := { 19938: [10556, false], 10617: [7318, true] }
+## The taming rods of Taming the Beast (CMaNGOS scripts them on one beast
+## each): rod spell -> the beast's creature entry. Using one through its
+## channel completes the quest it came with.
+const TAMING_RODS := {
+	19674: 1126, 19687: 1201, 19548: 1196, 19688: 2956, 19689: 2959, 19692: 2970,
+	19693: 1998, 19699: 2043, 19700: 1996, 19694: 3099, 19696: 3107, 19697: 3126,
+}
 const ERR_NO_TARGET := "There's nothing here to use it on."
 const ERR_FOCUS := "Requires %s."
 
@@ -30,7 +37,7 @@ static var _built := false
 
 
 static func is_quest_spell(spell: Dictionary) -> bool:
-	if int(spell.get("RequiresSpellFocus", 0)) > 0 or DUMMY_TARGETS.has(int(spell.Id)):
+	if int(spell.get("RequiresSpellFocus", 0)) > 0 or DUMMY_TARGETS.has(int(spell.Id)) or TAMING_RODS.has(int(spell.Id)):
 		return true
 	for i in [1, 2, 3]:
 		if int(spell.get("Effect%d" % i, 0)) in [EFFECT_QUEST_COMPLETE, EFFECT_CREATE_ITEM, EFFECT_SEND_EVENT]:
@@ -64,7 +71,7 @@ static func problem(unit: Node3D, spell: Dictionary) -> String:
 
 
 static func needs_target(spell: Dictionary) -> bool:
-	return DUMMY_TARGETS.has(int(spell.Id)) or not _targets_for(int(spell.Id)).is_empty()
+	return DUMMY_TARGETS.has(int(spell.Id)) or TAMING_RODS.has(int(spell.Id)) or not _targets_for(int(spell.Id)).is_empty()
 
 
 ## The name of a spell focus (its object's: "Mossglen Moonwell").
@@ -81,13 +88,15 @@ static func find_target(unit: Node3D, spell: Dictionary) -> Node3D:
 	var id := int(spell.Id)
 	var wanted: Array = []
 	var dead := false
-	if DUMMY_TARGETS.has(id):
+	if TAMING_RODS.has(id):
+		wanted = [int(TAMING_RODS[id])]
+	elif DUMMY_TARGETS.has(id):
 		wanted = [int(DUMMY_TARGETS[id][0])]
 		dead = DUMMY_TARGETS[id][1]
 	else:
 		wanted = _targets_for(id)
 	var best: Node3D = null
-	var best_distance := REACH
+	var best_distance := maxf(REACH, SpellDB.spell_range(spell)) if TAMING_RODS.has(id) else REACH
 	for node in unit.get_tree().get_nodes_in_group("enemies") + unit.get_tree().get_nodes_in_group("npcs") \
 			+ unit.get_tree().get_nodes_in_group("game_objects"):
 		var target := _target_id(node)
@@ -130,6 +139,9 @@ static func land(unit: Node3D, spell: Dictionary, target: Node3D) -> void:
 					Inventory.add_item(item, 1)
 			EFFECT_QUEST_COMPLETE:
 				QuestLog.complete_event(int(spell.get("EffectMiscValue%d" % i, 0)))
+	if TAMING_RODS.has(id):
+		_tamed_with_rod(unit, spell, target)
+		return
 	if target == null or not is_instance_valid(target):
 		return
 	if id == 19938 and target is Npc:
@@ -137,3 +149,17 @@ static func land(unit: Node3D, spell: Dictionary, target: Node3D) -> void:
 		QuestLog.on_kill(10556)
 	elif not DUMMY_TARGETS.has(id):
 		QuestLog.credit_object(_target_id(target), id)
+
+
+## A taming rod's channel ran through: the quest it came with is done, and
+## the beast, calmed, goes back where it came from.
+static func _tamed_with_rod(unit: Node3D, spell: Dictionary, target: Node3D) -> void:
+	for id: int in GameState.quests:
+		var item := ItemDB.get_item(int(QuestDB.get_quest(id).get("source_item", 0)))
+		if int(item.get("spellid_1", 0)) == int(spell.Id):
+			QuestLog.complete_event(id)
+	var enemy := target as Enemy
+	if enemy and is_instance_valid(enemy) and enemy.combatant.is_alive():
+		enemy.forget((unit as PlayerUnit).combatant)
+		if enemy.threat.is_empty():
+			enemy._start_return()

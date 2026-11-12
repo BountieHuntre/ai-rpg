@@ -153,6 +153,9 @@ func reward_kill(enemy: Enemy, tapper: Combatant) -> bool:
 			var share := rate * unit.profile.level / sum_level
 			var amount := int(xp * share) if top_level == top_not_grey else int(xp * share / 2.0) + 1
 			_progression(unit).add_xp(amount)
+			# A Ranger's pet earns the same (Pet::GivePetXP).
+			if unit.pet and is_instance_valid(unit.pet):
+				unit.pet.give_xp(amount)
 	if player and player in near:
 		QuestLog.on_kill(enemy.creature_entry)
 	# A bot on its own counts the kill for its own quests.

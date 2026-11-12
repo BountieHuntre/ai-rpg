@@ -174,3 +174,14 @@ appearance = {
 "body": 0
 }
 race = "wood_elf"
+
+[node name="AyalaSwiftbow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2176, 5, -4990)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Ayala Swiftbow"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 1
+}
+race = "wood_elf"

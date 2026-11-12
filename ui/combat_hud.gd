@@ -41,6 +41,9 @@ const NAMEPLATE_RANGE := 40.0
 ## Party frames fade for members further away than this, as in classic.
 const PARTY_RANGE := 40.0
 const PARTY_FRAME_SIZE := Vector2(80, 25)
+## A party Ranger's pet strip under its frame: its height and text size.
+const PARTY_PET_STRIP := 10.0
+const PET_STRIP_FONT := 5
 ## The player and target frames' bar width, and the least gap between a
 ## frame's name and its level; frames widen for longer names.
 const FRAME_INNER := 84.0
@@ -113,6 +116,9 @@ var _inventory: InventoryUI
 var _spells: SpellUI
 var _talents: TalentWindow
 var _trainer: TrainerWindow
+## The Ranger's Beast Training and a stable master's stable.
+var _beast_training: BeastTrainingWindow
+var _stable: StableWindow
 var _trainer_npc: Node3D
 var _vendor: VendorWindow
 var _vendor_npc: Node3D
@@ -150,6 +156,12 @@ var _fps: Label
 ## Recent loot messages as [text, seconds left].
 ## Party frames: { "bot", "frame", "name", "level", "health", "mana" }.
 var _party_frames: Array[Dictionary] = []
+## A Ranger's pet frame, under the player frame: { "frame", "name", "level",
+## "health", "focus", "xp", "xp_back" }, or {} for other classes.
+var _pet_frame: Dictionary = {}
+var _pet_menu: PopupMenu
+const PET_FRAME_SIZE := Vector2(80, 22)
+const FOCUS_COLOR := Color(0.85, 0.6, 0.2)
 var _unit_menu: PopupMenu
 var _menu_bot: Bot
 ## Combatants whose hits, heals and stuns show as floating text.
@@ -468,6 +480,18 @@ func _build() -> void:
 	_trainer.hovered.connect(func(id: int) -> void: _tooltip.show_lines(_spells.spell_tooltip(id)))
 	if _trainer_npc and is_instance_valid(_trainer_npc):
 		_trainer.open(_trainer_npc, _player, _ui_scale)
+	_beast_training = BeastTrainingWindow.new()
+	_beast_training.position = Vector2(130, 50) * _ui_scale
+	_beast_training.visible = false
+	add_child(_beast_training)
+	_beast_training.message.connect(_on_loot_message)
+	_player.spells.ranger().beast_training_requested.connect(func() -> void: _beast_training.open(_player, _ui_scale))
+	_stable = StableWindow.new()
+	_stable.position = Vector2(130, 50) * _ui_scale
+	_stable.visible = false
+	add_child(_stable)
+	_stable.message.connect(_on_loot_message)
+	move_child(_tooltip, -1)
 	_vendor = VendorWindow.new()
 	_vendor.position = Vector2(130, 50) * _ui_scale
 	_vendor.visible = false
@@ -895,7 +919,8 @@ func _update_enemy_names() -> void:
 		var combatant: Combatant = entry.combatant
 		# Where the unit is drawn (physics interpolation), so the label keeps up.
 		var world: Vector3 = combatant.body.get_global_transform_interpolated().origin + Vector3.UP * NAMEPLATE_HEIGHT
-		if not shown or eye.distance_squared_to(world) > reach or not combatant.is_alive() or _camera.is_position_behind(world):
+		# (A tamed creature has left the world: hidden.)
+		if not shown or eye.distance_squared_to(world) > reach or not combatant.is_alive() or not combatant.body.visible or _camera.is_position_behind(world):
 			label.visible = false
 			continue
 		label.visible = true
@@ -921,9 +946,16 @@ func _build_party_frames() -> void:
 	# Each with a small portrait on the left, like the player's frame.
 	var x0 := PARTY_PORTRAIT + 4.0
 	var frame_size := Vector2(x0 + inner + 3, PARTY_FRAME_SIZE.y)
+	# A Ranger's pet frame comes first, right under the player's.
+	var top := 43.0
+	_pet_frame = {}
+	if GameState.char_class == ClassicData.CharClass.HUNTER:
+		_build_pet_frame(Vector2(4, top), Vector2(frame_size.x, PET_FRAME_SIZE.y), x0, inner)
+		top += PET_FRAME_SIZE.y + 3
+	var y := top
 	for i in Party.members.size():
 		var bot := Party.members[i]
-		var frame := _frame(Vector2(4, 43 + i * (PARTY_FRAME_SIZE.y + 3)), frame_size)
+		var frame := _frame(Vector2(4, y), frame_size)
 		frame.mouse_filter = Control.MOUSE_FILTER_STOP
 		frame.gui_input.connect(_on_party_frame_input.bind(bot))
 		_portrait(frame, Vector2(2, 2), PARTY_PORTRAIT, Icons.portrait_key(bot))
@@ -936,10 +968,102 @@ func _build_party_frames() -> void:
 		var mana := _bar(frame, Vector2(x0, 17), Vector2(inner, 3), Color(0.2, 0.4, 0.85))
 		var xp_back := _trough(frame, Vector2(x0, 21), Vector2(inner, 2))
 		var xp := _bar(frame, Vector2(x0, 21), Vector2(inner, 2), PARTY_XP)
-		_party_frames.append({ "bot": bot, "frame": frame, "name": name_label, "level": level, "health": health, "mana": mana, "xp": xp, "xp_back": xp_back })
+		var entry := { "bot": bot, "frame": frame, "name": name_label, "level": level, "health": health, "mana": mana, "xp": xp, "xp_back": xp_back }
+		y += PARTY_FRAME_SIZE.y + 3
+		# A Ranger's pet: a strip under its frame, its name and health.
+		if bot.profile.char_class == ClassicData.CharClass.HUNTER:
+			var strip := _frame(Vector2(4 + x0, y - 2), Vector2(inner + 3, PARTY_PET_STRIP))
+			strip.mouse_filter = Control.MOUSE_FILTER_STOP
+			strip.gui_input.connect(_on_party_pet_input.bind(bot))
+			var pet_name := _label(strip, Vector2(2, -2), "")
+			pet_name.add_theme_font_size_override("font_size", roundi(PET_STRIP_FONT * _ui_scale))
+			pet_name.size.x = (inner - 1) * _ui_scale
+			pet_name.clip_text = true
+			pet_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			_trough(strip, Vector2(2, PARTY_PET_STRIP - 4), Vector2(inner - 1, 2))
+			entry.pet_health = _bar(strip, Vector2(2, PARTY_PET_STRIP - 4), Vector2(inner - 1, 2), Color(0.25, 0.7, 0.25))
+			entry.pet_name = pet_name
+			entry.pet_strip = strip
+			y += PARTY_PET_STRIP + 1
+		_party_frames.append(entry)
+
+
+## The pet frame: portrait, name, level, health, focus and XP; click to
+## target the pet, right-click to abandon it.
+func _build_pet_frame(at: Vector2, frame_size: Vector2, x0: float, inner: float) -> void:
+	var frame := _frame(at, frame_size)
+	frame.mouse_filter = Control.MOUSE_FILTER_STOP
+	frame.gui_input.connect(_on_pet_frame_input)
+	_portrait(frame, Vector2(2, 2), PARTY_PORTRAIT - 3, "tooth_claw")
+	var name_label := _label(frame, Vector2(x0, -1), "")
+	name_label.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+	# Long beast names stop short of the level.
+	name_label.size.x = (inner - 16) * _ui_scale
+	name_label.clip_text = true
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var level := _right_label(frame, Vector2(x0, -1), inner)
+	level.add_theme_font_size_override("font_size", roundi(BAR_FONT_SIZE * _ui_scale))
+	_trough(frame, Vector2(x0, 10), Vector2(inner, 5))
+	var health := _bar(frame, Vector2(x0, 10), Vector2(inner, 5), Color(0.25, 0.7, 0.25))
+	var focus := _bar(frame, Vector2(x0, 16), Vector2(inner, 3), FOCUS_COLOR)
+	var xp_back := _trough(frame, Vector2(x0, 19.5), Vector2(inner, 1.5))
+	var xp := _bar(frame, Vector2(x0, 19.5), Vector2(inner, 1.5), PARTY_XP)
+	_pet_frame = { "frame": frame, "name": name_label, "level": level, "health": health, "focus": focus, "xp": xp, "xp_back": xp_back }
+	if _pet_menu == null:
+		_pet_menu = PopupMenu.new()
+		add_child(_pet_menu)
+		_pet_menu.id_pressed.connect(_on_pet_menu)
+
+
+func _update_pet_frame() -> void:
+	if _pet_frame.is_empty():
+		return
+	var pet := _player.pet
+	var frame: Control = _pet_frame.frame
+	frame.visible = pet != null and is_instance_valid(pet)
+	if not frame.visible:
+		return
+	var c := pet.combatant
+	var alive := c.is_alive()
+	(_pet_frame.name as Label).text = str(pet.record.name)
+	(_pet_frame.level as Label).text = "Lv %d" % int(pet.record.level) if alive else "Dead"
+	_set_bar(_pet_frame.health, c.health, c.max_health)
+	_set_bar(_pet_frame.focus, c.mana, c.max_mana)
+	var capped := int(pet.record.level) >= _player.profile.level
+	_pet_frame.xp.visible = not capped
+	_pet_frame.xp_back.visible = not capped
+	if not capped:
+		_set_bar(_pet_frame.xp, int(pet.record.xp), PetDB.xp_to_next(int(pet.record.level)))
+
+
+func _on_pet_frame_input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	var pet := _player.pet
+	if click == null or not click.pressed or pet == null or not is_instance_valid(pet):
+		return
+	if click.button_index == MOUSE_BUTTON_RIGHT:
+		_pet_menu.clear()
+		_pet_menu.add_item("Abandon Pet", 0)
+		_pet_menu.add_item("Cancel", 2)
+		_pet_menu.reset_size()
+		_pet_menu.popup(Rect2i(Vector2i(get_viewport().get_mouse_position()), Vector2i.ZERO))
+
+
+## Abandoning asks once more, as classic does.
+func _on_pet_menu(id: int) -> void:
+	match id:
+		0:
+			_pet_menu.clear()
+			_pet_menu.add_item("Abandon %s for good?" % str(GameState.pet.get("name", "your pet")), 1)
+			_pet_menu.add_item("Cancel", 2)
+			_pet_menu.reset_size()
+			_pet_menu.popup(Rect2i(Vector2i(get_viewport().get_mouse_position()), Vector2i.ZERO))
+		1:
+			_player.spells.ranger().abandon_pet()
 
 
 func _update_party_frames() -> void:
+	_update_pet_frame()
 	for entry in _party_frames:
 		var bot: Bot = entry.bot
 		if not is_instance_valid(bot):
@@ -959,6 +1083,24 @@ func _update_party_frames() -> void:
 			_set_bar(entry.xp, bot.profile.xp, ClassicData.xp_to_next(bot.profile.level))
 		var far := _player.global_position.distance_to(bot.global_position) > PARTY_RANGE
 		entry.frame.modulate.a = 0.5 if far else 1.0
+		if entry.has("pet_strip"):
+			var pet: Pet = bot.pet if bot.pet and is_instance_valid(bot.pet) else null
+			var record: Dictionary = pet.record if pet else bot.pet_record
+			(entry.pet_strip as Control).visible = not record.is_empty()
+			if pet:
+				(entry.pet_name as Label).text = "%s  Lv %d" % [record.get("name", ""), int(record.get("level", 1))] if pet.combatant.is_alive() else "%s  Dead" % record.get("name", "")
+				_set_bar(entry.pet_health, pet.combatant.health, pet.combatant.max_health)
+			elif not record.is_empty():
+				(entry.pet_name as Label).text = "%s  %s" % [record.get("name", ""), "Dead" if record.get("dead", false) else "Away"]
+				_set_bar(entry.pet_health, 0, 1)
+			(entry.pet_strip as Control).modulate.a = entry.frame.modulate.a
+
+
+## Clicking a party Ranger's pet strip targets the pet.
+func _on_party_pet_input(event: InputEvent, bot: Bot) -> void:
+	var click := event as InputEventMouseButton
+	if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT and is_instance_valid(bot) and bot.pet and is_instance_valid(bot.pet):
+		_player.targeting.set_target(bot.pet)
 
 
 func _on_party_frame_input(event: InputEvent, bot: Bot) -> void:
@@ -1144,6 +1286,11 @@ func open_npc(npc: Npc) -> void:
 		_quest_npc = npc
 		_quest_window.open(npc, _player, _ui_scale)
 		return
+	if npc.stable:
+		close_vendor()
+		close_trainer()
+		_stable.open(npc, _player, _ui_scale)
+		return
 	_open_service(npc, "vendor" if npc.vendor != 0 else "trainer")
 
 
@@ -1295,8 +1442,11 @@ func close_vendor() -> bool:
 
 
 func close_trainer() -> bool:
+	var closed := _beast_training.visible or _stable.visible
+	_beast_training.close()
+	_stable.close()
 	if not _trainer.visible:
-		return false
+		return closed
 	_trainer.close()
 	_trainer_npc = null
 	return true

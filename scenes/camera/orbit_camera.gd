@@ -54,6 +54,18 @@ func is_auto_running() -> bool:
 	return _orbiting and _steering
 
 
+## Distant Gaze: the camera pulls far out for a while, until the player
+## moves; then the zoom comes back.
+func far_sight(far: float, duration: float) -> void:
+	_far_left = duration
+	_far_restore = _zoom_target
+	_zoom_target = far
+
+
+var _far_left := 0.0
+var _far_restore := 0.0
+
+
 func snap_to_target() -> void:
 	_zoom_target = distance
 	yaw = target.facing
@@ -119,6 +131,11 @@ func _physics_process(delta: float) -> void:
 			_returning = true
 	if _returning:
 		yaw = lerp_angle(yaw, target.facing, 1.0 - exp(-return_speed * delta))
+	if _far_left > 0.0:
+		_far_left -= delta
+		if _far_left <= 0.0 or moving:
+			_far_left = 0.0
+			_zoom_target = _far_restore
 	distance = move_toward(distance, _zoom_target, maxf(absf(_zoom_target - distance), 0.5) * zoom_speed * delta)
 	target.set_model_visible(distance > FIRST_PERSON_DISTANCE)
 	_update_transform()

@@ -66,6 +66,16 @@ func _process(_delta: float) -> void:
 static func entry_state(entry: Dictionary) -> Array:
 	var main_id: int = entry.spells[0]
 	var spell := SpellDB.get_spell(main_id)
+	# The pet trainer's: abilities the Ranger learns to teach (GameState.pet_spells).
+	if entry.get("pet", false):
+		if main_id in GameState.pet_spells:
+			return ["used", ""]
+		if int(entry.level) > GameState.level:
+			return ["unavailable", "Requires Level %d" % entry.level]
+		var before := SpellDB.previous_rank(main_id)
+		if before != 0 and not before in GameState.pet_spells:
+			return ["unavailable", "Requires %s" % SpellDB.full_name(SpellDB.get_spell(before))]
+		return ["available", ""]
 	if main_id in GameState.known_spells:
 		return ["used", ""]
 	# Weapon skills you started with are known through the proficiency.
@@ -102,11 +112,22 @@ func train(index: int) -> void:
 		message.emit("Not enough money", true)
 		return
 	GameState.money -= int(entry.cost)
-	for name in SpellCaster.learn(entry.spells):
-		message.emit("You have learned a new spell: %s." % name, false)
+	if entry.get("pet", false):
+		_learn_pet_ability(entry)
+	else:
+		for name in SpellCaster.learn(entry.spells):
+			message.emit("You have learned a new spell: %s." % name, false)
 	Sfx.play("level_up")
 	GameState.inventory_changed.emit()
 	_build.call_deferred()
+
+
+## A pet trainer's ability: the Ranger can teach it now (Beast Training).
+func _learn_pet_ability(entry: Dictionary) -> void:
+	for id: int in entry.spells:
+		if not id in GameState.pet_spells:
+			GameState.pet_spells.append(id)
+			message.emit("You can now teach your pet %s." % SpellDB.full_name(SpellDB.get_spell(id)), false)
 
 
 ## Trains everything available, cheapest level first, as long as the money
@@ -128,9 +149,13 @@ func train_all() -> void:
 				continue
 			GameState.money -= int(entry.cost)
 			spent += int(entry.cost)
-			for name in SpellCaster.learn(entry.spells):
-				message.emit("You have learned a new spell: %s." % name, false)
+			if entry.get("pet", false):
+				_learn_pet_ability(entry)
 				learned += 1
+			else:
+				for name in SpellCaster.learn(entry.spells):
+					message.emit("You have learned a new spell: %s." % name, false)
+					learned += 1
 			changed = true
 	if learned == 0:
 		message.emit("Not enough money" if short else "There's nothing new to train.", true)
@@ -157,6 +182,9 @@ func _build() -> void:
 
 	if npc.trainer == SpellDB.WEAPON_TRAINER and list.is_empty():
 		trainer_class = 0
+	# The pet trainer teaches Rangers what their pets can learn.
+	if npc.trainer == SpellDB.PET_TRAINER:
+		trainer_class = ClassicData.CharClass.HUNTER
 	if trainer_class != GameState.char_class:
 		var refusal := _text(self, Vector2(6, 20), "I can only train %s. Seek out a trainer of your own calling." % ClassicData.class_plural(trainer_class), Color.WHITE, FONT_SIZE)
 		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

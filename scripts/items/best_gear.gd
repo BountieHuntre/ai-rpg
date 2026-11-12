@@ -17,7 +17,8 @@ extends RefCounted
 ## By class, for each talent tree as the build's main one (the most points),
 ## as classic players geared them: Blademastery and Zeal swing two-handers,
 ## Ferocity fights with two weapons, Bulwark and Aegis tank with a shield,
-## Grace, Devotion and Mercy heal with an off-hand item or shield.
+## Grace, Devotion and Mercy heal with an off-hand item or shield; Rangers
+## want Agility and a ranged weapon whatever the tree.
 const SPECS := {
 	ClassicData.CharClass.WARRIOR: [
 		{ "stats": [2.2, 1.6, 1.0, 0.0, 0.0], "armor": 0.03, "health": 0.1, "mana": 0.0, "dps": 14.0, "block": 0.0, "hands": "two_hand" },
@@ -36,6 +37,13 @@ const SPECS := {
 		{ "stats": [1.0, 0.8, 2.2, 1.6, 0.0], "armor": 0.12, "health": 0.2, "mana": 0.06, "dps": 5.0, "block": 1.0, "hands": "shield" },
 		{ "stats": [1.2, 0.4, 1.0, 2.0, 0.6], "armor": 0.03, "health": 0.1, "mana": 0.1, "dps": 9.0, "block": 0.0, "hands": "any" },
 	],
+	# Ranger: Agility above all and the ranged weapon's damage ("ranged_dps");
+	# a two-hander for its stats. Woodcraft fights in melee more.
+	ClassicData.CharClass.HUNTER: [
+		{ "stats": [0.3, 2.2, 1.0, 0.6, 0.2], "armor": 0.02, "health": 0.1, "mana": 0.05, "dps": 3.0, "ranged_dps": 14.0, "block": 0.0, "hands": "two_hand" },
+		{ "stats": [0.2, 2.4, 0.8, 0.5, 0.1], "armor": 0.02, "health": 0.08, "mana": 0.05, "dps": 2.0, "ranged_dps": 16.0, "block": 0.0, "hands": "two_hand" },
+		{ "stats": [0.6, 2.4, 1.0, 0.4, 0.1], "armor": 0.03, "health": 0.1, "mana": 0.04, "dps": 5.0, "ranged_dps": 13.0, "block": 0.0, "hands": "two_hand" },
+	],
 	ClassicData.CharClass.PRIEST: [
 		{ "stats": [0.0, 0.0, 1.0, 2.0, 1.6], "armor": 0.02, "health": 0.08, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "off_hand" },
 		{ "stats": [0.0, 0.0, 0.8, 2.0, 2.0], "armor": 0.02, "health": 0.07, "mana": 0.15, "dps": 0.5, "block": 0.0, "hands": "off_hand" },
@@ -48,6 +56,7 @@ const WEIGHTS := {
 	ClassicData.CharClass.PALADIN: { "stats": [1.6, 0.8, 1.2, 1.2, 0.5], "armor": 0.05, "health": 0.1, "mana": 0.08, "dps": 7.0, "block": 0.3, "hands": "any" },
 	ClassicData.CharClass.PRIEST: { "stats": [0.0, 0.0, 1.0, 2.0, 1.6], "armor": 0.02, "health": 0.08, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "any" },
 	ClassicData.CharClass.SPELLSWORD: { "stats": [1.6, 0.8, 1.2, 1.4, 0.3], "armor": 0.05, "health": 0.1, "mana": 0.07, "dps": 9.0, "block": 0.3, "hands": "any" },
+	ClassicData.CharClass.HUNTER: { "stats": [0.4, 2.0, 1.0, 0.6, 0.2], "armor": 0.03, "health": 0.1, "mana": 0.05, "dps": 4.0, "ranged_dps": 14.0, "block": 0.0, "hands": "any" },
 }
 const DEFAULT_WEIGHTS := { "stats": [1.0, 1.0, 1.0, 1.0, 1.0], "armor": 0.04, "health": 0.1, "mana": 0.07, "dps": 5.0, "block": 0.2, "hands": "any" }
 ## How much a build favours its own weapon style: a matching set's score is
@@ -97,7 +106,9 @@ static func score(item: Dictionary, w: Dictionary) -> float:
 	var delay := int(item.get("delay", 0))
 	if int(item.get("dmg_max1", 0)) > 0 and delay > 0:
 		var dps := (float(item.dmg_min1) + float(item.dmg_max1)) / 2.0 / (delay / 1000.0)
-		total += dps * float(w.dps)
+		# A Ranger's build weighs its ranged weapon apart ("ranged_dps").
+		var ranged := int(item.get("class", -1)) == 2 and (1 << int(item.get("subclass", 0))) & Combatant.RANGED_SUBCLASSES != 0
+		total += dps * float(w.get("ranged_dps", w.dps) if ranged else w.dps)
 	total += float(item.get("block", 0)) * float(w.block)
 	return total
 

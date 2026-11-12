@@ -6,6 +6,8 @@ extends Node
 ## Must be a child of a PlayerUnit (the player or a playerbot), beside its
 ## Combatant; it reads the unit's profile.
 
+const AURA_MOD_RANGED_ATTACK_POWER := 124
+const AURA_MOD_RANGED_HASTE := 140
 const REGEN_TICK := 2.0
 ## The five-second rule: Spirit mana regen stops for this long after spending mana.
 const MANA_REGEN_DELAY := 5.0
@@ -95,6 +97,8 @@ func refresh() -> void:
 	# Final Stand adds health for a while (SPELL_AURA_MOD_INCREASE_HEALTH).
 	c.max_health = ClassicData.base_health(char_class, level) + health_from_stamina(stamina) + gear.health \
 		+ int(c.aura_total(SpellDB.AURA_MOD_INCREASE_HEALTH))
+	# Hardy raises maximum health (SPELL_AURA_MOD_INCREASE_HEALTH_PERCENT).
+	c.max_health = roundi(c.max_health * (1.0 + c.aura_total(SpellDB.AURA_MOD_INCREASE_HEALTH_PERCENT) / 100.0))
 	var base_mana := ClassicData.base_mana(char_class, level)
 	c.max_mana = base_mana + mana_from_intellect(intellect) + gear.mana if base_mana > 0 else 0
 	# Deep Mind raises maximum mana (SPELL_AURA_MOD_INCREASE_ENERGY_PERCENT).
@@ -130,14 +134,29 @@ func refresh() -> void:
 	# Player::UpdateAttackPowerAndDamage: level + Agility - 10 for fighters,
 	# twice that for Rangers, Agility - 10 for the rest).
 	c.ranged_weapon = gear.get("ranged", {})
-	c.ranged_attack_power = maxi(ranged_attack_power(char_class, level, agility), 0)
+	# Hawk Spirit and Sharpshooter's Aura (SPELL_AURA_MOD_RANGED_ATTACK_POWER),
+	# Quick Fire (SPELL_AURA_MOD_RANGED_HASTE).
+	c.ranged_attack_power = maxi(ranged_attack_power(char_class, level, agility) + roundi(c.aura_total(AURA_MOD_RANGED_ATTACK_POWER)), 0)
+	var ranged_haste := c.aura_total(AURA_MOD_RANGED_HASTE)
+	if not c.ranged_weapon.is_empty() and ranged_haste != 0.0:
+		c.ranged_weapon = c.ranged_weapon.duplicate()
+		c.ranged_weapon.speed = float(c.ranged_weapon.speed) / (1.0 + ranged_haste / 100.0)
+	# Keen Sight reaches further with Auto Shot too (its range modifier).
+	if not c.ranged_weapon.is_empty():
+		var reach := SpellMods.flat(c, SpellDB.get_spell(Combatant.AUTO_SHOT), SpellMods.RANGE)
+		if reach != 0.0:
+			c.ranged_weapon = c.ranged_weapon.duplicate()
+			c.ranged_weapon.range = float(c.ranged_weapon.range) + reach
 	# A weapon in the off hand (Two-Weapon Fighting) swings on its own.
 	var off: Dictionary = gear.get("off_weapon", {})
 	c.off_min_damage = float(off.get("min", 0.0))
 	c.off_max_damage = float(off.get("max", 0.0))
 	c.off_swing_interval = float(off.get("speed", 0.0)) / (1.0 + haste / 100.0) * haste_factor
 	# Fury Stance and Abandon add crit (SPELL_AURA_MOD_CRIT_PERCENT).
-	c.melee_crit = agility / _agility_rate(char_class, level, true) + c.aura_total(SpellDB.AURA_MOD_CRIT_PERCENT)
+	# Crit that needs a ranged weapon (Deadly Aim) is for ranged attacks only.
+	var ranged_only_crit := c.aura_total_ranged_only(SpellDB.AURA_MOD_CRIT_PERCENT)
+	c.melee_crit = agility / _agility_rate(char_class, level, true) + c.aura_total(SpellDB.AURA_MOD_CRIT_PERCENT) - ranged_only_crit
+	c.ranged_crit = c.melee_crit + ranged_only_crit
 	# Moon's Grace adds dodge.
 	c.dodge = BASE_DODGE.get(char_class, 0.0) + agility / _agility_rate(char_class, level, false) + c.aura_total(SpellDB.AURA_MOD_DODGE_PERCENT)
 	# Parry has to be trained, and players need a melee weapon to parry.

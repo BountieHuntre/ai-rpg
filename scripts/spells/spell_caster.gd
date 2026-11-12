@@ -10,6 +10,8 @@ extends Node
 signal failed(message: String)
 ## A spell was cast (its cast time done, or an instant), before its effects.
 signal spell_finished(spell: Dictionary)
+## A channel held to its end (Tame Beast tames on it).
+signal channel_completed(spell: Dictionary)
 
 ## Classic error messages.
 const ERR_NOT_READY := "Spell is not ready yet."
@@ -80,6 +82,8 @@ var _procs := SpellProcs.new()
 var _warrior := WarriorAbilities.new()
 ## The Spellsword's: forms, Edges, Resonance and Release.
 var _spellsword := SpellswordAbilities.new()
+## The Ranger's: shots, Spirits, traps, Still as Death, tracking.
+var _ranger := RangerAbilities.new()
 
 @onready var _unit: PlayerUnit = get_parent()
 
@@ -99,6 +103,8 @@ func _ready() -> void:
 	add_child(_warrior)
 	_spellsword.name = "SpellswordAbilities"
 	add_child(_spellsword)
+	_ranger.name = "RangerAbilities"
+	add_child(_ranger)
 	var talent_procs := TalentProcs.new()
 	talent_procs.name = "TalentProcs"
 	add_child(talent_procs)
@@ -131,7 +137,7 @@ func cast(id: int) -> void:
 	if id == SpellDB.ATTACK:
 		_toggle_attack()
 		return
-	if id == SpellDB.SHOOT:
+	if id == SpellDB.SHOOT or id == RangerAbilities.AUTO_SHOT:
 		toggle_shoot()
 		return
 	var spell := SpellDB.get_spell(id)
@@ -236,7 +242,7 @@ func _talent_crit(spell: Dictionary) -> float:
 ## Whether the current target is out of the spell's range, for the action bar.
 func out_of_range(id: int) -> bool:
 	var spell := SpellDB.get_spell(id)
-	if id == SpellDB.SHOOT:
+	if id == SpellDB.SHOOT or id == RangerAbilities.AUTO_SHOT:
 		var shot_at := _unit.enemy_target()
 		return shot_at != null and not _unit.combatant.ranged_weapon.is_empty() \
 			and _unit.combatant.distance_to(shot_at) > float(_unit.combatant.ranged_weapon.range)
@@ -267,8 +273,10 @@ func _physics_process(delta: float) -> void:
 		if _unit.is_moving() or not _unit.combatant.is_alive() or not held:
 			_stop_channel()
 		elif _cast_left <= 0.0:
+			var held_spell := casting
 			casting = {}
 			channeling = false
+			channel_completed.emit(held_spell)
 		return
 	if _unit.is_moving() or not _unit.combatant.is_alive():
 		casting = {}
@@ -278,7 +286,9 @@ func _physics_process(delta: float) -> void:
 	if _cast_left <= 0.0:
 		var spell := casting
 		casting = {}
-		var problem := _find_problem(spell, _cast_target, false)
+		# A quest item's spell checks its own needs (its target is the beast or
+		# grave QuestSpells found, not the caster the cast was held on).
+		var problem: String = QuestSpells.problem(_unit, spell) if _quest_spell == int(spell.Id) else _find_problem(spell, _cast_target, false)
 		if problem.is_empty():
 			_finish(spell, _cast_target)
 			_use_up_item()
@@ -385,6 +395,9 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 	var spellsword_problem := _spellsword.problem(spell, target)
 	if not spellsword_problem.is_empty():
 		return spellsword_problem
+	var ranger_problem: String = _ranger.problem(spell, target)
+	if not ranger_problem.is_empty():
+		return ranger_problem
 	# Shroud of Shadow shuts out Holy spells (Shadowform in classic).
 	if int(spell.get("School", 0)) == SpellDB.School.HOLY and _in_shroud():
 		return ERR_SHAPESHIFTED
@@ -499,7 +512,7 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell, _unit.combatant)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
-	if not _spellsword.cast(spell, target) and not _warrior.cast(spell, target):
+	if not _spellsword.cast(spell, target) and not _ranger.cast(spell, target) and not _warrior.cast(spell, target):
 		_cleric_spell(spell, target, extra_crit)
 	# Helpful spells that aren't heals (heals report their own) are events for
 	# procs too (Improved Last Rite, Improved Unbridled Rage).
@@ -879,11 +892,18 @@ func _use_quest_item(ref: Dictionary, item: Dictionary, spell: Dictionary) -> St
 	_quest_spell = int(spell.Id)
 	_quest_target = QuestSpells.find_target(_unit, spell)
 	_item_ref = ref if int(item.spellcharges_1) < 0 else {}
-	if SpellDB.cast_time(spell) > 0.0:
-		var err := _cast_item_spell(spell)
+	# Channelled ones (the taming rods) take their channel's time.
+	var time := SpellDB.cast_time(spell)
+	if time <= 0.0 and SpellDB.is_channeled(spell):
+		time = SpellDB.duration(spell)
+	if time > 0.0:
+		var err := _cast_item_spell(spell, null, time)
 		if not err.is_empty():
 			_item_ref = {}
 			_quest_spell = 0
+		elif _quest_target is Enemy:
+			# The beast turns on whoever is taming it.
+			(_quest_target as Enemy).provoke(_unit.combatant)
 		return err
 	_finish(spell, _unit.combatant)
 	_use_up_item()
@@ -893,7 +913,7 @@ func _use_quest_item(ref: Dictionary, item: Dictionary, spell: Dictionary) -> St
 ## Starts an item's cast-time spell on yourself, checking the spell's category
 ## cooldown (an hour for the Homing Token, from CategoryRecoveryTime) and the
 ## global cooldown. Moving interrupts it, as for any cast.
-func _cast_item_spell(spell: Dictionary, target: Combatant = null) -> String:
+func _cast_item_spell(spell: Dictionary, target: Combatant = null, time := -1.0) -> String:
 	if _item_cooldowns.get(_spell_category(spell), 0.0) > 0.0:
 		return ERR_ITEM_NOT_READY
 	if _gcd_left > 0.0:
@@ -909,10 +929,32 @@ func _cast_item_spell(spell: Dictionary, target: Combatant = null) -> String:
 	casting = spell
 	_unit.combatant.is_casting = true
 	_pushbacks = 0
-	_cast_left = SpellDB.cast_time(spell)
+	_cast_left = time if time >= 0.0 else SpellDB.cast_time(spell)
 	_cast_total = _cast_left
 	_cast_target = target if target else _unit.combatant
 	return ""
+
+
+## Starts the cooldown every known spell of a spell's category shares (the
+## Ranger's traps), as Player::AddSpellAndCategoryCooldowns.
+func start_category_cooldown(spell: Dictionary) -> void:
+	var category := int(spell.get("Category", 0))
+	var time := SpellDB.cooldown(spell, _unit.combatant)
+	if category == 0 or time <= 0.0:
+		return
+	for id: int in _unit.profile.known_spells:
+		if int(SpellDB.get_spell(id).get("Category", 0)) == category:
+			_cooldowns[id] = time
+
+
+## The Ranger's: their pet's record, and opening Beast Training.
+func ranger() -> RangerAbilities:
+	return _ranger
+
+
+## The Ranger's tracked creature type (Track Beasts...), or 0: the minimap shows them.
+func tracked_type() -> int:
+	return _ranger.tracked_type()
 
 
 ## Uses up one of the item whose spell just landed.

@@ -226,3 +226,36 @@ beast_color = Color(0.3, 0.3, 0.38, 1)
 beast_size = 0.55
 escort = 938
 race = "wood_elf"
+
+[node name="DarianThornshot" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2064, 6, -4352)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Darian Thornshot"
+subname = "Ranger Trainer"
+trainer = "hunter"
+appearance = {
+"body": 0
+}
+race = "wood_elf"
+
+[node name="LyssaFawnheart" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2058, 6, -4346)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Lyssa Fawnheart"
+subname = "Pet Trainer"
+trainer = "pet"
+appearance = {
+"body": 1
+}
+race = "wood_elf"
+
+[node name="SerenStarglade" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2072, 6, -4344)
+rotation = Vector3(0, 1.57080, 0)
+npc_name = "Seren Starglade"
+subname = "Stable Master"
+stable = true
+appearance = {
+"body": 0
+}
+race = "wood_elf"

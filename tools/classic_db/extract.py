@@ -234,7 +234,13 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
           # quest, 934, and the one to Darnassus left out); Druid of the Claw,
           # Mist, The Moss-twined Heart and Planting the Heart (Eldergrove).
           5441, 6394, 786, 6395, 754, 756, 758, 759, 760, 308, 310, 311,
-          920, 921, 928, 929, 933, 7383, 2561, 938, 927, 941]
+          920, 921, 928, 929, 933, 7383, 2561, 938, 927, 941,
+          # The Ranger's taming quests at level 10, each race's own: three
+          # Taming the Beast (a taming rod used on a beast of its second
+          # zone) and Training the Beast. Dwarves (Highpeak), Wood Elves
+          # (Eldergrove Isle), Orcs and Trolls (the Redsand Coast), Hornkin
+          # (the Tallgrass).
+          6064, 6084, 6085, 6086, 6063, 6101, 6102, 6103, 6062, 6083, 6082, 6081, 6061, 6087, 6088, 6089]
 # Game objects exported to gameobjects.json (gameobject_template): quest
 # givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
 # loot (type 3: Bundle of Wood), with their loot and usual respawn time.
@@ -263,31 +269,55 @@ GAMEOBJECTS = [55, 56, 176793,
 GO_TYPE_QUESTGIVER = 2
 GO_TYPE_CHEST = 3
 GO_TYPE_SPELL_FOCUS = 8
+GO_TYPE_TRAP = 6
+SPELL_EFFECT_SUMMON_OBJECT = 104
 
 # Class trainers whose spell lists are exported. 927 is Brother Wilhelm, Paladin
 # Trainer. Priests have racial spells, so their list merges one trainer per race
 # (race id: trainer): Brother Joshua (Human), Maxan Anvol (Dwarf), Astarii
 # Starseeker (Night Elf), Father Cobb (Undead) and Tai'jin (Troll). Entries that
 # not every one of them teaches get a "races" list.
-# 913 is Lyria Du Lac, Warrior Trainer.
-CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913}
+# 913 is Lyria Du Lac, Warrior Trainer. 3039 is Holt Thunderhorn, Hunter
+# Trainer (the Ranger's), whose list has every rank.
+CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913,
+                  "hunter": 3039}
 # Classic's weapon masters, whose lists the game's one Weapon Master joins
 # ("weapons"): Buliwyf Stonehand, Ilyenia Moonfire, Woo Ping, Sayoc,
 # Ansekhwa, Archibald, Bixi Wobblebonk and Hanashi. Each entry's "classes" is
 # the class mask that may learn it (weapon_skills.json, SkillRaceClassInfo).
 WEAPON_MASTERS = [11865, 11866, 11867, 11868, 11869, 11870, 13084, 2704]
 # Each class's skill lines in the order of its talent trees (SkillLine ids):
-# Arms, Fury, Protection; Holy, Protection, Retribution; Discipline, Holy,
-# Shadow Magic.
-CLASS_SKILL_LINES = {1: [26, 256, 257], 2: [594, 267, 184], 5: [613, 56, 78]}
+# Arms, Fury, Protection; Holy, Protection, Retribution; Beast Mastery,
+# Marksmanship, Survival; Discipline, Holy, Shadow Magic.
+CLASS_SKILL_LINES = {1: [26, 256, 257], 2: [594, 267, 184], 3: [50, 163, 51], 5: [613, 56, 78]}
 # Classes whose starting spells are exported: the ones with spell code in the game.
-SPELL_CLASSES = {1, 2, 5}  # Warrior, Paladin, Priest
+SPELL_CLASSES = {1, 2, 3, 5}  # Warrior, Paladin, Hunter, Priest
 # Each class's SpellFamilyName: start spells of other families (racials) are left out.
-CLASS_SPELL_FAMILIES = {1: 4, 2: 10, 5: 6}
+CLASS_SPELL_FAMILIES = {1: 4, 2: 10, 3: 9, 5: 6}
+# Spells left out of the game: Feed Pet (pets have no happiness here).
+LEFT_OUT_SPELLS = {6991}
+# Spells the pet trainer's list still names that classic 1.12 pets never
+# learned there: early patches' Pet Aggression and the like, and a GM charm.
+PET_TRAINER_LEFT_OUT = {"Pet Aggression", "Pet Hardiness", "Pet Recovery", "Pet Resistance", "Charm (Possess)"}
+# The Ranger's pets. Peria Lamenur, Pet Trainer: the abilities a Ranger buys
+# to teach (Growl, Great Stamina, Natural Armor, the resistances).
+PET_TRAINER = 2878
+# Hunter pets' stats by level are pet_levelstats' creature_entry 1
+# (Pet::InitStatsForLevel, HUNTER_PET); pet_familystats scales them by family.
+HUNTER_PET_STATS = 1
+# Pets' XP to the next level is the player's times this (PET_XP_FACTOR).
+PET_XP_FACTOR = 0.05
+# Hunter pet families (CreatureFamily ids): Wolf, Cat, Spider, Bear, Boar,
+# Crocolisk, Carrion Bird, Crab, Gorilla, Raptor, Tallstrider, Scorpid,
+# Turtle, Bat, Hyena, Owl and Wind Serpent (the warlock's Imp shares their
+# general skill line, so it's named here rather than found by it).
+PET_FAMILIES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 20, 21, 24, 25, 26, 27}
+# Families' game names (plain words kept).
+PET_FAMILY_NAMES = {"Scorpid": "Scorpion", "Tallstrider": "Tallbird", "Crocolisk": "Crocodile", "Carrion Bird": "Carrion Bird"}
 # Junk trainer rows: Lyria Du Lac lists Elemental Fury, a creature spell.
 SKIP_TRAINER_SPELLS = {877}
 # Starting spells worth keeping (the rest are passives and internals).
-START_SPELL_EFFECTS = {2, 6, 10, 17, 35, 77}
+START_SPELL_EFFECTS = {2, 6, 10, 17, 35, 58, 77}
 # Seal of Righteousness procs by rank, from UnitAuraProcHandler.cpp in CMaNGOS.
 SEAL_OF_RIGHTEOUSNESS_PROCS = {
     20154: 25742, 21084: 25741, 20287: 25740, 20288: 25739, 20289: 25738,
@@ -322,7 +352,17 @@ SPELL_LINKS = {
     # Talents: Deep Wounds' bleed (its dummy effect casts it), and Blessed
     # Recovery's heal per rank (UnitAuraProcHandler.cpp).
     12162: 12721, 27811: 27813, 27815: 27817, 27816: 27818,
+    # Ranger: Wyvern Sting's poison when its sleep ends, per rank (SpellAuras.cpp);
+    # Spirit Bond's aura on the pet and its owner (spell_pet_auras); Improved
+    # Mend Pet's cleanse (its ADD_TARGET_TRIGGER aura).
+    19386: 24131, 24132: 24134, 24133: 24135, 19578: 19579, 20895: 24529,
+    19572: 24406, 19573: 24406,
 }
+# The hidden passives every tamed hunter pet has (Pet::LearnPetPassives),
+# which the Ranger's pet talents change through spell modifiers on the
+# owner (Unleashed Fury, Endurance Training, Thick Hide, Bestial Swiftness,
+# Bestial Discipline, Ferocity, Frenzy).
+HUNTER_PET_PASSIVES = [8875, 19580, 19581, 19582, 19589, 19591, 20784]
 WEAKENED_SOUL = 6788
 # Judgement of Light and Wisdom heal or restore through a spell per rank, picked
 # in UnitAuraProcHandler.cpp (HandleDummyAuraProc), not linked in the data.
@@ -341,6 +381,7 @@ TABLES = {
     "spell_chain", "spell_bonus_data", "playercreateinfo_item", "quest_template", "spell_proc_event",
     "creature_ai_scripts", "creature_template_classlevelstats", "spell_affect",
     "gameobject_template", "gameobject", "gameobject_loot_template", "npc_vendor_template",
+    "pet_levelstats", "pet_familystats",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -377,6 +418,9 @@ CREATURE_FIELDS = [
     "MinLevelMana", "MaxLevelMana", "Armor", "MinMeleeDmg", "MaxMeleeDmg", "MeleeAttackPower",
     "MeleeBaseAttackTime", "Rank", "CreatureType", "Family", "LootId", "MinLootGold", "MaxLootGold",
     "SpeedWalk", "SpeedRun", "Faction", "ExtraFlags", "UnitClass", "CallForHelp",
+    # CreatureTypeFlags 0x1 is tameable by a Ranger; PetSpellDataId names the
+    # abilities it knows (CreatureSpellData, pet_families.json "spell_data").
+    "CreatureTypeFlags", "PetSpellDataId",
 ]
 ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",
@@ -582,6 +626,7 @@ def main(path):
             object_loot[loot_id] = loot_entries(object_loot_rows[loot_id])
             item_ids.update(entry["item"] for entry in object_loot[loot_id] if entry["min_or_ref"] >= 0)
     write("loot_tables.json", {"creature": creature_loot, "reference": references, "gameobject": object_loot})
+    export_pets(db, creatures)
     quests = export_quests(db)
     # No ammo in the game: quests that gave arrows or shot give nothing else instead.
     for quest in quests.values():
@@ -613,11 +658,50 @@ def main(path):
     write("characters.json", starting_characters(db, outfits, items, level_stats))
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
-    export_spells(db, item_spells | creature_spells(db))
+    export_spells(db, item_spells | creature_spells(db) | {s for q in quests.values() for s in q["learns"]})
+
+
+def export_pets(db, creatures):
+    """The Ranger's pets, into pets.json: stats by level (pet_levelstats for
+    hunter pets: health, armor, Strength, Agility, Stamina, Intellect,
+    Spirit), each family's health, damage and armour modifiers
+    (pet_familystats), its abilities (its skill lines' spells) and size, and
+    the abilities each exported creature knows (its PetSpellDataId)."""
+    with open(os.path.join(OUT_DIR, "pet_families.json"), encoding="utf8") as f:
+        client = json.load(f)
+    level_stats = [[int(r[k]) for k in ("hp", "armor", "str", "agi", "sta", "inte", "spi")]
+                   for r in sorted((r for r in db["pet_levelstats"] if int(r["creature_entry"]) == HUNTER_PET_STATS),
+                                   key=lambda r: int(r["level"]))]
+    modifiers = {r["family"]: [float(r["healthModifier"]), float(r["damageModifier"]), float(r["armorModifier"])]
+                 for r in db["pet_familystats"]}
+    spells = {r["Id"]: r for r in db["spell_template"]}
+    families = {}
+    for family_id, family in client["families"].items():
+        if int(family_id) not in PET_FAMILIES:
+            continue
+        abilities = set()
+        for line in family["skill_lines"]:
+            abilities.update(s for s in client["abilities"].get(str(line), [])
+                             if str(s) in spells and not spells[str(s)]["SpellName"].endswith("(DND)"))
+        families[family_id] = {
+            "name": PET_FAMILY_NAMES.get(family["name"], family["name"]),
+            "abilities": sorted(abilities),
+            "modifiers": modifiers.get(family_id, [1.0, 1.0, 1.0]),
+            "scale": [family["min_scale"], family["max_scale"]],
+        }
+    known = {}
+    for creature in creatures.values():
+        data_id = str(creature.get("PetSpellDataId", 0))
+        if data_id != "0" and data_id in client["spell_data"]:
+            known[data_id] = client["spell_data"][data_id]
+    write("pets.json", {"level_stats": level_stats, "families": families, "spell_data": known,
+                        "xp_factor": PET_XP_FACTOR})
+    print(f"{len(families)} pet families, {len(level_stats)} pet levels")
 
 
 def export_quests(db):
     """The rules of each quest in QUESTS, from quest_template."""
+    spells = {r["Id"]: r for r in db["spell_template"]}
     quests = {}
     for r in db["quest_template"]:
         if int(r["entry"]) not in QUESTS:
@@ -651,8 +735,15 @@ def export_quests(db):
             "money": int(r["RewOrReqMoney"]), "money_max_level": int(r["RewMoneyMaxLevel"]),
             "source_item": int(r["SrcItemId"]),
             # RequiredRaces: the races (bits by race id - 1) that may take
-            # it, 0 for all (QuestLog.race_allowed).
+            # it, 0 for all (QuestLog.race_allowed); RequiredClasses the
+            # same for classes (the Ranger's taming quests).
             "races": int(r["RequiredRaces"]),
+            "classes": int(r["RequiredClasses"]),
+            # Spells handing it in teaches (RewSpellCast's Learn Spell
+            # effects: Tame Beast, Call Pet...), less Feed Pet (no happiness).
+            "learns": [int(spells[r["RewSpellCast"]][f"EffectTriggerSpell{i}"]) for i in (1, 2, 3)
+                       if r["RewSpellCast"] in spells and int(spells[r["RewSpellCast"]][f"Effect{i}"]) == SPELL_EFFECT_LEARN
+                       and int(spells[r["RewSpellCast"]][f"EffectTriggerSpell{i}"]) not in LEFT_OUT_SPELLS],
         }
     missing = set(map(str, QUESTS)) - set(quests)
     if missing:
@@ -756,6 +847,20 @@ def export_spells(db, item_spells):
     for entry in weapons.values():
         wanted.update(entry["spells"])
     trainers["weapons"] = sorted(weapons.values(), key=lambda e: (e["level"], e["spells"][0]))
+    # The pet trainer, and every pet family's abilities (pet_families.json,
+    # from fetch_client_tables.py): their spells go out with the rest.
+    trainers["pet"] = sorted((dict(entry, pet=True) for entry in trainer_entries(PET_TRAINER).values()
+                              if spells[str(entry["spells"][0])]["SpellName"] not in PET_TRAINER_LEFT_OUT),
+                             key=lambda e: (e["level"], e["spells"][0]))
+    for entry in trainers["pet"]:
+        wanted.update(entry["spells"])
+    with open(os.path.join(OUT_DIR, "pet_families.json"), encoding="utf8") as f:
+        pet_families = json.load(f)
+    pet_lines = {str(line) for family_id, family in pet_families["families"].items() if int(family_id) in PET_FAMILIES
+                 for line in family["skill_lines"]}
+    for line in pet_lines:
+        wanted.update(s for s in pet_families["abilities"].get(line, [])
+                      if str(s) in spells and not spells[str(s)]["SpellName"].endswith("(DND)"))
 
     # Talent trees (data/classic/talents.json, from fetch_client_tables.py) of
     # the classes with spells: every rank's spell, and the trees renamed.
@@ -786,13 +891,24 @@ def export_spells(db, item_spells):
                 start.setdefault(f'{r["race"]}-{r["class"]}', []).append(int(r["Spell"]))
                 wanted.add(int(r["Spell"]))
 
-    # Follow triggered spells, seal procs and seal judgements.
+    wanted.update(HUNTER_PET_PASSIVES)
+    # Follow triggered spells, seal procs and seal judgements; and the trap
+    # objects the Ranger's traps set (Summon Object, 104: gameobject_template
+    # type 6, data2 its radius, data3 the spell it fires), their spells too.
+    objects = {r["entry"]: r for r in db["gameobject_template"]}
+    traps = {}
     pending = list(wanted)
     while pending:
         spell = spells.get(str(pending.pop()))
         if not spell:
             continue
         linked = [int(spell[f"EffectTriggerSpell{i}"]) for i in (1, 2, 3)]
+        for i in (1, 2, 3):
+            if int(spell[f"Effect{i}"]) == SPELL_EFFECT_SUMMON_OBJECT:
+                trap = objects.get(spell[f"EffectMiscValue{i}"])
+                if trap and int(trap["type"]) == GO_TYPE_TRAP:
+                    traps[str(trap["entry"])] = {"spell": int(trap["data3"]), "radius": float(trap["data2"])}
+                    linked.append(int(trap["data3"]))
         spell_id = int(spell["Id"])
         if spell_id in SEAL_OF_RIGHTEOUSNESS_PROCS:
             linked.append(SEAL_OF_RIGHTEOUSNESS_PROCS[spell_id])
@@ -853,6 +969,8 @@ def export_spells(db, item_spells):
                           "judgement_procs": {str(k): v for k, v in JUDGEMENT_PROC_SPELLS.items()},
                           "holy_shock": {str(k): v for k, v in HOLY_SHOCK_SPELLS.items()},
                           "links": {str(k): v for k, v in SPELL_LINKS.items()},
+                          "traps": traps,
+                          "pet_passives": HUNTER_PET_PASSIVES,
                           "seal_of_righteousness_procs": {str(k): v for k, v in SEAL_OF_RIGHTEOUSNESS_PROCS.items()}})
     print(f"{len(out)} spells, {sum(len(t) for t in trainers.values())} trainer entries, start spells {start}")
 

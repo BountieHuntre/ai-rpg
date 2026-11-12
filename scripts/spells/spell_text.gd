@@ -42,6 +42,9 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 	var man_at_arms := _man_at_arms(name, spell, t)
 	if not man_at_arms.is_empty():
 		return man_at_arms
+	var ranger := _ranger(name, spell, t, level)
+	if not ranger.is_empty():
+		return ranger
 	match name:
 		"Attack":
 			return "Toggles melee attack on your target."
@@ -299,6 +302,110 @@ static func _cleric(name: String, spell: Dictionary, t: _Values) -> String:
 
 
 ## Man-at-Arms abilities, or "" for other names.
+## The Ranger's spells (classic's Hunter's).
+static func _ranger(name: String, spell: Dictionary, t: _Values, level: int) -> String:
+	if name.begins_with("Track "):
+		var kind := name.trim_prefix("Track ").to_lower()
+		if kind == "hidden":
+			return "Lets you see hidden enemies more easily. Only one tracking can be active at a time."
+		return "Shows nearby %s on the minimap. Only one tracking can be active at a time." % kind
+	if RangerAbilities.is_trap(spell):
+		var trap := _Values.new({}, level)
+		for i in 3:
+			if int(spell.get("Effect%d" % (i + 1), 0)) == RangerAbilities.EFFECT_SUMMON_OBJECT:
+				trap = _Values.new(SpellDB.get_spell(int(SpellDB.trap(int(spell.get("EffectMiscValue%d" % (i + 1), 0))).get("spell", 0))), level)
+		var lasts := "Traps last 1 min and can only be set out of combat. Only one trap can be set at a time."
+		match name:
+			"Burning Trap":
+				return "Sets a trap that sets the first enemy to come near ablaze, dealing %s Fire damage over %s. %s" % [trap.over_time(0), trap.duration(), lasts]
+			"Frostbind Trap":
+				return "Sets a trap that freezes the first enemy to come near solid for up to %s. Any damage breaks the ice. %s" % [trap.duration(), lasts]
+			"Rime Trap":
+				return "Sets a trap that covers the ground in ice when an enemy comes near, slowing every enemy on it by %s%% for %s. %s" % [trap.magnitude(0), trap.duration(), lasts]
+			"Blast Trap":
+				return "Sets a trap that explodes when an enemy comes near, dealing %s Fire damage to enemies around it and %s more over %s. %s" % [trap.amount(0), trap.over_time(1), trap.duration(), lasts]
+	match name:
+		"Auto Shot":
+			return "Shoots your target with your ranged weapon again and again until you stop. You must stand still to shoot, and be at least 8 yards away."
+		"Talon Strike":
+			return "Your next melee swing deals %s more damage." % t.amount(0)
+		"Hawk Spirit":
+			return "Takes on the spirit of the hawk, raising your ranged attack power by %s. Only one Spirit can be active at a time." % t.amount(0)
+		"Monkey Spirit":
+			return "Takes on the spirit of the monkey, raising your chance to dodge by %s%%. Only one Spirit can be active at a time." % t.amount(0)
+		"Cheetah Spirit":
+			return "Takes on the spirit of the cheetah, raising your run speed by %s%%. Being hit dazes you. Only one Spirit can be active at a time." % t.amount(0)
+		"Pack Spirit":
+			return "Takes on the spirit of the pack, raising the run speed of you and your party within 20 yards by %s%%. Anyone hit is dazed. Only one Spirit can be active at a time." % t.amount(0)
+		"Beast Spirit":
+			return "Takes on the spirit of the beast: beasts can't track you, and your melee attacks do more damage to them. Only one Spirit can be active at a time."
+		"Wild Spirit":
+			return "Takes on the spirit of the wild, raising the Nature resistance of you and your party within 20 yards by %s. Only one Spirit can be active at a time." % t.amount(0)
+		"Adder Sting":
+			return "Stings the target, dealing %s Nature damage over %s. Only one Sting per Ranger can be active on a target." % [t.over_time(0), t.duration()]
+		"Stinger Venom":
+			return "Stings the target, lowering its Strength and Agility by %s for %s. Only one Sting per Ranger can be active on a target." % [t.magnitude(0), t.duration()]
+		"Asp Sting":
+			return "Stings the target, draining %s mana over %s and giving you half. Only one Sting per Ranger can be active on a target." % [t.over_time(0), t.duration()]
+		"Drake Sting":
+			# The sleep, or the poison that follows it (its linked spell).
+			if SpellDB.has_effect(spell, SpellDB.AURA_PERIODIC_DAMAGE, true):
+				return "Poisoned: %s Nature damage over %s." % [t.over_time(0), t.duration()]
+			var poison := _Values.new(SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id))), level)
+			return "Stings the target, putting it to sleep for %s. Any damage wakes it. When it wakes, a poison deals %s Nature damage over %s. Can't be used in combat." % [t.duration(), poison.over_time(0), poison.duration()]
+		"Quarry's Mark":
+			return "Marks an enemy for %s. Anyone shooting at it has %s more ranged attack power against it." % [t.duration(), t.amount(1)]
+		"Glimmer Shot":
+			return "An instant shot that deals %s Arcane damage." % t.amount(0)
+		"Hobbling Shot":
+			return "Hobbles the target, slowing its movement by %s%% for %s." % [t.magnitude(0), t.duration()]
+		"Careful Shot":
+			return "A slow, careful shot that deals %s more damage than a normal shot." % t.amount(0)
+		"Spread Shot":
+			return "Fires several arrows at once, hitting the target and up to two enemies near it, each for %s more damage than a normal shot." % t.amount(0)
+		"Taunting Shot":
+			return "A shot that does no damage but draws a great deal of threat (%s) from the target." % t.amount(0)
+		"Scattering Shot":
+			return "A short-range shot that deals %s%% weapon damage and confuses the target for %s. Any damage ends it." % [t.amount(0), t.duration()]
+		"Arrow Rain":
+			return "Rains arrows on the target's ground, dealing %s Arcane damage to every enemy there each second for %s while you channel." % [t.amount(0), t.duration()]
+		"Crippling Cut":
+			return "Strikes an enemy, slowing its movement by %s%% for %s." % [t.magnitude(0), t.duration()]
+		"Weasel Bite":
+			return "A strike for %s damage, which you can use only after the enemy dodges." % t.amount(0)
+		"Counterattack":
+			return "A strike for %s damage that roots the enemy for %s, which you can use only after you parry." % [t.amount(0), t.duration()]
+		"Break Away":
+			return "Tries to break away from the enemy in melee, lowering your threat with it by %s." % t.magnitude(0)
+		"Still as Death":
+			return "You drop to the ground, still as death. Enemies forget you and turn away, until you move. Lasts up to %s." % t.duration()
+		"Quick Fire":
+			return "Fires faster: your ranged attacks are %s%% quicker for %s." % [t.amount(0), t.duration()]
+		"Frighten Beast":
+			return "Scares a beast, making it flee for up to %s. Damage may break the effect." % t.duration()
+		"Creature Lore":
+			return "Studies a beast, learning what it is and what it can do."
+		"Distant Gaze":
+			return "Sends your sight far out over the land for up to %s. Moving brings it back." % t.duration()
+		"Flare":
+			return "Lights up the area with a burst of fire, showing anything hiding there."
+		"Sharpshooter's Aura":
+			return "Raises your attack power and ranged attack power by %s." % t.amount(0)
+		"Menace":
+			if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+				return "Stunned."
+			return "Your pet's next hit within %s stuns its target for 3 sec and draws its attention." % t.duration()
+		"Beast Fury":
+			return "Sends your pet into a fury for %s: it deals %s%% more damage and can't be stunned." % [t.duration(), t.amount(1)]
+		"Slipstep":
+			return "Raises your chance to dodge and parry by %s%% for %s." % [t.amount(0), t.duration()]
+		"Frenzied Strikes":
+			return "Attack speed raised by %s%%." % t.amount(0)
+		"Quick Shots":
+			return "Ranged attack speed raised by %s%%." % t.amount(0)
+	return ""
+
+
 static func _man_at_arms(name: String, spell: Dictionary, t: _Values) -> String:
 	var lasts := t.duration()
 	match name:

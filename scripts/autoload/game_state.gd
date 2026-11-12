@@ -76,6 +76,13 @@ var action_bar: Array[int] = []
 var party: Array[String] = []
 ## The friends list (the Social window): player names.
 var friends: Array[String] = []
+## A Ranger's pet (Pet.record: PetDB.new_record, with "out" while called),
+## its stabled pets, the stable slots bought, and the pet abilities the Ranger
+## can teach (from taming beasts and the pet trainer).
+var pet: Dictionary = {}
+var stable: Array = []
+var stable_slots := 0
+var pet_spells: Array[int] = []
 
 ## The current character's save file; empty until one is picked.
 var save_path := ""
@@ -321,6 +328,10 @@ func save_to_disk() -> bool:
 		"quests_done": quests_done,
 		"party": party,
 		"friends": friends,
+		"pet": _live_pet_record(),
+		"stable": stable,
+		"stable_slots": stable_slots,
+		"pet_spells": pet_spells,
 	}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
@@ -354,6 +365,14 @@ func reset_character() -> void:
 	save_to_disk()
 
 
+## The pet's record as it is now: the live pet's, when it's out.
+func _live_pet_record() -> Dictionary:
+	var player := get_tree().get_first_node_in_group("player") as PlayerUnit if is_inside_tree() else null
+	if player and player.pet and is_instance_valid(player.pet):
+		pet = player.pet.saved_record()
+	return pet
+
+
 func _start_fresh() -> void:
 	level = 1
 	xp = 0
@@ -364,6 +383,10 @@ func _start_fresh() -> void:
 	quests_done.clear()
 	party.clear()
 	friends.clear()
+	pet = {}
+	stable = []
+	stable_slots = 0
+	pet_spells.clear()
 	buyback.clear()
 	_reset_items()
 	Inventory.start_character(self)
@@ -394,12 +417,28 @@ func _apply_save(data: Dictionary) -> void:
 	quests = {}
 	var saved_quests: Dictionary = data.get("quests", {})
 	for id: String in saved_quests:
-		quests[int(id)] = { "kills": saved_quests[id].kills.map(func(count: float) -> int: return int(count)) }
-		if saved_quests[id].has("explored"):
-			quests[int(id)].explored = bool(saved_quests[id].explored)
+		var saved: Dictionary = saved_quests[id]
+		quests[int(id)] = {
+			"kills": saved.kills.map(func(count: float) -> int: return int(count)),
+			# Objects used and spells cast on things (QuestLog.credit_object).
+			"objects": saved.get("objects", []).map(func(count: float) -> int: return int(count)),
+		}
+		if saved.has("explored"):
+			quests[int(id)].explored = bool(saved.explored)
+		# Events, time left and failure (QuestLog.complete_event, tick, fail).
+		if saved.has("event"):
+			quests[int(id)].event = bool(saved.event)
+		if saved.has("time_left"):
+			quests[int(id)].time_left = float(saved.time_left)
+		if saved.get("failed", false):
+			quests[int(id)].failed = true
 	quests_done.assign(data.get("quests_done", []).map(func(id: float) -> int: return int(id)))
 	party.assign(data.get("party", []))
 	friends.assign(data.get("friends", []))
+	pet = data.get("pet", {}) if data.get("pet") is Dictionary else {}
+	stable = data.get("stable", [])
+	stable_slots = int(data.get("stable_slots", 0))
+	pet_spells.assign(data.get("pet_spells", []).map(func(id: float) -> int: return int(id)))
 	# Saves from before spells existed start with the class's starting spells.
 	if data.has("spells"):
 		known_spells.assign(data.spells.map(func(id: float) -> int: return int(id)))

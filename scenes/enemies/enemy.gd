@@ -480,7 +480,8 @@ func _physics_process(delta: float) -> void:
 			if _aggro_left <= 0.0 and is_aggressive():
 				_aggro_left = AGGRO_CHECK
 				for unit: PlayerUnit in _units_near():
-					if unit.combatant.is_alive() and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):
+					if unit.combatant.is_alive() and not unit.combatant.is_feigning_death() \
+							and global_position.distance_to(unit.global_position) <= aggro_radius(unit.combatant.level):
 						add_threat(unit.combatant, 0.0)
 						_start_chase(unit.combatant)
 						break
@@ -1210,7 +1211,8 @@ func _on_attacked(source: Combatant, damage: int) -> void:
 	if source == null or not source.is_player or state == State.RETURN or state == State.DEAD:
 		return
 	if tapped_by == null or not is_instance_valid(tapped_by):
-		tapped_by = source
+		# A pet taps for its owner.
+		tapped_by = source.owner_combatant if source.owner_combatant and is_instance_valid(source.owner_combatant) else source
 	# Stances change how much threat damage causes.
 	add_threat(source, float(damage) * source.threat_multiplier(combatant.last_hit_school))
 	if state == State.IDLE:
@@ -1356,6 +1358,7 @@ func _process(delta: float) -> void:
 
 
 func _respawn() -> void:
+	visible = true
 	global_position = _home
 	_wander_target = _home
 	velocity = Vector3.ZERO
@@ -1372,6 +1375,21 @@ func _respawn() -> void:
 	state = State.IDLE
 	if ai:
 		ai.on_spawn()
+
+
+## Tamed by a Ranger: it leaves the world (it is their pet now), and a new
+## one comes at its respawn time, with no corpse, loot or XP.
+func vanish() -> void:
+	state = State.DEAD
+	threat.clear()
+	tapped_by = null
+	_victim = null
+	combatant.attack_target = null
+	collision_layer = 0
+	visible = false
+	if ai:
+		ai.on_leave_combat()
+	respawn_at = Time.get_unix_time_from_system() + respawn_time
 
 
 ## Gold cubes over a corpse that still has loot, standing in for WoW's sparkles.
@@ -1393,3 +1411,8 @@ func _build_sparkle() -> Node3D:
 	sparkle.visible = false
 	add_child(sparkle)
 	return sparkle
+
+
+## Its classic CreatureType (1 beast ... 7 humanoid).
+func creature_type() -> int:
+	return int(_data.get("CreatureType", 7))

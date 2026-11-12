@@ -52,7 +52,7 @@ static func roll_ranged(attacker: Combatant, victim: Combatant) -> Outcome:
 	return _roll([
 		[Outcome.MISS, miss_chance(attacker, victim, true)],
 		[Outcome.BLOCK, block_chance(attacker, victim)],
-		[Outcome.CRIT, melee_crit_chance(attacker, victim)],
+		[Outcome.CRIT, melee_crit_chance(attacker, victim, true)],
 	])
 
 
@@ -163,15 +163,16 @@ static func glance_multiplier(attacker: Combatant, victim: Combatant) -> float:
 	return randi_range(roundi(low * 100), roundi(high * 100)) * 0.01
 
 
-static func melee_crit_chance(attacker: Combatant, victim: Combatant) -> float:
-	if attacker.melee_crit < 0.005:
+static func melee_crit_chance(attacker: Combatant, victim: Combatant, ranged := false) -> float:
+	var base := attacker.ranged_crit if ranged and attacker.ranged_crit >= 0.0 else attacker.melee_crit
+	if base < 0.005:
 		return 0.0
 	var difference := attacker.max_skill() - victim.defense_skill()
 	if not victim.is_player:
 		difference = attacker.weapon_skill() - victim.defense_skill()
 	# Crit suppression: against NPCs each level of difference is 1% crit.
 	var factor := 0.04 if victim.is_player else 0.2
-	return clampf(attacker.melee_crit + difference * factor, 0.0, 100.0)
+	return clampf(base + difference * factor, 0.0, 100.0)
 
 
 ## NPCs crushing players whose defense is 15 or more below their weapon skill.

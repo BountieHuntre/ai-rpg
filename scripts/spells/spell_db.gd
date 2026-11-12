@@ -87,6 +87,12 @@ const AURA_PROC_TRIGGER_DAMAGE := 43
 const AURA_MOD_BLOCK_PERCENT := 51
 const AURA_MOD_ATTACK_POWER := 99
 const AURA_MOD_TOTAL_STAT_PERCENTAGE := 137
+const AURA_MOD_INCREASE_HEALTH_PERCENT := 133
+const AURA_MOD_POWER_REGEN_PERCENT := 110
+## Monster Hunter and Manhunter: damage and crit damage against creature
+## types (misc value a mask of 1 << (CreatureType - 1)).
+const AURA_MOD_DAMAGE_DONE_VERSUS := 168
+const AURA_MOD_CRIT_DAMAGE_VERSUS := 169
 const AURA_MOD_MELEE_HASTE := 138
 const AURA_RESIST_PUSHBACK := 149
 ## Food (health) and drink (mana per 5 seconds).
@@ -107,6 +113,8 @@ const EFFECT_TRIGGER_SPELL := 64
 ## Spell power types: mana, rage, and health (Blood Fury costs health).
 const POWER_MANA := 0
 const POWER_RAGE := 1
+## Pets' focus (their abilities' cost).
+const POWER_FOCUS := 2
 const POWER_HEALTH := 4294967294
 const EFFECT_POWER_BURN := 62
 ## AuraInterruptFlags: the aura ends when the unit takes damage.
@@ -159,7 +167,7 @@ const AURA_MOD_SHAPESHIFT := 36
 ## 305, 467, 468 (14, 22 and 26 s: Ground Slam), and range 95 (8 to 25 yards).
 ## Harrowfield adds duration 205 (27 s: its finer food and drink) and range
 ## 12 (5 yards, Interact Range: Grunmaw's Head Butt).
-const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 7: 10.0, 14: 3.0, 16: 1.5, 19: 2.5, 20: 2.5, 22: 3.5 }
+const CAST_TIMES := { 1: 0.0, 4: 1.0, 5: 2.0, 6: 5.0, 7: 10.0, 14: 3.0, 16: 1.5, 19: 2.5, 20: 2.5, 22: 3.5 }
 ## -1 means until cancelled.
 const DURATIONS := {
 	0: 0.0, 1: 10.0, 3: 60.0, 4: 120.0, 5: 300.0, 6: 600.0, 8: 15.0, 36: 1.0, 105: 9.0, 305: 14.0, 467: 22.0, 468: 26.0, 9: 30.0, 18: 20.0, 21: -1.0, 25: 180.0, 27: 3.0,
@@ -167,9 +175,10 @@ const DURATIONS := {
 	86: 21.0, 106: 24.0, 205: 27.0, 347: 900.0,
 }
 ## The Spellsword's own: 901 (25 yards: Hurl Blade), 902 (8 to 20 yards: Phase Step).
-const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 12: 5.0, 13: 50000.0, 35: 35.0, 95: 25.0, 901: 25.0, 902: 20.0 }
+## 114: the Ranger's shots and stings, 8 to 35 yards (SpellRange.dbc).
+const RANGES := { 1: 0.0, 2: 5.0, 3: 20.0, 4: 30.0, 5: 40.0, 6: 100.0, 7: 10.0, 11: 15.0, 12: 5.0, 13: 50000.0, 35: 35.0, 95: 25.0, 114: 35.0, 901: 25.0, 902: 20.0 }
 ## Least ranges: Rush needs room to run.
-const MIN_RANGES := { 95: 8.0, 902: 8.0 }
+const MIN_RANGES := { 95: 8.0, 114: 8.0, 902: 8.0 }
 const RADII := { 0: 0.0, 7: 2.0, 9: 20.0, 10: 30.0, 12: 100.0, 13: 10.0, 14: 8.0 }
 
 static var _data: Dictionary
@@ -200,6 +209,9 @@ static func effect_value(spell: Dictionary, effect: int, caster_level: int, cast
 	if caster == null:
 		return value
 	value = SpellMods.apply(caster, spell, SpellMods.ALL_EFFECTS, value)
+	# Trailblazing: speed auras' speed.
+	if int(spell.get("EffectApplyAuraName%d" % (effect + 1), 0)) == AURA_MOD_INCREASE_SPEED:
+		value = SpellMods.apply(caster, spell, SpellMods.SPEED, value)
 	if int(spell.get("EffectApplyAuraName%d" % (effect + 1), 0)) == AURA_MOD_ATTACK_POWER:
 		value = SpellMods.apply(caster, spell, SpellMods.ATTACK_POWER, value)
 	return value
@@ -257,9 +269,23 @@ static func stance_form(spell: Dictionary) -> int:
 	return 0
 
 
-## Spells on the stance bar: Presences, stances and forms.
+## Spells on the stance bar: Presences, Spirits, stances and forms.
 static func is_stance_bar_spell(spell: Dictionary) -> bool:
-	return is_paladin_aura(spell) or stance_form(spell) != 0
+	return is_paladin_aura(spell) or is_aspect(spell) or stance_form(spell) != 0
+
+
+## The Ranger's Spirits (classic's Aspects): one at a time.
+const ASPECTS := ["Hawk Spirit", "Monkey Spirit", "Cheetah Spirit", "Pack Spirit", "Beast Spirit", "Wild Spirit"]
+
+
+static func is_aspect(spell: Dictionary) -> bool:
+	return str(spell.get("SpellName", "")) in ASPECTS
+
+
+## A trap object's spell and radius (spells.json "traps", from
+## gameobject_template), by object entry: { "spell", "radius" }, or {}.
+static func trap(entry: int) -> Dictionary:
+	return _get_data().get("traps", {}).get(str(entry), {})
 
 
 ## Mana cost, either flat or a percentage of the caster's base mana.
@@ -401,6 +427,7 @@ const TRAINER_CLASSES := {
 	"warrior": ClassicData.CharClass.WARRIOR,
 	"paladin": ClassicData.CharClass.PALADIN,
 	"priest": ClassicData.CharClass.PRIEST,
+	"hunter": ClassicData.CharClass.HUNTER,
 	"spellsword": ClassicData.CharClass.SPELLSWORD,
 }
 
@@ -422,6 +449,8 @@ static func trainer_list(trainer: String, race := 0, char_class := 0) -> Array:
 ## The Weapon Master's trainer, which teaches every class the weapon skills
 ## it may learn (classic's weapon masters joined).
 const WEAPON_TRAINER := "weapons"
+## The pet trainer's list: abilities a Ranger learns to teach their pet.
+const PET_TRAINER := "pet"
 
 
 ## A weapon skill (One-Handed Swords...): taught by the Weapon Master, and
@@ -462,6 +491,14 @@ static func classes_with_spells() -> Array:
 
 
 ## Linked spell another spell casts (Holy Nova's heal, Touch of Weakness's damage...), or 0.
+## The hidden passives every tamed pet has (spells.json "pet_passives").
+static func pet_passives() -> Array[int]:
+	var ids: Array[int] = []
+	for id in _get_data().get("pet_passives", []):
+		ids.append(int(id))
+	return ids
+
+
 static func linked_spell(id: int) -> int:
 	return int(_get_data().get("links", {}).get(str(id), 0))
 

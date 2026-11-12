@@ -41,6 +41,8 @@ static func can_take(id: int) -> bool:
 		return false
 	if int(quest.min_level) > GameState.level or not QuestDB.race_allowed(quest, GameState.race):
 		return false
+	if not QuestDB.class_allowed(quest, GameState.char_class):
+		return false
 	# PrevQuestId: a quest to have done first, or, negative, one to have
 	# underway (CMaNGOS's rule; Finding the Antidote while Need for a Cure is).
 	var prev := int(quest.prev)
@@ -344,6 +346,9 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 	for reward: Array in rewards:
 		Inventory.add_item(int(reward[0]), int(reward[1]))
 	GameState.money += int(quest.money)
+	# Spells it teaches (the Ranger's Tame Beast and Beast Training).
+	for name in SpellCaster.learn(quest.get("learns", [])):
+		GameState.quest_message.emit("You have learned a new spell: %s." % name)
 	_remember_item_counts()
 	GameState.quest_message.emit("%s completed." % quest.title)
 	if progression and xp > 0:

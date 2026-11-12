@@ -12,6 +12,8 @@ extends Control
 ## it's for. Sizes are in HUD units times ui_scale.
 
 ## Diameter in HUD units, and the gap to the screen's top right corner.
+## Tracked creatures' dots (the Ranger's Track Beasts...).
+const TRACKED_COLOR := Color(1.0, 0.85, 0.3)
 const SIZE := 72.0
 const MARGIN := 4.0
 ## Room above the map for the zone name.
@@ -226,6 +228,20 @@ func _draw_overlay() -> void:
 		var rank := " (Boss)" if enemy.boss else " (Elite)" if enemy.elite else ""
 		_hotspots.append([at, radius + 2.0 * _ui_scale, [[enemy.combatant.display_name, "", SPAWNED_COLOR if alive else GREY],
 			["Level %s%s" % ["??" if enemy.boss else str(enemy.level), rank], "" if alive else "Dead", Color.WHITE]]])
+	# The Ranger's tracking (Track Beasts...): creatures of the tracked type on
+	# the map, as yellow-edged dots; hover for which.
+	var tracked: int = _player.spells.tracked_type() if _player.spells else 0
+	if tracked != 0:
+		for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy.temporary or not enemy.combatant.is_alive() or int(Enemy.creature_data(enemy.creature_entry).get("CreatureType", 0)) != tracked:
+				continue
+			var offset := Vector2(enemy.global_position.x, enemy.global_position.z) - here
+			if offset.length() > view:
+				continue
+			var at := center + offset * scale
+			_overlay.draw_circle(at, 2.0 * _ui_scale, Color.BLACK)
+			_overlay.draw_circle(at, 1.5 * _ui_scale, TRACKED_COLOR)
+			_hotspots.append([at, 3.0 * _ui_scale, [[enemy.combatant.display_name, "", TRACKED_COLOR], ["Level %d" % enemy.level, "", Color.WHITE]]])
 	# Party members: blue dots, on the rim when off the map.
 	for bot in Party.members:
 		if not is_instance_valid(bot):

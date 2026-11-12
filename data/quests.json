@@ -1783,5 +1783,161 @@
 		"objectives": "Plant the Tainted Heart in Denalor's Planter.",
 		"progress": "",
 		"completion": "You bury the heart in the planter's earth. A green shoot pushes up through the soil almost at once."
+	},
+	"6064": {
+		"title": "Taming the Beast",
+		"giver": "HildaIronsight",
+		"ender": "HildaIronsight",
+		"details": "You've learned to shoot and to track; now it's time you learned what makes a Ranger a Ranger. A beast at your side.\n\nTake this taming rod and find the large crag boars that roam east and south of Kettlefold. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Large Crag Boar until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the large crag boar yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Large Crag Boar tamed"
+	},
+	"6084": {
+		"title": "Taming the Beast",
+		"giver": "HildaIronsight",
+		"ender": "HildaIronsight",
+		"details": "Take this taming rod and find the snow leopards on the slopes south of Kettlefold. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Snow Leopard until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the snow leopard yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Snow Leopard tamed"
+	},
+	"6085": {
+		"title": "Taming the Beast",
+		"giver": "HildaIronsight",
+		"ender": "HildaIronsight",
+		"details": "Take this taming rod and find the ice claw bears in the eastern pines. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Ice Claw Bear until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the ice claw bear yet?",
+		"completion": "Well done. You have the knack of it, and now you can tame a beast of your own, any you can match. Call it to your side, send it away, and bring it back when it falls.",
+		"event": "Ice Claw Bear tamed"
+	},
+	"6086": {
+		"title": "Training the Beast",
+		"giver": "HildaIronsight",
+		"ender": "BrandtFurmantle",
+		"details": "A pet that knows only what it knew in the wild is half a pet. Brandt Furmantle, the pet trainer here in Kettlefold, can teach you how to teach it more.\n\nGo and see them.",
+		"objectives": "Speak with the pet trainer in Kettlefold.",
+		"progress": "",
+		"completion": "So you've tamed your first beast. Let me show you how to train it: every ability you learn, from a beast you tame or from me, you can teach your pet, as far as its training points go."
+	},
+	"6063": {
+		"title": "Taming the Beast",
+		"giver": "DarianThornshot",
+		"ender": "DarianThornshot",
+		"details": "You've learned to shoot and to track; now it's time you learned what makes a Ranger a Ranger. A beast at your side.\n\nTake this taming rod and find the Silkwood lurkers in the woods west of Fernwatch. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Silkwood Lurker until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the silkwood lurker yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Silkwood Lurker tamed"
+	},
+	"6101": {
+		"title": "Taming the Beast",
+		"giver": "DarianThornshot",
+		"ender": "DarianThornshot",
+		"details": "Take this taming rod and find the shadecat stalkers in the south-western woods. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Shadecat Stalker until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the shadecat stalker yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Shadecat Stalker tamed"
+	},
+	"6102": {
+		"title": "Taming the Beast",
+		"giver": "DarianThornshot",
+		"ender": "DarianThornshot",
+		"details": "Take this taming rod and find the strigid screechers in the southern woods. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Strigid Screecher until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the strigid screecher yet?",
+		"completion": "Well done. You have the knack of it, and now you can tame a beast of your own, any you can match. Call it to your side, send it away, and bring it back when it falls.",
+		"event": "Strigid Screecher tamed"
+	},
+	"6103": {
+		"title": "Training the Beast",
+		"giver": "DarianThornshot",
+		"ender": "LyssaFawnheart",
+		"details": "A pet that knows only what it knew in the wild is half a pet. Lyssa Fawnheart, the pet trainer here in Fernwatch, can teach you how to teach it more.\n\nGo and see them.",
+		"objectives": "Speak with the pet trainer in Fernwatch.",
+		"progress": "",
+		"completion": "So you've tamed your first beast. Let me show you how to train it: every ability you learn, from a beast you tame or from me, you can teach your pet, as far as its training points go."
+	},
+	"6062": {
+		"title": "Taming the Beast",
+		"giver": "TharkaBloodarrow",
+		"ender": "TharkaBloodarrow",
+		"details": "You've learned to shoot and to track; now it's time you learned what makes a Ranger a Ranger. A beast at your side.\n\nTake this taming rod and find the dire dustback boars round Spikewall. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Dire Dustback Boar until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the dire dustback boar yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Dire Dustback Boar tamed"
+	},
+	"6083": {
+		"title": "Taming the Beast",
+		"giver": "TharkaBloodarrow",
+		"ender": "TharkaBloodarrow",
+		"details": "Take this taming rod and find the shore crabs on the eastern shore. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Shore Crab until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the shore crab yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Shore Crab tamed"
+	},
+	"6082": {
+		"title": "Taming the Beast",
+		"giver": "TharkaBloodarrow",
+		"ender": "TharkaBloodarrow",
+		"details": "Take this taming rod and find the armored scorpions inland, west of Spikewall. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Armored Scorpion until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the armored scorpion yet?",
+		"completion": "Well done. You have the knack of it, and now you can tame a beast of your own, any you can match. Call it to your side, send it away, and bring it back when it falls.",
+		"event": "Armored Scorpion tamed"
+	},
+	"6081": {
+		"title": "Training the Beast",
+		"giver": "TharkaBloodarrow",
+		"ender": "GrukkFangtamer",
+		"details": "A pet that knows only what it knew in the wild is half a pet. Grukk Fangtamer, the pet trainer here in Spikewall, can teach you how to teach it more.\n\nGo and see them.",
+		"objectives": "Speak with the pet trainer in Spikewall.",
+		"progress": "",
+		"completion": "So you've tamed your first beast. Let me show you how to train it: every ability you learn, from a beast you tame or from me, you can teach your pet, as far as its training points go."
+	},
+	"6061": {
+		"title": "Taming the Beast",
+		"giver": "TormLongstride",
+		"ender": "TormLongstride",
+		"details": "You've learned to shoot and to track; now it's time you learned what makes a Ranger a Ranger. A beast at your side.\n\nTake this taming rod and find the adult tallbirds on the plains round Longhorn Village. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Adult Tallbird until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the adult tallbird yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Adult Tallbird tamed"
+	},
+	"6087": {
+		"title": "Taming the Beast",
+		"giver": "TormLongstride",
+		"ender": "TormLongstride",
+		"details": "Take this taming rod and find the prairie stalkers on the western plains. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Prairie Stalker until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the prairie stalker yet?",
+		"completion": "Good. The beast answered to you. Now a harder one.",
+		"event": "Prairie Stalker tamed"
+	},
+	"6088": {
+		"title": "Taming the Beast",
+		"giver": "TormLongstride",
+		"ender": "TormLongstride",
+		"details": "Take this taming rod and find the swoops near the pass south of the village. Use the rod on one and hold it until the beast is calmed. It will fight you while you do, so be ready.",
+		"objectives": "Use the Taming Rod on a Swoop until it is tamed, then return to your trainer.",
+		"progress": "Have you tamed the swoop yet?",
+		"completion": "Well done. You have the knack of it, and now you can tame a beast of your own, any you can match. Call it to your side, send it away, and bring it back when it falls.",
+		"event": "Swoop tamed"
+	},
+	"6089": {
+		"title": "Training the Beast",
+		"giver": "TormLongstride",
+		"ender": "HelaMossfoot",
+		"details": "A pet that knows only what it knew in the wild is half a pet. Hela Mossfoot, the pet trainer here in Longhorn Village, can teach you how to teach it more.\n\nGo and see them.",
+		"objectives": "Speak with the pet trainer in Longhorn Village.",
+		"progress": "",
+		"completion": "So you've tamed your first beast. Let me show you how to train it: every ability you learn, from a beast you tame or from me, you can teach your pet, as far as its training points go."
 	}
 }

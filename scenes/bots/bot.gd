@@ -70,6 +70,7 @@ const BUFF_CATEGORIES := {
 	ClassicData.CharClass.PRIEST: ["Fortitude", "Spirit", "Warding", "Self"],
 	ClassicData.CharClass.WARRIOR: ["Stance", "Shout"],
 	ClassicData.CharClass.SPELLSWORD: ["Edge", "Form"],
+	ClassicData.CharClass.HUNTER: ["Spirits"],
 }
 const CATEGORY_SPELLS := {
 	"Presence": ["Bulwark Presence", "Thorned Presence", "Focused Presence", "Hallowed Presence",
@@ -86,7 +87,18 @@ const CATEGORY_SPELLS := {
 	"Shout": ["Rallying Cry"],
 	"Edge": ["Flame Edge", "Frost Edge", "Storm Edge", "Warding Edge"],
 	"Form": ["Bladesong Form", "Wardweave Form"],
+	"Spirits": ["Hawk Spirit", "Monkey Spirit", "Cheetah Spirit", "Pack Spirit", "Beast Spirit", "Wild Spirit"],
 }
+## The Ranger's pet spells, from the taming quests, which bots skip: they
+## know them from level 10 (unlike classic).
+const RANGER_PET_SPELLS := [1515, 883, 2641, 982, 5149]
+const RANGER_PET_LEVEL := 10
+## A Ranger bot shoots from this far; nearer than the dead zone it fights in
+## melee.
+const RANGER_RANGE := 25.0
+## How far a Ranger bot looks for a beast to tame, and how often.
+const TAME_SEARCH := 100.0
+const TAME_EVERY := 5.0
 ## Presences a Templar bot keeps up, best first.
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 ## Oaths a Templar bot fights with, best first.
@@ -120,6 +132,8 @@ func set_far(far: bool) -> void:
 	_feedback.set_process(not far)
 	if model:
 		model.set_animating(not far)
+	if pet and is_instance_valid(pet):
+		pet.set_far(far)
 
 
 ## One slow tick for a far bot: what its nodes would do over `delta` seconds.
@@ -128,6 +142,8 @@ func far_tick(delta: float) -> void:
 	stats._physics_process(delta)
 	spells._physics_process(delta)
 	_physics_process(delta)
+	if pet and is_instance_valid(pet):
+		pet.far_tick(delta)
 
 
 ## Brought back to life: raised by a spell, or got up after the wait.
@@ -228,6 +244,12 @@ var _chest: GameObject
 var _far := false
 ## When the BotManager last ticked it while far (BotManager.far_schedule).
 var far_clock := 0.0
+## A Ranger's pet record while it isn't out (RangerAbilities keeps it here;
+## out, the pet holds it), saved in its roster entry.
+var pet_record: Dictionary = {}
+## A beast a Ranger bot is going to tame, and when it next looks for one.
+var _tame_target: Enemy
+var _tame_search_left := 0.0
 
 
 @onready var stats: CharacterStats = $CharacterStats
@@ -288,6 +310,10 @@ func learn_spells() -> void:
 		for id in entry.spells:
 			if not int(id) in known:
 				known.append(int(id))
+	if profile.char_class == ClassicData.CharClass.HUNTER and up_to >= RANGER_PET_LEVEL:
+		for id: int in RANGER_PET_SPELLS:
+			if not id in known:
+				known.append(id)
 	profile.known_spells = known
 	# Weapon skills its class may learn, as from the Weapon Master.
 	for entry: Dictionary in SpellDB.trainer_list(SpellDB.WEAPON_TRAINER, profile.race, profile.char_class):
@@ -313,6 +339,7 @@ func saved_state() -> Dictionary:
 		"stay": [_stay_at.x, _stay_at.y, _stay_at.z] if command == Command.STAY else [], "auras": auras,
 		"item_cooldowns": spells.saved_item_cooldowns(),
 		"behavior": behavior, "buffs": buff_choices, "trained_level": trained_level, "role": role,
+		"pet": pet.saved_record() if pet and is_instance_valid(pet) else pet_record,
 	}
 
 
@@ -347,6 +374,12 @@ func restore_state(state: Dictionary) -> void:
 	if stay.size() == 3:
 		command = Command.STAY
 		_stay_at = Vector3(stay[0], stay[1], stay[2])
+	# Its pet, back at its side if it was out.
+	var saved_pet: Variant = state.get("pet", {})
+	if saved_pet is Dictionary and not (saved_pet as Dictionary).is_empty():
+		pet_record = saved_pet
+		if combatant.is_alive():
+			spells.ranger()._summon_saved()
 
 
 ## On its own it trains as it goes; in a party it waits for the player to
@@ -478,6 +511,9 @@ func _think() -> void:
 	if not _explore.is_empty():
 		_check_explored()
 	_enemy = _choose_enemy()
+	# A Ranger without a pet tames one before hunting on.
+	if _tame_step():
+		return
 	if spells.casting.is_empty():
 		_use_spells()
 	if not spells.casting.is_empty():
@@ -489,14 +525,16 @@ func _think() -> void:
 		# A caster with a wand stays back and shoots it once its mana runs
 		# low, as classic's priests do.
 		var wanding := _shoots_wand()
-		if wanding:
+		# A Ranger shoots from range, and fights in melee only in the dead zone.
+		var shooting := _ranger_shoots()
+		if wanding or shooting:
 			combatant.attack_target = null
 			if not _casts_from_range() and combatant.shoot_target != _enemy and combatant.shot_problem(_enemy).is_empty():
 				combatant.start_shooting(_enemy)
 		else:
 			combatant.stop_shooting()
 			combatant.attack_target = _enemy
-		var reach := CASTER_RANGE if wanding or _casts_from_range() else combatant.melee_range * 0.8
+		var reach := CASTER_RANGE if wanding or _casts_from_range() else RANGER_RANGE if shooting else combatant.melee_range * 0.8
 		if combatant.distance_to(_enemy) > reach:
 			_go_to(_enemy.body.global_position)
 		else:
@@ -1151,6 +1189,126 @@ func _use_spells() -> void:
 			_use_man_at_arms_spells()
 		ClassicData.CharClass.SPELLSWORD:
 			_use_spellsword_spells()
+		ClassicData.CharClass.HUNTER:
+			_use_ranger_spells()
+
+
+# Ranger abilities: a Spirit kept up (Hawk, else Monkey), its pet called,
+# revived, mended and sent in first; from range Quarry's Mark, Adder Sting,
+# Glimmer Shot and Spread Shot when crowded; in the dead zone Talon Strike,
+# Crippling Cut on what chases it, and the reactive strikes; Still as Death
+# when it's losing.
+
+## Whether a Ranger bot fights its enemy with its ranged weapon: it has one,
+## and the enemy is past the dead zone.
+func _ranger_shoots() -> bool:
+	if profile.char_class != ClassicData.CharClass.HUNTER or combatant.ranged_weapon.is_empty() or _enemy == null:
+		return false
+	return combatant.distance_to(_enemy) >= float(combatant.ranged_weapon.get("min_range", 8.0))
+
+
+func _use_ranger_spells() -> void:
+	var me := combatant
+	var fighting := me.is_in_combat()
+	var ranger := spells.ranger()
+	var record := ranger.pet_record()
+	var out := pet != null and is_instance_valid(pet)
+	# The pet: called, or revived out of combat; mended when hurt.
+	if not record.is_empty() and not out:
+		if record.get("dead", false):
+			if not fighting and _try("Revive Pet", me):
+				return
+		elif _try("Call Pet", me):
+			return
+	if out and not pet.combatant.is_alive() and not fighting and _try("Revive Pet", me):
+		return
+	if out and pet.combatant.is_alive() and pet.combatant.health < pet.combatant.max_health * 0.4 \
+			and me.distance_to(pet.combatant) <= 20.0 and _lacks(pet.combatant, "Mend Companion") and _try("Mend Companion", me):
+		return
+	# The Spirit: the one chosen, or Hawk (Monkey before Hawk is known).
+	var choice := buff_choice("Spirits")
+	var spirit := choice
+	if choice == "Auto":
+		spirit = "Hawk Spirit" if profile.best_rank("Hawk Spirit") != 0 else "Monkey Spirit"
+	if choice != "None" and profile.best_rank(spirit) != 0 and _lacks(me, spirit) and _try(spirit, me):
+		return
+	if _enemy == null:
+		return
+	if out and pet.combatant.is_alive() and pet.target != _enemy:
+		pet.order_attack(_enemy)
+	# Losing: lie still and let the pet (or the group) hold it.
+	if fighting and me.health < me.max_health * 0.2 and (_enemy.body as Enemy) != null \
+			and (_enemy.body as Enemy).current_victim() == me and (out or in_party) and _try("Still as Death", me):
+		return
+	var distance := me.distance_to(_enemy)
+	if _ranger_shoots():
+		if _lacks(_enemy, "Quarry's Mark") and _try("Quarry's Mark", _enemy):
+			return
+		if _crowd_near_point(_enemy.body.global_position, 8.0) >= 2 and _try("Spread Shot", _enemy):
+			return
+		if _enemy.health > _enemy.max_health * 0.3 and _lacks(_enemy, "Adder Sting", false) and _try("Adder Sting", _enemy):
+			return
+		_try("Glimmer Shot", _enemy)
+		return
+	if distance > me.melee_range + 1.0:
+		return
+	if _try("Weasel Bite", _enemy) or _try("Counterattack", _enemy):
+		return
+	var chasing := _enemy.body is Enemy and (_enemy.body as Enemy).current_victim() == me
+	if chasing and _lacks(_enemy, "Crippling Cut", false) and _try("Crippling Cut", _enemy):
+		return
+	_try("Talon Strike", _enemy)
+
+
+## Living enemies fighting within a radius of a point.
+func _crowd_near_point(point: Vector3, radius: float) -> int:
+	var count := 0
+	for node in _creatures_near(radius + 30.0):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and enemy.global_position.distance_to(point) <= radius:
+			count += 1
+	return count
+
+
+## A Ranger bot with no pet, from level 10, tames the nearest beast it can
+## (one of its level or below, not fighting): it walks up and holds Tame
+## Beast. Returns true while it's busy with that.
+func _tame_step() -> bool:
+	if profile.char_class != ClassicData.CharClass.HUNTER or profile.level < RANGER_PET_LEVEL or profile.best_rank("Tame Beast") == 0:
+		return false
+	if not spells.ranger().pet_record().is_empty() or combatant.is_in_combat() or (in_party and command == Command.STAY):
+		return false
+	if _tame_target == null or not is_instance_valid(_tame_target) or not _tame_target.combatant.is_alive() \
+			or not _tame_target.visible or _tame_target.state == Enemy.State.RETURN:
+		_tame_target = null
+		_tame_search_left -= THINK_INTERVAL
+		if _tame_search_left > 0.0:
+			return false
+		_tame_search_left = TAME_EVERY
+		var best_distance := TAME_SEARCH
+		for node in _creatures_near(TAME_SEARCH):
+			var beast := node as Enemy
+			if not beast.combatant.is_alive() or not beast.visible or beast.state == Enemy.State.CHASE or beast.level > profile.level:
+				continue
+			if not PetDB.is_tameable(beast.creature_entry) or (beast.tapped_by != null and beast.tapped_by != combatant):
+				continue
+			var distance := global_position.distance_to(beast.global_position)
+			if distance < best_distance:
+				best_distance = distance
+				_tame_target = beast
+		if _tame_target == null:
+			return false
+	var target := _tame_target.combatant
+	if combatant.distance_to(target) > 18.0:
+		_go_to(_tame_target.global_position)
+		return true
+	_has_destination = false
+	_enemy = target
+	_face(_tame_target.global_position)
+	if _try("Tame Beast", target):
+		return true
+	_enemy = null
+	return false
 
 
 # Spellsword spells: a tank in Wardweave Form with Warding Edge (with a
