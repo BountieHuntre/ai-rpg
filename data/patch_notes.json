@@ -1,5 +1,19 @@
 [
 	{
+		"version": "0.12.0",
+		"date": "11-12-2026",
+		"notes": [
+			"Every race now begins in its own lands.",
+			"Dwarves and Gnomes wake at the Hollow Hall in Frosthollow (levels 1-6), a snowbound valley of troll caves and trogg diggings, with Highpeak (levels 6-12) over the Frozen Stair: Kettlefold, the gnomes' depot, the Grey Quarry, Icemane Hold, the Grizzled Den and the ruined Cogworks.",
+			"Wood Elves wake under the Elderbough in Mossglen (levels 1-6) on Kareth, with Eldergrove Isle (levels 6-12) below it: Fernwatch, Lake Aleth, the Gloamrock, the Thornbarrow Den, Twistbark Hold and the Seers' Glade.",
+			"The Undead rise at the Gravesend Chapel, with Duskmoor Glades and the town of Gallowfield beyond; Hornkin begin at Sunfold Camp, with the Tallgrass and Longhorn Village beyond.",
+			"Over 100 new quests, with trainers, vendors and creatures for each land, and quests only for the races they belong to.",
+			"Character creation lists races under the Alliance and the Horde, and each look is chosen from a list that shows it on your character as you hover it, with tusks, horns, ears and war paint for the new races.",
+			"A new Performance tab in Options trades looks for speed: render resolution, animation quality, detail distances, character shadows, cloak physics, spell effects and how far away units are fully updated.",
+			"The Homing Token now takes you home to where your race began."
+		]
+	},
+	{
 		"version": "0.11.0",
 		"date": "11-11-2026",
 		"notes": [
