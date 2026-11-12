@@ -28,6 +28,18 @@ const DEFAULTS := {
 	"gamma": 1.0,
 	"contrast": 1.0,
 	"saturation": 1.0,
+	# Performance: how much of the game's crowd-saving work is done (main.gd
+	# _apply_setting): the rows the 3D view is drawn at, how often and how
+	# far characters animate and show small parts, shadows, cloaks, spell
+	# effects, how far units get full updates, and the time far ones get.
+	"render_resolution": "Medium",
+	"animation_quality": "High",
+	"character_detail": "High",
+	"character_shadows": "Normal",
+	"cloak_physics": "Everyone",
+	"spell_effects": "High",
+	"unit_detail_distance": "Normal",
+	"distant_unit_updates": "Normal",
 	# Sound
 	"sound_enabled": true,
 	"master_volume": 1.0,
@@ -519,7 +531,9 @@ func folder() -> String:
 const WINDOW_SIZES := ["1280x720", "1440x810", "1600x900", "1920x1080", "2560x1440"]
 ## Graphics options the world reads (Main applies them), so the HUD and
 ## camera know when to look again.
-const WORLD_OPTIONS := ["shadow_quality", "view_distance", "field_of_view", "environment_detail",
+const WORLD_OPTIONS := ["render_resolution", "animation_quality", "character_detail", "character_shadows",
+	"cloak_physics", "spell_effects", "unit_detail_distance", "distant_unit_updates",
+	"shadow_quality", "view_distance", "field_of_view", "environment_detail",
 	"ambient_occlusion", "bloom", "brightness", "gamma", "contrast", "saturation"]
 
 

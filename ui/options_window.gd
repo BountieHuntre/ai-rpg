@@ -1,7 +1,7 @@
 class_name OptionsWindow
 extends PanelContainer
 ## The Options window, with a tab down the left for each category: Video,
-## Sound, Interface, Chat, Playerbots, Key Bindings and Developer. A new category is a TABS entry plus its
+## Performance, Sound, Interface, Chat, Playerbots, Key Bindings and Developer. A new category is a TABS entry plus its
 ## rows in CATEGORIES (or its own builder, as Key Bindings has). Changes wait
 ## until Apply, which applies and saves every changed option at once; Okay
 ## does the same and closes, Cancel drops what wasn't applied, and Defaults
@@ -35,6 +35,18 @@ const CATEGORIES := {
 		["gamma", "Gamma", "slider", [0.6, 1.6]],
 		["contrast", "Contrast", "slider", [0.6, 1.4]],
 		["saturation", "Saturation", "slider", [0.0, 2.0]],
+	],
+	# What the game's crowd-saving work does, traded against looks (main.gd
+	# _apply_setting): lower is faster.
+	"Performance": [
+		["render_resolution", "Render Resolution", "choice", ["Low", "Medium", "High", "Ultra"]],
+		["animation_quality", "Animation Quality", "choice", ["Low", "Medium", "High", "Ultra"]],
+		["character_detail", "Character Detail Distance", "choice", ["Low", "Medium", "High", "Ultra"]],
+		["character_shadows", "Character Shadows", "choice", ["Off", "Normal", "Full"]],
+		["cloak_physics", "Cloak Physics", "choice", ["Off", "Player Only", "Everyone"]],
+		["spell_effects", "Spell Effects", "choice", ["Off", "Low", "High"]],
+		["unit_detail_distance", "Unit Detail Distance", "choice", ["Near", "Normal", "Far"]],
+		["distant_unit_updates", "Distant Unit Updates", "choice", ["Low", "Normal", "High"]],
 	],
 	"Sound": [
 		["sound_enabled", "Enable Sound", "check", null],
@@ -103,7 +115,7 @@ var _moving := false
 
 const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
-const TABS := ["Video", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, DEVELOPER]
+const TABS := ["Video", "Performance", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, DEVELOPER]
 ## One-click developer commands: [button text, console command]. "level+" is
 ## the next level (of the targeted playerbot, else the player's), filled in
 ## when pressed.
@@ -975,12 +987,28 @@ func _key_button(action: String, slot: int) -> Button:
 	return button
 
 
+## What an option does, shown on hovering its row.
+const HINTS := {
+	"render_resolution": "How many rows of pixels the world is drawn with: Low 270, Medium 405, High 540, Ultra 720. Lower is chunkier and faster.",
+	"animation_quality": "How often characters and creatures further off move their limbs. Low animates distant ones less often; Ultra animates everyone within 35 yards every frame.",
+	"character_detail": "How far away weapons, shields, hair, helms and capes are drawn: Low 15 yards, Medium 25, High 35, Ultra 70.",
+	"character_shadows": "Off: characters cast no shadows. Normal: bodies and gear, not weapons or hair. Full: everything.",
+	"cloak_physics": "Whether cloaks swing as their wearers move: for nobody, only you, or everyone.",
+	"spell_effects": "Sparks, bursts and glows from attacks and spells. Low shows fewer, and only within 25 yards.",
+	"unit_detail_distance": "Within this distance (30, 45 or 70 yards) bots and creatures update every frame; beyond it they take turns, which saves time in crowds.",
+	"distant_unit_updates": "How much of each frame goes to bots and creatures beyond the Unit Detail Distance. Higher keeps far ones livelier but costs frame rate.",
+}
+
+
 func _row(row: Array) -> Control:
 	var key: String = row[0]
 	var line := HBoxContainer.new()
 	line.custom_minimum_size.x = WIDTH * _ui_scale
 	var label := _label(row[1], TEXT)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if HINTS.has(key):
+		line.tooltip_text = HINTS[key]
+		label.mouse_filter = Control.MOUSE_FILTER_PASS
 	line.add_child(label)
 	var value = _value(key)
 	match row[2]:

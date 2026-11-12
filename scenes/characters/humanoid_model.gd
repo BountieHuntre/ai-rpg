@@ -194,6 +194,32 @@ const ANIM_STEPS: Array[Vector2] = [Vector2(15, 1.0 / 30.0), Vector2(25, 1.0 / 1
 const OFF_SCREEN_STEP := 0.5
 ## Yards from the camera past which parts other than the body aren't drawn.
 const PART_RANGE := 35.0
+## The graphics options (set_graphics): animation steps by Animation Quality,
+## part range by Character Detail Distance, Character Shadows ("Off", "Normal":
+## not weapons, hair or beards, "Full") and Cloak Physics ("Off", "Player
+## Only", "Everyone"). Beasts follow the same steps and shadows.
+const ANIM_QUALITY := {
+	"Low": [Vector2(8, 1.0 / 20.0), Vector2(16, 1.0 / 10.0), Vector2(25, 1.0 / 6.0)],
+	"Medium": [Vector2(12, 1.0 / 30.0), Vector2(20, 1.0 / 15.0), Vector2(30, 0.1)],
+	"High": [Vector2(15, 1.0 / 30.0), Vector2(25, 1.0 / 15.0), Vector2(35, 0.1)],
+	"Ultra": [Vector2(35, 1.0 / 30.0), Vector2(60, 1.0 / 15.0)],
+}
+const DETAIL_RANGE := { "Low": 15.0, "Medium": 25.0, "High": 35.0, "Ultra": 70.0 }
+static var anim_steps: Array = ANIM_QUALITY.High
+static var part_range := PART_RANGE
+static var character_shadows := "Normal"
+static var cloak_physics := "Everyone"
+
+
+## Applies the graphics options to every character and beast model.
+static func set_graphics(animation: String, detail: String, shadows: String, cloaks: String) -> void:
+	anim_steps = ANIM_QUALITY.get(animation, ANIM_QUALITY.High)
+	part_range = DETAIL_RANGE.get(detail, PART_RANGE)
+	character_shadows = shadows
+	cloak_physics = cloaks
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree:
+		tree.call_group("character_models", "refresh_graphics")
 ## How often gear is checked for changes, in seconds.
 const GEAR_CHECK := 0.5
 
@@ -278,6 +304,7 @@ var _anim_time := 0.0
 
 func _init() -> void:
 	name = "Model"
+	add_to_group("character_models")
 	_colors.resize(SLOT_COUNT)
 	_colors.fill(Color.WHITE)
 	_material.shader = SHADER
@@ -461,12 +488,7 @@ func _show(part: String, on: bool) -> void:
 	mesh.skin = _parts[part][1]
 	mesh.material_override = _material
 	mesh.layers = Targeting.UNIT_RENDER_LAYER
-	# Small parts are a pixel or two far off: not drawn past PART_RANGE, and
-	# weapons, hair and beards cast no shadow (each is its own draw).
-	if not part.begins_with("Body"):
-		mesh.visibility_range_end = PART_RANGE
-	if part.begins_with("Main_") or part.begins_with("Off_") or part.begins_with("Ranged_") 			or part.begins_with("Hair") or part.begins_with("Beard"):
-		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_part_graphics(part, mesh)
 	_skeleton.add_child(mesh)
 	mesh.skeleton = mesh.get_path_to(_skeleton)
 	_shown[part] = mesh
@@ -512,7 +534,7 @@ func _apply_equipment() -> void:
 	# A cloak.
 	var cloak := _item(Inventory.Slot.BACK)
 	_show("Cloak", cloak.size() > 0 or outfit.has(BACK))
-	_cape_springs(_shown.has("Cloak"))
+	_cape_springs(_shown.has("Cloak") and _cape_moves())
 	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, CLOTH[0]))
 	_apply_props()
 
@@ -703,6 +725,30 @@ func set_animating(on: bool) -> void:
 	set_process(on)
 
 
+## Small parts are a pixel or two far off: not drawn past part_range, and
+## weapons, hair and beards cast no shadow at Normal character shadows (each
+## is its own draw); none at Off, all at Full.
+func _part_graphics(part: String, mesh: MeshInstance3D) -> void:
+	mesh.visibility_range_end = 0.0 if part.begins_with("Body") else part_range
+	var small := part.begins_with("Main_") or part.begins_with("Off_") or part.begins_with("Ranged_") \
+		or part.begins_with("Hair") or part.begins_with("Beard") or part.begins_with("Mane")
+	var casts := character_shadows == "Full" or (character_shadows == "Normal" and not small)
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if casts else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## Whether this model's cloak swings (Cloak Physics); otherwise it hangs still.
+func _cape_moves() -> bool:
+	return cloak_physics == "Everyone" or (cloak_physics == "Player Only" and _unit is Player)
+
+
+## The graphics options changed (set_graphics).
+func refresh_graphics() -> void:
+	for part: String in _shown:
+		_part_graphics(part, _shown[part])
+	if _skeleton:
+		_cape_springs(_shown.has("Cloak") and _cape_moves())
+
+
 ## The cape swings: spring simulations on the cape's three chains of bones
 ## (CAPE_CHAINS: its left edge, middle and right edge, five bones each, built
 ## for it) while a cloak is worn, held off the body and legs by capsules on
@@ -807,7 +853,7 @@ func _advance(delta: float) -> void:
 		if not camera.is_position_in_frustum(at + Vector3.UP) and distance > 3.0:
 			interval = OFF_SCREEN_STEP
 		else:
-			for band: Vector2 in ANIM_STEPS:
+			for band: Vector2 in anim_steps:
 				if distance > band.x:
 					interval = band.y
 	if _anim_time >= interval:

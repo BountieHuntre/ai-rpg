@@ -204,6 +204,19 @@ func _apply_setting(key: String) -> void:
 			_camera.fov = float(Settings.get_value(key))
 		"environment_detail":
 			_world.set_clutter(Settings.get_value(key))
+		# Performance.
+		"render_resolution":
+			min_game_height = RENDER_ROWS.get(Settings.get_value(key), 405)
+			_fit_game_view()
+		"animation_quality", "character_detail", "character_shadows", "cloak_physics":
+			HumanoidModel.set_graphics(Settings.get_value("animation_quality"), Settings.get_value("character_detail"),
+				Settings.get_value("character_shadows"), Settings.get_value("cloak_physics"))
+		"spell_effects":
+			Vfx.quality = Settings.get_value(key)
+		"unit_detail_distance":
+			Bot.FAR = UNIT_DETAIL.get(Settings.get_value(key), 45.0)
+		"distant_unit_updates":
+			BotManager.FAR_BUDGET = DISTANT_UPDATES.get(Settings.get_value(key), 3000)
 		"ambient_occlusion":
 			environment.ssao_enabled = Settings.get_value(key)
 		"bloom":
@@ -236,6 +249,18 @@ static func gamma_curve(gamma: float) -> GradientTexture1D:
 	texture.gradient = gradient
 	texture.width = 256
 	return texture
+
+
+## Render Resolution: the rows of pixels the 3D view is at least drawn with
+## (it keeps a whole pixel scale, so the window may give a few more).
+const RENDER_ROWS := { "Low": 270, "Medium": 405, "High": 540, "Ultra": 720 }
+## Unit Detail Distance: yards from the player within which bots and
+## creatures do their own per-frame work (Bot.FAR); beyond, the BotManager
+## ticks them in turn.
+const UNIT_DETAIL := { "Near": 30.0, "Normal": 45.0, "Far": 70.0 }
+## Distant Unit Updates: microseconds a frame the BotManager gives far units
+## (BotManager.FAR_BUDGET): more is livelier far off and costs frame time.
+const DISTANT_UPDATES := { "Low": 1500, "Normal": 3000, "High": 6000 }
 
 
 ## Picks the largest whole pixel scale that fits, then rounds the view up so it

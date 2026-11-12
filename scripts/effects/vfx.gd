@@ -9,6 +9,10 @@ extends RefCounted
 
 ## Yards from the camera past which effects are skipped.
 const RANGE := 45.0
+## The Spell Effects option: "Off" (none), "Low" (nearer, fewer cubes) or "High".
+static var quality := "High"
+const LOW_RANGE := 25.0
+const LOW_AMOUNT := 0.5
 ## Colours by spell school (physical, holy, fire, nature, frost, shadow, arcane).
 const SCHOOL_COLORS := [
 	Color(1.0, 0.92, 0.65), Color(1.0, 0.92, 0.45), Color(1.0, 0.42, 0.1), Color(0.45, 0.95, 0.3),
@@ -30,8 +34,15 @@ static func school_color(school: int) -> Color:
 static func near(anchor: Node3D, at: Vector3) -> bool:
 	if not is_instance_valid(anchor) or not anchor.is_inside_tree():
 		return false
+	if quality == "Off":
+		return false
 	var camera := anchor.get_viewport().get_camera_3d()
-	return camera != null and camera.global_position.distance_to(at) <= RANGE
+	return camera != null and camera.global_position.distance_to(at) <= (LOW_RANGE if quality == "Low" else RANGE)
+
+
+## How many cubes an effect of `amount` gets at the Spell Effects option.
+static func count(amount: int) -> int:
+	return maxi(1, roundi(amount * LOW_AMOUNT)) if quality == "Low" else amount
 
 
 ## A burst of cubes from a point: `speed` yards a second outward within
@@ -42,7 +53,7 @@ static func burst(anchor: Node3D, at: Vector3, color: Color, amount := 8, speed 
 		return null
 	var p := _particles(color, size, life)
 	p.one_shot = true
-	p.amount = amount
+	p.amount = count(amount)
 	p.explosiveness = 1.0
 	p.direction = direction
 	p.spread = spread
@@ -86,7 +97,7 @@ static func buff(unit: Node3D, school: int) -> void:
 		return
 	var p := _particles(school_color(school).lightened(0.2), 0.09, 0.6)
 	p.one_shot = true
-	p.amount = 14
+	p.amount = count(14)
 	p.explosiveness = 1.0
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
 	p.emission_ring_axis = Vector3.UP
@@ -124,7 +135,7 @@ static func bolt(from_unit: Node3D, to_unit: Node3D, school: int, flight := -1.0
 	head.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	head.material_override = _flat(color)
 	var trail := _particles(color, 0.08, 0.25)
-	trail.amount = 16
+	trail.amount = count(16)
 	trail.local_coords = false
 	trail.initial_velocity_max = 0.3
 	trail.gravity = Vector3.ZERO
@@ -148,7 +159,7 @@ static func bolt(from_unit: Node3D, to_unit: Node3D, school: int, flight := -1.0
 ## casting: made once and switched on and off (`emitting`).
 static func hand_glow(anchor: Node3D, radius := 0.18) -> CPUParticles3D:
 	var p := _particles(Color.WHITE, 0.06, 0.45)
-	p.amount = 8
+	p.amount = count(8)
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	p.emission_sphere_radius = radius
 	p.direction = Vector3.UP

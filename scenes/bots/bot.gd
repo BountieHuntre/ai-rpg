@@ -19,7 +19,7 @@ const FAR_THINK_INTERVAL := 0.75
 ## Beyond this many yards from the player a bot walks the ground's height
 ## without collision, which costs far less with hundreds of bots about. The
 ## player never sees it up close.
-const FAR := 45.0
+static var FAR := 45.0
 ## Seconds between working out what its quests need and which quest giver it
 ## has business with.
 const QUEST_CHECK := 2.0

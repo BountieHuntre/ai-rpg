@@ -33,6 +33,7 @@ var _busy := 0.0
 
 func _init() -> void:
 	name = "Model"
+	add_to_group("character_models")
 	_material.shader = SHADER
 
 
@@ -51,6 +52,7 @@ func _ready() -> void:
 		mesh.material_override = _material
 		mesh.layers = Targeting.UNIT_RENDER_LAYER
 		_meshes.append(mesh)
+	refresh_graphics()
 	_player = model.get_node("AnimationPlayer")
 	_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	_anim_time = randf() * 0.1
@@ -84,6 +86,13 @@ func attach_creature(body: CharacterBody3D, c: Combatant) -> void:
 	c.died.connect(func() -> void:
 		_one_shot("death")
 		_loop = "dead")
+
+
+## Character Shadows (HumanoidModel.set_graphics): beasts cast one unless Off.
+func refresh_graphics() -> void:
+	for mesh in _meshes:
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if HumanoidModel.character_shadows == "Off" \
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
 
 func set_animating(on: bool) -> void:
@@ -157,7 +166,7 @@ func _advance(delta: float) -> void:
 		if not camera.is_position_in_frustum(global_position + Vector3.UP * 0.5) and distance > 3.0:
 			interval = HumanoidModel.OFF_SCREEN_STEP
 		else:
-			for band: Vector2 in HumanoidModel.ANIM_STEPS:
+			for band: Vector2 in HumanoidModel.anim_steps:
 				if distance > band.x:
 					interval = band.y
 	if _anim_time >= interval:

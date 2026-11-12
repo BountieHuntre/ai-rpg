@@ -441,7 +441,7 @@ func creatures() -> Array:
 ## the frame are used. However many there are, they cost about the same
 ## frame time; with more of them each is ticked less often (its step is
 ## capped at FAR_MAX_STEP seconds, so a crowded world's far side runs slow).
-const FAR_BUDGET := 3000
+static var FAR_BUDGET := 3000
 const FAR_RATE := 10.0
 const FAR_MAX_STEP := 0.5
 var _clock := 0.0
