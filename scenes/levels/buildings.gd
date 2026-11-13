@@ -70,18 +70,21 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 	var stone: Color = _look(look, "stone", Color(0.45, 0.43, 0.41))
 	var door := [] if door_side == Vector2.ZERO else _door_place(size, door_side, door_offset, made[3])
 	var thick := WALL_THICK if hollow else 0.0
+	var hearth := hollow and chimney
+	# The hearth's end: +x, or -x when the door is in that end wall.
+	var hearth_side := -1.0 if not door.is_empty() and (door[1] as Vector3).x > 0.5 else 1.0
+	var windows := _window_places(length, span, height, storeys, door, hearth_side if hearth else 0.0)
 	if hollow:
-		_hollow_walls(kit, length, span, height, thick, wall, stone, door)
+		_hollow_walls(kit, length, span, height, thick, wall, stone, door, windows)
 		kit.block(Vector3(0, -0.05, 0), Vector3(length - thick * 2.0, 0.15, span - thick * 2.0), _look(look, "floor", FLOOR), 0.0, true)
 	else:
 		kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
 		kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.3, 0.55, span + 0.3), stone)
 	if _look(look, "timber", false):
-		_timber(kit, length, span, height, storeys, trim)
-	var hearth := hollow and chimney
-	# The hearth's end: +x, or -x when the door is in that end wall.
-	var hearth_side := -1.0 if not door.is_empty() and (door[1] as Vector3).x > 0.5 else 1.0
-	_windows(kit, length, span, height, storeys, door, trim, look, thick, hearth_side if hearth else 0.0)
+		_timber(kit, length, span, height, storeys, trim, windows)
+	var shutter: Color = _look(look, "shutter", SHUTTER)
+	for place: Array in windows:
+		_window(kit, place[0], place[1], trim, shutter, thick)
 	if not door.is_empty():
 		if hollow:
 			_doorway(kit, door[0], door[1], thick, trim, stone)
@@ -108,17 +111,17 @@ const WALL_THICK := 0.45
 ## Half the doorway's width, and its height.
 const DOOR_HALF := 0.9
 const DOOR_HEIGHT := 2.6
-## Light through a window, seen from inside.
-const DAYLIGHT := Color(0.68, 0.78, 0.86)
 ## The planks' color (WOOD in the zones), so it's drawn with their texture.
 const FLOOR := Color(0.45, 0.31, 0.2)
 const WARM := Color(1.0, 0.8, 0.55)
 const FIRE := Color(1.0, 0.55, 0.25)
 
 
-## Walls `thick` thick round a room, open where the door is: each a solid
-## block (the doorway leaves a gap under a lintel), on a stone plinth.
-static func _hollow_walls(kit: BuildingKit, length: float, span: float, height: float, thick: float, color: Color, plinth: Color, door: Array) -> void:
+## Walls `thick` thick round a room, open where the door and the windows
+## are (`holes`: [middle, outward, half width, half height] each): each wall
+## is cut into solid blocks round its openings, on a stone plinth broken
+## only by the doorway.
+static func _hollow_walls(kit: BuildingKit, length: float, span: float, height: float, thick: float, color: Color, plinth: Color, door: Array, holes: Array = []) -> void:
 	var walls := [
 		[Vector3(0, 0, span / 2.0 - thick / 2.0), Vector3.RIGHT, length, Vector3.BACK],
 		[Vector3(0, 0, -(span / 2.0 - thick / 2.0)), Vector3.RIGHT, length, Vector3.FORWARD],
@@ -130,21 +133,60 @@ static func _hollow_walls(kit: BuildingKit, length: float, span: float, height: 
 		var along: Vector3 = each[1]
 		var wall_length: float = each[2]
 		var out: Vector3 = each[3]
-		var pieces := [[-wall_length / 2.0, wall_length / 2.0]]
+		# This wall's openings: [middle along it, half width, bottom, top].
+		var openings := []
 		var gap := INF
 		if not door.is_empty() and (door[1] as Vector3).dot(out) > 0.9:
 			gap = ((door[0] as Vector3) - center).dot(along)
+			openings.append([gap, DOOR_HALF, -1.0, DOOR_HEIGHT])
+		for hole: Array in holes:
+			if (hole[1] as Vector3).dot(out) > 0.9:
+				var middle: Vector3 = hole[0]
+				openings.append([(middle - center).dot(along), hole[2], middle.y - hole[3], middle.y + hole[3]])
+		_wall_around(kit, center, along, wall_length, out, thick, height, color, openings)
+		# The plinth runs round all but the doorway.
+		var pieces := [[-wall_length / 2.0, wall_length / 2.0]]
+		if gap != INF:
 			pieces = [[-wall_length / 2.0, gap - DOOR_HALF], [gap + DOOR_HALF, wall_length / 2.0]]
 		for piece: Array in pieces:
 			var a: float = piece[0]
 			var b: float = piece[1]
-			if b - a < 0.01:
+			if b - a > 0.01:
+				kit.block(center + along * (a + b) / 2.0 - Vector3(0, 0.1, 0), along * (b - a) + out.abs() * (thick + 0.3) + Vector3.UP * 0.55, plinth)
+
+
+## One wall, solid but for its openings: cut at every opening's sides into
+## strips, and each strip into the blocks above and below whatever opening
+## it passes through.
+static func _wall_around(kit: BuildingKit, center: Vector3, along: Vector3, wall_length: float, out: Vector3, thick: float, height: float, color: Color, openings: Array) -> void:
+	var half := wall_length / 2.0
+	var cuts: Array[float] = [-half, half]
+	for opening: Array in openings:
+		for edge: float in [opening[0] - opening[1], opening[0] + opening[1]]:
+			if edge > -half and edge < half:
+				cuts.append(edge)
+	cuts.sort()
+	for i in cuts.size() - 1:
+		var a := cuts[i]
+		var b := cuts[i + 1]
+		if b - a < 0.01:
+			continue
+		var middle := (a + b) / 2.0
+		# Heights left solid in this strip.
+		var spans := [[0.0, height]]
+		for opening: Array in openings:
+			if absf(middle - float(opening[0])) >= float(opening[1]):
 				continue
-			var middle := center + along * (a + b) / 2.0
-			kit.block(middle, along * (b - a) + out.abs() * thick + Vector3.UP * height, color, 0.0, true)
-			kit.block(middle - Vector3(0, 0.1, 0), along * (b - a) + out.abs() * (thick + 0.3) + Vector3.UP * 0.55, plinth)
-		if gap != INF:
-			kit.block(center + along * gap + Vector3.UP * DOOR_HEIGHT, along * DOOR_HALF * 2.0 + out.abs() * thick + Vector3.UP * (height - DOOR_HEIGHT), color, 0.0, true)
+			var kept := []
+			for each: Array in spans:
+				if float(opening[2]) > each[0]:
+					kept.append([each[0], minf(each[1], float(opening[2]))])
+				if float(opening[3]) < each[1]:
+					kept.append([maxf(each[0], float(opening[3])), each[1]])
+			spans = kept
+		for each: Array in spans:
+			if each[1] - each[0] > 0.01:
+				kit.block(center + along * middle + Vector3.UP * each[0], along * (b - a) + out.abs() * thick + Vector3.UP * (each[1] - each[0]), color, 0.0, true)
 
 
 ## An open doorway: a frame through the wall, a lintel, a step outside, and
@@ -217,7 +259,7 @@ static func roof(kit: BuildingKit, height: float, length: float, span: float, ri
 
 ## Dark timber over the walls: corner posts, sill, top plate, studs and
 ## braces (and a band between storeys).
-static func _timber(kit: BuildingKit, length: float, span: float, height: float, storeys: int, trim: Color) -> void:
+static func _timber(kit: BuildingKit, length: float, span: float, height: float, storeys: int, trim: Color, windows: Array = []) -> void:
 	var out := 0.06
 	for x: float in [-length / 2.0, length / 2.0]:
 		for z: float in [-span / 2.0, span / 2.0]:
@@ -236,7 +278,14 @@ static func _timber(kit: BuildingKit, length: float, span: float, height: float,
 		var face := z * (span / 2.0 + out)
 		for i in range(1, bays):
 			var x := -length / 2.0 + length * i / bays
-			kit.box(Vector3(x, height / 2.0, face), Vector3(0.2, height - 0.4, 0.12), trim)
+			# Not across a window.
+			var clear := true
+			for place: Array in windows:
+				var at: Vector3 = place[0]
+				if signf(at.z) == z and absf(at.x - x) < 0.7:
+					clear = false
+			if clear:
+				kit.box(Vector3(x, height / 2.0, face), Vector3(0.2, height - 0.4, 0.12), trim)
 		for end: float in [-1.0, 1.0]:
 			var corner := end * length / 2.0
 			kit.beam(Vector3(corner - end * 0.2, 0.55, face), Vector3(corner - end * minf(1.6, length / bays), minf(height - 0.3, height / storeys), face), 0.16, trim)
@@ -245,11 +294,16 @@ static func _timber(kit: BuildingKit, length: float, span: float, height: float,
 		kit.box(Vector3(x * (length / 2.0 + out), height / 2.0, 0), Vector3(0.12, height - 0.4, 0.2), trim)
 
 
-## Windows along the long walls (and one each end): a dark pane in a frame,
-## a sill, and shutters; left out where the door is, and at the hearth's
-## end. In walls `thick` thick, daylight shows through them inside.
-static func _windows(kit: BuildingKit, length: float, span: float, height: float, storeys: int, door: Array, trim: Color, look: Dictionary, thick := 0.0, hearth_side := 0.0) -> void:
-	var shutter: Color = _look(look, "shutter", SHUTTER)
+## Where a house's windows go: along the long walls (two rows for two
+## storeys) and one in each end; not where the door is, nor in the hearth's
+## end. Each is [middle (on the outer face), outward, half width, half
+## height].
+const WINDOW_HALF_WIDTH := 0.45
+const WINDOW_HALF_HEIGHT := 0.55
+
+
+static func _window_places(length: float, span: float, height: float, storeys: int, door: Array, hearth_side := 0.0) -> Array:
+	var places := []
 	var rows: Array[float] = []
 	rows.assign([height * 0.5] if storeys == 1 else [height * 0.27, height * 0.73])
 	var count := maxi(int(length / 3.2), 1)
@@ -258,30 +312,41 @@ static func _windows(kit: BuildingKit, length: float, span: float, height: float
 			var x := -length / 2.0 + length * (i + 0.5) / count
 			var at := Vector3(x, 0, z * span / 2.0)
 			for y: float in rows:
-				if not door.is_empty() and at.distance_to(door[0]) < 1.5 and y < 2.6:
+				if not door.is_empty() and at.distance_to(door[0]) < 1.6 and y < 2.8:
 					continue
-				_window(kit, at + Vector3.UP * y, Vector3(0, 0, z), trim, shutter, thick)
+				places.append([at + Vector3.UP * y, Vector3(0, 0, z), WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT])
 	for x: float in [-1.0, 1.0]:
 		var at := Vector3(x * length / 2.0, 0, 0)
-		if (not door.is_empty() and at.distance_to(door[0]) < 1.5) or x == hearth_side:
+		if (not door.is_empty() and at.distance_to(door[0]) < 1.6) or x == hearth_side:
 			continue
-		_window(kit, at + Vector3.UP * rows[0], Vector3(x, 0, 0), trim, shutter, thick)
+		places.append([at + Vector3.UP * rows[0], Vector3(x, 0, 0), WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT])
+	return places
 
 
+## A window, `at` the middle of its outer face. In a solid wall, a dark
+## pane; in a wall `thick` thick (a room), an opening you see through, lined
+## with a wooden frame, a mullion and transom across it, sills inside and
+## out. Shutters stand open either side.
 static func _window(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, shutter: Color, thick := 0.0) -> void:
 	var across := Vector3(out.z, 0, -out.x).abs()
-	var w := 0.85
-	var h := 1.0
-	kit.box(at + out * 0.03, across * w + Vector3.UP * h + out.abs() * 0.06, GLASS)
-	kit.box(at + out * 0.06, across * 0.08 + Vector3.UP * h + out.abs() * 0.05, trim)
-	kit.box(at + out * 0.06 + Vector3.UP * (h / 2.0), across * (w + 0.2) + Vector3.UP * 0.12 + out.abs() * 0.1, trim)
-	kit.box(at + out * 0.1 - Vector3.UP * (h / 2.0 + 0.04), across * (w + 0.35) + Vector3.UP * 0.12 + out.abs() * 0.25, trim)
-	for side: float in [-1.0, 1.0]:
-		kit.box(at + out * 0.06 + across * side * (w / 2.0 + 0.24), across * 0.44 + Vector3.UP * h + out.abs() * 0.06, shutter)
+	var w := WINDOW_HALF_WIDTH * 2.0
+	var h := WINDOW_HALF_HEIGHT * 2.0
 	if thick > 0.0:
-		var inside := at - out * thick
-		kit.box(inside - out * 0.02, across * w + Vector3.UP * h + out.abs() * 0.04, DAYLIGHT)
-		kit.box(inside - out * 0.08 - Vector3.UP * (h / 2.0 + 0.04), across * (w + 0.2) + Vector3.UP * 0.1 + out.abs() * 0.18, trim)
+		var middle := at - out * (thick / 2.0)
+		var deep := out.abs() * (thick + 0.04)
+		for side: float in [-1.0, 1.0]:
+			kit.box(middle + across * side * (w / 2.0 - 0.04), across * 0.08 + Vector3.UP * h + deep, trim)
+			kit.box(middle + Vector3.UP * side * (h / 2.0 - 0.04), across * w + Vector3.UP * 0.08 + deep, trim)
+		kit.box(middle, across * 0.06 + Vector3.UP * h + out.abs() * 0.07, trim.darkened(0.2))
+		kit.box(middle + Vector3.UP * 0.1, across * w + Vector3.UP * 0.06 + out.abs() * 0.07, trim.darkened(0.2))
+		kit.box(at - out * (thick + 0.08) - Vector3.UP * (h / 2.0 + 0.05), across * (w + 0.25) + Vector3.UP * 0.1 + out.abs() * 0.2, trim)
+	else:
+		kit.box(at + out * 0.03, across * w + Vector3.UP * h + out.abs() * 0.06, GLASS)
+		kit.box(at + out * 0.06, across * 0.08 + Vector3.UP * h + out.abs() * 0.05, trim)
+	kit.box(at + out * 0.06 + Vector3.UP * (h / 2.0 + 0.04), across * (w + 0.2) + Vector3.UP * 0.12 + out.abs() * 0.1, trim)
+	kit.box(at + out * 0.1 - Vector3.UP * (h / 2.0 + 0.05), across * (w + 0.35) + Vector3.UP * 0.12 + out.abs() * 0.25, trim)
+	for side: float in [-1.0, 1.0]:
+		kit.box(at + out * 0.06 + across * side * (w / 2.0 + 0.26), across * 0.46 + Vector3.UP * h + out.abs() * 0.06, shutter)
 
 
 ## A door on a wall with its frame, lintel and a step: `at` the middle of
@@ -315,30 +380,38 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 	var face: Vector3 = placed[0]
 	var out: Vector3 = placed[1]
 	var thick := 0.6 if hollow else 0.0
+	# Lancets along the long walls between the buttresses, and one in each
+	# end: [bottom middle (on the outer face), outward, height].
+	var bays := maxi(int(length / 3.0), 2)
+	var lancets := []
+	for z: float in [-1.0, 1.0]:
+		for i in bays:
+			var x := -length / 2.0 + length * (i + 0.5) / bays
+			if Vector3(x, 0, z * span / 2.0).distance_to(face) >= 1.6:
+				lancets.append([Vector3(x, height * 0.3, z * span / 2.0), Vector3(0, 0, z), height * 0.45])
+	for x: float in [-1.0, 1.0]:
+		if Vector3(x * length / 2.0, 0, 0).distance_to(face) > 1.6:
+			lancets.append([Vector3(x * length / 2.0, height * 0.3, 0), Vector3(x, 0, 0), height * 0.5])
 	if hollow:
-		_hollow_walls(kit, length, span, height, thick, wall, stone, placed)
+		var holes := []
+		for lancet: Array in lancets:
+			var bottom: Vector3 = lancet[0]
+			holes.append([bottom + Vector3.UP * (float(lancet[2]) / 2.0), lancet[1], LANCET_HALF_WIDTH, float(lancet[2]) / 2.0])
+		_hollow_walls(kit, length, span, height, thick, wall, stone, placed, holes)
 		kit.block(Vector3(0, -0.05, 0), Vector3(length - thick * 2.0, 0.15, span - thick * 2.0), _look(look, "floor", wall), 0.0, true)
 	else:
 		kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
 		kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.5, 0.7, span + 0.5), stone)
 	# A course under the eaves.
 	kit.block(Vector3(0, height - 0.35, 0), Vector3(length + 0.25, 0.3, span + 0.25), stone)
-	var bays := maxi(int(length / 3.0), 2)
 	for z: float in [-1.0, 1.0]:
 		for i in bays + 1:
 			var x := -length / 2.0 + length * i / bays
 			# Buttresses, stepped.
 			kit.block(Vector3(x, 0, z * (span / 2.0 + 0.35)), Vector3(0.7, height * 0.75, 0.7), stone)
 			kit.block(Vector3(x, height * 0.75, z * (span / 2.0 + 0.2)), Vector3(0.6, height * 0.15, 0.4), stone)
-		for i in bays:
-			var x := -length / 2.0 + length * (i + 0.5) / bays
-			if Vector3(x, 0, z * span / 2.0).distance_to(face) < 1.6:
-				continue
-			_lancet(kit, Vector3(x, height * 0.3, z * span / 2.0), Vector3(0, 0, z), height * 0.45, stone, thick)
-	# The end windows.
-	for x: float in [-1.0, 1.0]:
-		if Vector3(x * length / 2.0, 0, 0).distance_to(face) > 1.6:
-			_lancet(kit, Vector3(x * length / 2.0, height * 0.3, 0), Vector3(x, 0, 0), height * 0.5, stone, thick)
+	for lancet: Array in lancets:
+		_lancet(kit, lancet[0], lancet[1], lancet[2], stone, thick)
 	# The arched door (open, in a hollow chapel).
 	var across := Vector3(out.z, 0, out.x).abs()
 	if hollow:
@@ -370,22 +443,32 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 	return room
 
 
-## A tall narrow window with a pointed top and a stone surround (and light
-## through it, inside walls `thick` thick).
+## A tall narrow window, `at` the middle of its foot on the outer face,
+## with a stone sill and a pointed hood. In a solid wall a dark pane with a
+## pointed top; in a wall `thick` thick, an opening you see through,
+## crossed by lead bars, with a sill inside too.
+const LANCET_HALF_WIDTH := 0.35
+const LEAD := Color(0.16, 0.16, 0.18)
+
+
 static func _lancet(kit: BuildingKit, at: Vector3, out: Vector3, height: float, stone: Color, thick := 0.0) -> void:
 	var across := Vector3(out.z, 0, -out.x).abs()
-	kit.block(at + out * 0.03, across * 0.7 + Vector3.UP * height + out.abs() * 0.06, GLASS)
-	kit.block(at + out * 0.05 - Vector3.UP * 0.12, across * 1.0 + Vector3.UP * 0.12 + out.abs() * 0.2, stone)
+	var w := LANCET_HALF_WIDTH * 2.0
+	kit.block(at + out * 0.05 - Vector3.UP * 0.12, across * (w + 0.3) + Vector3.UP * 0.12 + out.abs() * 0.2, stone)
 	var outer := kit.frame
 	kit.frame = outer * Transform3D(Basis(Vector3.UP, atan2(out.x, out.z)), at + out * 0.04 + Vector3.UP * height)
-	kit.wedge(Vector3.ZERO, 0.7, 0.45, 0.06, GLASS)
-	kit.wedge(Vector3(0, 0, 0.03), 1.0, 0.65, 0.08, stone)
+	if thick <= 0.0:
+		kit.wedge(Vector3.ZERO, w, 0.45, 0.06, GLASS)
+	kit.wedge(Vector3(0, 0, 0.03), w + 0.3, 0.65, 0.08, stone)
 	kit.frame = outer
 	if thick > 0.0:
-		kit.block(at - out * (thick + 0.02), across * 0.7 + Vector3.UP * height + out.abs() * 0.04, DAYLIGHT)
-		kit.frame = outer * Transform3D(Basis(Vector3.UP, atan2(-out.x, -out.z)), at - out * (thick + 0.02) + Vector3.UP * height)
-		kit.wedge(Vector3.ZERO, 0.7, 0.45, 0.04, DAYLIGHT)
-		kit.frame = outer
+		var middle := at - out * (thick / 2.0) + Vector3.UP * (height / 2.0)
+		kit.box(middle, across * 0.05 + Vector3.UP * height + out.abs() * 0.05, LEAD)
+		for t: float in [-0.25, 0.1]:
+			kit.box(middle + Vector3.UP * height * t, across * w + Vector3.UP * 0.05 + out.abs() * 0.05, LEAD)
+		kit.block(at - out * (thick + 0.08) - Vector3.UP * 0.12, across * (w + 0.2) + Vector3.UP * 0.12 + out.abs() * 0.2, stone)
+	else:
+		kit.block(at + out * 0.03, across * w + Vector3.UP * height + out.abs() * 0.06, GLASS)
 
 
 # Furnishing rooms (from house and chapel): positions in the room's own
@@ -434,9 +517,12 @@ static func furnish(kit: BuildingKit, room: Dictionary, kind: String, look: Dict
 			for side: float in [-1.0, 1.0]:
 				bench(kit, _at(room, -0.3, side * 1.1), yaw, long - 0.4, wood)
 			rug(kit, _at(room, -0.3, 0.0), yaw, long + 1.6, 3.4, cloth)
-			for i in 3:
+			# Banners between the windows (_window_places spaces those).
+			var length := (hx + WALL_THICK) * 2.0
+			var count := maxi(int(length / 3.2), 1)
+			for i in range(1, count):
 				for side: float in [-1.0, 1.0]:
-					banner(kit, _at(room, -hx + hx * 2.0 * (i + 0.5) / 3.0, side * (hz - 0.02)) + Vector3.UP * 2.0, yaw + (0.0 if side < 0.0 else PI), cloth if i % 2 == 0 else Color(0.2, 0.3, 0.55))
+					banner(kit, _at(room, -length / 2.0 + length * i / count, side * (hz - 0.02)) + Vector3.UP * 2.0, yaw + (0.0 if side < 0.0 else PI), cloth if i % 2 == 1 else Color(0.2, 0.3, 0.55))
 		"inn":
 			# The bar across the back, the keeper behind it, barrels on the wall.
 			var bar_z := back * 0.62
