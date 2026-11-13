@@ -98,12 +98,7 @@ const SPAWNS := [
 	[94, Vector2(110, 140), 12.0, 5],   # Brigand Footpad, brigand camp (5-6)
 ]
 
-const GRASS := Color(0.36, 0.55, 0.25)
-const FOREST_FLOOR := Color(0.26, 0.4, 0.19)
 const ROCK := Color(0.47, 0.45, 0.42)
-const DIRT := Color(0.55, 0.42, 0.28)
-const MUD := Color(0.42, 0.36, 0.27)
-const PAVING := Color(0.6, 0.57, 0.5)
 const STONE := Color(0.66, 0.63, 0.58)
 const DARK_STONE := Color(0.45, 0.43, 0.41)
 const ROOF := Color(0.55, 0.22, 0.17)
@@ -112,11 +107,15 @@ const DARK_WOOD := Color(0.3, 0.2, 0.13)
 const CANVAS := Color(0.62, 0.55, 0.42)
 
 var _detail := FastNoiseLite.new()
+## Where flowers grow thick.
+var _meadow := FastNoiseLite.new()
 
 
 func _init() -> void:
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
+	_meadow.seed = SEED + 4
+	_meadow.frequency = 0.03
 	zone_name = ZONE_NAME
 	size = SIZE
 	graveyard = SPAWN
@@ -129,8 +128,15 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
-	build_water(WATER_LEVEL)
+	# Stone, roofs and wood with painted textures.
+	Props.use_texture(STONE, "stone_wall", 4.0)
+	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
+	Props.use_texture(ROOF, "roof_tiles", 2.5)
+	Props.use_texture(WOOD, "planks", 2.0)
+	Props.use_texture(DARK_WOOD, "planks", 2.0)
+	Props.use_texture(ROCK, "rock", 3.0)
+	build_ground(STEP, _ground_tint, _ground_layers)
+	build_water(WATER_LEVEL, true)
 	build_edges()
 	_build_priory()
 	_build_mine()
@@ -160,22 +166,33 @@ func height_at(x: float, z: float) -> float:
 	return carve_passes(x, z, height)
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground): dirt (camps, roads,
+## the stream's mud), cobbles (the priory), rock (steep and high ground) and
+## forest floor (the woods).
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.06
-	var color := GRASS.lerp(FOREST_FLOOR, _woods_density(point))
-	color = color.lerp(PAVING, 1.0 - smoothstep(26.0, 30.0, _priory_distance(point)))
+	var dirt := 0.0
 	for flat: Array in FLATS:
-		color = color.lerp(DIRT, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
-	var road := INF
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.9)
+	var road := distance_to_pass(point)
 	for line: Array in ROADS:
 		road = minf(road, distance_to_line(point, line))
-	road = minf(road, distance_to_pass(point))
-	color = color.lerp(DIRT, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, road))
-	color = color.lerp(MUD, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM)))
-	color = color.lerp(ROCK, smoothstep(0.82, 0.68, normal.y))
-	color = color.lerp(ROCK, smoothstep(24.0, 34.0, y))
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, road))
+	dirt = maxf(dirt, _mud(point))
+	var cobbles := 1.0 - smoothstep(26.0, 30.0, _priory_distance(point))
+	var rock := maxf(smoothstep(0.82, 0.68, normal.y), smoothstep(24.0, 34.0, y))
+	return Color(dirt, cobbles, rock, _woods_density(point))
+
+
+## Wet ground by the stream.
+func _mud(point: Vector2) -> float:
+	return 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM))
+
+
+## The textured ground's tint: darker mud by the stream, a little noise.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.08 - _mud(Vector2(x, z)) * 0.3
+	return Color(shade, shade, shade)
 
 
 func _woods_density(point: Vector2) -> float:
@@ -306,16 +323,14 @@ func _build_bridge() -> void:
 
 # Woods and scattered trees, placed by a seeded random walk over the map.
 
+
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var pine_trunks: Array[Transform3D] = []
-	var pine_lower: Array[Transform3D] = []
-	var pine_upper: Array[Transform3D] = []
-	var oak_trunks: Array[Transform3D] = []
-	var oak_crowns: Array[Transform3D] = []
+	var pines := variant_lists(TREE_VARIANTS)
+	var oaks := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
 	trunk_shape.radius = 0.45
 	trunk_shape.height = 4.0
@@ -329,34 +344,15 @@ func _build_trees() -> void:
 		var size := rng.randf_range(0.8, 1.3)
 		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
 		var pine := y > 12.0 or point.y < -60.0 or rng.randf() < 0.3
-		if pine:
-			pine_trunks.append(base * Transform3D(Basis(), Vector3(0, 1.0, 0)))
-			pine_lower.append(base * Transform3D(Basis(), Vector3(0, 3.2, 0)))
-			pine_upper.append(base * Transform3D(Basis(), Vector3(0, 5.0, 0)))
-		else:
-			oak_trunks.append(base * Transform3D(Basis(), Vector3(0, 1.4, 0)))
-			oak_crowns.append(base * Transform3D(Basis(), Vector3(0, 4.3, 0)))
+		(pines if pine else oaks)[rng.randi_range(0, TREE_VARIANTS - 1)].append(base)
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 2.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.25
-	trunk.bottom_radius = 0.35
-	trunk.height = 2.0
-	trunk.radial_segments = 6
-	var oak_trunk := trunk.duplicate() as CylinderMesh
-	oak_trunk.height = 2.8
-	oak_trunk.top_radius = 0.3
-	oak_trunk.bottom_radius = 0.45
 	# Added once its shapes are in: adding shapes to a body in the world
 	# rebuilds the body each time.
 	add_child(trees)
-	Props.scatter(trees, trunk, DARK_WOOD, pine_trunks)
-	Props.scatter(trees, Props.cone(1.9, 3.6), Color(0.16, 0.34, 0.2), pine_lower)
-	Props.scatter(trees, Props.cone(1.35, 2.8), Color(0.19, 0.39, 0.22), pine_upper)
-	Props.scatter(trees, oak_trunk, WOOD, oak_trunks)
-	Props.scatter(trees, Props.blob(2.3), Color(0.27, 0.48, 0.2), oak_crowns)
+	draw_trees(trees, pines, oaks, SEED)
 
 
 func _clear_for_tree(point: Vector2, y: float) -> bool:
@@ -380,7 +376,7 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	for attempt in 1500:
 		var point := Vector2(rng.randf_range(-EDGE, EDGE), rng.randf_range(-EDGE, EDGE))
 		var y := height_at(point.x, point.y)
@@ -388,7 +384,7 @@ func _build_rocks() -> void:
 		if rng.randf() > chance or not _clear_for_tree(point, minf(y, 30.0)):
 			continue
 		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -399,43 +395,54 @@ func _build_rocks() -> void:
 	# Added once its shapes are in: adding shapes to a body in the world
 	# rebuilds the body each time.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED)
 
 
-const CLUTTER_ATTEMPTS := 16000
-
-
-## Grass tufts and flowers on open ground: only for looks, so no collision
-## and no shadows. Placed in random order, so drawing a share of them thins
-## them evenly.
+## Grass, flowers, ferns and bushes, made near the camera as it goes
+## (Zone.add_nature_clutter): only for looks, so no collision.
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var tall_grass: Array[Transform3D] = []
-	var yellow: Array[Transform3D] = []
-	var white: Array[Transform3D] = []
-	for attempt in CLUTTER_ATTEMPTS:
-		var point := Vector2(rng.randf_range(-EDGE, EDGE), rng.randf_range(-EDGE, EDGE))
-		var y := height_at(point.x, point.y)
-		if y > 26.0 or not _clear_for_clutter(point, y):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		var roll := rng.randf()
-		if roll < 0.06:
-			(yellow if rng.randf() < 0.6 else white).append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.1)), at + Vector3.UP * 0.25))
-		elif roll < 0.4:
-			tall_grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.2, 1.8), 1)), at + Vector3.UP * 0.2))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.2), 1)), at + Vector3.UP * 0.15))
-	add_clutter(clutter, Props.cone(0.18, 0.3, 4), Color(0.3, 0.52, 0.22), grass)
-	add_clutter(clutter, Props.cone(0.14, 0.4, 4), Color(0.36, 0.56, 0.24), tall_grass)
-	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.95, 0.82, 0.25), yellow)
-	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.92, 0.92, 0.88), white)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3)
+
+
+## What grows at a point, if anything: thick grass on open ground, thin in
+## the woods with ferns under the trees, flowers in meadows. Called from a
+## worker thread: it only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var woods := _woods_density(point)
+	if rng.randf() > lerpf(0.9, 0.3, woods):
+		return []
+	var y := ground_height(point.x, point.y)
+	if y > 26.0 or not _clear_for_clutter(point, y) or _steep(point, y):
+		return []
+	var at := Vector3(point.x, y - 0.05, point.y)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	if woods > 0.35 and rng.randf() < 0.45:
+		return ["ferns", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.3)), at)]
+	if woods < 0.3 and ((_meadow.get_noise_2dv(point) > 0.25 and rng.randf() < 0.35) or rng.randf() < 0.025):
+		var kind: String = ["flowers_yellow", "flowers_white", "flowers_blue"][clampi(int((_meadow.get_noise_2dv(point * 0.37 + Vector2(500, 0)) + 1.0) * 1.5), 0, 2)]
+		return [kind, Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.1)), at)]
+	if rng.randf() < 0.3:
+		return ["tall", Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.1, 1.5), 1) * rng.randf_range(0.9, 1.2)), at)]
+	return ["grass", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.7, 1.1), 1) * rng.randf_range(0.8, 1.15)), at)]
+
+
+## A bush, now and then: thickest along the edges of the woods.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var woods := _woods_density(point)
+	if rng.randf() > 0.04 + woods * (1.0 - woods) * 4.0 * 0.45:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y > 26.0 or not _clear_for_clutter(point, y) or _steep(point, y):
+		return []
+	var size := rng.randf_range(0.8, 1.5)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)), Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.8, 1.1), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+## Steep ground is bare rock: nothing grows on it.
+func _steep(point: Vector2, y: float) -> bool:
+	var slope := maxf(absf(ground_height(point.x + 0.6, point.y) - y), absf(ground_height(point.x, point.y + 0.6) - y)) / 0.6
+	return slope > 0.6
 
 
 ## Open ground: not on roads, water, paving or camps.

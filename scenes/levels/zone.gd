@@ -166,17 +166,63 @@ func ground_point(x: float, z: float) -> Vector3:
 
 
 ## Ground over the zone's square, colored by `color` (f(x, z, y, normal)).
-func build_ground(step: float, color: Callable) -> void:
+## With `weights` (f(x, z, y, normal) -> Color of dirt, cobbles, rock and
+## forest floor) it's textured (terrain_material), and `color` tints it.
+func build_ground(step: float, color: Callable, weights := Callable()) -> void:
 	var ground := Terrain.new()
 	ground.name = "Ground"
 	add_child(ground)
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.vertex_color_is_srgb = true
+	var material: Material
+	if weights.is_valid():
+		material = terrain_material()
+	else:
+		var flat := StandardMaterial3D.new()
+		flat.vertex_color_use_as_albedo = true
+		flat.vertex_color_is_srgb = true
+		material = flat
 	# The shared noise is made now, before the worker threads read it.
 	land_noise()
-	ground.build(size, step, height_at, color, material, center)
+	ground.build(size, step, height_at, color, material, center, weights)
 	_ground = ground
+
+
+const TERRAIN_SHADER := preload("res://shaders/terrain.gdshader")
+const WATER_SHADER := preload("res://shaders/water.gdshader")
+const TERRAIN_TEXTURES := {
+	"grass_tex": "grass", "forest_tex": "forest_floor", "dirt_tex": "dirt",
+	"cobble_tex": "cobbles", "rock_tex": "rock",
+}
+
+
+## The textured ground's material (shaders/terrain.gdshader), with the
+## painted textures (tools/textures) and a seamless noise for its borders.
+static func terrain_material() -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = TERRAIN_SHADER
+	for uniform: String in TERRAIN_TEXTURES:
+		material.set_shader_parameter(uniform, load("res://assets/textures/%s.png" % TERRAIN_TEXTURES[uniform]))
+	material.set_shader_parameter("blend_noise", patch_noise())
+	return material
+
+
+static var _patch_noise: NoiseTexture2D
+
+
+## A seamless noise texture the ground and its grass share, for ragged
+## borders and large light and dark patches.
+static func patch_noise() -> NoiseTexture2D:
+	if _patch_noise == null:
+		var noise := FastNoiseLite.new()
+		noise.seed = LAND_SEED
+		noise.frequency = 0.02
+		noise.fractal_octaves = 3
+		_patch_noise = NoiseTexture2D.new()
+		_patch_noise.width = 256
+		_patch_noise.height = 256
+		_patch_noise.seamless = true
+		_patch_noise.generate_mipmaps = true
+		_patch_noise.noise = noise
+	return _patch_noise
 
 
 var _ground: Terrain
@@ -189,14 +235,22 @@ func ground_height(x: float, z: float) -> float:
 
 
 ## Water at a height over the zone's square.
-func build_water(level: float) -> void:
+## `styled` draws it with the pixel-art water shader (shaders/water.gdshader:
+## depth color, ripples, foam), else a flat see-through blue.
+func build_water(level: float, styled := false) -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(size, size)
-	var water := StandardMaterial3D.new()
-	water.albedo_color = Color(0.22, 0.42, 0.62, 0.75)
-	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	water.roughness = 0.2
-	plane.material = water
+	if styled:
+		var shaded := ShaderMaterial.new()
+		shaded.shader = WATER_SHADER
+		shaded.set_shader_parameter("ripple_noise", patch_noise())
+		plane.material = shaded
+	else:
+		var water := StandardMaterial3D.new()
+		water.albedo_color = Color(0.22, 0.42, 0.62, 0.75)
+		water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		water.roughness = 0.2
+		plane.material = water
 	var view := MeshInstance3D.new()
 	view.name = "Water"
 	view.mesh = plane
@@ -355,12 +409,102 @@ func add_clutter(parent: Node3D, mesh: Mesh, color: Color, transforms: Array[Tra
 	_clutter.append(view)
 
 
+## The textured zones' nature (Nature): tree, rock and bush shapes in a few
+## variants each, grass and flower cards drawn to CARD_RANGE yards (they
+## shrink away before that), bushes to BUSH_RANGE.
+const TREE_VARIANTS := 4
+const ROCK_VARIANTS := 5
+const BUSH_VARIANTS := 4
+const CARD_RANGE := 62.0
+const BUSH_RANGE := 140.0
+## The kinds a zone's grass place function can make (add_nature_clutter).
+const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat"]
+
+var _clutter_share := 0.66
+
+
+## A list per variant, for placing trees, rocks or bushes in.
+static func variant_lists(count: int) -> Array:
+	var lists := []
+	for i in count:
+		lists.append([] as Array[Transform3D])
+	return lists
+
+
+## Pines and oaks (lists per variant of where they stand) under `parent`.
+func draw_trees(parent: Node3D, pines: Array, oaks: Array, rng_seed: int) -> void:
+	for i in TREE_VARIANTS:
+		Nature.scatter(parent, Nature.pine_mesh(rng_seed + 10 + i), pines[i])
+		Nature.scatter(parent, Nature.oak_mesh(rng_seed + 20 + i), oaks[i])
+
+
+func draw_rocks(parent: Node3D, rocks: Array, rng_seed: int) -> void:
+	for i in ROCK_VARIANTS:
+		Nature.scatter(parent, Nature.rock_mesh(rng_seed + 30 + i), rocks[i])
+
+
+## Grass, flowers and ferns, and bushes, made near the camera (ClutterField):
+## `grass` is f(point, rng) -> [one of CARD_KINDS, Transform3D] or [], tried
+## every yard; `bush` the same with a variant number, tried every 4 yards.
+func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int) -> void:
+	var square := Rect2(center - Vector2.ONE * size / 2.0, Vector2.ONE * size)
+	var patches := patch_noise()
+	var clump := Nature.card_mesh(1.1, 0.45)
+	var cards := ClutterField.new()
+	cards.name = "Grass"
+	cards.zone = self
+	cards.area = square
+	cards.rng_seed = rng_seed
+	cards.reach = CARD_RANGE + 8.0
+	cards.range_end = CARD_RANGE
+	cards.place = grass
+	cards.kinds = {
+		"grass": [clump, Nature.card_material("grass_blades", patches)],
+		"tall": [Nature.card_mesh(0.8, 0.75), Nature.card_material("grass_blades", patches, 0.12)],
+		"flowers_yellow": [clump, Nature.card_material("flowers_yellow", patches)],
+		"flowers_white": [clump, Nature.card_material("flowers_white", patches)],
+		"flowers_blue": [clump, Nature.card_material("flowers_blue", patches)],
+		"ferns": [Nature.card_mesh(1.3, 0.85), Nature.card_material("ferns", patches, 0.05)],
+		"wheat": [Nature.card_mesh(1.0, 1.0, 2), Nature.card_material("wheat", patches, 0.1)],
+	}
+	add_child(cards)
+	var bushes := ClutterField.new()
+	bushes.name = "Bushes"
+	bushes.zone = self
+	bushes.area = square
+	bushes.rng_seed = rng_seed + 1
+	bushes.chunk = 48.0
+	bushes.step = 4.0
+	bushes.reach = BUSH_RANGE + 10.0
+	bushes.range_end = BUSH_RANGE
+	bushes.shadows = true
+	bushes.thinned = false
+	bushes.place = bush
+	for i in BUSH_VARIANTS:
+		bushes.kinds[str(i)] = [Nature.bush_mesh(rng_seed + 40 + i), null]
+	add_child(bushes)
+
+
+## Clutter the Environment Detail option thins (a ClutterField's chunks).
+func add_clutter_view(view: MultiMeshInstance3D) -> void:
+	_clutter.append(view)
+	_thin(view)
+
+
+func forget_clutter(view: MultiMeshInstance3D) -> void:
+	_clutter.erase(view)
+
+
+func _thin(view: MultiMeshInstance3D) -> void:
+	view.visible = _clutter_share > 0.0
+	view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * _clutter_share)
+
+
 ## The Environment Detail option: how much of the clutter is drawn.
 func set_clutter(level: String) -> void:
-	var share: float = CLUTTER_SHARE.get(level, 0.66)
+	_clutter_share = CLUTTER_SHARE.get(level, 0.66)
 	for view in _clutter:
-		view.visible = share > 0.0
-		view.multimesh.visible_instance_count = roundi(view.multimesh.instance_count * share)
+		_thin(view)
 
 
 ## The zone's game objects (quest_objects, chests), under an Objects node.

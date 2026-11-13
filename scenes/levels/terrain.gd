@@ -6,8 +6,11 @@ extends StaticBody3D
 ## Builds the ground over a square `size` yards across, centered on `center`
 ## (x, z), with a vertex every `step` yards. `height` is f(x, z) -> float and
 ## `color` is f(x, z, height, normal) -> Color; both are called from worker
-## threads, a row at a time on each, so they must only read.
-func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO) -> void:
+## threads, a row at a time on each, so they must only read. `weights`, if
+## given, is f(x, z, height, normal) -> Color of a textured ground's layers
+## (shaders/terrain.gdshader: r dirt, g cobbles, b rock, a forest floor),
+## stored in UV and UV2.
+func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO, weights := Callable()) -> void:
 	var cells := roundi(size / step)
 	var width := cells + 1
 	var half := size / 2.0
@@ -38,9 +41,14 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 		var points := PackedVector3Array()
 		var normals := PackedVector3Array()
 		var colors := PackedColorArray()
+		var uvs := PackedVector2Array()
+		var uv2s := PackedVector2Array()
 		points.resize(width)
 		normals.resize(width)
 		colors.resize(width)
+		if weights.is_valid():
+			uvs.resize(width)
+			uv2s.resize(width)
 		var z := origin.y + row * step
 		for column in width:
 			var y := heights[row * width + column]
@@ -53,15 +61,23 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 			points[column] = Vector3(x, y, z)
 			normals[column] = normal
 			colors[column] = color.call(x, z, y, normal)
-		rows[row] = [points, normals, colors]
+			if weights.is_valid():
+				var layers: Color = weights.call(x, z, y, normal)
+				uvs[column] = Vector2(layers.r, layers.g)
+				uv2s[column] = Vector2(layers.b, layers.a)
+		rows[row] = [points, normals, colors, uvs, uv2s]
 	)
 	var points := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
+	var uvs := PackedVector2Array()
+	var uv2s := PackedVector2Array()
 	for row: Array in rows:
 		points.append_array(row[0])
 		normals.append_array(row[1])
 		colors.append_array(row[2])
+		uvs.append_array(row[3])
+		uv2s.append_array(row[4])
 	# Two triangles a quad: a b c and b d c.
 	var indices := PackedInt32Array()
 	indices.resize(cells * cells * 6)
@@ -82,6 +98,9 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 	arrays[Mesh.ARRAY_VERTEX] = points
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_COLOR] = colors
+	if weights.is_valid():
+		arrays[Mesh.ARRAY_TEX_UV] = uvs
+		arrays[Mesh.ARRAY_TEX_UV2] = uv2s
 	arrays[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)

@@ -4,13 +4,40 @@ extends RefCounted
 ## colored boxes, roofs, trees and rocks, with collision on the world layer.
 
 static var _materials: Dictionary
+## Colors drawn with a painted texture instead (use_texture): color ->
+## [texture key, yards it spans].
+static var _textured: Dictionary = {}
+## The painted textures' average colors, which a block's color is tinted
+## against.
+const TEXTURE_AVERAGES := {
+	"stone_wall": Color(0.6, 0.58, 0.54), "roof_tiles": Color(0.5, 0.21, 0.15),
+	"planks": Color(0.43, 0.3, 0.19), "rock": Color(0.42, 0.4, 0.37),
+	"thatch": Color(0.62, 0.48, 0.24), "plaster": Color(0.83, 0.79, 0.69),
+}
+const TEXTURED_SHADER := preload("res://shaders/textured_prop.gdshader")
 
 
-static func material(color: Color) -> StandardMaterial3D:
+## Blocks of this color are drawn with a painted texture (tools/textures)
+## spanning `size` yards, tinted toward the color (shaders/textured_prop).
+static func use_texture(color: Color, key: String, size: float) -> void:
+	_textured[color] = [key, size]
+
+
+static func material(color: Color) -> Material:
 	if not _materials.has(color):
-		var made := StandardMaterial3D.new()
-		made.albedo_color = color
-		_materials[color] = made
+		if _textured.has(color):
+			var key: String = _textured[color][0]
+			var average: Color = TEXTURE_AVERAGES.get(key, Color(0.5, 0.5, 0.5))
+			var textured := ShaderMaterial.new()
+			textured.shader = TEXTURED_SHADER
+			textured.set_shader_parameter("albedo_tex", load("res://assets/textures/%s.png" % key))
+			textured.set_shader_parameter("texture_size", _textured[color][1])
+			textured.set_shader_parameter("tint", Vector3(color.r / average.r, color.g / average.g, color.b / average.b))
+			_materials[color] = textured
+		else:
+			var made := StandardMaterial3D.new()
+			made.albedo_color = color
+			_materials[color] = made
 	return _materials[color]
 
 
