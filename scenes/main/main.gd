@@ -183,6 +183,59 @@ const SHADOW_QUALITY := { "Low": [45.0, 1024], "Medium": [90.0, 2048], "High": [
 const VIEW_DISTANCE := { "Near": [120.0, 0.0045], "Normal": [200.0, 0.0025], "Far": [300.0, 0.0016], "Very Far": [420.0, 0.0011] }
 
 
+## Light Shafts: the volumetric fog's grid, [cells across the screen, slices
+## deep]. Narrow windows' beams blur into haze on a coarser grid; High costs
+## about twice Low, and only while the camera is near a room.
+const SHAFT_GRID := { "Low": [128, 64], "High": [192, 96] }
+## How near a room's dust the camera must be for its shafts to be drawn.
+const SHAFT_REACH := 8.0
+var _shaft_grid: Array = []
+var _shafts_left := 0.0
+
+
+## The volumetric fog costs its whole grid wherever it's on, even with nothing
+## to show, so it's on only while the camera is in or near a room's dust. And
+## the sky's ambient light, which walls and roofs don't block, fades down while
+## the camera is inside a room (INDOOR_AMBIENT), so rooms are lit by their
+## windows, door and lanterns.
+func _update_shafts(delta: float) -> void:
+	var environment := (_world.find_child("WorldEnvironment", true, false) as WorldEnvironment).environment
+	if _outdoor_ambient < 0.0:
+		_outdoor_ambient = environment.ambient_light_energy
+	var goal := _outdoor_ambient * (INDOOR_AMBIENT if _indoors else 1.0)
+	if environment.ambient_light_energy != goal:
+		environment.ambient_light_energy = move_toward(environment.ambient_light_energy, goal,
+			_outdoor_ambient * delta / AMBIENT_FADE)
+	_shafts_left -= delta
+	if _shafts_left > 0.0:
+		return
+	_shafts_left = 0.1
+	var near := false
+	_indoors = false
+	var eye := _camera.global_position
+	for air: FogVolume in get_tree().get_nodes_in_group(BuildingKit.DUST_GROUP):
+		var local := air.global_transform.affine_inverse() * eye
+		var half := air.size / 2.0
+		if absf(local.x) < half.x and absf(local.y) < half.y and absf(local.z) < half.z:
+			_indoors = true
+		var reach := half + Vector3.ONE * SHAFT_REACH
+		if absf(local.x) < reach.x and absf(local.y) < reach.y and absf(local.z) < reach.z:
+			near = true
+			if _indoors:
+				break
+	near = near and not _shaft_grid.is_empty()
+	if environment.volumetric_fog_enabled != near:
+		environment.volumetric_fog_enabled = near
+
+
+## The sky's ambient light inside a room, as a share of outdoors'.
+const INDOOR_AMBIENT := 0.25
+## Seconds the ambient light takes to fade between outdoors and in.
+const AMBIENT_FADE := 0.6
+var _outdoor_ambient := -1.0
+var _indoors := false
+
+
 ## Video options that live in the world: shadows, view distance, field of
 ## view, ground clutter, ambient occlusion, bloom and the picture's brightness,
 ## gamma, contrast and saturation.
@@ -213,6 +266,16 @@ func _apply_setting(key: String) -> void:
 				Settings.get_value("character_shadows"), Settings.get_value("cloak_physics"))
 		"spell_effects":
 			Vfx.quality = Settings.get_value(key)
+		"light_shafts":
+			# Volumetric fog, thin nowhere but in rooms' dust (BuildingKit.dust),
+			# on only near a room (_update_shafts).
+			var shafts: Variant = Settings.get_value(key)
+			if shafts is bool:  # older options files
+				shafts = "High" if shafts else "Off"
+			_shaft_grid = SHAFT_GRID.get(shafts, [])
+			if not _shaft_grid.is_empty():
+				RenderingServer.environment_set_volumetric_fog_volume_size(_shaft_grid[0], _shaft_grid[1])
+			_shafts_left = 0.0
 		"unit_detail_distance":
 			Bot.FAR = UNIT_DETAIL.get(Settings.get_value(key), 45.0)
 		"distant_unit_updates":
@@ -305,6 +368,7 @@ func _on_player_died() -> void:
 func _process(delta: float) -> void:
 	_update_drag_shield()
 	_check_zone()
+	_update_shafts(delta)
 	# Exploration quests: walking into the place they send you to.
 	QuestLog.tick(delta)
 	_explore_left -= delta

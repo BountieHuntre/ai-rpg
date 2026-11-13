@@ -45,6 +45,7 @@ const CATEGORIES := {
 		["character_shadows", "Character Shadows", "choice", ["Off", "Normal", "Full"]],
 		["cloak_physics", "Cloak Physics", "choice", ["Off", "Player Only", "Everyone"]],
 		["spell_effects", "Spell Effects", "choice", ["Off", "Low", "High"]],
+		["light_shafts", "Light Shafts", "choice", ["Off", "Low", "High"]],
 		["unit_detail_distance", "Unit Detail Distance", "choice", ["Near", "Normal", "Far"]],
 		["distant_unit_updates", "Distant Unit Updates", "choice", ["Low", "Normal", "High"]],
 	],
@@ -995,6 +996,7 @@ const HINTS := {
 	"character_shadows": "Off: characters cast no shadows. Normal: bodies and gear, not weapons or hair. Full: everything.",
 	"cloak_physics": "Whether cloaks swing as their wearers move: for nobody, only you, or everyone.",
 	"spell_effects": "Sparks, bursts and glows from attacks and spells. Low shows fewer, and only within 25 yards.",
+	"light_shafts": "Sunlight streaming in through windows and doors, in the dusty air of buildings you can walk into. Drawn only in and near them; High shows crisp beams, Low softer ones for less.",
 	"unit_detail_distance": "Within this distance (30, 45 or 70 yards) bots and creatures update every frame; beyond it they take turns, which saves time in crowds.",
 	"distant_unit_updates": "How much of each frame goes to bots and creatures beyond the Unit Detail Distance. Higher keeps far ones livelier but costs frame rate.",
 }

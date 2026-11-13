@@ -101,7 +101,8 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 		kit.block(Vector3(x, height + rise * 0.8 + 1.0, -span * 0.18), Vector3(1.15, 0.22, 1.15), stone)
 	if hollow:
 		_trusses(kit, length, span, height, rise, thick, trim)
-		kit.light(Vector3(0, height - 0.8, 0), WARM, maxf(length, span) * 0.8, 0.9)
+		_room_lights(kit, length, span, height, 0.9)
+		kit.dust(Vector3(0, (height + rise * 0.5) / 2.0, 0), Vector3(length - thick * 2.0, height + rise * 0.5, span - thick * 2.0))
 	kit.frame = Transform3D.IDENTITY
 	return { "frame": made[0], "yaw": yaw + (PI / 2.0 if made[3] else 0.0), "x": length / 2.0 - thick, "z": span / 2.0 - thick,
 		"height": height, "door": door, "hearth": hearth, "hearth_side": hearth_side }
@@ -114,6 +115,25 @@ const DOOR_HEIGHT := 2.6
 ## The planks' color (WOOD in the zones), so it's drawn with their texture.
 const FLOOR := Color(0.45, 0.31, 0.2)
 const WARM := Color(1.0, 0.8, 0.55)
+const IRON := Color(0.16, 0.15, 0.14)
+const FLAME := Color(1.0, 0.86, 0.5)
+
+
+## A room's lamps: lanterns hung from the tie beams down its middle, one every
+## 7 yards or so, so a long hall or nave is lit to its far end (one lamp in
+## the middle left the ends dark).
+static func _room_lights(kit: BuildingKit, length: float, span: float, height: float, energy: float) -> void:
+	var count := maxi(1, roundi(length / 7.0))
+	var step := length / count
+	var reach := maxf(span, step) * 1.1 + 2.0
+	for i in count:
+		var x := -length / 2.0 + step * (i + 0.5)
+		var y := height - 1.1
+		kit.beam(Vector3(x, height, 0), Vector3(x, y + 0.3, 0), 0.04, IRON)
+		kit.block(Vector3(x, y + 0.25, 0), Vector3(0.36, 0.06, 0.36), IRON)
+		kit.block(Vector3(x, y - 0.1, 0), Vector3(0.18, 0.3, 0.18), FLAME)
+		kit.block(Vector3(x, y - 0.17, 0), Vector3(0.36, 0.05, 0.36), IRON)
+		kit.light(Vector3(x, y - 0.3, 0), WARM, reach, energy * 0.5)
 const FIRE := Color(1.0, 0.55, 0.25)
 
 
@@ -434,7 +454,8 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 		"height": height, "door": placed, "hearth": false }
 	if hollow:
 		_trusses(kit, length, span, height, rise, thick, trim)
-		kit.light(Vector3(0, height - 1.0, 0), WARM, maxf(length, span) * 0.85, 1.0)
+		_room_lights(kit, length, span, height, 1.0)
+		kit.dust(Vector3(0, (height + rise * 0.5) / 2.0, 0), Vector3(length - thick * 2.0, height + rise * 0.5, span - thick * 2.0))
 	kit.frame = Transform3D.IDENTITY
 	if hollow:
 		_furnish_chapel(kit, room, look)

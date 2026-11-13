@@ -38,6 +38,7 @@ const DEFAULTS := {
 	"character_shadows": "Normal",
 	"cloak_physics": "Everyone",
 	"spell_effects": "High",
+	"light_shafts": "High",
 	"unit_detail_distance": "Normal",
 	"distant_unit_updates": "Normal",
 	# Sound
@@ -532,7 +533,7 @@ const WINDOW_SIZES := ["1280x720", "1440x810", "1600x900", "1920x1080", "2560x14
 ## Graphics options the world reads (Main applies them), so the HUD and
 ## camera know when to look again.
 const WORLD_OPTIONS := ["render_resolution", "animation_quality", "character_detail", "character_shadows",
-	"cloak_physics", "spell_effects", "unit_detail_distance", "distant_unit_updates",
+	"cloak_physics", "spell_effects", "light_shafts", "unit_detail_distance", "distant_unit_updates",
 	"shadow_quality", "view_distance", "field_of_view", "environment_detail",
 	"ambient_occlusion", "bloom", "brightness", "gamma", "contrast", "saturation"]
 

@@ -21,6 +21,13 @@ fog_enabled = true
 fog_light_color = Color(0.7, 0.76, 0.84, 1)
 fog_density = 0.0025
 fog_sky_affect = 0.0
+volumetric_fog_enabled = false
+volumetric_fog_density = 0.0
+volumetric_fog_albedo = Color(1, 0.96, 0.88, 1)
+volumetric_fog_anisotropy = 0.75
+volumetric_fog_length = 24.0
+volumetric_fog_ambient_inject = 0.0
+volumetric_fog_sky_affect = 0.0
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_script")
@@ -31,5 +38,6 @@ environment = SubResource("Environment_1")
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, 0.353553, -0.353553, 0, 0.707107, 0.707107, 0.5, -0.612372, 0.612372, 0, 60, 0)
 shadow_enabled = true
+light_volumetric_fog_energy = 24.0
 directional_shadow_mode = 0
 directional_shadow_max_distance = 90.0

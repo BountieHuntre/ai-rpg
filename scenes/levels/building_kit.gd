@@ -23,8 +23,24 @@ class Surface:
 		points.append_array([a, b, c])
 		normals.append_array([normal, normal, normal])
 var _body := StaticBody3D.new()
+## How thick a room's dust is (FogMaterial density).
+const DUST_DENSITY := 0.06
+## Rooms' dust volumes are in this group (main.gd draws the shafts near them).
+const DUST_GROUP := &"room_dust"
 ## Lights to add: [position, color, range, energy].
 var _lights: Array = []
+## Dusty air inside rooms: [transform, size]. With the world's volumetric
+## fog on (the Light Shafts option), sunlight through the windows and doors
+## shows in it as shafts.
+var _dust: Array = []
+static var _dust_material: FogMaterial
+
+
+## A room's dusty air: a box `size` round `center`, in `frame`.
+func dust(center: Vector3, size: Vector3) -> void:
+	_dust.append([frame * Transform3D(Basis(), center), size])
+
+
 ## Ground the buildings stand on (world squares), where no grass grows.
 var footprints: Array[Rect2] = []
 
@@ -220,6 +236,19 @@ func finish() -> Node3D:
 	if zone:
 		for square in footprints:
 			(zone as Zone).clear_ground(square)
+	if _dust_material == null:
+		_dust_material = FogMaterial.new()
+		_dust_material.density = DUST_DENSITY
+		_dust_material.albedo = Color(1.0, 0.95, 0.85)
+		_dust_material.edge_fade = 0.05
+	for made: Array in _dust:
+		var air := FogVolume.new()
+		air.transform = made[0]
+		air.size = made[1]
+		air.shape = RenderingServer.FOG_VOLUME_SHAPE_BOX
+		air.material = _dust_material
+		air.add_to_group(DUST_GROUP)
+		root.add_child(air)
 	for made: Array in _lights:
 		var lamp := OmniLight3D.new()
 		lamp.position = made[0]
@@ -227,6 +256,10 @@ func finish() -> Node3D:
 		lamp.omni_range = made[2]
 		lamp.light_energy = made[3]
 		lamp.shadow_enabled = false
+		# The default falloff: pools of light under the lanterns, dimmer by the walls.
+		lamp.omni_attenuation = 1.0
+		# A faint glow in the room's dust; the sun's shafts are the show.
+		lamp.light_volumetric_fog_energy = 0.0
 		root.add_child(lamp)
 	_parent.add_child(root)
 	return root
