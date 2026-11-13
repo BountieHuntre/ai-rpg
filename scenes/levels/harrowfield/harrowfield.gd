@@ -229,6 +229,12 @@ var _detail := FastNoiseLite.new()
 const COTTAGE_LOOK := { "wall": PLASTER, "roof": THATCH, "trim": DARK_WOOD, "stone": DARK_STONE, "thatch": true, "timber": true }
 const INN_LOOK := { "wall": PLASTER, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE, "timber": true }
 const STONE_LOOK := { "wall": STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE }
+## Walled places bots go in and out of by their doors: [x1, z1, x2, z2,
+## outside the door, inside it] (Zone.enclosures).
+const ENCLOSURES := [
+	[13.0, 423.0, 23.0, 437.0, Vector2(10.0, 432.0), Vector2(15.5, 432.0)],  # the Harrow Inn, door to the west
+	[-18.0, 411.5, -8.0, 424.5, Vector2(-13.0, 427.5), Vector2(-13.0, 421.5)],  # Wexford's chapel, door to the south
+]
 const SHED_LOOK := { "wall": WOOD, "roof": THATCH, "trim": DARK_WOOD, "stone": DARK_STONE, "thatch": true }
 ## Where flowers grow thick.
 var _meadow := FastNoiseLite.new()
@@ -254,6 +260,7 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	quest_objects = QUEST_OBJECTS
+	enclosures = ENCLOSURES
 	chests = CHESTS
 
 
@@ -390,19 +397,24 @@ func _build_village() -> void:
 	var kit := BuildingKit.new(village, "Buildings")
 	# The Harrow Inn, east of the green, two timbered storeys with its door to
 	# the west and its sign beside it.
-	Buildings.house(kit, _near(v, Vector2(18, -10), y), Vector3(10, 7, 14), 0.0, INN_LOOK, Vector2(-1, 0), 2.0, 2)
+	# Open inside: the bar across its back with Hilde Barrow behind it, tables
+	# and stools, and a fire at its north end.
+	var inn := Buildings.house(kit, _near(v, Vector2(18, -10), y), Vector3(10, 7, 14), 0.0, INN_LOOK, Vector2(-1, 0), 2.0, 2, true, true)
+	Buildings.furnish(kit, inn, "inn", INN_LOOK)
 	kit.beam(_near(v, Vector2(12.6, -12), y + 3.3), _near(v, Vector2(11.6, -12), y + 3.3), 0.12, DARK_WOOD)
 	kit.block(_near(v, Vector2(11.7, -12), y + 2.3), Vector3(0.1, 0.9, 1.3), WOOD)
-	# The chapel north of the green, its door to the green, its tower at the
-	# north end; the churchyard to the west.
-	Buildings.chapel(kit, _near(v, Vector2(-13, -22), y), Vector3(8, 6, 12), 0.0, STONE_LOOK, Vector2(0, 1), Vector2(0, -6.5), 3.2, 13.0)
+	# The chapel north of the green, its door to the green, open inside with
+	# pews up to the altar, where the Templar and Cleric trainers stand; its
+	# tower at the north end, the churchyard to the west.
+	Buildings.chapel(kit, _near(v, Vector2(-13, -22), y), Vector3(10, 7, 13), 0.0, STONE_LOOK, Vector2(0, 1), Vector2(0, -8.1), 3.2, 14.0, true)
 	for stone in [Vector2(-22, 6), Vector2(-25, 9), Vector2(-22, 12), Vector2(-25, 15), Vector2(-28, 6), Vector2(-28, 12)]:
 		Props.box(village, _near(v, stone, y), Vector3(0.9, 1.1, 0.25), DARK_STONE, 0.0, false)
 	for post in [Vector2(-31, 3), Vector2(-31, 19), Vector2(-19, 3), Vector2(-19, 19)]:
 		Props.box(village, _near(v, post, y), Vector3(0.4, 1.2, 0.4), DARK_WOOD, 0.0, false)
 	# Cottages round the green, their doors to it.
 	for cottage in [[Vector2(-18, -6), 0.0, Vector2(1, 0)], [Vector2(-12, 28), PI / 2, Vector2(1, 0)], [Vector2(16, 20), 0.0, Vector2(0, -1)]]:
-		Buildings.house(kit, _near(v, cottage[0], y), Vector3(7, 4, 6), cottage[1], COTTAGE_LOOK, cottage[2])
+		var home := Buildings.house(kit, _near(v, cottage[0], y), Vector3(7, 4, 6), cottage[1], COTTAGE_LOOK, cottage[2], 0.0, 1, true, true)
+		Buildings.furnish(kit, home, "cottage", COTTAGE_LOOK)
 	# The tanner's stall, a well, and the marshal's banner on the green.
 	Buildings.stall(kit, _near(v, Vector2(-11, 5), y), PI, WOOD, DARK_WOOD, CANVAS)
 	Buildings.well(kit, _near(v, Vector2(6, 8), y), DARK_STONE, DARK_WOOD, THATCH, true)
@@ -431,7 +443,8 @@ func _build_farm() -> void:
 	var at: Vector2 = FLATS[FARM][0]
 	var y: float = FLATS[FARM][2]
 	var kit := BuildingKit.new(farm, "Buildings")
-	Buildings.house(kit, _near(at, Vector2(-4, -6), y), Vector3(9, 4.5, 7), 0.0, COTTAGE_LOOK, Vector2(0, 1))
+	var house := Buildings.house(kit, _near(at, Vector2(-4, -6), y), Vector3(9, 4.5, 7), 0.0, COTTAGE_LOOK, Vector2(0, 1), 0.0, 1, true, true)
+	Buildings.furnish(kit, house, "cottage", COTTAGE_LOOK)
 	Buildings.barn(kit, _near(at, Vector2(8, -2), y), Vector3(7, 5, 10), 0.0, WOOD, DARK_WOOD, DARK_WOOD, -1.0)
 	for bale in [Vector2(3, 5), Vector2(4.5, 5.5), Vector2(3.6, 6.6)]:
 		kit.cylinder(_near(at, bale, y), 0.7, 0.9, THATCH, 10)
@@ -462,7 +475,8 @@ func _build_cottage() -> void:
 	var at: Vector2 = FLATS[COTTAGE][0]
 	var y: float = FLATS[COTTAGE][2]
 	var kit := BuildingKit.new(cottage, "Buildings")
-	Buildings.house(kit, _near(at, Vector2(3, -2), y), Vector3(6, 4, 6), 0.4, COTTAGE_LOOK, Vector2(0, 1))
+	var home := Buildings.house(kit, _near(at, Vector2(3, -2), y), Vector3(6, 4, 6), 0.4, COTTAGE_LOOK, Vector2(0, 1), 0.0, 1, true, true)
+	Buildings.furnish(kit, home, "cottage", COTTAGE_LOOK)
 	Buildings.crate(kit, _near(at, Vector2(-3, 3), y), 1.0, WOOD, DARK_WOOD, 0.2)
 	kit.finish()
 

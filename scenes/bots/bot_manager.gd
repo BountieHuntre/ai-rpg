@@ -365,25 +365,43 @@ func route(from: Vector3, to: Vector3) -> Array[Vector3]:
 	return _route_in_zone(from, to)
 
 
+## Walled places can lie inside others (the priory's chapel inside its
+## walls): out through the innermost door first, in through the outermost
+## gate first, and round any walls a leg between gates would cut through.
 func _route_in_zone(from: Vector3, to: Vector3) -> Array[Vector3]:
-	var points: Array[Vector3] = []
+	var leaving := []
+	var entering := []
 	for walls: Array in _world.enclosures():
 		var inside_from := _within(walls, from)
 		if inside_from == _within(walls, to):
 			continue
-		var outside: Vector2 = walls[4]
-		var inside: Vector2 = walls[5]
-		var flat: Array[Vector2] = []
-		if inside_from:
-			flat.append_array([inside, outside])
-			var back := _around(walls, Vector2(to.x, to.z), outside)
-			back.reverse()
-			flat.append_array(back)
-		else:
-			flat.append_array(_around(walls, Vector2(from.x, from.z), outside))
-			flat.append_array([outside, inside])
-		for point in flat:
-			points.append(Vector3(point.x, _world.height_at(point.x, point.y), point.y))
+		var area: float = (walls[2] - walls[0]) * (walls[3] - walls[1])
+		(leaving if inside_from else entering).append([area, walls])
+	leaving.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	entering.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
+	var flat: Array[Vector2] = [Vector2(from.x, from.z)]
+	for each: Array in leaving:
+		flat.append_array([each[1][5], each[1][4]])
+	for each: Array in entering:
+		flat.append_array([each[1][4], each[1][5]])
+	flat.append(Vector2(to.x, to.z))
+	var points: Array[Vector3] = []
+	for i in range(1, flat.size()):
+		var a := flat[i - 1]
+		var b := flat[i]
+		for walls: Array in _world.enclosures():
+			if _within(walls, Vector3(a.x, 0, a.y)) or _within(walls, Vector3(b.x, 0, b.y)):
+				continue
+			var corners: Array[Vector2] = []
+			if b == walls[4]:
+				corners = _around(walls, a, b)
+			elif a == walls[4]:
+				corners = _around(walls, b, a)
+				corners.reverse()
+			for point in corners:
+				points.append(Vector3(point.x, _world.height_at(point.x, point.y), point.y))
+		if i < flat.size() - 1:
+			points.append(Vector3(b.x, _world.height_at(b.x, b.y), b.y))
 	points.append(to)
 	return points
 

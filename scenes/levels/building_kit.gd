@@ -23,6 +23,20 @@ class Surface:
 		points.append_array([a, b, c])
 		normals.append_array([normal, normal, normal])
 var _body := StaticBody3D.new()
+## Lights to add: [position, color, range, energy].
+var _lights: Array = []
+## Ground the buildings stand on (world squares), where no grass grows.
+var footprints: Array[Rect2] = []
+
+
+## Marks a building's footprint (`size` x by z round `base`, turned by
+## `yaw`) as built on: the zone grows no grass or bushes there.
+func footprint(base: Vector3, size: Vector3, yaw: float) -> void:
+	var half := Vector2(size.x, size.z) / 2.0 + Vector2(0.6, 0.6)
+	var square := Rect2(Vector2(base.x, base.z), Vector2.ZERO)
+	for corner in [Vector2(-half.x, -half.y), Vector2(half.x, -half.y), Vector2(half.x, half.y), Vector2(-half.x, half.y)]:
+		square = square.expand(Vector2(base.x, base.z) + (corner as Vector2).rotated(-yaw))
+	footprints.append(square)
 
 
 func _init(parent: Node3D, node_name: String) -> void:
@@ -62,6 +76,17 @@ func box(center: Vector3, size: Vector3, color: Color, turn := Basis(), solid :=
 		_body.add_child(collision)
 
 
+## Collision only: a box by its center, in `frame` (furniture drawn from
+## thinner parts).
+func collider(center: Vector3, size: Vector3, turn := Basis()) -> void:
+	var shape := BoxShape3D.new()
+	shape.size = size
+	var collision := CollisionShape3D.new()
+	collision.shape = shape
+	collision.transform = Transform3D((frame.basis * turn).orthonormalized(), frame * center)
+	_body.add_child(collision)
+
+
 ## A box standing on `base` (the middle of its bottom), as Props.box.
 func block(base: Vector3, size: Vector3, color: Color, yaw := 0.0, solid := false) -> void:
 	box(base + Vector3(0, size.y / 2.0, 0), size, color, Basis(Vector3.UP, yaw), solid)
@@ -81,7 +106,7 @@ func beam(from: Vector3, to: Vector3, thickness: float, color: Color) -> void:
 
 ## A wedge: a triangle `width` across and `height` tall (apex in the middle)
 ## standing on `base`, `depth` thick along z. Gable ends.
-func wedge(base: Vector3, width: float, height: float, depth: float, color: Color) -> void:
+func wedge(base: Vector3, width: float, height: float, depth: float, color: Color, solid := false) -> void:
 	var w := width / 2.0
 	var d := depth / 2.0
 	var a := [base + Vector3(-w, 0, d), base + Vector3(w, 0, d), base + Vector3(0, height, d)]
@@ -106,6 +131,20 @@ func wedge(base: Vector3, width: float, height: float, depth: float, color: Colo
 		if normal.dot((p0 + p1) / 2.0 - center) < 0.0:
 			normal = -normal
 		_quad(color, [p0, p1, q1, q0], normal)
+	if solid:
+		var shape := ConvexPolygonShape3D.new()
+		var points := PackedVector3Array()
+		points.append_array(world_a)
+		points.append_array(world_b)
+		shape.points = points
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		_body.add_child(collision)
+
+
+## A warm light (a hearth, candles, a room's glow), in `frame`.
+func light(at: Vector3, color: Color, light_range: float, energy: float) -> void:
+	_lights.append([frame * at, color, light_range, energy])
 
 
 ## A cylinder (or cone, or frustum) standing on `base`.
@@ -174,5 +213,20 @@ func finish() -> Node3D:
 	# rebuilds the body each time).
 	if _body.get_child_count() > 0:
 		root.add_child(_body)
+	# The zone this is in keeps the ground under the buildings clear.
+	var zone: Node = _parent
+	while zone and not zone is Zone:
+		zone = zone.get_parent()
+	if zone:
+		for square in footprints:
+			(zone as Zone).clear_ground(square)
+	for made: Array in _lights:
+		var lamp := OmniLight3D.new()
+		lamp.position = made[0]
+		lamp.light_color = made[1]
+		lamp.omni_range = made[2]
+		lamp.light_energy = made[3]
+		lamp.shadow_enabled = false
+		root.add_child(lamp)
 	_parent.add_child(root)
 	return root

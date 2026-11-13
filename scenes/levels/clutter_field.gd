@@ -120,7 +120,7 @@ func _fill(key: Vector2i) -> void:
 	for row in cells:
 		for column in cells:
 			var point := origin + Vector2(column + rng.randf(), row + rng.randf()) * step
-			if not area.has_point(point):
+			if not area.has_point(point) or zone.is_cleared(point):
 				continue
 			var made: Array = place.call(point, rng)
 			if made.is_empty():

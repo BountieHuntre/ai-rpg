@@ -52,9 +52,14 @@ static func _door_place(size: Vector3, side: Vector2, offset: float, swapped: bo
 ## A house: walls `size` (x, height, z) standing on `base`, facing `yaw`,
 ## its door on `door_side` (+z front by default; Vector2.ZERO for none) at
 ## `door_offset` yards along that wall. `storeys` 2 gives a jettied band and
-## a second row of windows.
+## a second row of windows. `hollow` makes it a room you can walk into: walls
+## with an open doorway, a plank floor, windows letting in daylight, roof
+## trusses, a hearth under the chimney, a warm light, and a roof the camera
+## stops at. Returns the room (for furnish): its frame, yaw, inside half
+## length and half span, height and door.
 static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, look: Dictionary,
-		door_side := Vector2(0, 1), door_offset := 0.0, storeys := 1, chimney := true) -> void:
+		door_side := Vector2(0, 1), door_offset := 0.0, storeys := 1, chimney := true, hollow := false) -> Dictionary:
+	kit.footprint(base, size, yaw)
 	var made := _frame(base, size, yaw)
 	kit.frame = made[0]
 	var length: float = made[1]
@@ -63,27 +68,128 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 	var wall: Color = look.wall
 	var trim: Color = _look(look, "trim", Color(0.3, 0.2, 0.13))
 	var stone: Color = _look(look, "stone", Color(0.45, 0.43, 0.41))
-	kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
-	kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.3, 0.55, span + 0.3), stone)
+	var door := [] if door_side == Vector2.ZERO else _door_place(size, door_side, door_offset, made[3])
+	var thick := WALL_THICK if hollow else 0.0
+	if hollow:
+		_hollow_walls(kit, length, span, height, thick, wall, stone, door)
+		kit.block(Vector3(0, -0.05, 0), Vector3(length - thick * 2.0, 0.15, span - thick * 2.0), _look(look, "floor", FLOOR), 0.0, true)
+	else:
+		kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
+		kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.3, 0.55, span + 0.3), stone)
 	if _look(look, "timber", false):
 		_timber(kit, length, span, height, storeys, trim)
-	var door := [] if door_side == Vector2.ZERO else _door_place(size, door_side, door_offset, made[3])
-	_windows(kit, length, span, height, storeys, door, trim, look)
+	var hearth := hollow and chimney
+	# The hearth's end: +x, or -x when the door is in that end wall.
+	var hearth_side := -1.0 if not door.is_empty() and (door[1] as Vector3).x > 0.5 else 1.0
+	_windows(kit, length, span, height, storeys, door, trim, look, thick, hearth_side if hearth else 0.0)
 	if not door.is_empty():
-		_door(kit, door[0], door[1], trim, stone)
+		if hollow:
+			_doorway(kit, door[0], door[1], thick, trim, stone)
+		else:
+			_door(kit, door[0], door[1], trim, stone)
 	var thatch: bool = _look(look, "thatch", false)
 	var rise := span * (0.55 if thatch else 0.45)
-	roof(kit, height, length, span, rise, look.roof, wall, thatch, trim)
-	if chimney:
+	roof(kit, height, length, span, rise, look.roof, wall, thatch, trim, hollow)
+	if hearth:
+		_hearth(kit, length, span, height, rise, thick, stone, trim, hearth_side)
+	elif chimney:
 		var x := length / 2.0 - 0.9
 		kit.block(Vector3(x, 0, -span * 0.18), Vector3(0.9, height + rise * 0.8 + 1.0, 0.9), stone)
 		kit.block(Vector3(x, height + rise * 0.8 + 1.0, -span * 0.18), Vector3(1.15, 0.22, 1.15), stone)
+	if hollow:
+		_trusses(kit, length, span, height, rise, thick, trim)
+		kit.light(Vector3(0, height - 0.8, 0), WARM, maxf(length, span) * 0.8, 0.9)
 	kit.frame = Transform3D.IDENTITY
+	return { "frame": made[0], "yaw": yaw + (PI / 2.0 if made[3] else 0.0), "x": length / 2.0 - thick, "z": span / 2.0 - thick,
+		"height": height, "door": door, "hearth": hearth, "hearth_side": hearth_side }
+
+
+const WALL_THICK := 0.45
+## Half the doorway's width, and its height.
+const DOOR_HALF := 0.9
+const DOOR_HEIGHT := 2.6
+## Light through a window, seen from inside.
+const DAYLIGHT := Color(0.68, 0.78, 0.86)
+## The planks' color (WOOD in the zones), so it's drawn with their texture.
+const FLOOR := Color(0.45, 0.31, 0.2)
+const WARM := Color(1.0, 0.8, 0.55)
+const FIRE := Color(1.0, 0.55, 0.25)
+
+
+## Walls `thick` thick round a room, open where the door is: each a solid
+## block (the doorway leaves a gap under a lintel), on a stone plinth.
+static func _hollow_walls(kit: BuildingKit, length: float, span: float, height: float, thick: float, color: Color, plinth: Color, door: Array) -> void:
+	var walls := [
+		[Vector3(0, 0, span / 2.0 - thick / 2.0), Vector3.RIGHT, length, Vector3.BACK],
+		[Vector3(0, 0, -(span / 2.0 - thick / 2.0)), Vector3.RIGHT, length, Vector3.FORWARD],
+		[Vector3(length / 2.0 - thick / 2.0, 0, 0), Vector3.BACK, span - thick * 2.0, Vector3.RIGHT],
+		[Vector3(-(length / 2.0 - thick / 2.0), 0, 0), Vector3.BACK, span - thick * 2.0, Vector3.LEFT],
+	]
+	for each: Array in walls:
+		var center: Vector3 = each[0]
+		var along: Vector3 = each[1]
+		var wall_length: float = each[2]
+		var out: Vector3 = each[3]
+		var pieces := [[-wall_length / 2.0, wall_length / 2.0]]
+		var gap := INF
+		if not door.is_empty() and (door[1] as Vector3).dot(out) > 0.9:
+			gap = ((door[0] as Vector3) - center).dot(along)
+			pieces = [[-wall_length / 2.0, gap - DOOR_HALF], [gap + DOOR_HALF, wall_length / 2.0]]
+		for piece: Array in pieces:
+			var a: float = piece[0]
+			var b: float = piece[1]
+			if b - a < 0.01:
+				continue
+			var middle := center + along * (a + b) / 2.0
+			kit.block(middle, along * (b - a) + out.abs() * thick + Vector3.UP * height, color, 0.0, true)
+			kit.block(middle - Vector3(0, 0.1, 0), along * (b - a) + out.abs() * (thick + 0.3) + Vector3.UP * 0.55, plinth)
+		if gap != INF:
+			kit.block(center + along * gap + Vector3.UP * DOOR_HEIGHT, along * DOOR_HALF * 2.0 + out.abs() * thick + Vector3.UP * (height - DOOR_HEIGHT), color, 0.0, true)
+
+
+## An open doorway: a frame through the wall, a lintel, a step outside, and
+## the door standing open against the inside wall.
+static func _doorway(kit: BuildingKit, at: Vector3, out: Vector3, thick: float, trim: Color, stone: Color) -> void:
+	var across := Vector3(out.z, 0, out.x).abs()
+	var through := at - out * (thick / 2.0)
+	for s: float in [-1.0, 1.0]:
+		kit.block(through + across * s * (DOOR_HALF + 0.05), across * 0.22 + Vector3.UP * (DOOR_HEIGHT + 0.1) + out.abs() * (thick + 0.14), trim)
+	kit.block(through + Vector3.UP * DOOR_HEIGHT, across * (DOOR_HALF * 2.0 + 0.5) + Vector3.UP * 0.28 + out.abs() * (thick + 0.16), trim)
+	kit.block(at + out * 0.35 - Vector3.UP * 0.12, across * 2.2 + Vector3.UP * 0.25 + out.abs() * 0.7, stone)
+	kit.block(at - out * (thick + 0.55) + across * (DOOR_HALF - 0.05), out.abs() * 1.1 + Vector3.UP * (DOOR_HEIGHT - 0.15) + across * 0.08, trim.darkened(0.25))
+
+
+## A hearth inside an end wall (`side` +1 for +x, -1 for -x): the chimney
+## outside the end wall, a stone fireplace with embers and a mantel inside,
+## and the fire's light.
+static func _hearth(kit: BuildingKit, length: float, span: float, height: float, rise: float, thick: float, stone: Color, trim: Color, side := 1.0) -> void:
+	var end := length / 2.0
+	kit.block(Vector3(side * (end + 0.45), -0.1, 0), Vector3(0.9, height + rise + 1.0, 1.4), stone)
+	kit.block(Vector3(side * (end + 0.45), height + rise + 0.9, 0), Vector3(1.15, 0.22, 1.65), stone)
+	var inner := end - thick
+	kit.block(Vector3(side * (inner - 0.35), 0, 0), Vector3(0.7, 1.5, 2.1), stone, 0.0, true)
+	kit.block(Vector3(side * (inner - 0.71), 0.1, 0), Vector3(0.04, 0.9, 1.2), DARK)
+	kit.block(Vector3(side * (inner - 0.6), 0.1, 0), Vector3(0.25, 0.14, 0.9), Color(0.95, 0.45, 0.12))
+	kit.block(Vector3(side * (inner - 0.45), 1.5, 0), Vector3(0.95, 0.15, 2.4), trim)
+	kit.block(Vector3(side * (inner - 0.2), 1.65, 0), Vector3(0.4, height - 1.65, 1.2), stone)
+	kit.light(Vector3(side * (inner - 1.2), 0.8, 0), FIRE, 7.0, 1.6)
+
+
+## Tie beams across the room under the roof, each with a king post to the
+## ridge.
+static func _trusses(kit: BuildingKit, length: float, span: float, height: float, rise: float, thick: float, trim: Color) -> void:
+	var bays := maxi(int(length / 3.0), 1)
+	for i in range(1, bays):
+		var x := -length / 2.0 + length * i / bays
+		kit.box(Vector3(x, height - 0.15, 0), Vector3(0.25, 0.25, span - thick * 2.0), trim)
+		kit.beam(Vector3(x, height - 0.05, 0), Vector3(x, height + rise - 0.25, 0), 0.2, trim)
+	kit.beam(Vector3(-length / 2.0 + thick, height + rise - 0.3, 0), Vector3(length / 2.0 - thick, height + rise - 0.3, 0), 0.22, trim)
 
 
 ## A gable roof on walls `height` tall: its ridge along x, `length` long,
 ## spanning `span` along z, rising `rise`; gable ends filled with `gable`.
-static func roof(kit: BuildingKit, height: float, length: float, span: float, rise: float, color: Color, gable: Color, thatch := false, trim := Color(0.3, 0.2, 0.13)) -> void:
+## `solid` gives it collision (over a room, so the camera stops at it).
+static func roof(kit: BuildingKit, height: float, length: float, span: float, rise: float, color: Color, gable: Color, thatch := false, trim := Color(0.3, 0.2, 0.13), solid := false) -> void:
 	var overhang := 0.75 if thatch else 0.5
 	var thick := 0.5 if thatch else 0.22
 	var ridge := Vector3(0, height + rise, 0)
@@ -95,12 +201,12 @@ static func roof(kit: BuildingKit, height: float, length: float, span: float, ri
 			normal = -normal
 		var slab := (ridge - eave).length() + (0.15 if thatch else 0.05)
 		var center := (ridge + eave) / 2.0 + normal * thick / 2.0
-		kit.box(center, Vector3(length + overhang * 2.0, thick, slab), color, Basis(Vector3.RIGHT, normal, along))
+		kit.box(center, Vector3(length + overhang * 2.0, thick, slab), color, Basis(Vector3.RIGHT, normal, along), solid)
 	# Gable ends, with a beam along their foot.
 	for end: float in [-1.0, 1.0]:
 		var outer := kit.frame
 		kit.frame = outer * Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(end * (length / 2.0 - 0.05), height, 0))
-		kit.wedge(Vector3.ZERO, span, rise, 0.2, gable)
+		kit.wedge(Vector3.ZERO, span, rise, 0.2, gable, solid)
 		kit.frame = outer
 		kit.box(Vector3(end * (length / 2.0 + 0.02), height + 0.1, 0), Vector3(0.25, 0.25, span + 0.1), trim)
 	if thatch:
@@ -140,8 +246,9 @@ static func _timber(kit: BuildingKit, length: float, span: float, height: float,
 
 
 ## Windows along the long walls (and one each end): a dark pane in a frame,
-## a sill, and shutters; left out where the door is.
-static func _windows(kit: BuildingKit, length: float, span: float, height: float, storeys: int, door: Array, trim: Color, look: Dictionary) -> void:
+## a sill, and shutters; left out where the door is, and at the hearth's
+## end. In walls `thick` thick, daylight shows through them inside.
+static func _windows(kit: BuildingKit, length: float, span: float, height: float, storeys: int, door: Array, trim: Color, look: Dictionary, thick := 0.0, hearth_side := 0.0) -> void:
 	var shutter: Color = _look(look, "shutter", SHUTTER)
 	var rows: Array[float] = []
 	rows.assign([height * 0.5] if storeys == 1 else [height * 0.27, height * 0.73])
@@ -153,15 +260,15 @@ static func _windows(kit: BuildingKit, length: float, span: float, height: float
 			for y: float in rows:
 				if not door.is_empty() and at.distance_to(door[0]) < 1.5 and y < 2.6:
 					continue
-				_window(kit, at + Vector3.UP * y, Vector3(0, 0, z), trim, shutter)
+				_window(kit, at + Vector3.UP * y, Vector3(0, 0, z), trim, shutter, thick)
 	for x: float in [-1.0, 1.0]:
 		var at := Vector3(x * length / 2.0, 0, 0)
-		if not door.is_empty() and at.distance_to(door[0]) < 1.5:
+		if (not door.is_empty() and at.distance_to(door[0]) < 1.5) or x == hearth_side:
 			continue
-		_window(kit, at + Vector3.UP * rows[0], Vector3(x, 0, 0), trim, shutter)
+		_window(kit, at + Vector3.UP * rows[0], Vector3(x, 0, 0), trim, shutter, thick)
 
 
-static func _window(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, shutter: Color) -> void:
+static func _window(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, shutter: Color, thick := 0.0) -> void:
 	var across := Vector3(out.z, 0, -out.x).abs()
 	var w := 0.85
 	var h := 1.0
@@ -171,6 +278,10 @@ static func _window(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, sh
 	kit.box(at + out * 0.1 - Vector3.UP * (h / 2.0 + 0.04), across * (w + 0.35) + Vector3.UP * 0.12 + out.abs() * 0.25, trim)
 	for side: float in [-1.0, 1.0]:
 		kit.box(at + out * 0.06 + across * side * (w / 2.0 + 0.24), across * 0.44 + Vector3.UP * h + out.abs() * 0.06, shutter)
+	if thick > 0.0:
+		var inside := at - out * thick
+		kit.box(inside - out * 0.02, across * w + Vector3.UP * h + out.abs() * 0.04, DAYLIGHT)
+		kit.box(inside - out * 0.08 - Vector3.UP * (h / 2.0 + 0.04), across * (w + 0.2) + Vector3.UP * 0.1 + out.abs() * 0.18, trim)
 
 
 ## A door on a wall with its frame, lintel and a step: `at` the middle of
@@ -187,8 +298,11 @@ static func _door(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, ston
 ## A chapel: a stone nave with tall windows, buttresses and an arched door
 ## on `door_side`, a steep roof, and its bell tower (`tower_at`, from the
 ## base, `tower_size` across and `tower_height` tall) with a spire.
+## `hollow` opens it: a stone floor, rows of pews either side of a carpeted
+## aisle up to the altar at the far wall, candles, trusses and light.
 static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, look: Dictionary, door_side: Vector2,
-		tower_at: Vector2, tower_size: float, tower_height: float) -> void:
+		tower_at: Vector2, tower_size: float, tower_height: float, hollow := false) -> Dictionary:
+	kit.footprint(base, size, yaw)
 	var made := _frame(base, size, yaw)
 	kit.frame = made[0]
 	var length: float = made[1]
@@ -197,14 +311,19 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 	var wall: Color = look.wall
 	var trim: Color = _look(look, "trim", Color(0.3, 0.2, 0.13))
 	var stone: Color = _look(look, "stone", Color(0.45, 0.43, 0.41))
-	kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
-	kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.5, 0.7, span + 0.5), stone)
-	# A course under the eaves.
-	kit.block(Vector3(0, height - 0.35, 0), Vector3(length + 0.25, 0.3, span + 0.25), stone)
-	var bays := maxi(int(length / 3.0), 2)
 	var placed := _door_place(size, door_side, 0.0, made[3])
 	var face: Vector3 = placed[0]
 	var out: Vector3 = placed[1]
+	var thick := 0.6 if hollow else 0.0
+	if hollow:
+		_hollow_walls(kit, length, span, height, thick, wall, stone, placed)
+		kit.block(Vector3(0, -0.05, 0), Vector3(length - thick * 2.0, 0.15, span - thick * 2.0), _look(look, "floor", wall), 0.0, true)
+	else:
+		kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
+		kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.5, 0.7, span + 0.5), stone)
+	# A course under the eaves.
+	kit.block(Vector3(0, height - 0.35, 0), Vector3(length + 0.25, 0.3, span + 0.25), stone)
+	var bays := maxi(int(length / 3.0), 2)
 	for z: float in [-1.0, 1.0]:
 		for i in bays + 1:
 			var x := -length / 2.0 + length * i / bays
@@ -215,30 +334,45 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 			var x := -length / 2.0 + length * (i + 0.5) / bays
 			if Vector3(x, 0, z * span / 2.0).distance_to(face) < 1.6:
 				continue
-			_lancet(kit, Vector3(x, height * 0.3, z * span / 2.0), Vector3(0, 0, z), height * 0.45, stone)
-	# The end windows: a round one high in each gable end.
+			_lancet(kit, Vector3(x, height * 0.3, z * span / 2.0), Vector3(0, 0, z), height * 0.45, stone, thick)
+	# The end windows.
 	for x: float in [-1.0, 1.0]:
 		if Vector3(x * length / 2.0, 0, 0).distance_to(face) > 1.6:
-			_lancet(kit, Vector3(x * length / 2.0, height * 0.3, 0), Vector3(x, 0, 0), height * 0.5, stone)
-	# The arched door.
+			_lancet(kit, Vector3(x * length / 2.0, height * 0.3, 0), Vector3(x, 0, 0), height * 0.5, stone, thick)
+	# The arched door (open, in a hollow chapel).
 	var across := Vector3(out.z, 0, out.x).abs()
-	kit.block(face + out * 0.05, across * 1.6 + Vector3.UP * 2.6 + out.abs() * 0.12, trim.darkened(0.2))
+	if hollow:
+		_doorway(kit, face, out, thick, trim, stone)
+	else:
+		kit.block(face + out * 0.05, across * 1.6 + Vector3.UP * 2.6 + out.abs() * 0.12, trim.darkened(0.2))
 	var outer := kit.frame
-	kit.frame = outer * Transform3D(Basis(Vector3.UP, atan2(out.x, out.z)), face + out * 0.08 + Vector3.UP * 2.6)
-	kit.wedge(Vector3.ZERO, 1.6, 0.9, 0.12, trim.darkened(0.2))
+	kit.frame = outer * Transform3D(Basis(Vector3.UP, atan2(out.x, out.z)), face + out * 0.08 + Vector3.UP * (DOOR_HEIGHT + 0.25 if hollow else 2.6))
+	if not hollow:
+		kit.wedge(Vector3.ZERO, 1.6, 0.9, 0.12, trim.darkened(0.2))
 	kit.wedge(Vector3(0, -0.05, 0.05), 2.2, 1.2, 0.2, stone)
 	kit.frame = outer
 	for s: float in [-1.0, 1.0]:
-		kit.block(face + out * 0.15 + across * s * 1.0, across * 0.35 + Vector3.UP * 2.7 + out.abs() * 0.3, stone)
-	kit.block(face + out * 0.5 - Vector3.UP * 0.1, across * 2.4 + Vector3.UP * 0.3 + out.abs() * 1.0, stone)
-	roof(kit, height, length, span, span * 0.7, look.roof, wall, false, trim)
+		kit.block(face + out * 0.15 + across * s * 1.25, across * 0.35 + Vector3.UP * 2.9 + out.abs() * 0.3, stone)
+	if not hollow:
+		kit.block(face + out * 0.5 - Vector3.UP * 0.1, across * 2.4 + Vector3.UP * 0.3 + out.abs() * 1.0, stone)
+	var rise := span * 0.7
+	roof(kit, height, length, span, rise, look.roof, wall, false, trim, hollow)
+	var room := { "frame": made[0], "yaw": yaw + (PI / 2.0 if made[3] else 0.0), "x": length / 2.0 - thick, "z": span / 2.0 - thick,
+		"height": height, "door": placed, "hearth": false }
+	if hollow:
+		_trusses(kit, length, span, height, rise, thick, trim)
+		kit.light(Vector3(0, height - 1.0, 0), WARM, maxf(length, span) * 0.85, 1.0)
 	kit.frame = Transform3D.IDENTITY
+	if hollow:
+		_furnish_chapel(kit, room, look)
 	if tower_size > 0.0:
 		bell_tower(kit, base + Basis(Vector3.UP, yaw) * Vector3(tower_at.x, 0, tower_at.y), tower_size, tower_height, look)
+	return room
 
 
-## A tall narrow window with a pointed top and a stone surround.
-static func _lancet(kit: BuildingKit, at: Vector3, out: Vector3, height: float, stone: Color) -> void:
+## A tall narrow window with a pointed top and a stone surround (and light
+## through it, inside walls `thick` thick).
+static func _lancet(kit: BuildingKit, at: Vector3, out: Vector3, height: float, stone: Color, thick := 0.0) -> void:
 	var across := Vector3(out.z, 0, -out.x).abs()
 	kit.block(at + out * 0.03, across * 0.7 + Vector3.UP * height + out.abs() * 0.06, GLASS)
 	kit.block(at + out * 0.05 - Vector3.UP * 0.12, across * 1.0 + Vector3.UP * 0.12 + out.abs() * 0.2, stone)
@@ -247,6 +381,218 @@ static func _lancet(kit: BuildingKit, at: Vector3, out: Vector3, height: float, 
 	kit.wedge(Vector3.ZERO, 0.7, 0.45, 0.06, GLASS)
 	kit.wedge(Vector3(0, 0, 0.03), 1.0, 0.65, 0.08, stone)
 	kit.frame = outer
+	if thick > 0.0:
+		kit.block(at - out * (thick + 0.02), across * 0.7 + Vector3.UP * height + out.abs() * 0.04, DAYLIGHT)
+		kit.frame = outer * Transform3D(Basis(Vector3.UP, atan2(-out.x, -out.z)), at - out * (thick + 0.02) + Vector3.UP * height)
+		kit.wedge(Vector3.ZERO, 0.7, 0.45, 0.04, DAYLIGHT)
+		kit.frame = outer
+
+
+# Furnishing rooms (from house and chapel): positions in the room's own
+# terms (+x the hearth end, door where the room says), drawn in the world.
+
+## A point in a room's terms, in the world.
+static func _at(room: Dictionary, x: float, z: float) -> Vector3:
+	return (room.frame as Transform3D) * Vector3(x, 0.1, z)
+
+
+## Which way a room's door faces, as a sign along z (or along x when the
+## door is on an end): [axis "x" or "z", sign].
+static func _door_axis(room: Dictionary) -> Array:
+	var out: Vector3 = room.door[1] if not (room.door as Array).is_empty() else Vector3.BACK
+	return ["x", signf(out.x)] if absf(out.x) > 0.5 else ["z", signf(out.z)]
+
+
+## Fills a room: "cottage" (a bed, a table and stools, a shelf, a barrel),
+## "hall" (a long table with benches, banners, a rug), or "inn" (a bar
+## with its barrels and the keeper's place behind it, tables and stools).
+## Returns named spots in the world ("keeper" for an inn).
+static func furnish(kit: BuildingKit, room: Dictionary, kind: String, look: Dictionary) -> Dictionary:
+	var wood: Color = _look(look, "furniture", FLOOR)
+	var trim: Color = _look(look, "trim", Color(0.3, 0.2, 0.13))
+	var cloth: Color = _look(look, "cloth", Color(0.55, 0.22, 0.17))
+	var hx: float = room.x
+	var hz: float = room.z
+	var yaw: float = room.yaw
+	var axis := _door_axis(room)
+	# The wall away from the door (along z when the door's on a long wall).
+	var back: float = -axis[1] * (hz - 0.6) if axis[0] == "z" else -(hz - 0.6)
+	var spots := {}
+	match kind:
+		"cottage":
+			# The bed at the end away from the hearth, along the back wall.
+			var hs: float = room.get("hearth_side", 1.0)
+			bed(kit, _at(room, -hs * (hx - 1.15), back * 0.85), yaw + (0.0 if hs > 0.0 else PI), Color(0.5, 0.18, 0.15))
+			table(kit, _at(room, 0.0, 0.0), yaw, 1.4, 0.9, wood)
+			for side: float in [-1.0, 1.0]:
+				stool(kit, _at(room, side * 1.1, 0.0), wood)
+			shelf(kit, _at(room, hs * 0.6, back), yaw + (PI if back > 0.0 else 0.0), wood)
+			barrel(kit, _at(room, hs * (hx - 0.6), -back * 0.85), 0.4, 0.9, wood)
+		"hall":
+			var long := hx * 1.3
+			table(kit, _at(room, -0.3, 0.0), yaw, long, 1.2, wood)
+			for side: float in [-1.0, 1.0]:
+				bench(kit, _at(room, -0.3, side * 1.1), yaw, long - 0.4, wood)
+			rug(kit, _at(room, -0.3, 0.0), yaw, long + 1.6, 3.4, cloth)
+			for i in 3:
+				for side: float in [-1.0, 1.0]:
+					banner(kit, _at(room, -hx + hx * 2.0 * (i + 0.5) / 3.0, side * (hz - 0.02)) + Vector3.UP * 2.0, yaw + (0.0 if side < 0.0 else PI), cloth if i % 2 == 0 else Color(0.2, 0.3, 0.55))
+		"inn":
+			# The bar across the back, the keeper behind it, barrels on the wall.
+			var bar_z := back * 0.62
+			counter(kit, _at(room, -hx * 0.25, bar_z), yaw, hx * 1.1, wood, trim)
+			spots.keeper = _at(room, -hx * 0.25, back * 0.95)
+			for i in 4:
+				barrel(kit, _at(room, -hx * 0.95 + i * 0.9, back * 1.05), 0.42, 0.95, wood)
+			shelf(kit, _at(room, hx * 0.35, back), yaw + (PI if back > 0.0 else 0.0), wood)
+			# Tables in the front half, clear of the door.
+			var door_x: float = (room.door[0] as Vector3).x if not (room.door as Array).is_empty() else 99.0
+			for i in 3:
+				var x := -hx * 0.7 + hx * 0.7 * i
+				if absf(x - door_x) < 1.6:
+					x += 1.8
+				var z := -back * 0.35
+				table(kit, _at(room, x, z), yaw, 1.1, 1.1, wood)
+				for side: float in [-1.0, 1.0]:
+					stool(kit, _at(room, x + side * 0.9, z), wood)
+	return spots
+
+
+## The chapel's pews, aisle, altar and candles: the aisle runs from the door
+## to the far wall, pews in rows either side, the altar at the end.
+static func _furnish_chapel(kit: BuildingKit, room: Dictionary, look: Dictionary) -> void:
+	var frame: Transform3D = room.frame
+	var door_at: Vector3 = room.door[0]
+	var out: Vector3 = room.door[1]
+	var deep: Vector3 = -out
+	var side_axis := Vector3(absf(out.z), 0, absf(out.x))
+	var depth: float = (room.z if absf(out.z) > 0.5 else room.x) * 2.0
+	var width: float = (room.x if absf(out.z) > 0.5 else room.z) * 2.0
+	var start := door_at + deep * (0.6 if absf(out.z) > 0.5 else 0.6)
+	var wood := FLOOR
+	var cloth := Color(0.55, 0.15, 0.13)
+	var stone: Color = _look(look, "stone", Color(0.45, 0.43, 0.41))
+	# Pews face -z in their own terms, so turned by this their backs are to
+	# the door; the altar's front (+z) faces the door.
+	var face_yaw: float = room.yaw + atan2(out.x, out.z)
+	var pew_length := minf(3.6, width / 2.0 - 1.6)
+	var row := 2.6
+	while row < depth - 3.6:
+		for s: float in [-1.0, 1.0]:
+			pew(kit, frame * (start + deep * row + side_axis * s * (0.95 + pew_length / 2.0) + Vector3.UP * 0.1), face_yaw, pew_length, wood)
+		row += 1.5
+	rug(kit, frame * (start + deep * (depth / 2.0 - 0.6) + Vector3.UP * 0.1), face_yaw, 1.5, depth - 1.6, cloth)
+	altar(kit, frame * (start + deep * (depth - 1.85) + Vector3.UP * 0.1), face_yaw, stone, Color(0.85, 0.82, 0.72))
+
+
+# Furniture: each at `at` (the middle of its foot) turned by `yaw`.
+
+static func table(kit: BuildingKit, at: Vector3, yaw: float, sx: float, sz: float, wood: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, 0.75, 0), Vector3(sx, 0.1, sz), wood)
+	for x: float in [-1.0, 1.0]:
+		for z: float in [-1.0, 1.0]:
+			kit.block(Vector3(x * (sx / 2.0 - 0.12), 0, z * (sz / 2.0 - 0.12)), Vector3(0.12, 0.75, 0.12), wood.darkened(0.2))
+	kit.collider(Vector3(0, 0.42, 0), Vector3(sx, 0.85, sz))
+	kit.frame = Transform3D.IDENTITY
+
+
+static func bench(kit: BuildingKit, at: Vector3, yaw: float, length: float, wood: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, 0.4, 0), Vector3(length, 0.08, 0.4), wood)
+	for x: float in [-1.0, 1.0]:
+		kit.block(Vector3(x * (length / 2.0 - 0.2), 0, 0), Vector3(0.1, 0.4, 0.35), wood.darkened(0.2))
+	kit.collider(Vector3(0, 0.22, 0), Vector3(length, 0.45, 0.4))
+	kit.frame = Transform3D.IDENTITY
+
+
+static func stool(kit: BuildingKit, at: Vector3, wood: Color) -> void:
+	kit.frame = Transform3D(Basis(), at)
+	kit.cylinder(Vector3.ZERO, 0.2, 0.42, wood.darkened(0.15), 6)
+	kit.cylinder(Vector3(0, 0.42, 0), 0.24, 0.06, wood, 6)
+	kit.frame = Transform3D.IDENTITY
+
+
+## A bed along x, its head at -x.
+static func bed(kit: BuildingKit, at: Vector3, yaw: float, blanket: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3.ZERO, Vector3(2.1, 0.35, 1.1), FLOOR.darkened(0.15))
+	kit.block(Vector3(0, 0.35, 0), Vector3(1.95, 0.18, 0.98), Color(0.8, 0.76, 0.66))
+	kit.block(Vector3(0.25, 0.53, 0), Vector3(1.4, 0.06, 1.02), blanket)
+	kit.block(Vector3(-0.75, 0.53, 0), Vector3(0.35, 0.12, 0.7), Color(0.92, 0.9, 0.84))
+	kit.block(Vector3(-1.05, 0, 0), Vector3(0.1, 0.95, 1.1), FLOOR.darkened(0.25))
+	kit.collider(Vector3(0, 0.3, 0), Vector3(2.1, 0.6, 1.1))
+	kit.frame = Transform3D.IDENTITY
+
+
+## Shelves against a wall at its back (-z), with jars and a pot.
+static func shelf(kit: BuildingKit, at: Vector3, yaw: float, wood: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, 0, -0.05), Vector3(1.6, 1.9, 0.08), wood.darkened(0.2))
+	for y: float in [0.5, 1.1, 1.7]:
+		kit.block(Vector3(0, y, 0.12), Vector3(1.6, 0.06, 0.38), wood)
+	var jars := [Color(0.55, 0.6, 0.5), Color(0.6, 0.45, 0.3), Color(0.4, 0.42, 0.55), Color(0.7, 0.68, 0.6)]
+	for i in 6:
+		kit.cylinder(Vector3(-0.6 + (i % 3) * 0.6, 0.56 + (i / 3) * 0.6, 0.12), 0.1, 0.22, jars[i % jars.size()], 6)
+	kit.collider(Vector3(0, 0.95, 0.12), Vector3(1.6, 1.9, 0.45))
+	kit.frame = Transform3D.IDENTITY
+
+
+## A bar counter along x, its front to +z.
+static func counter(kit: BuildingKit, at: Vector3, yaw: float, length: float, wood: Color, trim: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3.ZERO, Vector3(length, 1.05, 0.6), wood, 0.0, true)
+	kit.block(Vector3(0, 1.05, 0.05), Vector3(length + 0.15, 0.1, 0.8), trim)
+	for i in int(length / 1.2):
+		kit.block(Vector3(-length / 2.0 + 0.6 + i * 1.2, 0, 0.31), Vector3(0.12, 1.05, 0.04), trim)
+	for i in 3:
+		kit.cylinder(Vector3(-length / 3.0 + i * 0.5, 1.15, 0.05), 0.07, 0.18, Color(0.75, 0.75, 0.7), 6)
+	kit.frame = Transform3D.IDENTITY
+
+
+## A pew facing -z: a seat and a back.
+static func pew(kit: BuildingKit, at: Vector3, yaw: float, length: float, wood: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, 0.42, 0), Vector3(length, 0.08, 0.45), wood)
+	kit.block(Vector3(0, 0.46, 0.2), Vector3(length, 0.6, 0.07), wood)
+	for x: float in [-1.0, 1.0]:
+		kit.block(Vector3(x * (length / 2.0 - 0.05), 0, 0.05), Vector3(0.1, 1.05, 0.55), wood.darkened(0.2))
+	kit.collider(Vector3(0, 0.5, 0.05), Vector3(length, 1.0, 0.55))
+	kit.frame = Transform3D.IDENTITY
+
+
+## An altar, its back to -z and its front (+z) to whoever stands before
+## it: stone with a cloth, a hanging, candlesticks, a cross and their light.
+static func altar(kit: BuildingKit, at: Vector3, yaw: float, stone: Color, cloth: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, -0.1, 0), Vector3(3.4, 0.3, 2.0), stone)
+	kit.block(Vector3.ZERO, Vector3(2.2, 1.0, 0.9), stone, 0.0, true)
+	kit.block(Vector3(0, 1.0, 0), Vector3(2.3, 0.05, 1.0), cloth)
+	kit.block(Vector3(0, 0.3, 0.47), Vector3(0.9, 0.75, 0.04), Color(0.6, 0.15, 0.13))
+	for x: float in [-0.8, 0.8]:
+		kit.cylinder(Vector3(x, 1.05, -0.15), 0.06, 0.4, Color(0.75, 0.62, 0.3), 6)
+		kit.cylinder(Vector3(x, 1.45, -0.15), 0.035, 0.12, Color(1.0, 0.85, 0.5), 6)
+	kit.beam(Vector3(0, 1.05, -0.3), Vector3(0, 1.75, -0.3), 0.08, Color(0.75, 0.62, 0.3))
+	kit.beam(Vector3(-0.22, 1.55, -0.3), Vector3(0.22, 1.55, -0.3), 0.07, Color(0.75, 0.62, 0.3))
+	kit.light(Vector3(0, 1.8, 0.6), Color(1.0, 0.82, 0.55), 6.0, 1.2)
+	kit.frame = Transform3D.IDENTITY
+
+
+## A rug or runner on the floor, `sx` by `sz`, with a darker border.
+static func rug(kit: BuildingKit, at: Vector3, yaw: float, sx: float, sz: float, color: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.block(Vector3(0, 0.0, 0), Vector3(sx, 0.03, sz), color.darkened(0.3))
+	kit.block(Vector3(0, 0.01, 0), Vector3(sx - 0.3, 0.03, sz - 0.3), color)
+	kit.frame = Transform3D.IDENTITY
+
+
+## A banner hanging on a wall, its face to +z.
+static func banner(kit: BuildingKit, at: Vector3, yaw: float, color: Color) -> void:
+	kit.frame = Transform3D(Basis(Vector3.UP, yaw), at)
+	kit.box(Vector3(0, 0.9, 0.05), Vector3(1.1, 0.08, 0.08), Color(0.3, 0.2, 0.13))
+	kit.box(Vector3(0, 0.0, 0.06), Vector3(0.9, 1.7, 0.04), color)
+	kit.box(Vector3(0, 0.1, 0.085), Vector3(0.35, 0.35, 0.02), Color(0.85, 0.75, 0.35))
+	kit.frame = Transform3D.IDENTITY
 
 
 ## A square stone bell tower `size` across and `height` tall: string
@@ -363,6 +709,7 @@ static func shed(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, woo
 ## A barn of planks: big double doors on a gable end (`door_end` +1 or -1
 ## along its length), a loft hatch above, braced doors, a plinth.
 static func barn(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, wood: Color, trim: Color, roof_color: Color, door_end := 1.0) -> void:
+	kit.footprint(base, size, yaw)
 	var made := _frame(base, size, yaw)
 	kit.frame = made[0]
 	var length: float = made[1]

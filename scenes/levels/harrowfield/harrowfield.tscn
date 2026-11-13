@@ -13,7 +13,7 @@ npc_name = "Marshal Edric Thorne"
 subname = "Marshal of Wexford"
 
 [node name="HildeBarrow" parent="." instance=ExtResource("2_npc")]
-position = Vector3(11.5, 5, 432)
+position = Vector3(21.75, 5, 431.6)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Hilde Barrow"
 subname = "Innkeeper"
@@ -93,7 +93,7 @@ npc_name = "Foreman Edda Harlow"
 subname = "Logging Foreman"
 
 [node name="TemplarTrainer" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-9, 5, 426.5)
+position = Vector3(-10.2, 5, 414.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Sir Rowan Ashdown"
 subname = "Templar Trainer"
@@ -107,7 +107,7 @@ subname = "Spellsword Trainer"
 trainer = "spellsword"
 
 [node name="ClericTrainer" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-16.5, 5, 426.5)
+position = Vector3(-15.8, 5, 414.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Sister Agnes Thorley"
 subname = "Cleric Trainer"

@@ -421,6 +421,21 @@ const BUSH_RANGE := 140.0
 const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat"]
 
 var _clutter_share := 0.66
+## Ground built on (BuildingKit footprints): no grass or bushes there.
+var _cleared: Array[Rect2] = []
+
+
+func clear_ground(square: Rect2) -> void:
+	_cleared.append(square)
+
+
+## Whether a point is under a building. Read from ClutterField's worker
+## thread once the buildings are up.
+func is_cleared(point: Vector2) -> bool:
+	for square in _cleared:
+		if square.has_point(point):
+			return true
+	return false
 
 
 ## A list per variant, for placing trees, rocks or bushes in.

@@ -30,7 +30,12 @@ const SPAWN_FACING := PI
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 const ENCLOSURES := [
 	[-24.0, -20.0, 24.0, 22.0, Vector2(0, 27), Vector2(0, 17)],  # the priory, gate in the south wall
+	[-11.0, -18.9, 11.0, -6.0, Vector2(0, -3), Vector2(0, -8.5)],  # its chapel, door to the south
 ]
+## The priory chapel: its middle and size (x, height, z), against the
+## north wall.
+const CHAPEL := Vector2(0, -12.45)
+const CHAPEL_SIZE := Vector3(22, 8, 12.9)
 
 ## Named places, for what playerbots say: [name, center, radius], smallest
 ## first, so a point is in the first place that holds it.
@@ -234,11 +239,15 @@ func _build_priory() -> void:
 	Buildings.battlements(kit, at.call(0, 22) + Vector3(0, 7.0, 0), 6.0, 1.5, STONE)
 	for side in [-1.0, 1.0]:
 		kit.block(at.call(side * 2.6, 21.0), Vector3(0.15, 4.6, 2.2), DARK_WOOD, side * 0.2)
-	# Chapel to the north, its door to the courtyard, with a bell tower at its
-	# west end.
-	Buildings.chapel(kit, at.call(0, -13), Vector3(16, 7, 9), 0.0, stone, Vector2(0, 1), Vector2(-6.5, 0), 4.0, 16.0)
-	# Hall to the east, its door to the courtyard.
-	Buildings.house(kit, at.call(17, -4), Vector3(8, 5, 12), 0.0, stone, Vector2(-1, 0), 0.0, 1, true)
+	# The chapel across the north of the courtyard, its door to the south,
+	# open inside: pews either side of the aisle up to the altar, where the
+	# Prior stands and the trainers keep to the sides. Its bell tower stands
+	# at its west end.
+	Buildings.chapel(kit, at.call(CHAPEL.x, CHAPEL.y), CHAPEL_SIZE, 0.0, stone, Vector2(0, 1), Vector2(-13.5, 0), 4.0, 16.0, true)
+	# Hall to the east, its door to the courtyard: a long table, benches,
+	# banners and a hearth.
+	var hall := Buildings.house(kit, at.call(17, -4), Vector3(8, 5, 12), 0.0, stone, Vector2(-1, 0), 0.0, 1, true, true)
+	Buildings.furnish(kit, hall, "hall", stone)
 	# Provisioner's stall by the hall, and crates.
 	Buildings.stall(kit, at.call(11.5, 6), 0.0, WOOD, DARK_WOOD, Color(0.55, 0.22, 0.17))
 	Buildings.crate(kit, at.call(14, 9.5), 1.0, WOOD, DARK_WOOD)
