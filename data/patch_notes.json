@@ -1,5 +1,18 @@
 [
 	{
+		"version": "0.13.0",
+		"date": "11-12-2026",
+		"notes": [
+			"New class: the Ranger, for Dwarves, Wood Elves, Orcs, Trolls and Hornkin. Shots and stings from range, Spirits on the stance bar, traps, tracking on the minimap, Still as Death, and three talent trees: Beastcraft, Sharpshooting and Woodcraft.",
+			"Rangers tame beasts from level 10. Your trainer's taming quests teach Tame Beast, Call, Dismiss and Revive Pet; pets level with you, fight, use their abilities on their own, and can be trained at pet trainers and kept at stable masters. Ranger playerbots tame pets of their own.",
+			"Quests with things to use: items you use on creatures or at special places, objects to click, events, escorts and timed quests, bringing back 22 quests that were left out.",
+			"Ashford Vale and Harrowfield have a whole new look: painted ground, thick grass and flowers, ferns and bushes, new trees and boulders, wheat in the Coombe fields, and clear water with ripples and foam.",
+			"Their buildings are rebuilt: battlemented walls and towers at the priory, timbered and thatched cottages, a spired chapel, barns, watchtowers and a rebuilt Thornwick Tower.",
+			"You can walk inside the priory chapel and hall, the Harrow Inn, Wexford's chapel and its homes, through real windows and doors. The priory's trainers and the Prior now wait inside the chapel, and Hilde Barrow behind the inn's bar.",
+			"Entering the world is a little faster."
+		]
+	},
+	{
 		"version": "0.12.0",
 		"date": "11-12-2026",
 		"notes": [
