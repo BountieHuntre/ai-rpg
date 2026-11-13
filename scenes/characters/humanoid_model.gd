@@ -265,13 +265,32 @@ var _hands_lit := false
 ## The cape's springs (see _cape_springs) take their stiffness, drag and
 ## weight, and its wind (_update_cape) its strength and smoothing, from the
 ## cape_ options (Settings, the Developer tab's sliders).
-## Capsules the cape can't pass through: [bone, radius, height, offset along
-## the bone] (yards, before the model's own scale).
+## The body the cape can't pass through, as capsules on its bones: [bone,
+## the bone it reaches to, how far along it the capsule's middle is, radius,
+## half its length (to the end of a cap), and "across" (lying left to right:
+## the torso, wide and flat, where a capsule round the spine would let the
+## cape's sides and upper part sink in) or "along" the bone (limbs)]. Sizes
+## are the Human's, from the build script's torso rings with a little room for
+## clothes, scaled by each race's width (the skeleton's shoulder span) and
+## placed from its own bones (_cape_collider).
 const CAPE_COLLIDERS := [
-	["Hips", 0.2, 0.45, 0.0], ["Spine", 0.17, 0.5, 0.12],
-	["RightUpperLeg", 0.1, 0.5, 0.22], ["LeftUpperLeg", 0.1, 0.5, 0.22],
-	["RightLowerLeg", 0.08, 0.45, 0.2], ["LeftLowerLeg", 0.08, 0.45, 0.2],
+	["Chest", "Neck", 0.85, 0.15, 0.29, "across"],
+	["Chest", "Neck", 0.5, 0.175, 0.3, "across"],
+	["Spine", "Chest", 0.5, 0.145, 0.24, "across"],
+	["Hips", "Spine", 0.2, 0.14, 0.21, "across"],
+	["RightUpperLeg", "RightLowerLeg", 0.45, 0.095, 0.27, "along"],
+	["LeftUpperLeg", "LeftLowerLeg", 0.45, 0.095, 0.27, "along"],
+	["RightLowerLeg", "RightFoot", 0.5, 0.08, 0.25, "along"],
+	["LeftLowerLeg", "LeftFoot", 0.5, 0.08, 0.25, "along"],
+	["RightUpperArm", "RightLowerArm", 0.5, 0.075, 0.18, "along"],
+	["LeftUpperArm", "LeftLowerArm", 0.5, 0.075, 0.18, "along"],
 ]
+## The Human's shoulder span (the upper arms' heads apart), which races'
+## widths are measured against.
+const HUMAN_SHOULDERS := 0.56
+## The cape's joints' radius: the cloth between them (the chains are a hand's
+## width apart) stays out of the body as long as a leg can't slip between two.
+const CAPE_JOINT_RADIUS := 0.055
 var _springs: Array[SpringBoneSimulator3D] = []
 ## The cape's chains (left edge, middle, right edge; the build script's
 ## CAPE_CHAINS), bones in each, and how far out of step each chain's flutter
@@ -772,15 +791,13 @@ func _cape_springs(on: bool) -> void:
 		springs.set_end_bone_name(0, "Cape%s%d" % [chain, CAPE_BONES])
 		springs.set_extend_end_bone(0, true)
 		springs.set_end_bone_length(0, 0.1)
-		springs.set_radius(0, 0.04)
+		springs.set_radius(0, CAPE_JOINT_RADIUS)
 		springs.set_enable_all_child_collisions(0, true)
+		var width := _skeleton_width()
 		for collider: Array in CAPE_COLLIDERS:
-			var capsule := SpringBoneCollisionCapsule3D.new()
-			capsule.bone_name = collider[0]
-			capsule.radius = collider[1]
-			capsule.height = collider[2]
-			capsule.position_offset = Vector3(0, collider[3], 0)
-			springs.add_child(capsule)
+			var capsule := _cape_collider(collider, width)
+			if capsule:
+				springs.add_child(capsule)
 		# Simulated in the character's own space, every drawn frame like its
 		# animation: its movement and turning reach the cape only as the
 		# smoothed wind of _update_cape (the steps of physics movement would
@@ -794,6 +811,47 @@ func _cape_springs(on: bool) -> void:
 		Settings.changed.connect(_on_setting_changed)
 	_cape_wind = Vector3.ZERO
 	_last_yaw = global_rotation.y
+
+
+## How wide this model's body is against the Human's, from its shoulders.
+func _skeleton_width() -> float:
+	var right := _skeleton.find_bone("RightUpperArm")
+	var left := _skeleton.find_bone("LeftUpperArm")
+	if right < 0 or left < 0:
+		return 1.0
+	var span := _skeleton.get_bone_global_rest(right).origin.distance_to(_skeleton.get_bone_global_rest(left).origin)
+	return span / HUMAN_SHOULDERS
+
+
+## A CAPE_COLLIDERS capsule on its bone: placed in the skeleton's rest pose
+## between the bone and the next, then held in the bone's own space so it
+## follows the animation.
+func _cape_collider(collider: Array, width: float) -> SpringBoneCollisionCapsule3D:
+	var bone := _skeleton.find_bone(collider[0])
+	var next := _skeleton.find_bone(collider[1])
+	if bone < 0 or next < 0:
+		return null
+	var rest := _skeleton.get_bone_global_rest(bone)
+	var from := rest.origin
+	var to := _skeleton.get_bone_global_rest(next).origin
+	var middle := from.lerp(to, collider[2])
+	var axis := Vector3.RIGHT if collider[5] == "across" else (to - from).normalized()
+	# A capsule lies along its own Y.
+	var up := axis
+	var side := up.cross(Vector3.BACK)
+	if side.length() < 0.01:
+		side = up.cross(Vector3.UP)
+	side = side.normalized()
+	var placed := Transform3D(Basis(side, up, side.cross(up)), middle)
+	var local := rest.affine_inverse() * placed
+	var capsule := SpringBoneCollisionCapsule3D.new()
+	capsule.bone_name = collider[0]
+	var scale := width if collider[5] == "across" else 1.0
+	capsule.radius = collider[3] * width
+	capsule.height = 2.0 * collider[4] * scale
+	capsule.position_offset = local.origin
+	capsule.rotation_offset = local.basis.get_rotation_quaternion()
+	return capsule
 
 
 ## The springs' stiffness, drag and weight from the options (the Developer
@@ -820,6 +878,9 @@ func _update_cape(delta: float) -> void:
 	_last_yaw = yaw
 	var local := global_basis.orthonormalized().inverse() * _body.velocity
 	var wind := Vector3(local.x, 0.0, local.z) * -float(Settings.get_value("cape_wind")) 		+ Vector3(turn * float(Settings.get_value("cape_turn_wind")), 0.0, 0.0)
+	# Never forward (the model faces -Z): backing up, a cloak just hangs; blown
+	# forward, its edges wrapped round the hips and through the legs.
+	wind.z = maxf(wind.z, 0.0)
 	_cape_wind = _cape_wind.lerp(wind, 1.0 - exp(-float(Settings.get_value("cape_wind_smoothing")) * delta))
 	# Flapping: gusts rising and falling on top of the wind, mostly up and
 	# down with a little side to side and back, at frequencies that don't
