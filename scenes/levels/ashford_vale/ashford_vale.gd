@@ -214,44 +214,48 @@ func _build_priory() -> void:
 	var priory := Node3D.new()
 	priory.name = "Priory"
 	add_child(priory)
+	var kit := BuildingKit.new(priory, "Buildings")
 	var y := PRIORY_HEIGHT
-	# Walls around x -24..24, z -20..22, with a gate in the south wall.
-	Props.box(priory, Vector3(0, y, -20), Vector3(49.5, 4, 1.5), STONE)
-	Props.box(priory, Vector3(-24, y, 1), Vector3(1.5, 4, 42), STONE)
-	Props.box(priory, Vector3(24, y, 1), Vector3(1.5, 4, 42), STONE)
-	Props.box(priory, Vector3(-14, y, 22), Vector3(21.5, 4, 1.5), STONE)
-	Props.box(priory, Vector3(14, y, 22), Vector3(21.5, 4, 1.5), STONE)
+	var at := func(x: float, z: float) -> Vector3: return Vector3(x, y, z)
+	var stone := { "wall": STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE }
+	# Battlemented walls around x -24..24, z -20..22, with a gate in the
+	# south wall between two towers, and a tower at each corner.
+	Buildings.wall(kit, at.call(0, -20), Vector3(49.5, 4, 1.5), STONE, DARK_STONE)
+	Buildings.wall(kit, at.call(-24, 1), Vector3(1.5, 4, 42), STONE, DARK_STONE)
+	Buildings.wall(kit, at.call(24, 1), Vector3(1.5, 4, 42), STONE, DARK_STONE)
+	Buildings.wall(kit, at.call(-14, 22), Vector3(21.5, 4, 1.5), STONE, DARK_STONE)
+	Buildings.wall(kit, at.call(14, 22), Vector3(21.5, 4, 1.5), STONE, DARK_STONE)
 	for corner in [Vector2(-24, -20), Vector2(24, -20), Vector2(-24, 22), Vector2(24, 22)]:
-		Props.box(priory, Vector3(corner.x, y, corner.y), Vector3(3.5, 6, 3.5), DARK_STONE)
+		Buildings.tower(kit, at.call(corner.x, corner.y), Vector3(3.5, 6, 3.5), DARK_STONE, STONE, ROOF)
 	for side in [-1, 1]:
-		Props.box(priory, Vector3(side * 4.5, y, 22), Vector3(3, 7, 3), DARK_STONE)
-	Props.box(priory, Vector3(0, y + 5.5, 22), Vector3(6, 1.5, 1.5), DARK_STONE, 0.0, false)
-	# Chapel to the north, with a bell tower.
-	Props.box(priory, Vector3(0, y, -13), Vector3(16, 7, 9), STONE)
-	Props.roof(priory, Vector3(0, y + 7, -13), Vector3(17, 4, 10), ROOF)
-	Props.box(priory, Vector3(0, y, -8.4), Vector3(2.4, 3.6, 0.3), DARK_WOOD, 0.0, false)
-	Props.box(priory, Vector3(-6.5, y, -13), Vector3(4, 13, 4), STONE)
-	Props.roof(priory, Vector3(-6.5, y + 13, -13), Vector3(4.6, 3, 4.6), ROOF)
-	# Hall to the east.
-	Props.box(priory, Vector3(17, y, -4), Vector3(8, 5, 12), STONE)
-	Props.roof(priory, Vector3(17, y + 5, -4), Vector3(13, 3, 9), ROOF, PI / 2)
-	# Provisioner's stall by the hall.
-	Props.box(priory, Vector3(11.5, y, 6), Vector3(1.4, 1, 4), WOOD)
-	Props.box(priory, Vector3(12.5, y, 6), Vector3(0.3, 3, 4.4), DARK_WOOD, 0.0, false)
-	Props.box(priory, Vector3(11.8, y + 3, 6), Vector3(2.2, 0.2, 4.6), CANVAS, 0.0, false)
-	for offset in [Vector3(14, 0, 9.5), Vector3(15.2, 0, 9.8), Vector3(14.4, 1, 9.6)]:
-		Props.box(priory, Vector3(0, y, 0) + offset, Vector3(1, 1, 1), WOOD)
-	# Open smithy to the west: a roof on posts, a forge and an anvil.
-	for post in [Vector2(-20, -6), Vector2(-12, -6), Vector2(-20, 2), Vector2(-12, 2)]:
-		Props.box(priory, Vector3(post.x, y, post.y), Vector3(0.5, 4, 0.5), DARK_WOOD)
-	Props.roof(priory, Vector3(-16, y + 4, -2), Vector3(9.5, 2.5, 9.5), DARK_STONE, PI / 2)
-	Props.box(priory, Vector3(-18.5, y, -4), Vector3(3, 2, 2.5), DARK_STONE)
-	Props.box(priory, Vector3(-13, y, 4), Vector3(1.2, 0.9, 0.6), Color(0.25, 0.25, 0.28))
+		Buildings.tower(kit, at.call(side * 4.5, 22), Vector3(3, 7, 3), DARK_STONE, STONE)
+	# The arch over the gate, battlemented, and its gates standing open.
+	kit.block(at.call(0, 22) + Vector3(0, 5.5, 0), Vector3(6, 1.5, 1.5), DARK_STONE)
+	Buildings.battlements(kit, at.call(0, 22) + Vector3(0, 7.0, 0), 6.0, 1.5, STONE)
+	for side in [-1.0, 1.0]:
+		kit.block(at.call(side * 2.6, 21.0), Vector3(0.15, 4.6, 2.2), DARK_WOOD, side * 0.2)
+	# Chapel to the north, its door to the courtyard, with a bell tower at its
+	# west end.
+	Buildings.chapel(kit, at.call(0, -13), Vector3(16, 7, 9), 0.0, stone, Vector2(0, 1), Vector2(-6.5, 0), 4.0, 16.0)
+	# Hall to the east, its door to the courtyard.
+	Buildings.house(kit, at.call(17, -4), Vector3(8, 5, 12), 0.0, stone, Vector2(-1, 0), 0.0, 1, true)
+	# Provisioner's stall by the hall, and crates.
+	Buildings.stall(kit, at.call(11.5, 6), 0.0, WOOD, DARK_WOOD, Color(0.55, 0.22, 0.17))
+	Buildings.crate(kit, at.call(14, 9.5), 1.0, WOOD, DARK_WOOD)
+	Buildings.crate(kit, at.call(15.2, 9.8), 1.0, WOOD, DARK_WOOD, 0.3)
+	Buildings.crate(kit, at.call(14.4, 9.6) + Vector3(0, 1, 0), 0.9, WOOD, DARK_WOOD, -0.2)
+	# Open smithy to the west: a roof on braced posts, a forge with its hood
+	# and an anvil.
+	Buildings.shed(kit, at.call(-16, -2), Vector3(8.5, 4, 8.5), PI / 2, DARK_WOOD, DARK_STONE)
+	kit.block(at.call(-18.5, -4), Vector3(3, 1.6, 2.5), DARK_STONE, 0.0, true)
+	kit.block(at.call(-18.5, -4) + Vector3(0, 1.6, 0), Vector3(2.2, 0.15, 1.8), Color(0.55, 0.2, 0.08))
+	kit.cylinder(at.call(-18.5, -4) + Vector3(0, 2.6, 0), 1.3, 1.6, DARK_STONE, 4, 0.35)
+	kit.block(at.call(-18.5, -4) + Vector3(0, 4.2, 0), Vector3(0.7, 2.4, 0.7), DARK_STONE)
+	kit.block(at.call(-13, 4), Vector3(0.6, 0.6, 0.45), DARK_WOOD, 0.0, true)
+	kit.block(at.call(-13, 4) + Vector3(0, 0.6, 0), Vector3(1.2, 0.3, 0.55), Color(0.25, 0.25, 0.28))
 	# Well in the courtyard.
-	Props.cylinder(priory, Vector3(6, y, 10), 1.2, 1.0, DARK_STONE)
-	for side in [-1, 1]:
-		Props.box(priory, Vector3(6 + side * 1.0, y, 10), Vector3(0.2, 2.6, 0.2), DARK_WOOD, 0.0, false)
-	Props.roof(priory, Vector3(6, y + 2.6, 10), Vector3(2.8, 0.9, 2.2), ROOF)
+	Buildings.well(kit, at.call(6, 10), DARK_STONE, DARK_WOOD, ROOF)
+	kit.finish()
 
 
 # The burrowlings' mine in the western hill, with a timber-framed entrance.

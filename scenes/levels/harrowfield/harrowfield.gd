@@ -224,6 +224,12 @@ const CANVAS := Color(0.62, 0.55, 0.42)
 const PUMPKIN := Color(0.85, 0.48, 0.12)
 
 var _detail := FastNoiseLite.new()
+## How the buildings look (Buildings): limewashed and timbered cottages
+## under thatch, stone under tiles, and plank sheds.
+const COTTAGE_LOOK := { "wall": PLASTER, "roof": THATCH, "trim": DARK_WOOD, "stone": DARK_STONE, "thatch": true, "timber": true }
+const INN_LOOK := { "wall": PLASTER, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE, "timber": true }
+const STONE_LOOK := { "wall": STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE }
+const SHED_LOOK := { "wall": WOOD, "roof": THATCH, "trim": DARK_WOOD, "stone": DARK_STONE, "thatch": true }
 ## Where flowers grow thick.
 var _meadow := FastNoiseLite.new()
 
@@ -381,50 +387,39 @@ func _build_village() -> void:
 	add_child(village)
 	var v := VILLAGE
 	var y := VILLAGE_HEIGHT
-	# The Harrow Inn, east of the green, two storeys with its door to the west.
-	Props.box(village, _near(v, Vector2(18, -10), y), Vector3(10, 7, 14), PLASTER)
-	Props.roof(village, _near(v, Vector2(18, -10), y + 7), Vector3(11, 4, 15), ROOF)
-	Props.box(village, _near(v, Vector2(12.9, -8), y), Vector3(0.3, 2.6, 1.6), DARK_WOOD, 0.0, false)
-	Props.box(village, _near(v, Vector2(13, -12), y + 2.8), Vector3(0.2, 1, 1.6), DARK_WOOD, 0.0, false)
-	for beam in [-16.0, -10.0, -4.0]:
-		Props.box(village, _near(v, Vector2(12.9, beam), y), Vector3(0.25, 7, 0.3), DARK_WOOD, 0.0, false)
-	# The chapel north of the green, its churchyard to the west.
-	Props.box(village, _near(v, Vector2(-13, -22), y), Vector3(8, 6, 12), STONE)
-	Props.roof(village, _near(v, Vector2(-13, -22), y + 6), Vector3(13, 3, 9), ROOF, PI / 2)
-	Props.box(village, _near(v, Vector2(-13, -15.9), y), Vector3(2.2, 3.4, 0.3), DARK_WOOD, 0.0, false)
-	Props.box(village, _near(v, Vector2(-13, -28.5), y), Vector3(3, 10, 3), STONE)
-	Props.roof(village, _near(v, Vector2(-13, -28.5), y + 10), Vector3(3.6, 2.5, 3.6), ROOF)
+	var kit := BuildingKit.new(village, "Buildings")
+	# The Harrow Inn, east of the green, two timbered storeys with its door to
+	# the west and its sign beside it.
+	Buildings.house(kit, _near(v, Vector2(18, -10), y), Vector3(10, 7, 14), 0.0, INN_LOOK, Vector2(-1, 0), 2.0, 2)
+	kit.beam(_near(v, Vector2(12.6, -12), y + 3.3), _near(v, Vector2(11.6, -12), y + 3.3), 0.12, DARK_WOOD)
+	kit.block(_near(v, Vector2(11.7, -12), y + 2.3), Vector3(0.1, 0.9, 1.3), WOOD)
+	# The chapel north of the green, its door to the green, its tower at the
+	# north end; the churchyard to the west.
+	Buildings.chapel(kit, _near(v, Vector2(-13, -22), y), Vector3(8, 6, 12), 0.0, STONE_LOOK, Vector2(0, 1), Vector2(0, -6.5), 3.2, 13.0)
 	for stone in [Vector2(-22, 6), Vector2(-25, 9), Vector2(-22, 12), Vector2(-25, 15), Vector2(-28, 6), Vector2(-28, 12)]:
 		Props.box(village, _near(v, stone, y), Vector3(0.9, 1.1, 0.25), DARK_STONE, 0.0, false)
 	for post in [Vector2(-31, 3), Vector2(-31, 19), Vector2(-19, 3), Vector2(-19, 19)]:
 		Props.box(village, _near(v, post, y), Vector3(0.4, 1.2, 0.4), DARK_WOOD, 0.0, false)
-	# Cottages round the green.
-	for cottage in [[Vector2(-18, -6), 0.0], [Vector2(-12, 28), PI / 2], [Vector2(16, 20), 0.0]]:
-		Props.box(village, _near(v, cottage[0], y), Vector3(7, 4, 6), PLASTER, cottage[1])
-		Props.roof(village, _near(v, cottage[0], y + 4), Vector3(8, 3, 7), THATCH, cottage[1])
+	# Cottages round the green, their doors to it.
+	for cottage in [[Vector2(-18, -6), 0.0, Vector2(1, 0)], [Vector2(-12, 28), PI / 2, Vector2(1, 0)], [Vector2(16, 20), 0.0, Vector2(0, -1)]]:
+		Buildings.house(kit, _near(v, cottage[0], y), Vector3(7, 4, 6), cottage[1], COTTAGE_LOOK, cottage[2])
 	# The tanner's stall, a well, and the marshal's banner on the green.
-	Props.box(village, _near(v, Vector2(-11, 5), y), Vector3(1.4, 1, 4), WOOD)
-	Props.box(village, _near(v, Vector2(-11.6, 5), y + 3), Vector3(2.2, 0.2, 4.6), CANVAS, 0.0, false)
-	for post in [Vector2(-12.3, 3), Vector2(-12.3, 7)]:
-		Props.box(village, _near(v, post, y), Vector3(0.25, 3, 0.25), DARK_WOOD, 0.0, false)
-	Props.cylinder(village, _near(v, Vector2(6, 8), y), 1.2, 1.0, DARK_STONE)
-	for side in [-1, 1]:
-		Props.box(village, _near(v, Vector2(6 + side * 1.0, 8), y), Vector3(0.2, 2.6, 0.2), DARK_WOOD, 0.0, false)
-	Props.roof(village, _near(v, Vector2(6, 8), y + 2.6), Vector3(2.8, 0.9, 2.2), THATCH)
+	Buildings.stall(kit, _near(v, Vector2(-11, 5), y), PI, WOOD, DARK_WOOD, CANVAS)
+	Buildings.well(kit, _near(v, Vector2(6, 8), y), DARK_STONE, DARK_WOOD, THATCH, true)
 	Props.box(village, _near(v, Vector2(-2, 8), y), Vector3(0.25, 5, 0.25), DARK_WOOD, 0.0, false)
 	Props.box(village, _near(v, Vector2(-1.3, 8), y + 3.2), Vector3(1.2, 1.6, 0.1), Color(0.2, 0.3, 0.6), 0.0, false)
 	torch(village, _near(v, Vector2(12.6, -5.5), y + 2.6))
 	torch(village, _near(v, Vector2(-10.5, -15.5), y + 2.4))
-	# The smithy east of the well: a stone forge under a lean-to roof, with an
-	# anvil out front, where the weaponsmith and the Man-at-Arms trainer stand.
-	Props.box(village, _near(v, Vector2(25, 7), y), Vector3(6, 4.5, 5), DARK_STONE)
-	Props.roof(village, _near(v, Vector2(25, 7), y + 4.5), Vector3(7, 2, 6), ROOF, PI / 2)
+	# The smithy east of the well: a stone forge with its chimney, the anvil
+	# out front, where the weaponsmith and the Man-at-Arms trainer stand.
+	Buildings.house(kit, _near(v, Vector2(25, 7), y), Vector3(6, 4.5, 5), 0.0, { "wall": DARK_STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": STONE }, Vector2.ZERO)
 	Props.box(village, _near(v, Vector2(21.6, 7), y), Vector3(0.8, 1.4, 2.4), Color(0.12, 0.1, 0.1))
 	torch(village, _near(v, Vector2(21.4, 7), y + 0.9), 5.0)
 	Props.box(village, _near(v, Vector2(19.5, 11), y), Vector3(0.7, 0.8, 0.5), DARK_STONE)
 	Props.box(village, _near(v, Vector2(19.5, 11), y + 0.8), Vector3(1.1, 0.3, 0.5), Color(0.25, 0.25, 0.28), 0.0, false)
 	for rack in [3.0, 4.0, 5.0]:
 		Props.box(village, _near(v, Vector2(21.8, rack + 1.5), y), Vector3(0.1, 1.6, 0.1), Color(0.6, 0.6, 0.65), 0.2, false)
+	kit.finish()
 
 
 # The Coombe farm: a farmhouse, a barn and a fenced pumpkin patch to the south.
@@ -435,12 +430,12 @@ func _build_farm() -> void:
 	add_child(farm)
 	var at: Vector2 = FLATS[FARM][0]
 	var y: float = FLATS[FARM][2]
-	Props.box(farm, _near(at, Vector2(-4, -6), y), Vector3(9, 4.5, 7), PLASTER)
-	Props.roof(farm, _near(at, Vector2(-4, -6), y + 4.5), Vector3(10, 3.5, 8), THATCH)
-	Props.box(farm, _near(at, Vector2(8, -2), y), Vector3(7, 5, 10), WOOD)
-	Props.roof(farm, _near(at, Vector2(8, -2), y + 5), Vector3(8, 3, 11), DARK_WOOD, PI / 2)
+	var kit := BuildingKit.new(farm, "Buildings")
+	Buildings.house(kit, _near(at, Vector2(-4, -6), y), Vector3(9, 4.5, 7), 0.0, COTTAGE_LOOK, Vector2(0, 1))
+	Buildings.barn(kit, _near(at, Vector2(8, -2), y), Vector3(7, 5, 10), 0.0, WOOD, DARK_WOOD, DARK_WOOD, -1.0)
 	for bale in [Vector2(3, 5), Vector2(4.5, 5.5), Vector2(3.6, 6.6)]:
-		Props.cylinder(farm, _near(at, bale, y), 0.7, 0.9, THATCH, false)
+		kit.cylinder(_near(at, bale, y), 0.7, 0.9, THATCH, 10)
+	kit.finish()
 	var patch: Vector2 = FLATS[PATCH][0]
 	var patch_y: float = FLATS[PATCH][2]
 	var rng := RandomNumberGenerator.new()
@@ -466,9 +461,10 @@ func _build_cottage() -> void:
 	add_child(cottage)
 	var at: Vector2 = FLATS[COTTAGE][0]
 	var y: float = FLATS[COTTAGE][2]
-	Props.box(cottage, _near(at, Vector2(3, -2), y), Vector3(6, 4, 6), PLASTER, 0.4)
-	Props.roof(cottage, _near(at, Vector2(3, -2), y + 4), Vector3(7, 3, 7), THATCH, 0.4)
-	Props.box(cottage, _near(at, Vector2(-3, 3), y), Vector3(2, 1, 1.2), WOOD)
+	var kit := BuildingKit.new(cottage, "Buildings")
+	Buildings.house(kit, _near(at, Vector2(3, -2), y), Vector3(6, 4, 6), 0.4, COTTAGE_LOOK, Vector2(0, 1))
+	Buildings.crate(kit, _near(at, Vector2(-3, 3), y), 1.0, WOOD, DARK_WOOD, 0.2)
+	kit.finish()
 
 
 ## A mine dug into a hill beside its flat: `side` -1 for a hill to the west
@@ -505,8 +501,9 @@ func _build_farmstead() -> void:
 	Props.box(farmstead, _near(at, Vector2(-5, -7), y), Vector3(9, 3.5, 0.6), charred)
 	Props.box(farmstead, _near(at, Vector2(-9.2, -4), y), Vector3(0.6, 2.5, 6), charred)
 	Props.box(farmstead, _near(at, Vector2(-0.8, -5), y), Vector3(0.6, 3, 4), charred)
-	Props.box(farmstead, _near(at, Vector2(8, 2), y), Vector3(6, 4, 8), WOOD)
-	Props.roof(farmstead, _near(at, Vector2(8, 2), y + 4), Vector3(7, 2.5, 9), DARK_WOOD, PI / 2)
+	var kit := BuildingKit.new(farmstead, "Buildings")
+	Buildings.barn(kit, _near(at, Vector2(8, 2), y), Vector3(6, 4, 8), 0.0, WOOD, DARK_WOOD, DARK_WOOD, -1.0)
+	kit.finish()
 	Props.roof(farmstead, _near(at, Vector2(-3, 7), y), Vector3(4, 2.6, 3.4), Color(0.45, 0.18, 0.15), 0.3)
 	Props.cylinder(farmstead, _near(at, Vector2.ZERO, y), 1.0, 0.3, DARK_STONE, false)
 	torch(farmstead, _near(at, Vector2.ZERO, y + 0.6), 6.0)
@@ -533,11 +530,9 @@ func _build_gnoll_camp() -> void:
 ## A wooden watchtower on four posts, with a roof: the south watch and the
 ## west garrison.
 func _watchtower(parent: Node3D, at: Vector2, y: float, height: float, width: float) -> void:
-	var half := width / 2.0 - 0.3
-	for corner in [Vector2(-half, -half), Vector2(half, -half), Vector2(-half, half), Vector2(half, half)]:
-		Props.box(parent, _near(at, corner, y), Vector3(0.4, height, 0.4), DARK_WOOD)
-	Props.box(parent, _near(at, Vector2.ZERO, y + height), Vector3(width, 0.3, width), WOOD, 0.0, false)
-	Props.roof(parent, _near(at, Vector2.ZERO, y + height + 1.2), Vector3(width + 0.4, 1.6, width + 0.4), ROOF)
+	var kit := BuildingKit.new(parent, "Watchtower")
+	Buildings.watchtower(kit, _near(at, Vector2.ZERO, y), height, width, WOOD, DARK_WOOD, ROOF)
+	kit.finish()
 
 
 ## The south watch by the bridge and the watchman's hut by the mere.
@@ -551,8 +546,9 @@ func _build_watch_posts() -> void:
 	torch(posts, _near(watch, Vector2(1, -1), y + 2.4))
 	var hut: Vector2 = FLATS[HUT][0]
 	var hut_y: float = FLATS[HUT][2]
-	Props.box(posts, _near(hut, Vector2(-3, 0), hut_y), Vector3(4, 3, 4), WOOD)
-	Props.roof(posts, _near(hut, Vector2(-3, 0), hut_y + 3), Vector3(5, 2, 5), THATCH)
+	var kit := BuildingKit.new(posts, "Hut")
+	Buildings.house(kit, _near(hut, Vector2(-3, 0), hut_y), Vector3(4, 3, 4), 0.0, SHED_LOOK, Vector2(0, 1), 0.0, 1, false)
+	kit.finish()
 
 
 func _build_bridge() -> void:
@@ -612,10 +608,26 @@ func _build_tower() -> void:
 	add_child(tower)
 	var at: Vector2 = FLATS[TOWER][0]
 	var y: float = FLATS[TOWER][2]
-	Props.cylinder(tower, _near(at, Vector2.ZERO, y), 4.0, 16.0, STONE)
-	Props.cylinder(tower, _near(at, Vector2.ZERO, y + 16.0), 4.8, 5.0, ROOF, false, 0.0)
-	# Its door to the south, and dark windows up its side.
-	Props.box(tower, _near(at, Vector2(0, 3.9), y), Vector3(1.8, 3.0, 0.4), DARK_WOOD, 0.0, false)
+	var kit := BuildingKit.new(tower, "Buildings")
+	var base := _near(at, Vector2.ZERO, y)
+	kit.cylinder(base, 4.0, 16.0, STONE, 14, -1.0, true)
+	kit.cylinder(base + Vector3(0, -0.2, 0), 4.5, 1.2, DARK_STONE, 14, 4.2)
+	for course in [5.5, 11.0]:
+		kit.cylinder(base + Vector3(0, course, 0), 4.15, 0.3, DARK_STONE, 14)
+	# Corbels and battlements round the top, then the cone.
+	kit.cylinder(base + Vector3(0, 15.3, 0), 4.1, 0.7, DARK_STONE, 14, 4.5)
+	for i in 14:
+		var angle := TAU * i / 14.0
+		if i % 2 == 0:
+			kit.box(base + Vector3(cos(angle) * 4.3, 16.4, sin(angle) * 4.3), Vector3(0.7, 0.8, 0.4), DARK_STONE, Basis(Vector3.UP, -angle + PI / 2.0))
+	kit.cylinder(base + Vector3(0, 16.0, 0), 3.7, 6.0, ROOF, 14, 0.0)
+	# Its arched door to the south, and dark windows up its side.
+	kit.block(base + Vector3(0, 0, 3.95), Vector3(1.8, 3.0, 0.4), DARK_WOOD)
+	kit.frame = Transform3D(Basis(), base + Vector3(0, 3.0, 4.0))
+	kit.wedge(Vector3.ZERO, 1.8, 0.8, 0.4, DARK_WOOD)
+	kit.wedge(Vector3(0, -0.05, 0.12), 2.4, 1.1, 0.3, DARK_STONE)
+	kit.frame = Transform3D.IDENTITY
+	kit.finish()
 	for window in [[Vector2(0, 3.95), 7.0], [Vector2(3.95, 0), 10.0], [Vector2(-3.95, 0), 12.0], [Vector2(0, -3.95), 9.0]]:
 		var spot: Vector2 = window[0]
 		Props.box(tower, _near(at, spot, y + window[1]), Vector3(0.8 if spot.x == 0.0 else 0.3, 1.2, 0.3 if spot.x == 0.0 else 0.8), Color(0.08, 0.07, 0.1), 0.0, false)
@@ -645,10 +657,11 @@ func _build_vineyard() -> void:
 	var leaf := BoxMesh.new()
 	leaf.size = Vector3.ONE
 	Props.scatter(vineyard, leaf, Color(0.28, 0.48, 0.2), leaves)
-	Props.box(vineyard, _near(at, Vector2(0, -16), y), Vector3(7, 3.5, 5), PLASTER)
-	Props.roof(vineyard, _near(at, Vector2(0, -16), y + 3.5), Vector3(8, 2.5, 6), ROOF)
+	var kit := BuildingKit.new(vineyard, "Buildings")
+	Buildings.house(kit, _near(at, Vector2(0, -16), y), Vector3(7, 3.5, 5), 0.0, INN_LOOK, Vector2(0, 1))
 	for barrel in [Vector2(5, -15), Vector2(5, -17), Vector2(6.2, -16)]:
-		Props.cylinder(vineyard, _near(at, barrel, y), 0.5, 1.0, WOOD)
+		Buildings.barrel(kit, _near(at, barrel, y), 0.5, 1.0, WOOD)
+	kit.finish()
 
 
 # The Reedford landing: a dock on the stream's north bank, a shed and a boat.
@@ -664,8 +677,9 @@ func _build_landing() -> void:
 	for z in [8.0, 11.5, 15.0]:
 		for side in [-1, 1]:
 			Props.box(landing, Vector3(at.x + side * 2.3, STREAM_BED - 1.0, at.y + z), Vector3(0.4, deck - STREAM_BED + 1.6, 0.4), DARK_WOOD, 0.0, false)
-	Props.box(landing, _near(at, Vector2(-5, -3), y), Vector3(4, 3, 4), WOOD)
-	Props.roof(landing, _near(at, Vector2(-5, -3), y + 3), Vector3(5, 1.8, 5), THATCH)
+	var kit := BuildingKit.new(landing, "Buildings")
+	Buildings.house(kit, _near(at, Vector2(-5, -3), y), Vector3(4, 3, 4), 0.0, SHED_LOOK, Vector2(1, 0), 0.0, 1, false)
+	kit.finish()
 	Props.box(landing, Vector3(at.x + 4.0, WATER_LEVEL - 0.3, at.y + 12.0), Vector3(1.6, 0.7, 4.2), WOOD, 0.0, false)
 	for crate in [Vector2(3, -2), Vector2(4, -1)]:
 		Props.box(landing, _near(at, crate, y), Vector3(1, 1, 1), WOOD)
