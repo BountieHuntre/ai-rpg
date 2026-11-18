@@ -1,5 +1,17 @@
 [
 	{
+		"version": "0.14.0",
+		"date": "11-17-2026",
+		"notes": [
+			"Weapons come in many new shapes, chosen by what they're called: scimitars curve, claymores have swept guards, cudgels are clubs, mauls have great hammer heads, gnarled staves twist, and rare weapons are ornate with gems. Grips are wrapped, blades have fullers and guards.",
+			"Five shield shapes (round, kite, heater, buckler and tower), more off-hand items (orbs, tomes, steins, rods), and longbows, blunderbusses, crossbows and throwing axes.",
+			"Helms come in two shapes for each armour type, plus a brigand's mask, and shoulder pieces look different for cloth, leather, mail and plate.",
+			"Armour shows what it's made of: woven, quilted or striped cloth, plain, studded or tooled leather, chain or scale mail, plain or banded plate.",
+			"Sunlight streams through the windows and doors of buildings you can walk into (the Light Shafts option under Performance). Rooms are darker inside and lit by hanging lanterns.",
+			"Cloaks no longer pass through your body or legs, and hang behind you when you back up."
+		]
+	},
+	{
 		"version": "0.13.0",
 		"date": "11-12-2026",
 		"notes": [
