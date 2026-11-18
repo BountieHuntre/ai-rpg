@@ -36,7 +36,7 @@ FPS = 30
 SLOT_NAMES = [
 	"skin", "hair", "eyes", "chest", "legs", "feet", "hands", "waist",
 	"shoulders", "wrists", "head", "trim", "blade", "handle", "shield", "shield_trim",
-	"back", "ranged", "ranged_trim", "helm_trim", "tusk", "paint",
+	"back", "ranged", "ranged_trim", "helm_trim", "tusk", "paint", "gem", "strap", "emblem",
 ]
 SLOT = {name: i for i, name in enumerate(SLOT_NAMES)}
 # U steps: room for this many slots (shaders/character.gdshader's array).
@@ -213,6 +213,22 @@ def build_armature():
 
 # ---------------------------------------------------------------- meshes
 
+def _along_axis(points, axis):
+	"""A face's corners' texture coordinates (yards) laid along `axis`: on
+	faces running along it, across and along; on faces across its end, flat."""
+	axis = axis.normalized()
+	normal = (points[1] - points[0]).cross(points[2] - points[0])
+	if normal.length < 1e-9:
+		normal = axis.orthogonal()
+	normal.normalize()
+	if abs(normal.dot(axis)) > 0.7:
+		e1 = axis.orthogonal().normalized()
+		e2 = axis.cross(e1)
+		return [(p.dot(e1), p.dot(e2)) for p in points]
+	across = normal.cross(axis).normalized()
+	return [(p.dot(across), p.dot(axis)) for p in points]
+
+
 class Builder:
 	"""Geometry for one mesh object, in armature space."""
 
@@ -222,14 +238,20 @@ class Builder:
 		self.groups = []
 		self.faces = []
 		self.face_uv = []
+		# Texture coordinates in yards for each face's corners (the second UV
+		# map): what the character shader lays its gear patterns by.
+		self.face_uv2 = []
 
-	def _add(self, verts, groups, faces, slots, shades):
+	def _add(self, verts, groups, faces, slots, shades, uv2=None, axis=(0, 0, 1)):
+		"""Faces of a shape. `uv2` gives each face's corners' texture
+		coordinates; without it they're laid along `axis` (_along_axis)."""
 		base = len(self.verts)
 		self.verts += [Vector(v) for v in verts]
 		self.groups += groups
-		for face, slot, shade in zip(faces, slots, shades):
+		for n, (face, slot, shade) in enumerate(zip(faces, slots, shades)):
 			self.faces.append([base + i for i in face])
 			self.face_uv.append(((SLOT[slot] + 0.5) / SLOT_COUNT, shade / 2.0))
+			self.face_uv2.append(uv2[n] if uv2 else _along_axis([Vector(verts[i]) for i in face], Vector(axis)))
 
 	def loft(self, rings, slots, sides=8, turn=None, cap_slots=None, shade=1.0):
 		"""Rings of (center, rx, ry, bone) joined into a capped tube along
@@ -237,7 +259,14 @@ class Builder:
 		rings lie flat in the plane across the tube."""
 		if turn is None:
 			turn = math.pi / sides
-		verts, groups, faces, fslots = [], [], [], []
+		verts, groups, faces, fslots, uv2 = [], [], [], [], []
+		# Around (yards of the average girth) and along (yards down the
+		# centres), so patterns wrap round limbs and the torso in rows.
+		girth = math.tau * sum((r[1] + r[2]) / 2 for r in rings) / len(rings)
+		along = [0.0]
+		for a, b in zip(rings, rings[1:]):
+			along.append(along[-1] + (Vector(b[0]) - Vector(a[0])).length)
+		ends = []
 		for i, (center, rx, ry, bone) in enumerate(rings):
 			center = Vector(center)
 			nxt = Vector(rings[min(i + 1, len(rings) - 1)][0])
@@ -251,6 +280,7 @@ class Builder:
 				fwd = -fwd
 			if side.x < 0 and abs(axis.x) < 0.9:
 				side = -side
+			ends.append((side, fwd))
 			for k in range(sides):
 				a = turn + math.tau * k / sides
 				verts.append(center + side * math.cos(a) * rx + fwd * math.sin(a) * ry)
@@ -260,13 +290,17 @@ class Builder:
 				a, b = i * sides + k, i * sides + (k + 1) % sides
 				faces.append([a, b, b + sides, a + sides])
 				fslots.append(slots[i])
+				u0, u1 = girth * k / sides, girth * (k + 1) / sides
+				uv2.append([(u0, along[i]), (u1, along[i]), (u1, along[i + 1]), (u0, along[i + 1])])
 		caps = cap_slots or (slots[0], slots[-1])
 		faces.append(list(range(sides))[::-1])
 		fslots.append(caps[0])
 		last = (len(rings) - 1) * sides
 		faces.append([last + k for k in range(sides)])
 		fslots.append(caps[1])
-		self._add(verts, groups, faces, fslots, [shade] * len(faces))
+		for face, (side, fwd) in ((faces[-2], ends[0]), (faces[-1], ends[-1])):
+			uv2.append([(Vector(verts[i]).dot(side), Vector(verts[i]).dot(fwd)) for i in face])
+		self._add(verts, groups, faces, fslots, [shade] * len(faces), uv2)
 
 	def tube(self, p0, p1, r0, r1, bone, slot, sides=6, shade=1.0):
 		self.loft([(p0, r0, r0, bone), (p1, r1, r1, bone)], [slot], sides, shade=shade)
@@ -294,29 +328,34 @@ class Builder:
 			for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
 				verts.append(p + u * a * width / 2 * t + s * b * depth / 2 * t)
 		faces = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]]
-		self._add(verts, [bone] * 8, faces, [slot] * 6, [shade] * 6)
+		self._add(verts, [bone] * 8, faces, [slot] * 6, [shade] * 6, axis=axis)
 
-	def plate(self, outline, x0, x1, bone, slot, rim_slot=None):
-		"""A flat shape in the YZ plane (outline of (y, z)) from x0 to x1."""
+	def plate(self, outline, x0, x1, bone, slot, rim_slot=None, shade=1.0, rim_shade=None, axis=(0, 0, 1)):
+		"""A flat shape in the YZ plane (outline of (y, z)) from x0 to x1,
+		its patterns laid along `axis`."""
 		n = len(outline)
 		verts = [(x0, y, z) for y, z in outline] + [(x1, y, z) for y, z in outline]
 		faces = [list(range(n))[::-1], [n + k for k in range(n)]]
 		slots = [slot, slot]
+		shades = [shade, shade]
 		for k in range(n):
 			faces.append([k, (k + 1) % n, n + (k + 1) % n, n + k])
 			slots.append(rim_slot or slot)
-		self._add(verts, [bone] * len(verts), faces, slots, [1.0] * len(faces))
+			shades.append(rim_shade if rim_shade is not None else shade)
+		self._add(verts, [bone] * len(verts), faces, slots, shades, axis=axis)
 
 	def build(self, arm, material):
 		mesh = bpy.data.meshes.new(self.name)
 		bm = bmesh.new()
 		bverts = [bm.verts.new(place(v, g)) for v, g in zip(self.verts, self.groups)]
 		uv_layer = bm.loops.layers.uv.new("UVMap")
-		for face, uv in zip(self.faces, self.face_uv):
+		uv2_layer = bm.loops.layers.uv.new("UVPattern")
+		for face, uv, uv2 in zip(self.faces, self.face_uv, self.face_uv2):
 			f = bm.faces.new([bverts[i] for i in face])
 			f.smooth = False
-			for loop in f.loops:
+			for loop, corner in zip(f.loops, uv2):
 				loop[uv_layer].uv = uv
+				loop[uv2_layer].uv = corner
 		# Every part is a closed shell: turn its faces outward (the mirrored
 		# left side and some lofts are built inside out).
 		bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
@@ -619,17 +658,6 @@ def species_parts(species):
 	return [head] + ([tail] if tail.faces else [])
 
 
-def shoulders():
-	b = Builder("Shoulders")
-	for side, x in (("Right", 1), ("Left", -1)):
-		c = Vector(_side(x, (0.31, 0, 1.43)))
-		b.loft([(c + Vector((0, 0, -0.07)), 0.12, 0.12, side + "Shoulder"),
-				(c + Vector((0.01 * x, 0, 0.02)), 0.13, 0.125, side + "Shoulder"),
-				(c + Vector((0, 0, 0.08)), 0.07, 0.07, side + "Shoulder")], ["shoulders", "shoulders"], sides=8)
-		b.box(c + Vector((0.11 * x, 0, -0.02)), (0.03, 0.1, 0.03), side + "Shoulder", "trim")
-	return b
-
-
 def hair_cap(b, back=1.66, back_depth=0.16):
 	b.loft([((0, -0.005, 1.715), 0.13, 0.145, "Head"),
 			((0, -0.01, 1.8), 0.132, 0.145, "Head"),
@@ -730,123 +758,645 @@ def race_hairs():
 	return out
 
 
-def weapon(name, grip, bone, kind):
-	"""A prop along +Y from the grip point."""
-	b = Builder(name)
-	g = Vector(grip)
-	fw = lambda d: g + Vector((0, d, 0))
-	up = lambda d, z: g + Vector((0, d, z))
+class Prop:
+	"""Builds a held prop from its grip `g`: Y runs along it (forward from the
+	hand), Z across a blade's width (its edge up), X through its flat side."""
+
+	def __init__(self, b, grip, bone):
+		self.b, self.g, self.bone = b, Vector(grip), bone
+
+	def at(self, y, z=0.0, x=0.0):
+		return self.g + Vector((x, y, z))
+
+	def tube(self, y0, y1, r0, r1, slot, sides=6, z=0.0, shade=1.0):
+		self.b.tube(self.at(y0, z), self.at(y1, z), r0, r1, self.bone, slot, sides=sides, shade=shade)
+
+	def rod(self, a, c, r0, r1, slot, sides=6, shade=1.0):
+		"""A tube between two (y, z) points."""
+		self.b.tube(self.at(*a), self.at(*c), r0, r1, self.bone, slot, sides=sides, shade=shade)
+
+	def wraps(self, y0, y1, r, count, slot="strap"):
+		"""Bands of wrapping round a grip."""
+		step = (y1 - y0) / count
+		for i in range(count):
+			self.tube(y0 + step * (i + 0.1), y0 + step * (i + 0.6), r, r, slot)
+
+	def ball(self, y, r, slot, z=0.0, sides=6, long=1.0):
+		self.b.loft([(self.at(y - r * long, z), r * 0.35, r * 0.35, self.bone),
+					 (self.at(y - r * 0.55 * long, z), r * 0.9, r * 0.9, self.bone),
+					 (self.at(y + r * 0.55 * long, z), r * 0.9, r * 0.9, self.bone),
+					 (self.at(y + r * long, z), r * 0.35, r * 0.35, self.bone)], [slot] * 3, sides=sides)
+
+	def flat(self, outline, thick, slot, rim=None, shade=1.0, rim_shade=None, x=0.0):
+		"""A flat piece (an outline of (y, z) from the grip) `thick` through."""
+		pts = [(self.g.y + dy, self.g.z + dz) for dy, dz in outline]
+		self.b.plate(pts, self.g.x + x + thick / 2, self.g.x + x - thick / 2, self.bone, slot, rim,
+					 shade=shade, rim_shade=rim_shade, axis=(0, 1, 0))
+
+	def box(self, y, z, size, slot, x=0.0, shade=1.0, top=(1.0, 1.0)):
+		self.b.box(self.at(y, z, x), size, self.bone, slot, shade=shade, top=top)
+
+	def gem(self, y, z, size=0.03, x=0.0):
+		self.box(y, z, (size * 1.2, size, size), "gem", x=x)
+
+
+def blade_outline(y0, y1, w0, w1, tip, curve=0.0, steps=1):
+	"""A blade's outline from y0 to y1 (widths w0 to w1), with a point `tip`
+	long; `curve` lifts it towards the tip (a sabre's curve)."""
+	top, bottom = [], []
+	for i in range(steps + 1):
+		t = i / steps
+		y = y0 + (y1 - y0) * t
+		w = w0 + (w1 - w0) * t
+		c = curve * t * t
+		top.append((y, c + w / 2))
+		bottom.append((y, c - w / 2))
+	end = (y1 + tip, curve + (w1 / 2 if curve else 0.0))
+	return bottom + [end] + top[::-1]
+
+
+def sword_kind(p, kind):
 	if kind == "sword":
-		b.tube(fw(-0.1), fw(0.07), 0.022, 0.022, bone, "handle")
-		b.box(fw(-0.12), (0.045, 0.045, 0.045), bone, "trim")
-		b.box(fw(0.08), (0.04, 0.04, 0.2), bone, "trim")
-		b.beam(fw(0.1), fw(0.7), 0.075, 0.02, bone, "blade", taper=0.8)
-		b.beam(fw(0.7), fw(0.8), 0.06, 0.016, bone, "blade", taper=0.1)
-	elif kind == "sword2h":
-		b.tube(fw(-0.24), fw(0.07), 0.025, 0.025, bone, "handle")
-		b.box(fw(-0.26), (0.05, 0.05, 0.05), bone, "trim")
-		b.box(fw(0.08), (0.05, 0.05, 0.3), bone, "trim")
-		b.beam(fw(0.1), fw(1.05), 0.11, 0.025, bone, "blade", taper=0.8)
-		b.beam(fw(1.05), fw(1.2), 0.088, 0.02, bone, "blade", taper=0.1)
-	elif kind == "axe":
-		b.tube(fw(-0.12), fw(0.56), 0.022, 0.02, bone, "handle")
-		b.box(up(0.47, -0.07), (0.03, 0.1, 0.11), bone, "blade", top=(1.0, 1.0))
-		b.beam(up(0.47, -0.11), up(0.47, -0.2), 0.2, 0.025, bone, "blade", taper=1.3, up=(0, 1, 0))
-		b.box(fw(0.565), (0.04, 0.04, 0.04), bone, "trim")
-	elif kind == "axe2h":
-		b.tube(fw(-0.35), fw(0.9), 0.027, 0.025, bone, "handle")
+		# Arming sword: fullered blade, a crossguard turned down at its ends,
+		# a wrapped grip and a wheel pommel.
+		p.tube(-0.1, 0.07, 0.021, 0.021, "handle")
+		p.wraps(-0.09, 0.06, 0.024, 4)
+		p.b.loft([(p.at(-0.135), 0.03, 0.03, p.bone), (p.at(-0.12), 0.042, 0.042, p.bone), (p.at(-0.1), 0.03, 0.03, p.bone)],
+				 ["trim", "trim"], sides=8)
+		p.box(0.08, 0, (0.035, 0.035, 0.16), "trim")
 		for z in (-1, 1):
-			b.beam(up(0.78, 0.04 * z), up(0.78, 0.24 * z), 0.2, 0.03, bone, "blade", taper=1.6, up=(0, 1, 0))
-		b.box(fw(0.78), (0.06, 0.1, 0.09), bone, "trim")
-	elif kind == "mace":
-		b.tube(fw(-0.1), fw(0.5), 0.022, 0.02, bone, "handle")
-		b.loft([(fw(0.46), 0.04, 0.04, bone), (fw(0.53), 0.075, 0.075, bone), (fw(0.62), 0.075, 0.075, bone),
-				(fw(0.68), 0.04, 0.04, bone)], ["blade", "blade", "blade"], sides=6)
-		b.box(fw(-0.11), (0.045, 0.045, 0.045), bone, "trim")
+			p.rod((0.08, 0.08 * z), (0.1, 0.12 * z), 0.017, 0.012, "trim")
+		p.flat(blade_outline(0.1, 0.66, 0.072, 0.06, 0.12), 0.016, "blade")
+		p.flat(blade_outline(0.12, 0.56, 0.016, 0.014, 0.04), 0.02, "blade", shade=0.6)
+	elif kind == "sword_broad":
+		# Broadsword: a wide plain blade, a straight square guard, a ring pommel.
+		p.tube(-0.1, 0.07, 0.022, 0.022, "handle")
+		p.wraps(-0.09, 0.06, 0.025, 3)
+		p.tube(-0.14, -0.1, 0.035, 0.035, "trim", sides=8)
+		p.box(0.08, 0, (0.045, 0.05, 0.2), "trim")
+		p.flat(blade_outline(0.1, 0.64, 0.09, 0.085, 0.1), 0.018, "blade")
+	elif kind == "sword_curved":
+		# Scimitar or sabre: a blade widening and curving up to its point, a
+		# small guard and a hooked pommel.
+		p.tube(-0.1, 0.07, 0.021, 0.02, "handle")
+		p.wraps(-0.09, 0.06, 0.023, 3)
+		p.box(-0.11, -0.012, (0.04, 0.045, 0.06), "trim", top=(1.0, 0.6))
+		p.box(0.08, 0, (0.035, 0.035, 0.12), "trim")
+		p.flat(blade_outline(0.1, 0.62, 0.06, 0.1, 0.12, curve=0.12, steps=6), 0.014, "blade")
+	elif kind == "sword_short":
+		# Short sword or gladius: a broad leaf-shaped blade, a ball pommel.
+		p.tube(-0.08, 0.06, 0.022, 0.022, "handle")
+		p.ball(-0.11, 0.035, "trim")
+		p.box(0.07, 0, (0.04, 0.04, 0.1), "trim")
+		p.flat([(0.08, -0.03), (0.3, -0.045), (0.46, -0.03), (0.56, 0.0), (0.46, 0.03), (0.3, 0.045), (0.08, 0.03)],
+			   0.018, "blade")
+		p.flat(blade_outline(0.1, 0.4, 0.012, 0.01, 0.03), 0.022, "blade", shade=0.6)
+	elif kind == "sword_ornate":
+		# A fine sword: swept quillons curling towards the blade, gems in the
+		# guard and pommel, a fullered blade.
+		p.tube(-0.1, 0.07, 0.021, 0.021, "handle")
+		p.wraps(-0.09, 0.06, 0.024, 5, "trim")
+		p.ball(-0.125, 0.032, "trim")
+		p.gem(-0.125, 0, 0.028)
+		p.box(0.08, 0, (0.04, 0.045, 0.08), "trim")
+		p.gem(0.08, 0, 0.03, x=0.012)
+		for z in (-1, 1):
+			p.rod((0.08, 0.035 * z), (0.06, 0.1 * z), 0.015, 0.013, "trim")
+			p.rod((0.06, 0.1 * z), (0.13, 0.13 * z), 0.013, 0.008, "trim")
+		p.flat(blade_outline(0.1, 0.68, 0.07, 0.055, 0.13), 0.016, "blade")
+		p.flat(blade_outline(0.12, 0.58, 0.014, 0.012, 0.04), 0.02, "blade", shade=0.55)
+	elif kind == "sword2h":
+		# Longsword: a long grip, a wide crossguard, a ricasso, a long blade.
+		p.tube(-0.24, 0.07, 0.024, 0.024, "handle")
+		p.wraps(-0.22, 0.05, 0.027, 7)
+		p.b.loft([(p.at(-0.29), 0.03, 0.03, p.bone), (p.at(-0.27), 0.045, 0.045, p.bone), (p.at(-0.24), 0.03, 0.03, p.bone)],
+				 ["trim", "trim"], sides=8)
+		p.box(0.08, 0, (0.045, 0.045, 0.3), "trim")
+		p.flat(blade_outline(0.1, 1.04, 0.1, 0.08, 0.16), 0.022, "blade")
+		p.flat(blade_outline(0.1, 0.2, 0.104, 0.104, 0.0), 0.026, "blade", shade=0.75)
+		p.flat(blade_outline(0.22, 0.9, 0.022, 0.018, 0.05), 0.026, "blade", shade=0.6)
+	elif kind == "sword2h_claymore":
+		# Claymore: quillons angled up the blade, ending in rings.
+		p.tube(-0.26, 0.07, 0.024, 0.024, "handle")
+		p.wraps(-0.24, 0.05, 0.027, 7)
+		p.ball(-0.29, 0.04, "trim")
+		p.box(0.07, 0, (0.045, 0.05, 0.08), "trim")
+		for z in (-1, 1):
+			p.rod((0.07, 0.04 * z), (0.16, 0.2 * z), 0.018, 0.015, "trim")
+			p.tube(0.15, 0.19, 0.03, 0.03, "trim", sides=6, z=0.21 * z)
+		p.flat(blade_outline(0.1, 1.06, 0.095, 0.075, 0.15), 0.022, "blade")
+		p.flat(blade_outline(0.12, 0.92, 0.02, 0.016, 0.05), 0.026, "blade", shade=0.6)
+	elif kind == "sword2h_great":
+		# Greatsword: a very wide blade with a blunt tip, parrying lugs above
+		# a long ricasso.
+		p.tube(-0.24, 0.07, 0.026, 0.026, "handle")
+		p.wraps(-0.22, 0.05, 0.029, 6)
+		p.tube(-0.3, -0.24, 0.04, 0.035, "trim", sides=8)
+		p.box(0.08, 0, (0.05, 0.06, 0.34), "trim")
+		p.flat(blade_outline(0.1, 0.3, 0.09, 0.09, 0.0), 0.026, "blade", shade=0.8)
+		for z in (-1, 1):
+			p.flat([(0.28, 0.045 * z), (0.32, 0.1 * z), (0.36, 0.1 * z), (0.36, 0.06 * z)], 0.022, "blade")
+		p.flat([(0.3, -0.075), (1.0, -0.07), (1.12, -0.03), (1.12, 0.03), (1.0, 0.07), (0.3, 0.075)], 0.024, "blade")
+	elif kind == "sword2h_ornate":
+		# A flamberge: a wavy blade, gilt guard with gems.
+		p.tube(-0.24, 0.07, 0.024, 0.024, "handle")
+		p.wraps(-0.22, 0.05, 0.027, 7, "trim")
+		p.ball(-0.28, 0.04, "trim")
+		p.gem(-0.28, 0, 0.03)
+		p.box(0.08, 0, (0.05, 0.05, 0.1), "trim")
+		p.gem(0.08, 0, 0.034, x=0.016)
+		for z in (-1, 1):
+			p.rod((0.08, 0.05 * z), (0.05, 0.17 * z), 0.018, 0.013, "trim")
+			p.ball(0.05, 0.025, "trim", z=0.18 * z)
+		top, bottom = [], []
+		for i in range(9):
+			y = 0.1 + i * 0.11
+			wave = 0.018 * math.sin(i * math.pi / 2)
+			w = 0.09 - i * 0.004
+			top.append((y, wave + w / 2))
+			bottom.append((y, wave - w / 2))
+		p.flat(bottom + [(1.12, 0.0)] + top[::-1], 0.022, "blade")
+
+
+def axe_kind(p, kind):
+	if kind == "axe":
+		# A bearded axe: the blade hooking down below the head, a socket and a
+		# poll knob behind.
+		p.tube(-0.12, 0.56, 0.021, 0.019, "handle")
+		p.wraps(-0.1, 0.06, 0.024, 3)
+		p.tube(-0.14, -0.12, 0.026, 0.024, "trim")
+		p.box(0.48, 0, (0.045, 0.1, 0.06), "trim")
+		p.flat([(0.44, 0.03), (0.52, 0.03), (0.58, 0.08), (0.6, 0.17), (0.52, 0.2), (0.42, 0.19), (0.38, 0.12), (0.43, 0.06)],
+			   0.022, "blade", shade=1.0, rim="blade", rim_shade=1.25)
+		p.box(0.48, -0.05, (0.04, 0.05, 0.05), "trim", shade=0.8)
+	elif kind == "axe_hatchet":
+		# A hatchet or tomahawk: a small head on a slim haft, bound on with
+		# leather.
+		p.tube(-0.12, 0.5, 0.019, 0.017, "handle")
+		p.wraps(0.38, 0.5, 0.022, 3)
+		p.flat([(0.42, 0.02), (0.5, 0.02), (0.52, 0.06), (0.55, 0.13), (0.43, 0.13), (0.42, 0.07)], 0.02, "blade",
+			   rim="blade", rim_shade=1.25)
+		p.flat([(0.44, -0.02), (0.48, -0.02), (0.46, -0.08)], 0.02, "trim")
+	elif kind == "axe_double":
+		# A double-bitted axe: two crescents either side of the head.
+		p.tube(-0.12, 0.58, 0.021, 0.019, "handle")
+		p.wraps(-0.1, 0.06, 0.024, 3)
+		p.box(0.48, 0, (0.05, 0.08, 0.08), "trim")
+		for z in (-1, 1):
+			p.flat([(0.45, 0.035 * z), (0.51, 0.035 * z), (0.58, 0.15 * z), (0.48, 0.17 * z), (0.38, 0.15 * z)],
+				   0.02, "blade", rim="blade", rim_shade=1.25)
+		p.box(0.6, 0, (0.03, 0.03, 0.03), "trim")
+	elif kind == "axe_pick":
+		# A pick: a long curved spike to the front, a flat adze behind.
+		p.tube(-0.12, 0.52, 0.021, 0.019, "handle")
+		p.wraps(-0.1, 0.04, 0.024, 3)
+		p.box(0.47, 0, (0.045, 0.07, 0.07), "trim")
+		p.rod((0.47, 0.03), (0.5, 0.15), 0.022, 0.016, "blade")
+		p.rod((0.5, 0.15), (0.45, 0.27), 0.016, 0.005, "blade")
+		p.rod((0.47, -0.03), (0.47, -0.12), 0.02, 0.012, "blade")
+	elif kind == "axe2h":
+		# A great double axe: crescents either side, a spike on top.
+		p.tube(-0.35, 0.9, 0.026, 0.024, "handle")
+		p.wraps(-0.33, -0.05, 0.029, 6)
+		p.box(0.78, 0, (0.06, 0.12, 0.09), "trim")
+		for z in (-1, 1):
+			p.flat([(0.72, 0.04 * z), (0.84, 0.04 * z), (0.98, 0.26 * z), (0.78, 0.29 * z), (0.58, 0.26 * z)],
+				   0.026, "blade", rim="blade", rim_shade=1.25)
+		p.rod((0.84, 0.0), (1.0, 0.0), 0.02, 0.004, "trim")
+	elif kind == "axe2h_bearded":
+		# A great bearded axe: one huge blade and a back spike.
+		p.tube(-0.35, 0.92, 0.026, 0.024, "handle")
+		p.wraps(-0.33, -0.05, 0.029, 6)
+		p.box(0.8, 0, (0.06, 0.13, 0.08), "trim")
+		p.flat([(0.74, 0.04), (0.86, 0.04), (0.95, 0.14), (0.98, 0.3), (0.84, 0.33), (0.66, 0.3), (0.6, 0.2), (0.74, 0.1)],
+			   0.028, "blade", rim="blade", rim_shade=1.25)
+		p.rod((0.8, -0.04), (0.84, -0.2), 0.024, 0.005, "blade")
+		p.box(0.94, 0, (0.03, 0.04, 0.03), "trim")
+	elif kind == "axe2h_cleaver":
+		# A cleaver: a broad square blade.
+		p.tube(-0.35, 0.86, 0.026, 0.024, "handle")
+		p.wraps(-0.33, -0.05, 0.029, 6)
+		p.flat([(0.6, 0.03), (0.92, 0.03), (0.92, 0.3), (0.62, 0.28)], 0.026, "blade", rim="blade", rim_shade=1.25)
+		for y in (0.66, 0.78, 0.88):
+			p.box(y, 0.05, (0.034, 0.02, 0.02), "trim")
+
+
+def mace_kind(p, kind):
+	if kind == "mace":
+		# A flanged mace: six flanges round the head, a knob on top.
+		p.tube(-0.1, 0.5, 0.021, 0.019, "handle")
+		p.wraps(-0.08, 0.06, 0.024, 3)
+		p.tube(-0.13, -0.1, 0.03, 0.026, "trim")
+		p.tube(0.44, 0.5, 0.03, 0.035, "trim")
+		p.tube(0.5, 0.66, 0.04, 0.03, "blade")
+		for k in range(6):
+			a = math.tau * k / 6
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.beam(p.at(0.5) + d * 0.04, p.at(0.66) + d * 0.04, 0.012, 0.075, p.bone, "blade", taper=0.8,
+					 up=tuple(d.cross(Vector((0, 1, 0)))))
+		p.ball(0.69, 0.02, "trim")
+	elif kind == "mace_club":
+		# A club: a knotty branch thickening to its end, nail heads in it.
+		p.b.loft([(p.at(-0.12), 0.022, 0.022, p.bone), (p.at(0.2), 0.026, 0.026, p.bone),
+				  (p.at(0.46), 0.05, 0.048, p.bone), (p.at(0.6), 0.055, 0.052, p.bone), (p.at(0.64), 0.035, 0.035, p.bone)],
+				 ["handle", "handle", "handle", "handle"], sides=7)
+		p.box(0.3, 0.03, (0.03, 0.03, 0.03), "handle", shade=0.8)
+		for y, z in ((0.5, 0.05), (0.55, -0.05), (0.58, 0.02)):
+			p.box(y, z, (0.018, 0.018, 0.018), "trim")
+	elif kind == "mace_hammer":
+		# A hammer: a square head with a spike behind.
+		p.tube(-0.1, 0.52, 0.021, 0.019, "handle")
+		p.wraps(-0.08, 0.06, 0.024, 3)
+		p.b.beam(p.at(0.53, -0.05), p.at(0.53, 0.09), 0.075, 0.075, p.bone, "blade", up=(0, 1, 0))
+		p.b.beam(p.at(0.53, 0.09), p.at(0.53, 0.11), 0.088, 0.088, p.bone, "blade", up=(0, 1, 0))
+		p.b.beam(p.at(0.53, -0.012), p.at(0.53, 0.012), 0.082, 0.082, p.bone, "trim", up=(0, 1, 0))
+		p.rod((0.53, -0.05), (0.54, -0.16), 0.03, 0.004, "blade")
+	elif kind == "mace_spiked":
+		# A morningstar: a round head studded with spikes.
+		p.tube(-0.1, 0.48, 0.021, 0.019, "handle")
+		p.wraps(-0.08, 0.06, 0.024, 3)
+		p.tube(0.44, 0.5, 0.028, 0.032, "trim")
+		p.ball(0.57, 0.065, "blade", sides=8)
+		for d in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1), (0, 1, 0), (0.7, 0.4, 0.7), (-0.7, 0.4, -0.7),
+				  (0.7, 0.4, -0.7), (-0.7, 0.4, 0.7)):
+			v = Vector(d).normalized()
+			p.b.tube(p.at(0.57) + v * 0.05, p.at(0.57) + v * 0.11, 0.016, 0.003, p.bone, "trim", sides=4)
+	elif kind == "mace_scepter":
+		# A scepter: a slender gilt rod, a crowned head round a gem.
+		p.tube(-0.1, 0.48, 0.018, 0.016, "trim")
+		p.wraps(-0.08, 0.06, 0.021, 3, "handle")
+		p.ball(-0.12, 0.025, "trim")
+		p.tube(0.46, 0.5, 0.022, 0.04, "trim")
+		p.ball(0.56, 0.045, "gem")
+		for k in range(4):
+			a = math.tau * k / 4 + math.pi / 4
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.tube(p.at(0.5) + d * 0.035, p.at(0.62) + d * 0.03, 0.01, 0.006, p.bone, "trim", sides=4)
+		p.ball(0.63, 0.015, "trim")
 	elif kind == "mace2h":
-		b.tube(fw(-0.35), fw(0.85), 0.027, 0.025, bone, "handle")
-		b.loft([(fw(0.78), 0.06, 0.06, bone), (fw(0.86), 0.11, 0.11, bone), (fw(0.98), 0.11, 0.11, bone),
-				(fw(1.05), 0.06, 0.06, bone)], ["blade", "blade", "blade"], sides=6)
-		b.box(fw(1.08), (0.04, 0.04, 0.06), bone, "trim")
-	elif kind == "dagger":
-		b.tube(fw(-0.08), fw(0.06), 0.02, 0.02, bone, "handle")
-		b.box(fw(0.07), (0.035, 0.035, 0.12), bone, "trim")
-		b.beam(fw(0.08), fw(0.32), 0.055, 0.016, bone, "blade", taper=0.15)
-	elif kind == "staff":
-		b.tube(fw(-0.75), fw(0.75), 0.027, 0.025, bone, "handle")
-		b.loft([(fw(0.72), 0.035, 0.035, bone), (fw(0.8), 0.06, 0.06, bone), (fw(0.9), 0.035, 0.035, bone)],
-			   ["blade", "blade"], sides=6)
-		b.box(fw(-0.77), (0.04, 0.04, 0.04), bone, "trim")
-	elif kind == "polearm":
-		b.tube(fw(-0.7), fw(0.95), 0.025, 0.024, bone, "handle")
-		b.beam(fw(0.92), fw(1.3), 0.09, 0.022, bone, "blade", taper=0.2)
-		b.beam(up(1.0, 0.0), up(1.08, -0.16), 0.05, 0.02, bone, "blade", taper=0.3, up=(0, 1, 0))
-		b.box(fw(0.92), (0.05, 0.05, 0.06), bone, "trim")
-	elif kind == "wand":
-		b.tube(fw(-0.06), fw(0.26), 0.016, 0.012, bone, "handle")
-		b.box(fw(0.28), (0.035, 0.035, 0.035), bone, "blade")
+		# A great flanged mace.
+		p.tube(-0.35, 0.85, 0.026, 0.024, "handle")
+		p.wraps(-0.33, -0.05, 0.029, 6)
+		p.tube(0.78, 1.02, 0.06, 0.045, "blade")
+		for k in range(8):
+			a = math.tau * k / 8
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.beam(p.at(0.78) + d * 0.06, p.at(1.02) + d * 0.055, 0.016, 0.1, p.bone, "blade", taper=0.85,
+					 up=tuple(d.cross(Vector((0, 1, 0)))))
+		p.tube(0.74, 0.79, 0.04, 0.05, "trim")
+		p.ball(1.06, 0.03, "trim")
+	elif kind == "mace2h_maul":
+		# A maul: a great block of a head, banded.
+		p.tube(-0.35, 0.84, 0.026, 0.024, "handle")
+		p.wraps(-0.33, -0.05, 0.029, 6)
+		p.b.beam(p.at(0.82, -0.12), p.at(0.82, 0.12), 0.16, 0.16, p.bone, "blade", up=(0, 1, 0))
+		for z in (-0.1, 0.1):
+			p.b.beam(p.at(0.82, z - 0.012), p.at(0.82, z + 0.012), 0.17, 0.17, p.bone, "trim", up=(0, 1, 0))
+	elif kind == "mace2h_club":
+		# A great club: a heavy log with knots and iron studs.
+		p.b.loft([(p.at(-0.35), 0.026, 0.026, p.bone), (p.at(0.3), 0.034, 0.034, p.bone),
+				  (p.at(0.78), 0.075, 0.07, p.bone), (p.at(0.98), 0.08, 0.076, p.bone), (p.at(1.04), 0.05, 0.05, p.bone)],
+				 ["handle", "handle", "handle", "handle"], sides=7)
+		p.wraps(-0.33, -0.05, 0.03, 4)
+		for y, z in ((0.5, 0.05), (0.62, -0.06), (0.8, 0.075), (0.86, -0.075), (0.95, 0.03), (0.92, -0.02)):
+			p.box(y, z, (0.024, 0.024, 0.024), "trim")
+	elif kind == "mace2h_shovel":
+		# A shovel.
+		p.tube(-0.35, 0.72, 0.024, 0.022, "handle")
+		p.b.beam(p.at(-0.36, -0.06), p.at(-0.36, 0.06), 0.03, 0.03, p.bone, "handle", up=(0, 1, 0))
+		p.tube(0.7, 0.78, 0.03, 0.034, "trim")
+		p.flat([(0.76, -0.1), (1.04, -0.11), (1.12, 0.0), (1.04, 0.11), (0.76, 0.1)], 0.016, "blade")
+
+
+def dagger_kind(p, kind):
+	if kind == "dagger":
+		p.tube(-0.08, 0.06, 0.019, 0.019, "handle")
+		p.wraps(-0.07, 0.05, 0.022, 3)
+		p.ball(-0.1, 0.026, "trim")
+		p.box(0.065, 0, (0.03, 0.03, 0.12), "trim")
+		p.flat(blade_outline(0.08, 0.26, 0.05, 0.04, 0.08), 0.014, "blade")
+		p.flat(blade_outline(0.09, 0.24, 0.01, 0.008, 0.02), 0.018, "blade", shade=0.6)
+	elif kind == "dagger_knife":
+		# A knife: one edge, no guard, a riveted wooden grip.
+		p.flat([(-0.09, -0.018), (0.06, -0.018), (0.06, 0.018), (-0.09, 0.016)], 0.034, "handle")
+		for y in (-0.05, 0.02):
+			p.box(y, 0, (0.038, 0.012, 0.012), "trim")
+		p.flat([(0.06, -0.022), (0.2, -0.022), (0.28, 0.02), (0.06, 0.024)], 0.012, "blade")
+	elif kind == "dagger_curved":
+		# A curved knife, its point swept up.
+		p.tube(-0.08, 0.06, 0.019, 0.019, "handle")
+		p.wraps(-0.07, 0.05, 0.022, 3)
+		p.box(-0.09, 0, (0.03, 0.03, 0.04), "trim")
+		p.box(0.065, 0, (0.03, 0.03, 0.08), "trim")
+		p.flat(blade_outline(0.07, 0.26, 0.045, 0.05, 0.07, curve=0.07, steps=5), 0.013, "blade")
+	elif kind == "dagger_stiletto":
+		# A stiletto: a needle blade, a ring guard.
+		p.tube(-0.09, 0.06, 0.017, 0.017, "handle")
+		p.wraps(-0.08, 0.05, 0.02, 4)
+		p.ball(-0.11, 0.022, "trim")
+		p.tube(0.06, 0.075, 0.04, 0.04, "trim", sides=8)
+		p.b.beam(p.at(0.07), p.at(0.3), 0.024, 0.024, p.bone, "blade", taper=0.6)
+		p.b.beam(p.at(0.3), p.at(0.36), 0.0144, 0.0144, p.bone, "blade", taper=0.05)
+
+
+def staff_kind(p, kind):
+	if kind == "staff":
+		# A staff: shod at the foot, wrapped at the grip, a crystal held in
+		# claws at its head.
+		p.tube(-0.75, 0.72, 0.026, 0.024, "handle")
+		p.wraps(-0.12, 0.12, 0.029, 4)
+		p.tube(-0.78, -0.7, 0.03, 0.028, "trim")
+		p.tube(0.68, 0.74, 0.028, 0.034, "trim")
+		for k in range(3):
+			a = math.tau * k / 3
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.tube(p.at(0.73) + d * 0.025, p.at(0.84) + d * 0.045, 0.01, 0.006, p.bone, "trim", sides=4)
+		p.ball(0.83, 0.045, "blade", long=1.4)
+	elif kind == "staff_gnarled":
+		# A gnarled staff: a crooked branch with knots, curling at the top
+		# round a small stone.
+		pts = [(-0.76, 0.0), (-0.4, 0.015), (0.0, -0.01), (0.35, 0.02), (0.62, 0.0), (0.78, 0.05), (0.86, 0.13),
+			   (0.84, 0.21), (0.77, 0.23), (0.72, 0.19)]
+		radii = [0.024, 0.025, 0.026, 0.027, 0.028, 0.026, 0.022, 0.018, 0.015, 0.012]
+		for (a, ra), (c, rc) in zip(zip(pts, radii), zip(pts[1:], radii[1:])):
+			p.rod(a, c, ra, rc, "handle")
+		for y, z in ((-0.45, 0.02), (0.1, -0.02), (0.45, 0.025)):
+			p.box(y, z, (0.04, 0.04, 0.035), "handle", shade=0.8)
+		p.ball(0.79, 0.03, "blade", z=0.14)
+	elif kind == "staff_quarter":
+		# A quarterstaff: plain, banded with iron at both ends.
+		p.tube(-0.8, 0.8, 0.026, 0.026, "handle")
+		for y in (-0.8, -0.68, 0.68, 0.8):
+			p.tube(y - 0.02, y + 0.02, 0.03, 0.03, "trim")
+		p.wraps(-0.25, 0.25, 0.029, 5)
+	elif kind == "staff_runed":
+		# A runed staff: a dark shaft with gilt bands, a crescent fork at the
+		# head cradling an orb.
+		p.tube(-0.75, 0.68, 0.025, 0.024, "handle")
+		for y in (-0.5, -0.2, 0.2, 0.45):
+			p.tube(y - 0.012, y + 0.012, 0.03, 0.03, "trim")
+		p.tube(-0.8, -0.72, 0.022, 0.03, "trim")
+		p.tube(0.66, 0.72, 0.03, 0.04, "trim")
+		for z in (-1, 1):
+			p.rod((0.72, 0.02 * z), (0.82, 0.1 * z), 0.018, 0.014, "trim")
+			p.rod((0.82, 0.1 * z), (0.95, 0.07 * z), 0.014, 0.006, "trim")
+		p.ball(0.85, 0.055, "blade")
+
+
+def polearm_kind(p, kind):
+	p.tube(-0.7, 0.95, 0.025, 0.024, "handle")
+	p.wraps(-0.1, 0.15, 0.028, 4)
+	p.tube(-0.74, -0.68, 0.028, 0.026, "trim")
+	if kind == "polearm":
+		# A spear: a leaf blade on a socket, a binding under it.
+		p.tube(0.88, 0.98, 0.03, 0.026, "trim")
+		p.wraps(0.8, 0.88, 0.029, 2)
+		p.flat([(0.97, -0.02), (1.1, -0.06), (1.24, -0.03), (1.36, 0.0), (1.24, 0.03), (1.1, 0.06), (0.97, 0.02)],
+			   0.02, "blade")
+	elif kind == "polearm_halberd":
+		# A halberd: an axe blade, a spike on top and a hook behind.
+		p.tube(0.86, 1.08, 0.03, 0.028, "trim")
+		p.flat([(0.9, 0.03), (1.06, 0.03), (1.1, 0.12), (1.06, 0.22), (0.86, 0.2), (0.86, 0.1)], 0.022, "blade",
+			   rim="blade", rim_shade=1.25)
+		p.flat([(1.06, -0.015), (1.38, 0.0), (1.06, 0.015)], 0.026, "blade")
+		p.flat([(0.96, -0.03), (1.0, -0.03), (1.08, -0.16), (1.02, -0.13)], 0.02, "blade")
+	elif kind == "polearm_glaive":
+		# A glaive: a long single-edged blade curving back at its point.
+		p.tube(0.9, 1.0, 0.03, 0.03, "trim")
+		p.flat(blade_outline(0.98, 1.34, 0.07, 0.09, 0.08, curve=-0.06, steps=5), 0.02, "blade")
+		p.flat([(1.02, 0.03), (1.08, 0.08), (1.1, 0.03)], 0.02, "blade")
+
+
+def small_kind(p, kind):
+	if kind == "wand":
+		p.tube(-0.06, 0.24, 0.016, 0.012, "handle")
+		p.wraps(-0.05, 0.05, 0.019, 3, "trim")
+		p.tube(0.23, 0.27, 0.014, 0.022, "trim")
+		p.ball(0.3, 0.025, "blade", long=1.5)
+	elif kind == "wand_twisted":
+		# A twisted wand of bone or root, a claw holding a stone.
+		for i in range(5):
+			y0, y1 = -0.06 + i * 0.06, 0.0 + i * 0.06
+			p.rod((y0, 0.008 * (-1) ** i), (y1, 0.008 * (-1) ** (i + 1)), 0.017 - i * 0.001, 0.016 - i * 0.001, "handle")
+		for k in range(3):
+			a = math.tau * k / 3
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.tube(p.at(0.24), p.at(0.3) + d * 0.03, 0.008, 0.004, p.bone, "trim", sides=4)
+		p.ball(0.29, 0.022, "blade")
 	elif kind == "fist":
-		b.box(g + Vector((0, 0.07, 0)), (0.1, 0.06, 0.14), bone, "blade")
-		for z in (-0.04, 0.0, 0.04):
-			b.beam(up(0.09, z), up(0.17, z), 0.02, 0.015, bone, "blade", taper=0.2)
+		# A fist weapon: a knuckle plate on a grip bar, three claws.
+		p.box(0.03, 0, (0.03, 0.03, 0.12), "handle")
+		p.box(0.08, 0, (0.11, 0.05, 0.15), "blade")
+		p.box(0.08, 0, (0.115, 0.03, 0.1), "trim")
+		for z in (-0.045, 0.0, 0.045):
+			p.flat([(0.1, z - 0.012), (0.24, z - 0.004), (0.26, z), (0.1, z + 0.012)], 0.016, "blade")
 	elif kind == "orb":
-		b.loft([(g + Vector((0, 0.04, -0.08)), 0.04, 0.04, bone), (g + Vector((0, 0.04, -0.03)), 0.08, 0.08, bone),
-				(g + Vector((0, 0.04, 0.05)), 0.08, 0.08, bone), (g + Vector((0, 0.04, 0.1)), 0.04, 0.04, bone)],
-			   ["blade", "blade", "blade"], sides=6)
+		# An orb in a gilt cage on a short stem.
+		p.tube(-0.09, 0.0, 0.016, 0.02, "trim")
+		p.ball(0.06, 0.06, "blade", sides=8)
+		for k in range(4):
+			a = math.tau * k / 4
+			d = Vector((math.cos(a), 0, math.sin(a)))
+			p.b.tube(p.at(0.0) + d * 0.02, p.at(0.06) + d * 0.066, 0.007, 0.007, p.bone, "trim", sides=4)
+			p.b.tube(p.at(0.06) + d * 0.066, p.at(0.12) + d * 0.02, 0.007, 0.007, p.bone, "trim", sides=4)
+	elif kind == "orb_tome":
+		# A book held in the hand: boards, pages, a clasp and a gem.
+		p.box(0.06, 0.02, (0.05, 0.22, 0.17), "blade")
+		p.box(0.065, 0.02, (0.04, 0.2, 0.155), "emblem")
+		p.box(-0.05, 0.02, (0.058, 0.016, 0.17), "trim")
+		p.gem(0.06, 0.02, 0.03, x=0.03)
+	elif kind == "orb_stein":
+		# A stein: a lidded tankard.
+		p.tube(-0.02, 0.14, 0.05, 0.045, "handle", sides=8)
+		for y in (0.0, 0.12):
+			p.tube(y - 0.008, y + 0.008, 0.053, 0.053, "trim", sides=8)
+		p.tube(0.14, 0.16, 0.052, 0.04, "trim", sides=8)
+		p.rod((0.02, -0.05), (0.12, -0.05), 0.01, 0.01, "trim")
+	elif kind == "orb_rod":
+		# A short rod of carved wood, knobbed, a gem set in its head.
+		p.tube(-0.1, 0.2, 0.017, 0.014, "handle")
+		for y in (-0.06, 0.06, 0.16):
+			p.tube(y - 0.01, y + 0.01, 0.022, 0.022, "trim")
+		p.ball(0.24, 0.03, "blade")
+
+
+WEAPON_KINDS = {
+	"sword": ["sword", "sword_broad", "sword_curved", "sword_short", "sword_ornate"],
+	"sword2h": ["sword2h", "sword2h_claymore", "sword2h_great", "sword2h_ornate"],
+	"axe": ["axe", "axe_hatchet", "axe_double", "axe_pick"],
+	"axe2h": ["axe2h", "axe2h_bearded", "axe2h_cleaver"],
+	"mace": ["mace", "mace_club", "mace_hammer", "mace_spiked", "mace_scepter"],
+	"mace2h": ["mace2h", "mace2h_maul", "mace2h_club", "mace2h_shovel"],
+	"dagger": ["dagger", "dagger_knife", "dagger_curved", "dagger_stiletto"],
+	"staff": ["staff", "staff_gnarled", "staff_quarter", "staff_runed"],
+	"polearm": ["polearm", "polearm_halberd", "polearm_glaive"],
+	"wand": ["wand", "wand_twisted"],
+	"fist": ["fist"],
+	"orb": ["orb", "orb_tome", "orb_stein", "orb_rod"],
+}
+WEAPON_BUILDERS = {
+	"sword": sword_kind, "sword2h": sword_kind, "axe": axe_kind, "axe2h": axe_kind, "mace": mace_kind,
+	"mace2h": mace_kind, "dagger": dagger_kind, "staff": staff_kind, "polearm": polearm_kind,
+	"wand": small_kind, "fist": small_kind, "orb": small_kind,
+}
+
+
+def weapon(name, grip, bone, kind):
+	"""A prop along +Y from the grip point: one of WEAPON_KINDS' shapes."""
+	b = Builder(name)
+	family = next(f for f, kinds in WEAPON_KINDS.items() if kind in kinds)
+	WEAPON_BUILDERS[family](Prop(b, grip, bone), kind)
 	return b
 
 
 def shield(name, kind):
+	"""Shields on the left forearm, their face to the outside (-X)."""
 	b = Builder(name)
 	x0, x1 = SHIELD_AT.x, SHIELD_AT.x - 0.04
 	y, z = SHIELD_AT.y, SHIELD_AT.z
+	face = x1 - 0.004
+
+	def outline_ring(pts, width, slot="shield_trim"):
+		"""A raised rim round an outline."""
+		for (ay, az), (cy, cz) in zip(pts, pts[1:] + pts[:1]):
+			b.beam((face, ay, az), (face, cy, cz), width, 0.02, "ShieldL", slot, up=(1, 0, 0))
+
+	def circle(r, n=12, cy=0.0, cz=0.0):
+		return [(y + cy + r * math.cos(a), z + cz + r * math.sin(a)) for a in (math.tau * k / n + math.pi / n for k in range(n))]
+
+	def boss(r, h, slot="shield_trim", cy=0.0, cz=0.0, spike=0.0):
+		b.loft([((face + 0.004, y + cy, z + cz), r, r, "ShieldL"), ((face - h * 0.6, y + cy, z + cz), r * 0.8, r * 0.8, "ShieldL"),
+				((face - h, y + cy, z + cz), r * 0.35, r * 0.35, "ShieldL")], [slot, slot], sides=8)
+		if spike:
+			b.tube((face - h, y + cy, z + cz), (face - h - spike, y + cy, z + cz), r * 0.3, 0.004, "ShieldL", slot, sides=4)
+
+	def rivets(pts, slot="shield_trim"):
+		for py, pz in pts:
+			b.box((face - 0.008, py, pz), (0.016, 0.022, 0.022), "ShieldL", slot)
+
 	if kind == "round":
-		pts = [(y + 0.27 * math.cos(a), z + 0.27 * math.sin(a)) for a in (math.tau * k / 8 + math.pi / 8 for k in range(8))]
-		b.plate(pts, x0, x1, "ShieldL", "shield", "shield_trim")
-		b.box((x1 - 0.02, y, z), (0.04, 0.09, 0.09), "ShieldL", "shield_trim")
-	else:
-		pts = [(y - 0.22, z + 0.3), (y + 0.22, z + 0.3), (y + 0.2, z - 0.05), (y, z - 0.42), (y - 0.2, z - 0.05)]
-		b.plate(pts, x0, x1, "ShieldL", "shield", "shield_trim")
-		b.box((x1 - 0.015, y, z + 0.05), (0.03, 0.06, 0.4), "ShieldL", "shield_trim")
-		b.box((x1 - 0.015, y, z + 0.12), (0.03, 0.3, 0.06), "ShieldL", "shield_trim")
+		# Boards behind an iron rim, a domed boss, rivets round the edge.
+		pts = circle(0.29)
+		b.plate(pts, x0, x1, "ShieldL", "shield", "shield_trim", axis=(0, 0, 1))
+		outline_ring(pts, 0.035)
+		boss(0.085, 0.05)
+		rivets(circle(0.22, 8))
+		b.box((x0 + 0.02, y, z), (0.03, 0.2, 0.04), "ShieldL", "strap")
+	elif kind == "kite":
+		# A kite shield: a long point below, a painted cross, rimmed.
+		pts = [(y - 0.22, z + 0.3), (y + 0.22, z + 0.3), (y + 0.21, z + 0.02), (y + 0.12, z - 0.24), (y, z - 0.45),
+			   (y - 0.12, z - 0.24), (y - 0.21, z + 0.02)]
+		b.plate(pts, x0, x1, "ShieldL", "shield", "shield_trim", axis=(0, 0, 1))
+		outline_ring(pts, 0.03)
+		b.box((face - 0.002, y, z - 0.04), (0.006, 0.08, 0.6), "ShieldL", "emblem")
+		b.box((face - 0.002, y, z + 0.1), (0.006, 0.36, 0.08), "ShieldL", "emblem")
+	elif kind == "heater":
+		# A heater: flat top, curving to a point, a painted band across.
+		pts = [(y - 0.23, z + 0.27), (y + 0.23, z + 0.27), (y + 0.22, z), (y + 0.16, z - 0.18), (y, z - 0.33),
+			   (y - 0.16, z - 0.18), (y - 0.22, z)]
+		b.plate(pts, x0, x1, "ShieldL", "shield", "shield_trim", axis=(0, 0, 1))
+		outline_ring(pts, 0.03)
+		b.plate([(y - 0.22, z + 0.12), (y + 0.22, z + 0.12), (y + 0.22, z + 0.02), (y - 0.22, z + 0.02)],
+				face, face - 0.006, "ShieldL", "emblem")
+		boss(0.05, 0.03, cz=-0.06)
+	elif kind == "buckler":
+		# A buckler: small and all metal, a spiked boss, a raised rim.
+		pts = circle(0.17)
+		b.plate(pts, x0, x1, "ShieldL", "shield_trim", "shield_trim", axis=(0, 0, 1))
+		outline_ring(pts, 0.025, "shield")
+		boss(0.07, 0.05, slot="shield", spike=0.06)
+	elif kind == "tower":
+		# A tower shield: tall and squared, boards banded with iron.
+		pts = [(y - 0.2, z + 0.36), (y + 0.2, z + 0.36), (y + 0.21, z - 0.42), (y - 0.21, z - 0.42)]
+		b.plate(pts, x0, x1 + 0.01, "ShieldL", "shield", "shield_trim", axis=(0, 0, 1))
+		outline_ring(pts, 0.035)
+		for bz in (z + 0.18, z - 0.24):
+			b.beam((face, y - 0.2, bz), (face, y + 0.2, bz), 0.04, 0.016, "ShieldL", "shield_trim", up=(0, 0, 1))
+		boss(0.06, 0.035)
+		rivets([(y + dy, z + dz) for dy in (-0.16, 0.16) for dz in (0.3, 0.0, -0.36)])
 	return b
 
 
 def helms():
-	"""Head pieces by armour type; hair is hidden under any of them."""
+	"""Head pieces by armour type, two or more shapes each, and a mask. Hair is
+	hidden under all but the circlet."""
 	out = []
+	# Cloth: a hood, its point falling back; and a wide-brimmed hat.
 	b = Builder("Helm_hood")
-	b.loft([((0, -0.01, 1.74), 0.15, 0.16, "Head"), ((0, -0.015, 1.84), 0.145, 0.155, "Head"),
-			((0, -0.02, 1.9), 0.085, 0.1, "Head")], ["head", "head"], sides=8)
+	b.loft([((0, 0.0, 1.73), 0.152, 0.165, "Head"), ((0, -0.02, 1.84), 0.148, 0.158, "Head"),
+			((0, -0.05, 1.9), 0.09, 0.1, "Head"), ((0, -0.1, 1.92), 0.04, 0.05, "Head")], ["head", "head", "head"], sides=8)
 	for x in (-1, 1):
-		b.box((0.14 * x, 0.0, 1.66), (0.04, 0.2, 0.2), "Head", "head", top=(1.0, 1.0))
+		b.box((0.145 * x, -0.005, 1.66), (0.04, 0.22, 0.2), "Head", "head", top=(1.0, 1.0))
 	b.box((0, -0.12, 1.6), (0.3, 0.07, 0.3), "Head", "head", top=(0.9, 1.0))
-	b.loft([((0, -0.02, 1.46), 0.22, 0.17, "Head"), ((0, -0.02, 1.54), 0.15, 0.13, "Head")], ["head"], sides=8)
+	b.loft([((0, -0.02, 1.44), 0.23, 0.18, "Head"), ((0, -0.02, 1.54), 0.15, 0.13, "Head")], ["head"], sides=8)
 	out.append(b)
+	b = Builder("Helm_hat")
+	b.loft([((0, 0.0, 1.76), 0.27, 0.28, "Head"), ((0, 0.0, 1.78), 0.27, 0.28, "Head")], ["head"], sides=10)
+	b.loft([((0, 0.0, 1.77), 0.145, 0.155, "Head"), ((0, -0.01, 1.86), 0.12, 0.13, "Head"),
+			((0, -0.03, 1.98), 0.05, 0.06, "Head"), ((0, -0.08, 2.03), 0.015, 0.015, "Head")], ["head", "head", "head"], sides=8)
+	b.loft([((0, 0.0, 1.785), 0.15, 0.16, "Head"), ((0, 0.0, 1.81), 0.14, 0.15, "Head")], ["helm_trim"], sides=8)
+	out.append(b)
+	# Leather: a cap with a stitched band; a cap with ear flaps.
 	b = Builder("Helm_cap")
 	b.loft([((0, -0.005, 1.74), 0.145, 0.158, "Head"), ((0, -0.01, 1.82), 0.142, 0.152, "Head"),
 			((0, -0.01, 1.885), 0.08, 0.09, "Head")], ["head", "head"], sides=8)
 	b.loft([((0, 0.0, 1.735), 0.17, 0.18, "Head"), ((0, 0.0, 1.755), 0.17, 0.18, "Head")], ["helm_trim"], sides=8)
 	out.append(b)
+	b = Builder("Helm_capflaps")
+	b.loft([((0, -0.005, 1.74), 0.15, 0.162, "Head"), ((0, -0.01, 1.83), 0.145, 0.155, "Head"),
+			((0, -0.01, 1.89), 0.085, 0.095, "Head")], ["head", "head"], sides=8)
+	for x in (-1, 1):
+		b.box((0.148 * x, 0.0, 1.66), (0.035, 0.11, 0.17), "Head", "head", top=(1.0, 0.8))
+		b.box((0.15 * x, 0.0, 1.58), (0.03, 0.03, 0.03), "Head", "strap")
+	b.box((0, -0.13, 1.68), (0.26, 0.04, 0.12), "Head", "head")
+	b.loft([((0, 0.0, 1.745), 0.168, 0.178, "Head"), ((0, 0.0, 1.765), 0.168, 0.178, "Head")], ["strap"], sides=8)
+	out.append(b)
+	# Mail: a coif; a conical helm with a nasal over a coif.
+	coif = [((0, -0.01, 1.74), 0.148, 0.16, "Head"), ((0, -0.015, 1.84), 0.142, 0.152, "Head"),
+			((0, -0.02, 1.895), 0.08, 0.095, "Head")]
 	b = Builder("Helm_coif")
-	b.loft([((0, -0.01, 1.74), 0.148, 0.16, "Head"), ((0, -0.015, 1.84), 0.142, 0.152, "Head"),
-			((0, -0.02, 1.895), 0.08, 0.095, "Head")], ["head", "head"], sides=8)
+	b.loft(coif, ["head", "head"], sides=8)
 	for x in (-1, 1):
 		b.box((0.138 * x, 0.0, 1.64), (0.035, 0.22, 0.24), "Head", "head")
 	b.box((0, 0.1, 1.575), (0.26, 0.06, 0.07), "Head", "head")
 	b.loft([((0, -0.01, 1.44), 0.2, 0.16, "Head"), ((0, -0.01, 1.6), 0.14, 0.14, "Head")], ["head"], sides=8)
+	b.loft([((0, 0.0, 1.745), 0.152, 0.164, "Head"), ((0, 0.0, 1.765), 0.152, 0.164, "Head")], ["strap"], sides=8)
 	out.append(b)
+	b = Builder("Helm_nasal")
+	b.loft(coif[:1] + [((0, -0.015, 1.8), 0.142, 0.152, "Head")], ["head"], sides=8)
+	for x in (-1, 1):
+		b.box((0.138 * x, 0.0, 1.64), (0.035, 0.22, 0.24), "Head", "head")
+	b.loft([((0, -0.01, 1.44), 0.2, 0.16, "Head"), ((0, -0.01, 1.6), 0.14, 0.14, "Head")], ["head"], sides=8)
+	b.loft([((0, 0.0, 1.76), 0.158, 0.17, "Head"), ((0, -0.005, 1.86), 0.13, 0.14, "Head"),
+			((0, -0.01, 1.98), 0.02, 0.02, "Head")], ["helm_trim", "helm_trim"], sides=8)
+	b.loft([((0, 0.0, 1.755), 0.165, 0.176, "Head"), ((0, 0.0, 1.78), 0.165, 0.176, "Head")], ["strap"], sides=8)
+	b.box((0, 0.172, 1.7), (0.03, 0.016, 0.12), "Head", "helm_trim")
+	out.append(b)
+	# Plate: a closed great helm with a crest ridge and breaths; a visored
+	# sallet with a plume. Open-faced races wear the open helm.
 	b = Builder("Helm_plate")
-	b.loft([((0, 0.0, 1.53), 0.12, 0.13, "Head"), ((0, 0.005, 1.6), 0.15, 0.165, "Head"),
-			((0, 0.0, 1.8), 0.15, 0.165, "Head"), ((0, -0.005, 1.9), 0.09, 0.1, "Head")],
-		   ["head", "head", "head"], sides=8)
-	b.box((0, 0.162, 1.71), (0.2, 0.02, 0.025), "Head", "eyes")
-	b.box((0, 0.165, 1.65), (0.025, 0.02, 0.08), "Head", "eyes")
-	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
+	b.loft([((0, 0.0, 1.53), 0.12, 0.13, "Head"), ((0, 0.005, 1.6), 0.155, 0.17, "Head"),
+			((0, 0.0, 1.8), 0.155, 0.17, "Head"), ((0, -0.005, 1.9), 0.09, 0.1, "Head")], ["head", "head", "head"], sides=8)
+	b.box((0, 0.168, 1.71), (0.21, 0.02, 0.022), "Head", "eyes")
+	b.box((0, 0.17, 1.65), (0.022, 0.02, 0.09), "Head", "helm_trim")
+	for x in (-1, 1):
+		for dz in (0.0, 0.03):
+			b.box((0.06 * x, 0.16, 1.6 + dz), (0.03, 0.016, 0.01), "Head", "eyes")
+	b.box((0, -0.005, 1.905), (0.035, 0.32, 0.06), "Head", "helm_trim")
+	b.loft([((0, 0.0, 1.595), 0.16, 0.175, "Head"), ((0, 0.0, 1.615), 0.16, 0.175, "Head")], ["helm_trim"], sides=8)
 	out.append(b)
-	# Plate without the faceplate, for faces that stick out of one (a Troll's
-	# nose and tusks, a Hornkin's snout): a dome, a brow band, cheek guards
-	# and a neck guard.
+	b = Builder("Helm_plate_visor")
+	b.loft([((0, -0.01, 1.55), 0.14, 0.15, "Head"), ((0, 0.0, 1.62), 0.155, 0.17, "Head"),
+			((0, -0.005, 1.82), 0.15, 0.165, "Head"), ((0, -0.03, 1.9), 0.09, 0.11, "Head")], ["head", "head", "head"], sides=8)
+	b.box((0, -0.16, 1.62), (0.24, 0.08, 0.06), "Head", "head", top=(1.0, 1.6))
+	b.box((0, 0.175, 1.7), (0.24, 0.05, 0.14), "Head", "head", top=(0.9, 0.6))
+	b.box((0, 0.2, 1.715), (0.2, 0.02, 0.018), "Head", "eyes")
+	for x in (-1, 1):
+		b.box((0.155 * x, 0.03, 1.7), (0.03, 0.04, 0.04), "Head", "helm_trim")
+	b.tube((0, -0.03, 1.9), (0, -0.04, 1.97), 0.02, 0.02, "Head", "helm_trim")
+	b.loft([((0, -0.04, 1.96), 0.03, 0.04, "Head"), ((0, -0.12, 2.04), 0.045, 0.07, "Head"),
+			((0, -0.26, 1.98), 0.03, 0.04, "Head"), ((0, -0.32, 1.86), 0.01, 0.015, "Head")], ["emblem"] * 3, sides=6)
+	out.append(b)
 	b = Builder("Helm_plate_open")
 	b.loft([((0, -0.005, 1.73), 0.152, 0.166, "Head"), ((0, -0.01, 1.82), 0.15, 0.162, "Head"),
 			((0, -0.01, 1.9), 0.09, 0.1, "Head")], ["head", "head"], sides=8)
@@ -856,6 +1406,59 @@ def helms():
 	b.box((0, -0.13, 1.6), (0.26, 0.06, 0.24), "Head", "head", top=(0.9, 1.0))
 	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
 	out.append(b)
+	# A brigand's mask: a cloth over the lower face, knotted behind, and a
+	# head wrap.
+	b = Builder("Helm_mask")
+	b.loft([((0, -0.005, 1.74), 0.148, 0.16, "Head"), ((0, -0.01, 1.83), 0.143, 0.153, "Head"),
+			((0, -0.02, 1.88), 0.09, 0.1, "Head")], ["head", "head"], sides=8)
+	b.loft([((0, 0.005, 1.58), 0.135, 0.15, "Head"), ((0, 0.01, 1.675), 0.142, 0.158, "Head")], ["head"], sides=8)
+	b.box((0, -0.16, 1.72), (0.05, 0.06, 0.05), "Head", "head")
+	b.box((0, -0.19, 1.66), (0.05, 0.03, 0.12), "Head", "head", top=(0.6, 1.0))
+	out.append(b)
+	return out
+
+
+def shoulders():
+	"""Shoulder pieces by armour type: a rolled cloth mantle, layered leather,
+	mail over a leather cap, and plate pauldrons."""
+	out = []
+	for kind in ("cloth", "leather", "mail", "plate"):
+		b = Builder("Shoulders_" + kind)
+		for side, x in (("Right", 1), ("Left", -1)):
+			c = Vector(_side(x, (0.31, 0, 1.43)))
+			bone = side + "Shoulder"
+			if kind == "cloth":
+				b.loft([(c + Vector((0, 0, -0.06)), 0.115, 0.115, bone), (c + Vector((0.01 * x, 0, 0.02)), 0.125, 0.12, bone),
+						(c + Vector((0, 0, 0.065)), 0.07, 0.07, bone)], ["shoulders", "shoulders"], sides=8)
+				b.loft([(c + Vector((-0.12 * x, 0, 0.06)), 0.035, 0.035, bone), (c + Vector((0.02 * x, 0, 0.075)), 0.045, 0.045, bone)],
+					   ["helm_trim"], sides=6)
+				for dy in (-0.06, 0.0, 0.06):
+					b.box(c + Vector((0.11 * x, dy, -0.09)), (0.02, 0.025, 0.05), bone, "helm_trim")
+			elif kind == "leather":
+				for i, (dz, r) in enumerate(((0.06, 0.1), (0.0, 0.12), (-0.06, 0.125))):
+					b.loft([(c + Vector((0.015 * i * x, 0, dz - 0.035)), r, r * 0.95, bone),
+							(c + Vector((0.015 * i * x, 0, dz + 0.025)), r * 0.85, r * 0.8, bone)], ["shoulders"], sides=8,
+						   shade=1.0 - 0.08 * i)
+				b.box(c + Vector((-0.06 * x, 0, 0.09)), (0.12, 0.04, 0.02), bone, "strap")
+				b.box(c + Vector((0.02 * x, 0, 0.09)), (0.03, 0.045, 0.03), bone, "trim")
+			elif kind == "mail":
+				b.loft([(c + Vector((0, 0, 0.02)), 0.12, 0.12, bone), (c + Vector((0, 0, 0.08)), 0.075, 0.075, bone)],
+					   ["strap"], sides=8)
+				b.loft([(c + Vector((0.01 * x, 0, -0.1)), 0.13, 0.125, bone), (c + Vector((0.005 * x, 0, 0.02)), 0.125, 0.12, bone)],
+					   ["shoulders"], sides=8)
+				b.loft([(c + Vector((0, 0, 0.015)), 0.128, 0.126, bone), (c + Vector((0, 0, 0.035)), 0.128, 0.126, bone)],
+					   ["trim"], sides=8)
+			else:
+				for i, (dz, r) in enumerate(((0.07, 0.11), (0.0, 0.135), (-0.07, 0.14))):
+					b.loft([(c + Vector((0.02 * i * x, 0, dz - 0.04)), r, r * 0.95, bone),
+							(c + Vector((0.02 * i * x, 0, dz + 0.03)), r * 0.9, r * 0.85, bone)], ["shoulders"], sides=8,
+						   shade=1.05 - 0.07 * i)
+					b.loft([(c + Vector((0.02 * i * x, 0, dz - 0.045)), r + 0.006, r * 0.95 + 0.006, bone),
+							(c + Vector((0.02 * i * x, 0, dz - 0.035)), r + 0.006, r * 0.95 + 0.006, bone)], ["helm_trim"], sides=8)
+				b.beam(c + Vector((-0.05 * x, -0.06, 0.1)), c + Vector((-0.05 * x, 0.06, 0.1)), 0.05, 0.02, bone, "helm_trim")
+				for dy in (-0.07, 0.07):
+					b.box(c + Vector((0.12 * x, dy, 0.0)), (0.02, 0.02, 0.02), bone, "helm_trim")
+		out.append(b)
 	return out
 
 
@@ -935,49 +1538,106 @@ def cloak():
 
 
 def ranged():
-	"""Ranged weapons, drawn while shooting: a bow in the left hand, a gun or
-	a throwing knife in the right."""
+	"""Ranged weapons, drawn while shooting: bows in the left hand, guns,
+	crossbows and throwing weapons in the right."""
 	out = []
-	b = Builder("Ranged_bow")
-	g = GRIP_L
-	points = [(y, 0.13 * (y / 0.55) ** 2) for y in (-0.55, -0.4, -0.22, -0.06, 0.06, 0.22, 0.4, 0.55)]
-	for (y0, z0), (y1, z1) in zip(points, points[1:]):
-		b.beam(g + Vector((0, y0, z0)), g + Vector((0, y1, z1)), 0.04, 0.03, "WeaponL", "ranged", up=(1, 0, 0))
-	b.box(g, (0.045, 0.1, 0.045), "WeaponL", "handle")
-	b.beam(g + Vector((0, -0.55, 0.14)), g + Vector((0, 0.55, 0.14)), 0.012, 0.012, "WeaponL", "ranged_trim", up=(1, 0, 0))
-	out.append(b)
-	b = Builder("Ranged_gun")
+
+	def bow(name, half, bend, recurve):
+		b = Builder(name)
+		g = GRIP_L
+		ys = [half * t for t in (-1.0, -0.8, -0.55, -0.3, -0.1, 0.1, 0.3, 0.55, 0.8, 1.0)]
+		pts = []
+		for y in ys:
+			t = abs(y) / half
+			z = bend * t * t - (recurve * max(0.0, t - 0.8) / 0.2 if recurve else 0.0)
+			pts.append((y, z))
+		for (y0, z0), (y1, z1) in zip(pts, pts[1:]):
+			w = 0.045 - 0.02 * abs(y0 + y1) / (2 * half)
+			b.beam(g + Vector((0, y0, z0)), g + Vector((0, y1, z1)), w, 0.032, "WeaponL", "ranged", up=(1, 0, 0))
+		p = Prop(b, g, "WeaponL")
+		p.wraps(-0.08, 0.08, 0.03, 4)
+		b.beam(g + Vector((0, pts[0][0], pts[0][1] + 0.01)), g + Vector((0, pts[-1][0], pts[-1][1] + 0.01)), 0.01, 0.01,
+			   "WeaponL", "ranged_trim", up=(1, 0, 0))
+		for y, z in (pts[0], pts[-1]):
+			b.box(g + Vector((0, y, z)), (0.03, 0.03, 0.03), "WeaponL", "ranged_trim")
+		return b
+
+	out.append(bow("Ranged_bow", 0.52, 0.14, 0.06))
+	out.append(bow("Ranged_longbow", 0.72, 0.12, 0.0))
 	g = GRIP_R
-	b.tube(g + Vector((0, 0.0, 0.03)), g + Vector((0, 0.6, 0.03)), 0.026, 0.024, "WeaponR", "ranged_trim")
-	b.beam(g + Vector((0, -0.3, -0.03)), g + Vector((0, 0.3, 0.0)), 0.075, 0.05, "WeaponR", "ranged", up=(0, 0, 1))
-	b.box(g + Vector((0, 0.6, 0.03)), (0.07, 0.04, 0.07), "WeaponR", "ranged_trim")
+	# A rifle: a wooden stock, a long barrel bound to it, the lock.
+	b = Builder("Ranged_gun")
+	p = Prop(b, g, "WeaponR")
+	p.flat([(-0.34, -0.1), (-0.12, -0.04), (-0.02, -0.04), (0.4, 0.0), (0.4, 0.04), (-0.05, 0.04), (-0.34, 0.0)], 0.05, "ranged")
+	p.tube(-0.05, 0.62, 0.02, 0.018, "ranged_trim", z=0.05)
+	for y in (0.15, 0.35):
+		p.tube(y - 0.012, y + 0.012, 0.03, 0.03, "ranged_trim", z=0.035)
+	p.box(-0.02, 0.05, (0.04, 0.06, 0.04), "ranged_trim")
+	p.box(0.62, 0.075, (0.012, 0.02, 0.025), "ranged_trim")
+	out.append(b)
+	# A blunderbuss: a short stock and a barrel flaring to a bell.
+	b = Builder("Ranged_blunderbuss")
+	p = Prop(b, g, "WeaponR")
+	p.flat([(-0.28, -0.11), (-0.1, -0.04), (0.0, -0.04), (0.3, 0.0), (0.3, 0.04), (-0.05, 0.04), (-0.28, 0.0)], 0.055, "ranged")
+	p.b.loft([(p.at(-0.04, 0.05), 0.024, 0.024, p.bone), (p.at(0.36, 0.05), 0.026, 0.026, p.bone),
+			  (p.at(0.46, 0.05), 0.045, 0.045, p.bone), (p.at(0.5, 0.05), 0.06, 0.06, p.bone)], ["ranged_trim"] * 3, sides=8)
+	p.box(-0.02, 0.05, (0.045, 0.06, 0.04), "ranged_trim")
+	p.tube(0.2, 0.22, 0.032, 0.032, "ranged_trim", z=0.045)
+	out.append(b)
+	# A crossbow: a stock, a bow across its front, the string drawn back.
+	b = Builder("Ranged_crossbow")
+	p = Prop(b, g, "WeaponR")
+	p.flat([(-0.3, -0.07), (-0.05, -0.03), (0.42, 0.0), (0.42, 0.04), (-0.3, 0.02)], 0.05, "ranged")
+	for z in (-1, 1):
+		b.beam(p.at(0.4, 0.03), p.at(0.33, 0.03, 0.28 * z), 0.03, 0.02, "WeaponR", "ranged_trim", up=(0, 1, 0))
+		b.beam(p.at(0.33, 0.03, 0.28 * z), p.at(0.1, 0.035), 0.008, 0.008, "WeaponR", "strap", up=(0, 1, 0))
+	p.tube(0.42, 0.46, 0.035, 0.035, "ranged_trim", sides=6, z=0.02)
+	p.box(0.05, -0.04, (0.012, 0.02, 0.06), "ranged_trim")
 	out.append(b)
 	b = Builder("Ranged_thrown")
-	b.tube(g + Vector((0, -0.06, 0)), g + Vector((0, 0.04, 0)), 0.018, 0.018, "WeaponR", "handle")
-	b.beam(g + Vector((0, 0.04, 0)), g + Vector((0, 0.22, 0)), 0.05, 0.014, "WeaponR", "ranged_trim", taper=0.15)
+	p = Prop(b, g, "WeaponR")
+	p.tube(-0.06, 0.04, 0.017, 0.017, "handle")
+	p.wraps(-0.05, 0.03, 0.02, 2)
+	p.tube(-0.08, -0.06, 0.022, 0.022, "ranged_trim", sides=8)
+	p.flat(blade_outline(0.04, 0.16, 0.05, 0.04, 0.07), 0.012, "ranged_trim")
+	out.append(b)
+	b = Builder("Ranged_thrown_axe")
+	p = Prop(b, g, "WeaponR")
+	p.tube(-0.08, 0.26, 0.016, 0.015, "handle")
+	p.flat([(0.2, 0.02), (0.27, 0.02), (0.3, 0.11), (0.2, 0.12), (0.18, 0.06)], 0.018, "ranged_trim")
 	out.append(b)
 	return out
 
 
-WEAPONS = ["sword", "sword2h", "axe", "axe2h", "mace", "mace2h", "dagger", "staff", "polearm", "wand", "fist"]
-OFF_HAND = ["sword", "axe", "mace", "dagger", "fist", "orb"]
+ONE_HANDED = ["sword", "axe", "mace", "dagger", "fist"]
+
+
+def held_props():
+	"""Every weapon shape in the right hand; one-handers and off-hand items in
+	the left (Off_...); and the shields."""
+	out = []
+	for family, kinds in WEAPON_KINDS.items():
+		if family == "orb":
+			continue
+		for kind in kinds:
+			out.append(weapon("Main_" + kind, GRIP_R, "WeaponR", kind))
+	for family, kinds in WEAPON_KINDS.items():
+		if family not in ONE_HANDED and family != "orb":
+			continue
+		for kind in kinds:
+			b = weapon("Off_" + kind, GRIP_L, "WeaponL", kind)
+			# Off-hand weapons take the off-hand colour slots: blade and trim
+			# become shield_trim and shield.
+			swap = {SLOT["blade"]: SLOT["shield_trim"], SLOT["trim"]: SLOT["shield"]}
+			b.face_uv = [((swap.get(int(u * SLOT_COUNT), int(u * SLOT_COUNT)) + 0.5) / SLOT_COUNT, v) for u, v in b.face_uv]
+			out.append(b)
+	for kind in ("round", "kite", "heater", "buckler", "tower"):
+		out.append(shield("Shield_" + kind, kind))
+	return out
 
 
 def props():
-	out = []
-	for kind in WEAPONS:
-		out.append(weapon("Main_" + kind, GRIP_R, "WeaponR", kind))
-	for kind in OFF_HAND:
-		b = weapon("Off_" + kind, GRIP_L, "WeaponL", kind)
-		# Off-hand weapons take the off-hand colour slots.
-		# Off-hand weapons take the off-hand colour slots: blade and trim
-		# become shield_trim and shield.
-		swap = {SLOT["blade"]: SLOT["shield_trim"], SLOT["trim"]: SLOT["shield"]}
-		b.face_uv = [((swap.get(int(u * SLOT_COUNT), int(u * SLOT_COUNT)) + 0.5) / SLOT_COUNT, v) for u, v in b.face_uv]
-		out.append(b)
-	out.append(shield("Shield_round", "round"))
-	out.append(shield("Shield_kite", "kite"))
-	return out + helms() + [cloak()] + ranged()
+	return held_props() + helms() + [cloak()] + ranged()
 
 # ---------------------------------------------------------------- animation
 
@@ -1368,9 +2028,9 @@ def build(race):
 	arm = build_armature()
 	material = bpy.data.materials.new("Character")
 	if RACE.get("species"):
-		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + props()[:len(WEAPONS) + len(OFF_HAND) + 2]
+		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + held_props()
 	else:
-		parts = [body("BodyMale", False), body("BodyFemale", True), shoulders()] + race_parts() + hairs() + props()
+		parts = [body("BodyMale", False), body("BodyFemale", True)] + shoulders() + race_parts() + hairs() + props()
 	tris = {}
 	for builder in parts:
 		obj = builder.build(arm, material)

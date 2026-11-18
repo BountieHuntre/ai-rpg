@@ -22,7 +22,31 @@ const RACE_MODELS := {
 const SLOT_COUNT := 32
 
 enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
-	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT }
+	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT, GEM, STRAP, EMBLEM }
+
+## Patterns laid under a slot's colour (the shader's slot_pattern): what the
+## gear is made of, by armour type and item (_armor_pattern). Each is a
+## painted tile (tools/textures/texture_painter.gd, assets/textures/gear_*.png),
+## in this order from 1; 0 is none.
+enum Pattern { NONE, WEAVE, QUILTED, STRIPES, LEATHER, STUDDED, TOOLED, CHAIN, SCALE, PLATE, BANDED, WOOD, PLANKS,
+	WRAP, BRUSHED, HAMMERED }
+const GEAR_PATTERNS := ["gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
+	"gear_chain", "gear_scale", "gear_plate", "gear_banded", "gear_wood", "gear_planks", "gear_wrap",
+	"gear_brushed", "gear_hammered"]
+## Patterns by armour subclass (cloth, leather, mail, plate), one picked per
+## item; and words in an item's name that choose one.
+const ARMOR_PATTERNS := {
+	0: [Pattern.WEAVE, Pattern.QUILTED, Pattern.STRIPES], 1: [Pattern.WEAVE, Pattern.QUILTED, Pattern.STRIPES],
+	2: [Pattern.LEATHER, Pattern.STUDDED, Pattern.TOOLED], 3: [Pattern.CHAIN, Pattern.SCALE],
+	4: [Pattern.PLATE, Pattern.BANDED],
+}
+const NAME_PATTERNS := {
+	"quilted": Pattern.QUILTED, "padded": Pattern.QUILTED, "studded": Pattern.STUDDED, "tooled": Pattern.TOOLED,
+	"inscribed": Pattern.TOOLED, "scale": Pattern.SCALE, "scaled": Pattern.SCALE, "chain": Pattern.CHAIN,
+	"ringmail": Pattern.CHAIN, "banded": Pattern.BANDED, "splint": Pattern.BANDED, "striped": Pattern.STRIPES,
+}
+## The patterns as one texture array, made once.
+static var _pattern_array: Texture2DArray
 
 const SKIN_COLORS := [
 	Color(0.96, 0.8, 0.68), Color(0.9, 0.71, 0.56), Color(0.8, 0.59, 0.43),
@@ -158,12 +182,75 @@ const MAIN_PROPS := {
 	10: "staff", 13: "fist", 15: "dagger", 20: "staff",
 }
 const OFF_PROPS := { 0: "axe", 4: "mace", 7: "sword", 13: "fist", 15: "dagger" }
-## Head armour subclass -> helm (cloth hood, leather cap, mail coif, plate helm).
-const HELMS := { 0: "Helm_hood", 1: "Helm_hood", 2: "Helm_cap", 3: "Helm_coif", 4: "Helm_plate" }
-## Races whose faces stick out of a closed plate helm wear it open-faced.
+## Each prop's shapes (the build script's WEAPON_KINDS): words in an item's
+## name that pick one, the common shapes one of which is picked for any other
+## item (_pick), and the fine one rare and better items get.
+const PROP_SHAPES := {
+	"sword": { "words": { "sword_curved": ["scimitar", "sabre", "saber", "machete", "cutlass", "falchion", "clipper"],
+		"sword_short": ["shortsword", "gladius", "short"], "sword_broad": ["broadsword", "broad", "northern"],
+		"sword_ornate": ["fine", "gleaming", "ornate", "jeweled", "ceremonial"] },
+		"common": ["sword", "sword_broad"], "fine": "sword_ornate" },
+	"sword2h": { "words": { "sword2h_claymore": ["claymore"], "sword2h_great": ["greatsword", "bastard", "blunt", "broad", "heavy"],
+		"sword2h_ornate": ["gleaming", "flamberge", "ornate"] }, "common": ["sword2h", "sword2h_great"], "fine": "sword2h_ornate" },
+	"axe": { "words": { "axe_hatchet": ["hatchet", "hand", "tomahawk", "scalping"], "axe_double": ["twin", "double"],
+		"axe_pick": ["pick", "mattock"] }, "common": ["axe", "axe_double"] },
+	"axe2h": { "words": { "axe2h_bearded": ["broad", "battle", "greataxe", "beaten"],
+		"axe2h_cleaver": ["chopper", "cleaver", "slayer", "severing", "barbaric"], "axe2h": ["twin", "double"] },
+		"common": ["axe2h", "axe2h_bearded"] },
+	"mace": { "words": { "mace_club": ["club", "cudgel", "wooden", "plank", "billy", "stick", "branch", "bludgeon"],
+		"mace_hammer": ["hammer", "mallet", "warhammer", "battlehammer"], "mace_spiked": ["spiked", "morningstar", "stinging", "flail"],
+		"mace_scepter": ["scepter", "sceptre", "ornamental", "ceremonial", "chaplain"], "mace": ["flanged"] },
+		"common": ["mace", "mace_spiked"], "fine": "mace_scepter" },
+	"mace2h": { "words": { "mace2h_maul": ["maul", "sledge", "warhammer", "hammer", "mallet", "bonecracker"],
+		"mace2h_club": ["club", "cudgel", "knobbed", "oak", "birchwood", "wooden", "log"], "mace2h_shovel": ["shovel", "spade"] },
+		"common": ["mace2h", "mace2h_maul"] },
+	"dagger": { "words": { "dagger_knife": ["knife", "carving", "whittling", "skinning", "camping", "paper", "fisherman"],
+		"dagger_curved": ["curved", "hook", "jagged", "kris"], "dagger_stiletto": ["stiletto", "dirk", "bayonet", "needle"] },
+		"common": ["dagger", "dagger_knife"] },
+	"staff": { "words": { "staff_gnarled": ["gnarled", "knotted", "crooked", "withered", "twisted", "branch", "driftwood",
+		"walking", "stick", "cane", "rough", "whittled", "primitive", "broom", "gritroot", "thistlewood"],
+		"staff_quarter": ["quarterstaff", "fighting", "balanced", "sturdy", "smooth", "long"],
+		"staff_runed": ["oracle", "elder", "executor", "dreamwatcher", "medicine", "darkwood", "runed"] },
+		"common": ["staff", "staff_gnarled"], "fine": "staff_runed" },
+	"polearm": { "words": { "polearm_halberd": ["halberd", "poleaxe", "bardiche"], "polearm_glaive": ["glaive", "scythe", "bill"],
+		"polearm": ["spear", "pike", "lance"] }, "common": ["polearm", "polearm_halberd", "polearm_glaive"] },
+	"wand": { "words": {}, "common": ["wand", "wand_twisted"] },
+	"fist": { "words": {}, "common": ["fist"] },
+	"orb": { "words": { "orb_tome": ["tome", "book", "codex", "grimoire", "journal"], "orb_stein": ["stein", "mug", "tankard", "flagon"],
+		"orb_rod": ["rod", "branch", "stave", "willow"], "orb": ["orb", "sphere", "globe", "crystal"] }, "common": ["orb", "orb_tome"] },
+	"shield": { "words": { "Shield_buckler": ["buckler", "roundel", "small", "targe"], "Shield_round": ["round"],
+		"Shield_heater": ["heater", "standard", "issue", "militia", "veteran"], "Shield_kite": ["kite"],
+		"Shield_tower": ["tower", "large", "rectangular", "thick", "wall"] }, "common": ["Shield_round", "Shield_kite", "Shield_heater"] },
+}
+## Head armour subclass -> its helms (cloth hood or hat, leather caps, mail
+## coif or nasal helm, plate helms), and words in a name that pick one.
+const HELMS := { 0: ["Helm_hood", "Helm_hat"], 1: ["Helm_hood", "Helm_hat"], 2: ["Helm_cap", "Helm_capflaps"],
+	3: ["Helm_coif", "Helm_nasal"], 4: ["Helm_plate", "Helm_plate_visor"] }
+const HELM_WORDS := { "mask": "Helm_mask", "hat": "Helm_hat", "cap": "Helm_cap", "hood": "Helm_hood", "cowl": "Helm_hood",
+	"coif": "Helm_coif" }
+const ALL_HELMS := ["Helm_hood", "Helm_hat", "Helm_cap", "Helm_capflaps", "Helm_coif", "Helm_nasal", "Helm_plate",
+	"Helm_plate_visor", "Helm_plate_open", "Helm_mask"]
+## Helms that cover the face (and so the beard).
+const CLOSED_HELMS := ["Helm_plate", "Helm_plate_visor", "Helm_mask"]
+## Shoulder pieces by armour subclass.
+const SHOULDER_PARTS := { 0: "Shoulders_cloth", 1: "Shoulders_cloth", 2: "Shoulders_leather", 3: "Shoulders_mail",
+	4: "Shoulders_plate" }
+## Races whose faces stick out of a closed plate helm wear it open-faced, and
+## a hood or coif for a mask or nasal helm.
 const OPEN_HELM_RACES := ["troll", "hornkin"]
+const OPEN_FACED := { "Helm_plate": "Helm_plate_open", "Helm_plate_visor": "Helm_plate_open", "Helm_mask": "Helm_hood",
+	"Helm_nasal": "Helm_coif" }
 ## Ranged weapon subclass -> the prop drawn while shooting, and how it's shot.
-const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_gun", 16: "Ranged_thrown", 19: "Main_wand" }
+const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_crossbow", 16: "Ranged_thrown", 19: "Main_wand" }
+## Words that pick another shape for a ranged weapon.
+const RANGED_WORDS := { "Ranged_bow": { "Ranged_longbow": ["long", "longbow", "heavy", "hickory", "yew", "war"] },
+	"Ranged_gun": { "Ranged_blunderbuss": ["blunderbuss", "handgonne", "shotgun"] },
+	"Ranged_thrown": { "Ranged_thrown_axe": ["axe", "hatchet", "tomahawk"] } }
+## Gems by item quality (uncommon, rare, epic, legendary); poorer items' are red.
+const GEM_COLORS := [Color(0.75, 0.2, 0.18), Color(0.75, 0.2, 0.18), Color(0.3, 0.8, 0.3), Color(0.25, 0.5, 0.95),
+	Color(0.65, 0.3, 0.9), Color(1.0, 0.55, 0.15)]
+const STRAP_COLOR := Color(0.28, 0.19, 0.11)
+const PARCHMENT := Color(0.86, 0.8, 0.64)
 const RANGED_SHOTS := { 2: "shoot_bow", 3: "shoot_gun", 18: "shoot_gun", 16: "throw", 19: "shoot_wand" }
 
 ## Animations that loop.
@@ -240,6 +327,8 @@ var appearance: Dictionary = {}
 var skin_override := Color(0, 0, 0, 0)
 ## Clothes shown where nothing is worn (slot enum -> colour), for NPCs.
 var outfit: Dictionary = {}
+## Each colour slot's Pattern.
+var _patterns := PackedInt32Array()
 var _material := ShaderMaterial.new()
 var _model: Node3D
 var _skeleton: Skeleton3D
@@ -326,7 +415,9 @@ func _init() -> void:
 	add_to_group("character_models")
 	_colors.resize(SLOT_COUNT)
 	_colors.fill(Color.WHITE)
+	_patterns.resize(SLOT_COUNT)
 	_material.shader = SHADER
+	_material.set_shader_parameter("gear_patterns", _gear_patterns())
 
 
 func _ready() -> void:
@@ -535,19 +626,39 @@ func _apply_equipment() -> void:
 	_colors[FEET] = _armor_color(Inventory.Slot.FEET, outfit.get(FEET, skin))
 	_colors[WAIST] = _armor_color(Inventory.Slot.WAIST, outfit.get(WAIST, _colors[LEGS].darkened(0.25)))
 	_colors[SHOULDERS] = _armor_color(Inventory.Slot.SHOULDER, chest)
-	_show("Shoulders", _item(Inventory.Slot.SHOULDER).size() > 0)
+	var shoulder := _item(Inventory.Slot.SHOULDER)
+	var shoulder_part: String = SHOULDER_PARTS.get(int(shoulder.get("subclass", 1)), "Shoulders_cloth") if shoulder.size() > 0 else ""
+	for part: String in SHOULDER_PARTS.values():
+		_show(part, part == shoulder_part)
+	# What it's made of: each slot's pattern, by the same rules as its colour.
+	var worn: Dictionary = outfit.get("patterns", {})
+	_patterns.fill(Pattern.NONE)
+	var shirt_pattern := _armor_pattern(Inventory.Slot.SHIRT, worn.get(CHEST, Pattern.NONE))
+	var chest_pattern := _armor_pattern(Inventory.Slot.CHEST, shirt_pattern)
+	_patterns[CHEST] = chest_pattern
+	_patterns[WRISTS] = _armor_pattern(Inventory.Slot.WRIST, chest_pattern if _item(Inventory.Slot.CHEST).size() > 0 else worn.get(WRISTS, shirt_pattern))
+	_patterns[HANDS] = _armor_pattern(Inventory.Slot.HANDS, worn.get(HANDS, Pattern.NONE))
+	_patterns[LEGS] = _armor_pattern(Inventory.Slot.LEGS, worn.get(LEGS, Pattern.WEAVE))
+	if int(_item(Inventory.Slot.CHEST).get("InventoryType", 0)) == INVTYPE_ROBE:
+		_patterns[LEGS] = chest_pattern
+	_patterns[FEET] = _armor_pattern(Inventory.Slot.FEET, worn.get(FEET, Pattern.NONE))
+	_patterns[WAIST] = _armor_pattern(Inventory.Slot.WAIST, worn.get(WAIST, _patterns[LEGS]))
+	_patterns[SHOULDERS] = _armor_pattern(Inventory.Slot.SHOULDER, worn.get(SHOULDERS, chest_pattern))
+	_patterns[HEAD] = _armor_pattern(Inventory.Slot.HEAD, chest_pattern)
+	_patterns[BACK] = _armor_pattern(Inventory.Slot.BACK, Pattern.WEAVE)
+	_patterns[STRAP] = Pattern.LEATHER
 	# A helm hides the hair (and a closed one the beard).
 	var head := _item(Inventory.Slot.HEAD)
-	var helm: String = creature_gear.get("helm", HELMS.get(int(head.get("subclass", 0)), "Helm_cap") if head.size() > 0 else "")
-	if helm == "Helm_plate" and race in OPEN_HELM_RACES:
-		helm = "Helm_plate_open"
-	for part: String in HELMS.values() + ["Helm_plate_open"]:
+	var helm: String = creature_gear.get("helm", _helm_for(head) if head.size() > 0 else "")
+	if race in OPEN_HELM_RACES:
+		helm = OPEN_FACED.get(helm, helm)
+	for part: String in ALL_HELMS:
 		_show(part, part == helm)
 	_colors[HEAD] = _armor_color(Inventory.Slot.HEAD, outfit.get(HEAD, chest))
 	_colors[HELM_TRIM] = TRIM_COLOR if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
 	var body: int = appearance.get("body", 0)
 	var hair: String = RACE_HAIR_STYLES.get(race, HAIR_STYLES)[body][appearance.get("hair", 0)] if helm == "" else ""
-	var face: String = RACE_FACES.get(race, FACES)[body][appearance.get("face", 0)] if helm != "Helm_plate" else ""
+	var face: String = RACE_FACES.get(race, FACES)[body][appearance.get("face", 0)] if helm not in CLOSED_HELMS else ""
 	for style: String in ALL_HAIR:
 		_show(style, style == hair or style == face)
 	# A cloak.
@@ -564,21 +675,24 @@ func _apply_props() -> void:
 	var off := _item(Inventory.Slot.OFF_HAND)
 	var main_prop := ""
 	if main.size() > 0 and int(main.get("class", 0)) == 2:
-		main_prop = "Main_" + MAIN_PROPS.get(int(main.subclass), "")
+		main_prop = "Main_" + _shape(MAIN_PROPS.get(int(main.subclass), ""), main)
 	var off_prop := ""
 	if off.size() > 0:
 		if int(off.get("class", 0)) == 2:
-			off_prop = "Off_" + OFF_PROPS.get(int(off.subclass), "sword")
+			off_prop = "Off_" + _shape(OFF_PROPS.get(int(off.subclass), "sword"), off)
 		elif int(off.get("subclass", 0)) == Inventory.ARMOR_SUBCLASS_SHIELD:
-			off_prop = "Shield_kite" if _pick(off, 2) == 1 else "Shield_round"
+			off_prop = _shape("shield", off)
 		else:
-			off_prop = "Off_orb"
+			off_prop = "Off_" + _shape("orb", off)
 	if not creature_gear.is_empty():
 		main_prop = "Main_" + str(creature_gear.get("main", "")) if creature_gear.get("main", "") != "" else ""
 		off_prop = str(creature_gear.get("off", ""))
 	var ranged := _item(Inventory.Slot.RANGED)
 	if _drawn and ranged.size() > 0:
 		main_prop = RANGED_PROPS.get(int(ranged.subclass), "")
+		for shape: String in RANGED_WORDS.get(main_prop, {}):
+			if _named(ranged, RANGED_WORDS[main_prop][shape]):
+				main_prop = shape
 		off_prop = ""
 		_colors[RANGED] = _handle_color(ranged).lightened(0.15)
 		_colors[RANGED_TRIM] = Color(0.3, 0.3, 0.33)
@@ -589,25 +703,72 @@ func _apply_props() -> void:
 			_show(part, part == main_prop)
 		elif part.begins_with("Off_") or part.begins_with("Shield_"):
 			_show(part, part == off_prop)
+	_patterns[BLADE] = Pattern.NONE
+	_patterns[HANDLE] = Pattern.WOOD
+	_patterns[RANGED] = Pattern.WOOD
+	_patterns[SHIELD] = Pattern.NONE
+	_patterns[SHIELD_TRIM] = Pattern.NONE
 	if main.size() > 0:
 		_colors[BLADE] = _blade_color(main)
 		_colors[HANDLE] = _handle_color(main)
+		# Metal blades and heads brushed; staves' and wands' gems and carved
+		# heads plain. Grips of wood, or wrapped.
+		_patterns[BLADE] = Pattern.NONE if int(main.get("subclass", 0)) in [10, 19, 20] else Pattern.BRUSHED
+		_patterns[HANDLE] = [Pattern.WOOD, Pattern.WRAP][_pick(main, 2)] if int(main.get("subclass", 0)) not in [10, 20] else Pattern.WOOD
 		_colors[TRIM] = TRIM_COLOR if int(main.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
 	if off.size() > 0:
 		if off_prop.begins_with("Shield"):
 			_colors[SHIELD] = _armor_color(Inventory.Slot.OFF_HAND, WOOD)
 			_colors[SHIELD_TRIM] = TRIM_COLOR if int(off.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
+			# Boards, painted or not, or (the grey ones) beaten metal.
+			_patterns[SHIELD] = Pattern.HAMMERED if _name_color(off).a == 0.0 and _pick(off, 4) == 3 else Pattern.PLANKS
+			_patterns[SHIELD_TRIM] = Pattern.BRUSHED
 		else:
 			_colors[SHIELD_TRIM] = _blade_color(off)
+			_patterns[SHIELD_TRIM] = Pattern.BRUSHED
 			_colors[SHIELD] = TRIM_COLOR if int(off.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
 			if main.size() == 0:
 				_colors[HANDLE] = _handle_color(off)
+	# Gems by quality, leather bindings, a shield's device or a book's pages.
+	var fine := main if main.size() > 0 else off
+	_colors[GEM] = GEM_COLORS[clampi(int(fine.get("Quality", 1)), 0, GEM_COLORS.size() - 1)]
+	_colors[STRAP] = STRAP_COLOR
+	if off_prop.begins_with("Shield"):
+		var device := _name_color(off)
+		_colors[EMBLEM] = device if device.a > 0.0 and device != _colors[SHIELD] else (TRIM_COLOR if int(off.get("Quality", 1)) >= 2 else PARCHMENT)
+	else:
+		_colors[EMBLEM] = PARCHMENT
 	if not creature_gear.is_empty():
+		_patterns[BLADE] = Pattern.BRUSHED
+		_patterns[SHIELD] = Pattern.PLANKS
 		_colors[BLADE] = STEEL.darkened(0.15)
 		_colors[HANDLE] = WOOD
 		_colors[SHIELD] = WOOD
 		_colors[SHIELD_TRIM] = STEEL.darkened(0.15)
+	_push_colors()
+
+
+## Sends the slots' colours and patterns to the shader.
+func _push_colors() -> void:
 	_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
+	_material.set_shader_parameter("slot_pattern", _patterns)
+
+
+## The gear patterns as a texture array (each tile with its own mipmaps, so
+## they repeat without bleeding into each other).
+static func _gear_patterns() -> Texture2DArray:
+	if _pattern_array:
+		return _pattern_array
+	var images: Array[Image] = []
+	for key: String in GEAR_PATTERNS:
+		var image: Image = (load("res://assets/textures/%s.png" % key) as Texture2D).get_image()
+		image.decompress()
+		image.convert(Image.FORMAT_RGBA8)
+		image.generate_mipmaps()
+		images.append(image)
+	_pattern_array = Texture2DArray.new()
+	_pattern_array.create_from_images(images)
+	return _pattern_array
 
 
 ## Clothes for an NPC by its trade (a trainer list: "paladin" in plate,
@@ -617,19 +778,29 @@ static func outfit_for(trade: String, seed_value: int) -> Dictionary:
 	rng.seed = seed_value
 	var body: Color = CLOTH[rng.randi_range(0, CLOTH.size() - 1)]
 	var legs: Color = LEATHER[rng.randi_range(0, LEATHER.size() - 1)]
+	var cloth: Array = ARMOR_PATTERNS[1]
+	var body_pattern: int = cloth[rng.randi_range(0, cloth.size() - 1)]
+	var legs_pattern := Pattern.LEATHER
 	match trade:
 		"paladin":
 			body = PLATE[rng.randi_range(0, PLATE.size() - 1)]
 			legs = body.darkened(0.15)
+			body_pattern = [Pattern.PLATE, Pattern.BANDED][rng.randi_range(0, 1)]
+			legs_pattern = body_pattern
 		"warrior", "weapons":
 			body = MAIL[rng.randi_range(0, MAIL.size() - 1)]
+			body_pattern = [Pattern.CHAIN, Pattern.SCALE][rng.randi_range(0, 1)]
 		"priest":
 			body = [Color(0.88, 0.86, 0.8), Color(0.75, 0.65, 0.4), Color(0.55, 0.15, 0.15)][rng.randi_range(0, 2)]
 			legs = body
+			legs_pattern = body_pattern
 		"spellsword":
 			body = Color(0.25, 0.3, 0.55)
+			body_pattern = Pattern.QUILTED
 	var boots: Color = LEATHER[rng.randi_range(0, LEATHER.size() - 1)].darkened(0.2)
-	return { CHEST: body, LEGS: legs, FEET: boots, HANDS: boots, WAIST: boots.darkened(0.2) }
+	return { CHEST: body, LEGS: legs, FEET: boots, HANDS: boots, WAIST: boots.darkened(0.2),
+		"patterns": { CHEST: body_pattern, WRISTS: body_pattern, SHOULDERS: body_pattern, LEGS: legs_pattern,
+			FEET: Pattern.LEATHER, HANDS: Pattern.LEATHER, WAIST: Pattern.TOOLED } }
 
 
 func _item(slot: int) -> Dictionary:
@@ -637,6 +808,40 @@ func _item(slot: int) -> Dictionary:
 	if not stack is Dictionary or stack.is_empty():
 		return {}
 	return ItemDB.get_item(int(stack.id))
+
+
+## Which of a prop's shapes (PROP_SHAPES) an item is: by a word in its name,
+## else the fine shape for rare and better items, else a common one picked
+## for it, so the same item always looks the same.
+static func _shape(family: String, item: Dictionary) -> String:
+	var shapes: Dictionary = PROP_SHAPES.get(family, {})
+	if shapes.is_empty():
+		return family
+	for shape: String in shapes.words:
+		if _named(item, shapes.words[shape]):
+			return shape
+	if shapes.has("fine") and int(item.get("Quality", 1)) >= 3:
+		return shapes.fine
+	var common: Array = shapes.common
+	return common[_pick(item, common.size())]
+
+
+## Whether an item's name has any of these words.
+static func _named(item: Dictionary, words: Array) -> bool:
+	for word in str(item.get("name", "")).to_lower().replace("'", " ").replace("-", " ").split(" "):
+		if word in words:
+			return true
+	return false
+
+
+## The helm an item shows as: a word in its name (a mask, hat, cap...), else
+## one of its armour type's.
+static func _helm_for(item: Dictionary) -> String:
+	for word: String in HELM_WORDS:
+		if _named(item, [word]):
+			return HELM_WORDS[word]
+	var choices: Array = HELMS.get(int(item.get("subclass", 1)), HELMS[1])
+	return choices[_pick(item, choices.size())]
 
 
 ## A stable choice of n for an item.
@@ -665,6 +870,20 @@ func _armor_color(slot: int, bare: Color) -> Color:
 				palette = [WOOD, Color(0.55, 0.15, 0.12), Color(0.2, 0.28, 0.5), Color(0.5, 0.5, 0.52)]
 		color = palette[_pick(item, palette.size())]
 	return _by_quality(color, int(item.get("Quality", 1)))
+
+
+## The pattern of what's worn in an equipment slot, or `bare` with nothing
+## there: by the item's armour type, a word in its name, else one picked for
+## it (_pick, so the same item always looks the same).
+func _armor_pattern(slot: int, bare: int) -> int:
+	var item := _item(slot)
+	if item.is_empty():
+		return bare
+	for word in str(item.get("name", "")).to_lower().replace("'", " ").replace("-", " ").split(" "):
+		if NAME_PATTERNS.has(word):
+			return NAME_PATTERNS[word]
+	var choices: Array = ARMOR_PATTERNS.get(int(item.get("subclass", 0)), ARMOR_PATTERNS[1])
+	return choices[_pick(item, choices.size())]
 
 
 func _name_color(item: Dictionary) -> Color:
@@ -935,7 +1154,7 @@ func _update_unit(delta: float) -> void:
 	if drawn != _drawn:
 		_drawn = drawn
 		_apply_props()
-		_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
+		_push_colors()
 	_update_loco(delta)
 	_update_glow()
 	_update_cape(delta)

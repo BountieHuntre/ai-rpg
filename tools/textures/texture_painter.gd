@@ -12,6 +12,17 @@ const KEYS := [
 	"grass", "forest_floor", "dirt", "cobbles", "rock",
 	"grass_blades", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"leaves", "needles", "bark", "stone_wall", "roof_tiles", "planks", "thatch", "plaster",
+	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
+	"gear_chain", "gear_scale", "gear_plate", "gear_banded", "gear_wood", "gear_planks",
+	"gear_wrap", "gear_brushed", "gear_hammered",
+]
+## Gear patterns laid under a character's colours (HumanoidModel's
+## GEAR_PATTERNS, shaders/character.gdshader): grey, mid-grey leaving the colour
+## as it is, darker and lighter shading it; 32 pixels, tiling.
+const GEAR_KEYS := [
+	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
+	"gear_chain", "gear_scale", "gear_plate", "gear_banded", "gear_wood", "gear_planks",
+	"gear_wrap", "gear_brushed", "gear_hammered",
 ]
 
 var _rng := RandomNumberGenerator.new()
@@ -589,4 +600,233 @@ func _planks() -> Image:
 		# Nails at the seam.
 		_put(image, seam + 2, row * board + 2, Color("2a2420"))
 		_put(image, seam + 2, row * board + 5, Color("2a2420"))
+	return image
+
+
+# Gear patterns: values round 0.5 (the colour as it is), written as grey.
+
+const GEAR := 32
+
+
+func _gear(fill := 0.5) -> Image:
+	var image := _image(GEAR)
+	image.fill(Color(fill, fill, fill))
+	return image
+
+
+func _g(image: Image, x: int, y: int, value: float) -> void:
+	_put(image, x, y, Color(value, value, value))
+
+
+## Mid-grey with a little noise, for leather and metal.
+func _grain(amount: float, frequency: float) -> Image:
+	var image := _gear()
+	var values := _noise(GEAR, frequency)
+	for y in GEAR:
+		for x in GEAR:
+			_g(image, x, y, 0.5 + (values[y * GEAR + x] - 0.5) * amount)
+	return image
+
+
+## Cloth: over-and-under threads, two pixels each.
+func _gear_weave() -> Image:
+	var image := _gear()
+	for y in GEAR:
+		for x in GEAR:
+			var over := ((x / 2) + (y / 2)) % 2 == 0
+			var edge := (x % 2 == 1) if over else (y % 2 == 1)
+			_g(image, x, y, (0.56 if over else 0.46) - (0.05 if edge else 0.0) + _rng.randf_range(-0.02, 0.02))
+	return image
+
+
+## Quilted: padded diamonds with stitched seams.
+func _gear_quilted() -> Image:
+	var image := _gear_weave()
+	for y in GEAR:
+		for x in GEAR:
+			var a := posmod(x + y, 16)
+			var b := posmod(x - y, 16)
+			var d := mini(mini(a, 16 - a), mini(b, 16 - b))
+			var v := _at(image, x, y).r + 0.02 * d - 0.05
+			if a == 0 or b == 0:
+				v = 0.36 if (x % 2 == 0) else 0.43
+			_g(image, x, y, v)
+	return image
+
+
+## Cloth with woven bands.
+func _gear_stripes() -> Image:
+	var image := _gear_weave()
+	for y in GEAR:
+		var band := posmod(y, 16)
+		for x in GEAR:
+			var v := _at(image, x, y).r
+			if band < 3:
+				v -= 0.14
+			elif band == 3 or band == 15:
+				v += 0.1
+			_g(image, x, y, v)
+	return image
+
+
+## Leather: soft grain and a stitched seam.
+func _gear_leather() -> Image:
+	var image := _grain(0.5, 0.14)
+	for x in GEAR:
+		_g(image, x, 22, 0.24)
+		_g(image, x, 23, 0.62)
+		if x % 4 < 2:
+			_g(image, x, 19, 0.72)
+			_g(image, x, 26, 0.72)
+	return image
+
+
+## Studded leather: rows of rivets.
+func _gear_studded() -> Image:
+	var image := _grain(0.4, 0.14)
+	for row in 4:
+		for col in 4:
+			var cx := col * 8 + (4 if row % 2 == 1 else 0) + 2
+			var cy := row * 8 + 3
+			_g(image, cx, cy, 0.85)
+			_g(image, cx + 1, cy, 0.7)
+			_g(image, cx, cy + 1, 0.7)
+			_g(image, cx + 1, cy + 1, 0.4)
+			_g(image, cx + 2, cy + 1, 0.3)
+			_g(image, cx + 1, cy + 2, 0.3)
+	return image
+
+
+## Tooled leather: panels with stitched borders and a pressed line.
+func _gear_tooled() -> Image:
+	var image := _grain(0.4, 0.12)
+	for i in GEAR:
+		_g(image, i, 0, 0.3)
+		_g(image, 0, i, 0.3)
+		if i % 3 == 1:
+			_g(image, i, 2, 0.68)
+			_g(image, 2, i, 0.68)
+	for i in range(6, 26):
+		_g(image, i, 16 + int(4.0 * sin(i * 0.5)), 0.38)
+	return image
+
+
+## Chain mail: rows of rings, each row offset.
+func _gear_chain() -> Image:
+	var image := _gear(0.3)
+	for row in 8:
+		for col in 8:
+			var cx := col * 4 + (2 if row % 2 == 1 else 0)
+			var cy := row * 4
+			for p in [[1, 0, 0.78], [2, 0, 0.7], [0, 1, 0.72], [3, 1, 0.55], [0, 2, 0.6], [3, 2, 0.45], [1, 3, 0.48], [2, 3, 0.42]]:
+				_g(image, cx + p[0], cy + p[1], p[2])
+	return image
+
+
+## Scale mail: overlapping rounded scales, lit at the top.
+func _gear_scale() -> Image:
+	var image := _gear()
+	for y in GEAR:
+		for x in GEAR:
+			var row := y / 6
+			var cx := posmod(x + (4 if row % 2 == 1 else 0), 8)
+			var cy := posmod(y, 6)
+			var d := absi(cx - 4)
+			var v := 0.62 - cy * 0.04 - d * 0.02
+			if cy == 5 - d / 2 or d == 4:
+				v = 0.28
+			_g(image, x, y, v)
+	return image
+
+
+## Plate: broad smooth panels, a seam with rivets, a soft highlight.
+func _gear_plate() -> Image:
+	var image := _grain(0.08, 0.05)
+	for y in GEAR:
+		for x in GEAR:
+			var v := _at(image, x, y).r + 0.08 * cos(x * TAU / GEAR)
+			_g(image, x, y, v)
+	for x in GEAR:
+		_g(image, x, 0, 0.25)
+		_g(image, x, 1, 0.68)
+	for x in [4, 12, 20, 28]:
+		_g(image, x, 4, 0.85)
+		_g(image, x + 1, 5, 0.3)
+	return image
+
+
+## Banded plate: overlapping horizontal lames.
+func _gear_banded() -> Image:
+	var image := _grain(0.06, 0.05)
+	for y in GEAR:
+		var band := posmod(y, 8)
+		for x in GEAR:
+			var v := _at(image, x, y).r + 0.12 - band * 0.03
+			if band == 7:
+				v = 0.22
+			elif band == 0:
+				v = 0.75
+			_g(image, x, y, v)
+	for x in [3, 19]:
+		for row in 4:
+			_g(image, x, row * 8 + 3, 0.85)
+	return image
+
+
+## Wood: grain running along (V).
+func _gear_wood() -> Image:
+	var image := _gear()
+	var values := _noise(GEAR, 0.08)
+	for y in GEAR:
+		for x in GEAR:
+			var w := fposmod(x * 0.45 + values[y * GEAR + x] * 5.0, 2.0)
+			_g(image, x, y, 0.52 - (0.12 if w < 0.4 else 0.0) + _rng.randf_range(-0.02, 0.02))
+	_g(image, 9, 14, 0.25)
+	_g(image, 10, 14, 0.3)
+	_g(image, 9, 15, 0.3)
+	return image
+
+
+## Planks: boards across, nailed.
+func _gear_planks() -> Image:
+	var image := _gear_wood()
+	for x in GEAR:
+		for y in GEAR:
+			if x % 11 == 10:
+				_g(image, x, y, 0.22)
+	for x in [3, 14, 25]:
+		_g(image, x, 6, 0.8)
+		_g(image, x, 25, 0.8)
+	return image
+
+
+## A grip's wrapping: diagonal bands.
+func _gear_wrap() -> Image:
+	var image := _gear()
+	for y in GEAR:
+		for x in GEAR:
+			var band := posmod(x + y, 8)
+			_g(image, x, y, 0.62 - band * 0.035 if band < 7 else 0.25)
+	return image
+
+
+## Brushed metal: fine streaks along (V).
+func _gear_brushed() -> Image:
+	var image := _gear()
+	for x in GEAR:
+		var streak := _rng.randf_range(-0.07, 0.07)
+		for y in GEAR:
+			_g(image, x, y, 0.52 + streak + _rng.randf_range(-0.02, 0.02))
+	return image
+
+
+## Hammered metal: dimples.
+func _gear_hammered() -> Image:
+	var image := _grain(0.06, 0.06)
+	for i in 14:
+		var cx := _rng.randi_range(0, GEAR - 1)
+		var cy := _rng.randi_range(0, GEAR - 1)
+		_g(image, cx, cy, 0.36)
+		_g(image, cx + 1, cy, 0.42)
+		_g(image, cx - 1, cy - 1, 0.66)
 	return image
