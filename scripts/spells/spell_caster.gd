@@ -38,6 +38,8 @@ const UNDEAD_ONLY := ["Rebuke the Dead"]
 const PROFICIENCY_SPELLS := { "Plate Mail": "4:4" }
 ## InterruptFlags: taking damage delays the cast.
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
+## The Ranger's spell family, whose shots fly by their own Projectile.
+const RANGER_FAMILY := 9
 const ERR_IN_COMBAT := "You are in combat"
 const ERR_ITEM_NOT_READY := "Item is not ready yet."
 const ERR_CANT_YET := "You can't do that yet"
@@ -512,8 +514,19 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell, _unit.combatant)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
-	if not _spellsword.cast(spell, target) and not _ranger.cast(spell, target) and not _warrior.cast(spell, target):
-		_cleric_spell(spell, target, extra_crit)
+	# Spells that travel (a Speed in yards a second; the Ranger's shots fly by
+	# their own Projectile) reach an enemy after the flight, as in CMaNGOS,
+	# shown as a bolt; the rest land now.
+	var speed := float(spell.get("Speed", 0))
+	if speed > 0.0 and int(spell.get("SpellFamilyName", 0)) != RANGER_FAMILY and target and target != me \
+			and SpellDB.target_type(spell) == SpellDB.TARGET_ENEMY:
+		var flight := _unit.global_position.distance_to(target.body.global_position) / speed
+		Vfx.bolt(_unit, target.body, int(spell.get("School", 0)), flight)
+		get_tree().create_timer(flight, false).timeout.connect(func() -> void:
+			if is_instance_valid(self) and is_instance_valid(target) and target.is_alive():
+				_land(spell, target, extra_crit))
+	else:
+		_land(spell, target, extra_crit)
 	# Helpful spells that aren't heals (heals report their own) are events for
 	# procs too (Improved Last Rite, Improved Unbridled Rage).
 	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY and not SpellDB.has_effect(spell, SpellDB.EFFECT_HEAL) and target:
@@ -523,6 +536,12 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	if uses_stillness:
 		me.remove_aura(int(stillness.spell.Id))
 	_use_modifier_charges(spell)
+
+
+## A spell's effects reaching its target, by class.
+func _land(spell: Dictionary, target: Combatant, extra_crit: float) -> void:
+	if not _spellsword.cast(spell, target) and not _ranger.cast(spell, target) and not _warrior.cast(spell, target):
+		_cleric_spell(spell, target, extra_crit)
 
 
 ## Buffs that change your next few spells (Heaven's Favor: the next heal is

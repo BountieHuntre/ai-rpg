@@ -675,7 +675,7 @@ func _physics_process(delta: float) -> void:
 		if enemy.combatant.is_alive() and enemy.global_position.distance_to(_rain.at) <= radius:
 			enemy.combatant.take_damage(roundi(damage), _combatant, false, int(spell.get("School", 0)))
 			enemy.provoke(_combatant)
-	Vfx.burst(_unit, _rain.at + Vector3.UP * 0.5, Vfx.school_color(int(spell.get("School", 0))), 12, 3.0, 0.1)
+	Vfx.school_burst(_unit, _rain.at + Vector3.UP * 0.5, int(spell.get("School", 0)), 12, 1.5)
 
 
 ## Cheetah and Pack Spirit: being hit Dazes you (their proc spell), which

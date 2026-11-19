@@ -63,7 +63,7 @@ func _spring(enemy: Enemy) -> void:
 	var caster: Combatant = owner_unit.combatant
 	var level := owner_unit.profile.level
 	Sfx.play_at("bolt_hit", global_position)
-	Vfx.burst(self, global_position + Vector3.UP * 0.3, Vfx.school_color(int(spell.get("School", 0))), 14, 4.0, 0.12)
+	Vfx.impact(self, global_position + Vector3.UP * 0.3, int(spell.get("School", 0)), true)
 	enemy.provoke(caster)
 	if SpellDB.has_effect(spell, SpellDB.EFFECT_PERSISTENT_AREA_AURA):
 		# Rime Trap's ice and Blast Trap's flames: the ground around it, a
@@ -121,7 +121,7 @@ func _tick_area(delta: float) -> void:
 				_hit_area(func(target: Combatant) -> void:
 					if target.find_aura(func(other: Dictionary) -> bool: return int(other.Id) == int(spell.Id)).is_empty():
 						target.add_aura(spell, caster))
-	Vfx.burst(self, global_position + Vector3.UP * 0.2, Vfx.school_color(int(spell.get("School", 0))), 6, 2.0, 0.1)
+	Vfx.school_burst(self, global_position + Vector3.UP * 0.2, int(spell.get("School", 0)), 6, 0.3)
 
 
 func _hit_area(action: Callable) -> void:
