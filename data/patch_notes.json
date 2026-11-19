@@ -1,5 +1,15 @@
 [
 	{
+		"version": "0.15.0",
+		"date": "11-19-2026",
+		"notes": [
+			"Every race has a new look: rounder heads, eyes with whites, a stronger chin and cheekbones, rounder arms, legs and bodies, and shoulders that join the chest.",
+			"Human hair is reshaped: each style is one piece with a fringe, the bun and ponytail grow out of it, and short hair has sideburns. Beards follow the jaw.",
+			"Characters move with more life: they breathe and shift their weight when standing, turn their hips and shoulders as they walk and run, put their whole body into attacks, and gather a spell before the chest and push it out.",
+			"Women's bodies no longer have the chest blocks."
+		]
+	},
+	{
 		"version": "0.14.0",
 		"date": "11-17-2026",
 		"notes": [
