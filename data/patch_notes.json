@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.17.0",
+		"date": "11-19-2026",
+		"notes": [
+			"Helms are remade, each in one piece: hoods, wide-brimmed hats, leather caps with ear flaps, mail coifs, conical helms with a nasal, great helms and sallets.",
+			"Helms look the same on every race: ears, horns or the whole head are tucked away beneath them instead.",
+			"Shoulder pieces are bigger and bolder, sitting high on the shoulders: puffed cloth mantles, layered leather, mail flares and ridged plate pauldrons.",
+			"Weapons and shields are each one solid piece; weapons are a little larger and shields sturdier.",
+			"Armour colours are brighter, so the weave, studs, chain and scale show."
+		]
+	},
+	{
 		"version": "0.16.0",
 		"date": "11-19-2026",
 		"notes": [
