@@ -888,11 +888,14 @@ class Prop:
 	"""Builds a held prop from its grip `g`: Y runs along it (forward from the
 	hand), Z across a blade's width (its edge up), X through its flat side."""
 
-	def __init__(self, b, grip, bone):
+	def __init__(self, b, grip, bone, flip=False):
 		self.b, self.g, self.bone = b, Vector(grip), bone
+		# Built upside down (an axe's head on the side that leads a downward
+		# chop): every Z turned over.
+		self.zs = -1.0 if flip else 1.0
 
 	def at(self, y, z=0.0, x=0.0):
-		return self.g + Vector((x, y, z))
+		return self.g + Vector((x, y, z * self.zs))
 
 	def tube(self, y0, y1, r0, r1, slot, sides=6, z=0.0, shade=1.0):
 		self.b.tube(self.at(y0, z), self.at(y1, z), r0, r1, self.bone, slot, sides=sides, shade=shade)
@@ -915,7 +918,7 @@ class Prop:
 
 	def flat(self, outline, thick, slot, rim=None, shade=1.0, rim_shade=None, x=0.0):
 		"""A flat piece (an outline of (y, z) from the grip) `thick` through."""
-		pts = [(self.g.y + dy, self.g.z + dz) for dy, dz in outline]
+		pts = [(self.g.y + dy, self.g.z + dz * self.zs) for dy, dz in outline]
 		self.b.plate(pts, self.g.x + x + thick / 2, self.g.x + x - thick / 2, self.bone, slot, rim,
 					 shade=shade, rim_shade=rim_shade, axis=(0, 1, 0))
 
@@ -1371,7 +1374,8 @@ def weapon(name, grip, bone, kind):
 	"""A prop along +Y from the grip point: one of WEAPON_KINDS' shapes."""
 	b = Builder(name)
 	family = next(f for f, kinds in WEAPON_KINDS.items() if kind in kinds)
-	WEAPON_BUILDERS[family](Prop(b, grip, bone), kind)
+	# Axes' heads face down when held out, as their edge leads a chop.
+	WEAPON_BUILDERS[family](Prop(b, grip, bone, flip=family in ("axe", "axe2h")), kind)
 	return b
 
 
@@ -1728,7 +1732,7 @@ def ranged():
 	p.flat(blade_outline(0.04, 0.16, 0.05, 0.04, 0.07), 0.012, "ranged_trim")
 	out.append(b)
 	b = Builder("Ranged_thrown_axe")
-	p = Prop(b, g, "WeaponR")
+	p = Prop(b, g, "WeaponR", flip=True)
 	p.tube(-0.08, 0.26, 0.016, 0.015, "handle")
 	p.flat([(0.2, 0.02), (0.27, 0.02), (0.3, 0.11), (0.2, 0.12), (0.18, 0.06)], 0.018, "ranged_trim")
 	out.append(b)
