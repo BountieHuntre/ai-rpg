@@ -1,5 +1,17 @@
 [
 	{
+		"version": "0.16.0",
+		"date": "11-19-2026",
+		"notes": [
+			"Spell effects are redrawn: sparks, flames, frost shards, leaves, holy rays, shadow wisps and arcane stars instead of cubes, each school moving its own way, with a flash of light where spells land.",
+			"Spells that fly have a body of their own: fireballs trail flames, frost bolts are spinning ice crystals, shadow bolts dark orbs, arcane bolts spinning gems.",
+			"Spell hits send out a shockwave ring; fire hits keep burning a moment, and frost hits leave ice crystals that shatter.",
+			"Heals spiral green crosses up round the target, and buffs raise a ring from the feet to the head. Effects on a character move with them.",
+			"Gavel of Reckoning flies to its target and strikes when it arrives.",
+			"Axes are held the right way round, so their edge leads the swing."
+		]
+	},
+	{
 		"version": "0.15.0",
 		"date": "11-19-2026",
 		"notes": [
