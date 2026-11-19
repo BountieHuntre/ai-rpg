@@ -79,6 +79,10 @@ const ALL_HAIR := ["HairShort", "HairLong", "HairCrest", "HairFLong", "HairFTail
 	"HairMohawk", "HairTopknot", "HairStringy", "HairElfLong", "ManeShort", "ManeBraids", "BeardGoatee",
 	"BeardHornkin", "BeardHornkinLong"]
 const BODIES := ["BodyMale", "BodyFemale"]
+## Each body's head, and the ears that stand out of a helm, are parts of their
+## own (the build script's `body`), hidden under helms as HELM_HIDES says.
+const HEADS := ["HeadMale", "HeadFemale"]
+const EARS := ["EarsMale", "EarsFemale"]
 const EYE_COLOR := Color(0.1, 0.09, 0.12)
 ## Races' own skins and hair colours (as many as SKIN_COLORS and HAIR_COLORS,
 ## so an appearance's choice fits any race), eyes, and tusks, horns and bone;
@@ -161,11 +165,11 @@ const STEEL := Color(0.72, 0.74, 0.78)
 const INVTYPE_ROBE := 20
 
 ## Armour colours by subclass (cloth, leather, mail, plate), picked by item.
-const CLOTH := [Color(0.6, 0.2, 0.17), Color(0.2, 0.3, 0.58), Color(0.3, 0.45, 0.2), Color(0.45, 0.28, 0.55),
-	Color(0.66, 0.6, 0.45), Color(0.4, 0.32, 0.25)]
-const LEATHER := [Color(0.45, 0.3, 0.17), Color(0.33, 0.21, 0.12), Color(0.55, 0.4, 0.24), Color(0.28, 0.25, 0.22)]
-const MAIL := [Color(0.56, 0.58, 0.62), Color(0.45, 0.47, 0.5), Color(0.52, 0.46, 0.4)]
-const PLATE := [Color(0.74, 0.76, 0.8), Color(0.78, 0.66, 0.38), Color(0.6, 0.63, 0.7)]
+const CLOTH := [Color(0.68, 0.24, 0.2), Color(0.26, 0.37, 0.66), Color(0.36, 0.53, 0.25), Color(0.52, 0.33, 0.62),
+	Color(0.74, 0.68, 0.52), Color(0.5, 0.4, 0.32)]
+const LEATHER := [Color(0.58, 0.4, 0.24), Color(0.45, 0.3, 0.18), Color(0.66, 0.5, 0.32), Color(0.4, 0.36, 0.32)]
+const MAIL := [Color(0.66, 0.68, 0.72), Color(0.56, 0.58, 0.62), Color(0.62, 0.56, 0.5)]
+const PLATE := [Color(0.82, 0.84, 0.88), Color(0.86, 0.74, 0.44), Color(0.7, 0.73, 0.8)]
 ## Words in an item's name that say its colour.
 const NAME_COLORS := {
 	"red": Color(0.62, 0.15, 0.12), "crimson": Color(0.6, 0.1, 0.12), "scarlet": Color(0.7, 0.15, 0.1),
@@ -229,17 +233,19 @@ const HELMS := { 0: ["Helm_hood", "Helm_hat"], 1: ["Helm_hood", "Helm_hat"], 2: 
 const HELM_WORDS := { "mask": "Helm_mask", "hat": "Helm_hat", "cap": "Helm_cap", "hood": "Helm_hood", "cowl": "Helm_hood",
 	"coif": "Helm_coif" }
 const ALL_HELMS := ["Helm_hood", "Helm_hat", "Helm_cap", "Helm_capflaps", "Helm_coif", "Helm_nasal", "Helm_plate",
-	"Helm_plate_visor", "Helm_plate_open", "Helm_mask"]
+	"Helm_plate_visor", "Helm_mask"]
 ## Helms that cover the face (and so the beard).
 const CLOSED_HELMS := ["Helm_plate", "Helm_plate_visor", "Helm_mask"]
+## Helms look the same on every race; what of a head would stand out of them
+## is hidden instead: under any helm the ears that stand out (EARS) and the
+## chosen feature of races whose feature is on top of the head (Wood Elves'
+## ears, Hornkin horns); under a helm that closes over the face, the whole
+## head with its feature and markings.
+const FULL_HELMS := ["Helm_plate", "Helm_plate_visor"]
+const HELM_HIDES_FEATURE := ["wood_elf", "hornkin"]
 ## Shoulder pieces by armour subclass.
 const SHOULDER_PARTS := { 0: "Shoulders_cloth", 1: "Shoulders_cloth", 2: "Shoulders_leather", 3: "Shoulders_mail",
 	4: "Shoulders_plate" }
-## Races whose faces stick out of a closed plate helm wear it open-faced, and
-## a hood or coif for a mask or nasal helm.
-const OPEN_HELM_RACES := ["troll", "hornkin"]
-const OPEN_FACED := { "Helm_plate": "Helm_plate_open", "Helm_plate_visor": "Helm_plate_open", "Helm_mask": "Helm_hood",
-	"Helm_nasal": "Helm_coif" }
 ## Ranged weapon subclass -> the prop drawn while shooting, and how it's shot.
 const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_crossbow", 16: "Ranged_thrown", 19: "Main_wand" }
 ## Words that pick another shape for a ranged weapon.
@@ -568,14 +574,6 @@ func _apply_appearance() -> void:
 	# Humanoid creatures' own head and tail (burrowlings, mirefin, ditchjaw).
 	for part in ["Species_head", "Species_tail"]:
 		_show(part, _parts.has(part))
-	# The race's chosen feature and markings (RACE_OPTIONS), in the body's shape.
-	var woman := "F" if body == 1 else ""
-	for i in FEATURE_COUNT:
-		_show("Feature%d" % i, i == int(appearance.feature) and woman == "")
-		_show("FeatureF%d" % i, i == int(appearance.feature) and woman == "F")
-	for i in MARKS_COUNT - 1:
-		_show("Marks%d" % i, i == int(appearance.marks) - 1 and woman == "")
-		_show("MarksF%d" % i, i == int(appearance.marks) - 1 and woman == "F")
 	_colors[PAINT] = RACE_OPTIONS.get(race, {}).get("paint", Color(0.6, 0.1, 0.08))
 	var hairs: Array = RACE_HAIRS.get(race, HAIR_COLORS)
 	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
@@ -585,6 +583,26 @@ func _apply_appearance() -> void:
 	_colors[TRIM] = TRIM_COLOR
 	# Women are a little smaller.
 	_model.scale = Vector3.ONE * (0.95 if body == 1 else 1.0)
+
+
+## The head, ears, the race's chosen feature and markings (RACE_OPTIONS), in
+## the body's shape, less what the helm worn hides (FULL_HELMS,
+## HELM_HIDES_FEATURE).
+func _apply_head(helm: String) -> void:
+	var body: int = appearance.get("body", 0)
+	var full := helm in FULL_HELMS
+	var any := helm != ""
+	for i in HEADS.size():
+		_show(HEADS[i], i == body and not full)
+		_show(EARS[i], i == body and not any)
+	var feature := not full and not (any and race in HELM_HIDES_FEATURE)
+	var woman := "F" if body == 1 else ""
+	for i in FEATURE_COUNT:
+		_show("Feature%d" % i, feature and i == int(appearance.get("feature", 0)) and woman == "")
+		_show("FeatureF%d" % i, feature and i == int(appearance.get("feature", 0)) and woman == "F")
+	for i in MARKS_COUNT - 1:
+		_show("Marks%d" % i, not full and i == int(appearance.get("marks", 0)) - 1 and woman == "")
+		_show("MarksF%d" % i, not full and i == int(appearance.get("marks", 0)) - 1 and woman == "F")
 
 
 func _show(part: String, on: bool) -> void:
@@ -652,10 +670,9 @@ func _apply_equipment() -> void:
 	# A helm hides the hair (and a closed one the beard).
 	var head := _item(Inventory.Slot.HEAD)
 	var helm: String = creature_gear.get("helm", _helm_for(head) if head.size() > 0 else "")
-	if race in OPEN_HELM_RACES:
-		helm = OPEN_FACED.get(helm, helm)
 	for part: String in ALL_HELMS:
 		_show(part, part == helm)
+	_apply_head(helm)
 	_colors[HEAD] = _armor_color(Inventory.Slot.HEAD, outfit.get(HEAD, chest))
 	_colors[HELM_TRIM] = TRIM_COLOR if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
 	var body: int = appearance.get("body", 0)
@@ -969,7 +986,7 @@ func set_animating(on: bool) -> void:
 ## weapons, hair and beards cast no shadow at Normal character shadows (each
 ## is its own draw); none at Off, all at Full.
 func _part_graphics(part: String, mesh: MeshInstance3D) -> void:
-	mesh.visibility_range_end = 0.0 if part.begins_with("Body") else part_range
+	mesh.visibility_range_end = 0.0 if part.begins_with("Body") or part.begins_with("Head") else part_range
 	var small := part.begins_with("Main_") or part.begins_with("Off_") or part.begins_with("Ranged_") \
 		or part.begins_with("Hair") or part.begins_with("Beard") or part.begins_with("Mane")
 	var casts := character_shadows == "Full" or (character_shadows == "Normal" and not small)

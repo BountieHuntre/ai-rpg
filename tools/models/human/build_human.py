@@ -406,8 +406,19 @@ class Builder:
 		return obj
 
 
+# Features that stand out of a helm (HumanoidModel hides them under one):
+# built as the Ears part rather than on the head.
+EAR_FEATURES = ("ears_short", "ears_wide", "ears_side")
+# Features on the body rather than the head.
+BODY_FEATURES = ("ribs", "tail")
+
+
 def body(name, female):
+	"""A body; its head (HeadMale/HeadFemale) and the ears that stand out of a
+	helm (EarsMale/EarsFemale) are parts of their own, `b.parts`, so a helm can
+	hide them."""
 	b = Builder(name)
+	b.parts = []
 	f = female
 	# Torso: pelvis to the base of the neck, one tube bending with the spine.
 	rings = [
@@ -431,6 +442,11 @@ def body(name, female):
 	b.tube((0, 0, 1.46), (0, 0.01, 1.6), 0.062 if f else 0.08, 0.056 if f else 0.072, "Neck", "skin")
 	if RACE.get("species"):
 		return _limbs(b, f)
+	whose = "Female" if f else "Male"
+	body_b = b
+	b = Builder("Head" + whose)
+	ears = Builder("Ears" + whose)
+	body_b.parts = [b, ears]
 	hw = 0.92 if f else 1.0
 	# Twelve sides round, a little smaller than the eight it had so its faces
 	# lie where they did (hair and helms fit it as before): a narrower chin and
@@ -453,8 +469,11 @@ def body(name, female):
 		b.box((0.122 * hw * x, 0.0, 1.7), (0.03, 0.05, 0.065), "Head", "skin", shade=0.9)
 	b.box((0, 0.14, 1.668), (0.035, 0.045, 0.06), "Head", "skin", top=(0.8, 0.6), shift=(0, -0.01), shade=0.95)
 	b.box((0, 0.128, 1.625), (0.05, 0.015, 0.012), "Head", "skin", shade=0.6)
-	race_features(b, f, RACE.get("features", []))
-	return _limbs(b, f)
+	features = RACE.get("features", [])
+	race_features(b, f, [x for x in features if x not in EAR_FEATURES and x not in BODY_FEATURES])
+	race_features(ears, f, [x for x in features if x in EAR_FEATURES])
+	race_features(body_b, f, [x for x in features if x in BODY_FEATURES])
+	return _limbs(body_b, f)
 
 
 def race_features(b, f, features):
@@ -1370,26 +1389,34 @@ WEAPON_BUILDERS = {
 }
 
 
+# Weapons a little larger than drawn, so their heads read at a distance.
+WEAPON_SCALE = 1.1
+
+
 def weapon(name, grip, bone, kind):
 	"""A prop along +Y from the grip point: one of WEAPON_KINDS' shapes."""
 	b = Builder(name)
 	family = next(f for f, kinds in WEAPON_KINDS.items() if kind in kinds)
 	# Axes' heads face down when held out, as their edge leads a chop.
 	WEAPON_BUILDERS[family](Prop(b, grip, bone, flip=family in ("axe", "axe2h")), kind)
+	# A little larger than they were drawn, from the grip.
+	if family != "orb":
+		g = Vector(grip)
+		b.verts = [g + (v - g) * WEAPON_SCALE for v in b.verts]
 	return b
 
 
 def shield(name, kind):
 	"""Shields on the left forearm, their face to the outside (-X)."""
 	b = Builder(name)
-	x0, x1 = SHIELD_AT.x, SHIELD_AT.x - 0.04
+	x0, x1 = SHIELD_AT.x, SHIELD_AT.x - 0.055
 	y, z = SHIELD_AT.y, SHIELD_AT.z
 	face = x1 - 0.004
 
 	def outline_ring(pts, width, slot="shield_trim"):
 		"""A raised rim round an outline."""
 		for (ay, az), (cy, cz) in zip(pts, pts[1:] + pts[:1]):
-			b.beam((face, ay, az), (face, cy, cz), width, 0.02, "ShieldL", slot, up=(1, 0, 0))
+			b.beam((face, ay, az), (face, cy, cz), width * 1.3, 0.03, "ShieldL", slot, up=(1, 0, 0))
 
 	def circle(r, n=12, cy=0.0, cz=0.0):
 		return [(y + cy + r * math.cos(a), z + cz + r * math.sin(a)) for a in (math.tau * k / n + math.pi / n for k in range(n))]
@@ -1447,147 +1474,268 @@ def shield(name, kind):
 	return b
 
 
+def shell(b, profile, bottom, top, bone, columns=24, rows=10, thick=0.02, hole=None, slot_at=None,
+		  center=(0.0, 0.0), facing=90.0):
+	"""A piece in one shell, round an upright axis at `center` (x, y): its
+	outer surface from an apex at height `top` down to a lower edge whose
+	height `bottom(d)` follows the angle d (degrees, -180 to 180) from the
+	`facing` direction (90 is +Y, the front); `profile(z, d)` gives the outer
+	surface's (half width, half depth, centre's y offset) at a height; the
+	inner surface lies `thick` inside. `hole(d, z)` leaves cells open (a face
+	opening, eye holes), rimmed so the shell stays solid; `slot_at(d, z)`
+	colours each cell (default "head")."""
+	cx, cy = center
+	verts, faces, slots = [], [], []
+
+	def angle_d(c):
+		a = 360.0 * c / columns
+		return ((a - facing) + 180.0) % 360.0 - 180.0
+
+	def point(c, z, inner):
+		d = angle_d(c)
+		w, dep, oy = profile(z, d)
+		if inner:
+			w, dep = max(w - thick, 0.004), max(dep - thick, 0.004)
+		a = math.radians(360.0 * c / columns)
+		return (cx + w * math.cos(a), cy + oy + dep * math.sin(a), z)
+
+	def row_z(c, r):
+		return top - (top - bottom(angle_d(c))) * (r + 1) / rows
+
+	index = {}
+	for c in range(columns):
+		for r in range(rows):
+			z = row_z(c, r)
+			index[(c, r, 0)] = len(verts)
+			verts.append(point(c, z, False))
+			index[(c, r, 1)] = len(verts)
+			verts.append(point(c, z, True))
+	w0, d0, oy0 = profile(top, 0.0)
+	apex = (len(verts), len(verts) + 1)
+	verts += [(cx, cy + oy0, top), (cx, cy + oy0, top - thick)]
+
+	def open_cell(c, r):
+		if r < 0:
+			return False
+		if r >= rows - 1:
+			return True
+		if not hole:
+			return False
+		n = (c + 1) % columns
+		d = (angle_d(c) + angle_d(n)) / 2.0 if abs(angle_d(c) - angle_d(n)) < 180.0 else angle_d(c)
+		z = (row_z(c, r) + row_z(n, r + 1)) / 2.0
+		return hole(d, z)
+
+	def cell_slot(c, r):
+		if not slot_at:
+			return "head"
+		n = (c + 1) % columns
+		d = (angle_d(c) + angle_d(n)) / 2.0 if abs(angle_d(c) - angle_d(n)) < 180.0 else angle_d(c)
+		z = (row_z(c, max(r, 0)) + row_z(n, max(r, 0) + 1)) / 2.0 if r >= 0 else top
+		return slot_at(d, z)
+
+	def add(face, slot):
+		faces.append(face)
+		slots.append(slot)
+
+	for c in range(columns):
+		n = (c + 1) % columns
+		# The cap round the apex.
+		cap = cell_slot(c, -1)
+		add([apex[0], index[(c, 0, 0)], index[(n, 0, 0)]], cap)
+		add([apex[1], index[(n, 0, 1)], index[(c, 0, 1)]], cap)
+		for r in range(rows - 1):
+			if open_cell(c, r):
+				continue
+			slot = cell_slot(c, r)
+			o = [index[(c, r, 0)], index[(c, r + 1, 0)], index[(n, r + 1, 0)], index[(n, r, 0)]]
+			i = [index[(c, r, 1)], index[(n, r, 1)], index[(n, r + 1, 1)], index[(c, r + 1, 1)]]
+			add(o, slot)
+			add(i, slot)
+			# Rims where the shell ends: below, above, and either side.
+			if open_cell(c, r + 1):
+				add([index[(c, r + 1, 0)], index[(c, r + 1, 1)], index[(n, r + 1, 1)], index[(n, r + 1, 0)]], slot)
+			if r > 0 and open_cell(c, r - 1):
+				add([index[(c, r, 0)], index[(n, r, 0)], index[(n, r, 1)], index[(c, r, 1)]], slot)
+			if open_cell((c - 1) % columns, r):
+				add([index[(c, r, 0)], index[(c, r, 1)], index[(c, r + 1, 1)], index[(c, r + 1, 0)]], slot)
+			if open_cell(n, r):
+				add([index[(n, r, 0)], index[(n, r + 1, 0)], index[(n, r + 1, 1)], index[(n, r, 1)]], slot)
+	b._add(verts, [bone] * len(verts), faces, slots, [1.0] * len(faces))
+
+
+def _keys(keys):
+	"""An edge from (degrees from the front, height) keys, front to back."""
+	return lambda d: _lerp_keys(keys, abs(d))
+
+
+def _profile(points, oy=-0.005, back=0.0):
+	"""A profile from (z, half width, half depth) points, top to bottom (below
+	the last it keeps its size); `back` moves the centre back towards the top
+	(a hood's point)."""
+	def f(z, d):
+		if z >= points[0][0]:
+			w, dep = points[0][1], points[0][2]
+		elif z <= points[-1][0]:
+			w, dep = points[-1][1], points[-1][2]
+		else:
+			for (za, wa, da), (zc, wc, dc) in zip(points, points[1:]):
+				if zc <= z <= za:
+					t = (za - z) / (za - zc)
+					w, dep = wa + (wc - wa) * t, da + (dc - da) * t
+					break
+		top, low = points[0][0], points[-1][0]
+		lift = max(0.0, min(1.0, (z - low) / max(top - low, 0.01)))
+		return w, dep, oy - back * lift * lift
+	return f
+
+
+# Helms fit over the head (and its hair) by these sizes, in the Human's
+# measurements: place() scales them with each race's head.
+HELM_DOME = [(1.95, 0.0, 0.0), (1.925, 0.085, 0.095), (1.88, 0.135, 0.15), (1.82, 0.155, 0.168), (1.74, 0.158, 0.17),
+			 (1.66, 0.152, 0.165), (1.58, 0.145, 0.158)]
+
+
 def helms():
-	"""Head pieces by armour type, two or more shapes each, and a mask. Hair is
-	hidden under all but the circlet."""
+	"""Head pieces by armour type, two each, and a mask, each one shell
+	(`shell`): cloth a hood and a wide-brimmed hat, leather a cap and a cap
+	with ear flaps, mail a coif and a conical helm with a nasal over one, plate
+	a great helm and a visored sallet. The same on every race (HumanoidModel
+	hides whatever of a head stands out of them)."""
 	out = []
-	# Cloth: a hood, its point falling back; and a wide-brimmed hat.
+	trim = lambda lo, hi, slot="helm_trim", base="head": (lambda d, z: slot if lo <= z <= hi else base)
+
+	# A hood: a point falling back, open round the face, down over the
+	# shoulders behind.
 	b = Builder("Helm_hood")
-	b.loft([((0, 0.0, 1.73), 0.152, 0.165, "Head"), ((0, -0.02, 1.84), 0.148, 0.158, "Head"),
-			((0, -0.05, 1.9), 0.09, 0.1, "Head"), ((0, -0.1, 1.92), 0.04, 0.05, "Head")], ["head", "head", "head"], sides=8)
-	for x in (-1, 1):
-		b.box((0.145 * x, -0.005, 1.66), (0.04, 0.22, 0.2), "Head", "head", top=(1.0, 1.0))
-	b.box((0, -0.12, 1.6), (0.3, 0.07, 0.3), "Head", "head", top=(0.9, 1.0))
-	b.loft([((0, -0.02, 1.44), 0.23, 0.18, "Head"), ((0, -0.02, 1.54), 0.15, 0.13, "Head")], ["head"], sides=8)
+	shell(b, _profile([(1.97, 0.0, 0.0), (1.94, 0.08, 0.09), (1.88, 0.14, 0.155), (1.8, 0.16, 0.172), (1.7, 0.162, 0.172),
+					   (1.6, 0.17, 0.17), (1.5, 0.2, 0.18), (1.44, 0.22, 0.19)], back=0.07),
+		  _keys([(0, 1.775), (30, 1.74), (55, 1.6), (80, 1.48), (180, 1.44)]), 1.97, "Head", rows=12)
 	out.append(b)
+
+	# A hat: a tall crown bent at its tip and a wide brim.
 	b = Builder("Helm_hat")
-	b.loft([((0, 0.0, 1.76), 0.27, 0.28, "Head"), ((0, 0.0, 1.78), 0.27, 0.28, "Head")], ["head"], sides=10)
-	b.loft([((0, 0.0, 1.77), 0.145, 0.155, "Head"), ((0, -0.01, 1.86), 0.12, 0.13, "Head"),
-			((0, -0.03, 1.98), 0.05, 0.06, "Head"), ((0, -0.08, 2.03), 0.015, 0.015, "Head")], ["head", "head", "head"], sides=8)
-	b.loft([((0, 0.0, 1.785), 0.15, 0.16, "Head"), ((0, 0.0, 1.81), 0.14, 0.15, "Head")], ["helm_trim"], sides=8)
+	shell(b, _profile([(2.05, 0.0, 0.0), (2.0, 0.04, 0.045), (1.92, 0.1, 0.11), (1.82, 0.15, 0.162), (1.795, 0.155, 0.166),
+					   (1.785, 0.3, 0.31), (1.77, 0.31, 0.32)], back=0.06),
+		  _keys([(0, 1.77), (180, 1.77)]), 2.05, "Head", rows=12, thick=0.015, slot_at=trim(1.79, 1.82))
 	out.append(b)
-	# Leather: a cap with a stitched band; a cap with ear flaps.
+
+	# A leather cap with a stitched band.
 	b = Builder("Helm_cap")
-	b.loft([((0, -0.005, 1.74), 0.145, 0.158, "Head"), ((0, -0.01, 1.82), 0.142, 0.152, "Head"),
-			((0, -0.01, 1.885), 0.08, 0.09, "Head")], ["head", "head"], sides=8)
-	b.loft([((0, 0.0, 1.735), 0.17, 0.18, "Head"), ((0, 0.0, 1.755), 0.17, 0.18, "Head")], ["helm_trim"], sides=8)
+	shell(b, _profile(HELM_DOME), _keys([(0, 1.75), (90, 1.73), (180, 1.71)]), 1.95, "Head",
+		  slot_at=trim(1.7, 1.77))
 	out.append(b)
+
+	# A cap with ear flaps down the sides, a strap at their ends.
 	b = Builder("Helm_capflaps")
-	b.loft([((0, -0.005, 1.74), 0.15, 0.162, "Head"), ((0, -0.01, 1.83), 0.145, 0.155, "Head"),
-			((0, -0.01, 1.89), 0.085, 0.095, "Head")], ["head", "head"], sides=8)
-	for x in (-1, 1):
-		b.box((0.148 * x, 0.0, 1.66), (0.035, 0.11, 0.17), "Head", "head", top=(1.0, 0.8))
-		b.box((0.15 * x, 0.0, 1.58), (0.03, 0.03, 0.03), "Head", "strap")
-	b.box((0, -0.13, 1.68), (0.26, 0.04, 0.12), "Head", "head")
-	b.loft([((0, 0.0, 1.745), 0.168, 0.178, "Head"), ((0, 0.0, 1.765), 0.168, 0.178, "Head")], ["strap"], sides=8)
+	shell(b, _profile(HELM_DOME), _keys([(0, 1.75), (46, 1.745), (52, 1.585), (110, 1.585), (117, 1.675), (180, 1.67)]),
+		  1.95, "Head", columns=48, rows=14, slot_at=lambda d, z: "strap" if z < 1.61 or 1.735 <= z <= 1.765 else "head")
 	out.append(b)
-	# Mail: a coif; a conical helm with a nasal over a coif.
-	coif = [((0, -0.01, 1.74), 0.148, 0.16, "Head"), ((0, -0.015, 1.84), 0.142, 0.152, "Head"),
-			((0, -0.02, 1.895), 0.08, 0.095, "Head")]
+
+	# A mail coif: head, neck and chin, open round the face, falling over the
+	# shoulders.
+	coif = _profile([(1.95, 0.0, 0.0), (1.925, 0.085, 0.095), (1.88, 0.135, 0.15), (1.82, 0.155, 0.168),
+					 (1.72, 0.158, 0.17), (1.62, 0.15, 0.165), (1.54, 0.17, 0.17), (1.44, 0.21, 0.19)])
+	face = lambda d, z: abs(d) < 50 and 1.585 < z < 1.765
 	b = Builder("Helm_coif")
-	b.loft(coif, ["head", "head"], sides=8)
-	for x in (-1, 1):
-		b.box((0.138 * x, 0.0, 1.64), (0.035, 0.22, 0.24), "Head", "head")
-	b.box((0, 0.1, 1.575), (0.26, 0.06, 0.07), "Head", "head")
-	b.loft([((0, -0.01, 1.44), 0.2, 0.16, "Head"), ((0, -0.01, 1.6), 0.14, 0.14, "Head")], ["head"], sides=8)
-	b.loft([((0, 0.0, 1.745), 0.152, 0.164, "Head"), ((0, 0.0, 1.765), 0.152, 0.164, "Head")], ["strap"], sides=8)
+	shell(b, coif, _keys([(0, 1.45), (180, 1.44)]), 1.95, "Head", rows=14, hole=face)
 	out.append(b)
+
+	# A conical helm with a nasal over the coif, a band at its brim.
+	cone = lambda z, d: (coif(z, d) if z < 1.765 else
+						 (max(0.004, 0.17 * (2.02 - z) / 0.25), max(0.004, 0.18 * (2.02 - z) / 0.25), -0.005))
+	nasal = lambda d, z: face(d, z) and not (abs(d) < 9 and z > 1.66)
 	b = Builder("Helm_nasal")
-	b.loft(coif[:1] + [((0, -0.015, 1.8), 0.142, 0.152, "Head")], ["head"], sides=8)
-	for x in (-1, 1):
-		b.box((0.138 * x, 0.0, 1.64), (0.035, 0.22, 0.24), "Head", "head")
-	b.loft([((0, -0.01, 1.44), 0.2, 0.16, "Head"), ((0, -0.01, 1.6), 0.14, 0.14, "Head")], ["head"], sides=8)
-	b.loft([((0, 0.0, 1.76), 0.158, 0.17, "Head"), ((0, -0.005, 1.86), 0.13, 0.14, "Head"),
-			((0, -0.01, 1.98), 0.02, 0.02, "Head")], ["helm_trim", "helm_trim"], sides=8)
-	b.loft([((0, 0.0, 1.755), 0.165, 0.176, "Head"), ((0, 0.0, 1.78), 0.165, 0.176, "Head")], ["strap"], sides=8)
-	b.box((0, 0.172, 1.7), (0.03, 0.016, 0.12), "Head", "helm_trim")
+	shell(b, cone, _keys([(0, 1.45), (180, 1.44)]), 2.02, "Head", rows=18, hole=nasal,
+		  slot_at=lambda d, z: "helm_trim" if z > 1.765 or (abs(d) < 9 and z > 1.66) else ("strap" if 1.745 <= z <= 1.765 else "head"))
 	out.append(b)
-	# Plate: a closed great helm with a crest ridge and breaths; a visored
-	# sallet with a plume. Open-faced races wear the open helm.
+
+	# A great helm: closed, flat-topped, an eye slit and breaths, a band at
+	# the brow and a ridge down the face.
+	great = _profile([(1.93, 0.0, 0.0), (1.925, 0.11, 0.12), (1.9, 0.158, 0.172), (1.8, 0.165, 0.18), (1.62, 0.165, 0.18),
+					  (1.54, 0.135, 0.15)])
+	def great_slot(d, z):
+		if abs(d) < 45 and 1.695 <= z <= 1.725:
+			return "eyes"
+		if 15 < abs(d) < 40 and (1.6 <= z <= 1.615 or 1.63 <= z <= 1.645):
+			return "eyes"
+		if abs(d) < 6 or 1.59 <= z <= 1.61 and abs(d) > 45:
+			return "helm_trim"
+		return "head"
 	b = Builder("Helm_plate")
-	b.loft([((0, 0.0, 1.53), 0.12, 0.13, "Head"), ((0, 0.005, 1.6), 0.155, 0.17, "Head"),
-			((0, 0.0, 1.8), 0.155, 0.17, "Head"), ((0, -0.005, 1.9), 0.09, 0.1, "Head")], ["head", "head", "head"], sides=8)
-	b.box((0, 0.168, 1.71), (0.21, 0.02, 0.022), "Head", "eyes")
-	b.box((0, 0.17, 1.65), (0.022, 0.02, 0.09), "Head", "helm_trim")
-	for x in (-1, 1):
-		for dz in (0.0, 0.03):
-			b.box((0.06 * x, 0.16, 1.6 + dz), (0.03, 0.016, 0.01), "Head", "eyes")
-	b.box((0, -0.005, 1.905), (0.035, 0.32, 0.06), "Head", "helm_trim")
-	b.loft([((0, 0.0, 1.595), 0.16, 0.175, "Head"), ((0, 0.0, 1.615), 0.16, 0.175, "Head")], ["helm_trim"], sides=8)
+	shell(b, great, _keys([(0, 1.535), (180, 1.54)]), 1.93, "Head", rows=18, slot_at=great_slot)
 	out.append(b)
+
+	# A sallet: a rounded skull sweeping out into a tail behind, a visor with
+	# its slit, a crest ridge.
+	sallet = lambda z, d: (
+		max(0.004, 0.16 * min(1.0, (1.95 - z) / 0.12) ** 0.5) + (0.03 * max(0.0, (1.65 - z) / 0.1) if abs(d) > 100 else 0.0),
+		max(0.004, 0.172 * min(1.0, (1.95 - z) / 0.12) ** 0.5) + (0.05 * max(0.0, (1.65 - z) / 0.1) if abs(d) > 100 else 0.0),
+		-0.005 - (0.03 * max(0.0, (1.65 - z) / 0.1) if abs(d) > 100 else 0.0))
 	b = Builder("Helm_plate_visor")
-	b.loft([((0, -0.01, 1.55), 0.14, 0.15, "Head"), ((0, 0.0, 1.62), 0.155, 0.17, "Head"),
-			((0, -0.005, 1.82), 0.15, 0.165, "Head"), ((0, -0.03, 1.9), 0.09, 0.11, "Head")], ["head", "head", "head"], sides=8)
-	b.box((0, -0.16, 1.62), (0.24, 0.08, 0.06), "Head", "head", top=(1.0, 1.6))
-	b.box((0, 0.175, 1.7), (0.24, 0.05, 0.14), "Head", "head", top=(0.9, 0.6))
-	b.box((0, 0.2, 1.715), (0.2, 0.02, 0.018), "Head", "eyes")
-	for x in (-1, 1):
-		b.box((0.155 * x, 0.03, 1.7), (0.03, 0.04, 0.04), "Head", "helm_trim")
-	b.tube((0, -0.03, 1.9), (0, -0.04, 1.97), 0.02, 0.02, "Head", "helm_trim")
-	b.loft([((0, -0.04, 1.96), 0.03, 0.04, "Head"), ((0, -0.12, 2.04), 0.045, 0.07, "Head"),
-			((0, -0.26, 1.98), 0.03, 0.04, "Head"), ((0, -0.32, 1.86), 0.01, 0.015, "Head")], ["emblem"] * 3, sides=6)
+	shell(b, sallet, _keys([(0, 1.56), (60, 1.58), (120, 1.6), (180, 1.56)]), 1.95, "Head", rows=18,
+		  slot_at=lambda d, z: "eyes" if abs(d) < 50 and 1.7 <= z <= 1.725 else (
+			  "helm_trim" if abs(d) > 170 and z > 1.78 or 1.735 <= z <= 1.75 and abs(d) < 60 else "head"))
 	out.append(b)
-	b = Builder("Helm_plate_open")
-	b.loft([((0, -0.005, 1.73), 0.152, 0.166, "Head"), ((0, -0.01, 1.82), 0.15, 0.162, "Head"),
-			((0, -0.01, 1.9), 0.09, 0.1, "Head")], ["head", "head"], sides=8)
-	b.loft([((0, 0.0, 1.725), 0.165, 0.178, "Head"), ((0, 0.0, 1.75), 0.165, 0.178, "Head")], ["helm_trim"], sides=8)
-	for x in (-1, 1):
-		b.box((0.15 * x, 0.02, 1.64), (0.035, 0.12, 0.16), "Head", "head", top=(1.0, 0.8))
-	b.box((0, -0.13, 1.6), (0.26, 0.06, 0.24), "Head", "head", top=(0.9, 1.0))
-	b.box((0, -0.005, 1.9), (0.04, 0.3, 0.05), "Head", "helm_trim")
-	out.append(b)
-	# A brigand's mask: a cloth over the lower face, knotted behind, and a
-	# head wrap.
+
+	# A brigand's mask: a head wrap and a cloth over the lower face, in one,
+	# open at the eyes.
 	b = Builder("Helm_mask")
-	b.loft([((0, -0.005, 1.74), 0.148, 0.16, "Head"), ((0, -0.01, 1.83), 0.143, 0.153, "Head"),
-			((0, -0.02, 1.88), 0.09, 0.1, "Head")], ["head", "head"], sides=8)
-	b.loft([((0, 0.005, 1.58), 0.135, 0.15, "Head"), ((0, 0.01, 1.675), 0.142, 0.158, "Head")], ["head"], sides=8)
-	b.box((0, -0.16, 1.72), (0.05, 0.06, 0.05), "Head", "head")
-	b.box((0, -0.19, 1.66), (0.05, 0.03, 0.12), "Head", "head", top=(0.6, 1.0))
+	shell(b, _profile(HELM_DOME, back=0.02), _keys([(0, 1.56), (60, 1.6), (180, 1.62)]), 1.95, "Head", rows=14,
+		  hole=lambda d, z: abs(d) < 55 and 1.675 < z < 1.75)
 	out.append(b)
 	return out
 
 
 def shoulders():
-	"""Shoulder pieces by armour type: a rolled cloth mantle, layered leather,
-	mail over a leather cap, and plate pauldrons."""
+	"""Shoulder pieces by armour type, each pad one shell (`shell`): big
+	rounded domes set high and out over the shoulder, heroic in the old
+	style, ending in a rolled lip; lower on the outside than towards the
+	neck. Cloth a puffed mantle, leather two layers under a strap, mail a
+	leather cap over a broad flare of mail, plate a domed cop with a ridge
+	along its top and a stepped lame below."""
 	out = []
 	for kind in ("cloth", "leather", "mail", "plate"):
 		b = Builder("Shoulders_" + kind)
 		for side, x in (("Right", 1), ("Left", -1)):
-			c = Vector(_side(x, (0.31, 0, 1.43)))
+			# Higher and further out than the shoulder joint, clear of it.
+			c = Vector(_side(x, (0.33, 0, 1.47)))
 			bone = side + "Shoulder"
+			facing = 0.0 if x > 0 else 180.0
+			z = c.z
 			if kind == "cloth":
-				b.loft([(c + Vector((0, 0, -0.06)), 0.115, 0.115, bone), (c + Vector((0.01 * x, 0, 0.02)), 0.125, 0.12, bone),
-						(c + Vector((0, 0, 0.065)), 0.07, 0.07, bone)], ["shoulders", "shoulders"], sides=8)
-				b.loft([(c + Vector((-0.12 * x, 0, 0.06)), 0.035, 0.035, bone), (c + Vector((0.02 * x, 0, 0.075)), 0.045, 0.045, bone)],
-					   ["helm_trim"], sides=6)
-				for dy in (-0.06, 0.0, 0.06):
-					b.box(c + Vector((0.11 * x, dy, -0.09)), (0.02, 0.025, 0.05), bone, "helm_trim")
+				points = [(z + 0.1, 0.0, 0.0), (z + 0.085, 0.1, 0.095), (z + 0.05, 0.16, 0.15), (z + 0.0, 0.18, 0.165),
+						  (z - 0.04, 0.17, 0.155), (z - 0.055, 0.185, 0.17), (z - 0.07, 0.175, 0.16)]
+				edge = [(0, z - 0.07), (90, z - 0.05), (180, z + 0.02)]
+				slot = lambda d, zz, z=z: "helm_trim" if zz < z - 0.045 else "shoulders"
+				ridge = 0.0
 			elif kind == "leather":
-				for i, (dz, r) in enumerate(((0.06, 0.1), (0.0, 0.12), (-0.06, 0.125))):
-					b.loft([(c + Vector((0.015 * i * x, 0, dz - 0.035)), r, r * 0.95, bone),
-							(c + Vector((0.015 * i * x, 0, dz + 0.025)), r * 0.85, r * 0.8, bone)], ["shoulders"], sides=8,
-						   shade=1.0 - 0.08 * i)
-				b.box(c + Vector((-0.06 * x, 0, 0.09)), (0.12, 0.04, 0.02), bone, "strap")
-				b.box(c + Vector((0.02 * x, 0, 0.09)), (0.03, 0.045, 0.03), bone, "trim")
+				points = [(z + 0.11, 0.0, 0.0), (z + 0.095, 0.1, 0.095), (z + 0.06, 0.155, 0.145), (z + 0.04, 0.17, 0.155),
+						  (z + 0.03, 0.16, 0.148), (z - 0.01, 0.185, 0.168), (z - 0.05, 0.19, 0.172), (z - 0.065, 0.205, 0.185),
+						  (z - 0.08, 0.195, 0.175)]
+				edge = [(0, z - 0.08), (90, z - 0.05), (180, z + 0.03)]
+				slot = lambda d, zz, z=z: "strap" if z + 0.025 <= zz <= z + 0.045 or zz < z - 0.06 else "shoulders"
+				ridge = 0.0
 			elif kind == "mail":
-				b.loft([(c + Vector((0, 0, 0.02)), 0.12, 0.12, bone), (c + Vector((0, 0, 0.08)), 0.075, 0.075, bone)],
-					   ["strap"], sides=8)
-				b.loft([(c + Vector((0.01 * x, 0, -0.1)), 0.13, 0.125, bone), (c + Vector((0.005 * x, 0, 0.02)), 0.125, 0.12, bone)],
-					   ["shoulders"], sides=8)
-				b.loft([(c + Vector((0, 0, 0.015)), 0.128, 0.126, bone), (c + Vector((0, 0, 0.035)), 0.128, 0.126, bone)],
-					   ["trim"], sides=8)
+				points = [(z + 0.11, 0.0, 0.0), (z + 0.095, 0.1, 0.095), (z + 0.06, 0.155, 0.145), (z + 0.035, 0.17, 0.158),
+						  (z + 0.025, 0.18, 0.168), (z - 0.04, 0.2, 0.18), (z - 0.1, 0.22, 0.195), (z - 0.115, 0.215, 0.19)]
+				edge = [(0, z - 0.12), (90, z - 0.07), (180, z + 0.02)]
+				slot = lambda d, zz, z=z: "strap" if zz > z + 0.04 else ("trim" if z + 0.02 <= zz <= z + 0.04 else "shoulders")
+				ridge = 0.0
 			else:
-				for i, (dz, r) in enumerate(((0.07, 0.11), (0.0, 0.135), (-0.07, 0.14))):
-					b.loft([(c + Vector((0.02 * i * x, 0, dz - 0.04)), r, r * 0.95, bone),
-							(c + Vector((0.02 * i * x, 0, dz + 0.03)), r * 0.9, r * 0.85, bone)], ["shoulders"], sides=8,
-						   shade=1.05 - 0.07 * i)
-					b.loft([(c + Vector((0.02 * i * x, 0, dz - 0.045)), r + 0.006, r * 0.95 + 0.006, bone),
-							(c + Vector((0.02 * i * x, 0, dz - 0.035)), r + 0.006, r * 0.95 + 0.006, bone)], ["helm_trim"], sides=8)
-				b.beam(c + Vector((-0.05 * x, -0.06, 0.1)), c + Vector((-0.05 * x, 0.06, 0.1)), 0.05, 0.02, bone, "helm_trim")
-				for dy in (-0.07, 0.07):
-					b.box(c + Vector((0.12 * x, dy, 0.0)), (0.02, 0.02, 0.02), bone, "helm_trim")
+				points = [(z + 0.12, 0.0, 0.0), (z + 0.105, 0.11, 0.1), (z + 0.07, 0.17, 0.155), (z + 0.03, 0.195, 0.175),
+						  (z + 0.005, 0.2, 0.18), (z - 0.005, 0.185, 0.168), (z - 0.045, 0.215, 0.192), (z - 0.075, 0.23, 0.205),
+						  (z - 0.09, 0.22, 0.195)]
+				edge = [(0, z - 0.1), (90, z - 0.06), (180, z + 0.03)]
+				slot = lambda d, zz, z=z: "helm_trim" if (abs(d) < 10 or abs(d) > 170) and zz > z + 0.02 \
+					or z - 0.012 <= zz <= z + 0.008 or zz < z - 0.07 else "shoulders"
+				# A raised ridge along the top, outward to inward.
+				ridge = 0.025
+			base = _profile(points, oy=0.0)
+			prof = (lambda zz, d, base=base, ridge=ridge, z=z: (
+				lambda w: (w[0] + (ridge if (abs(d) < 10 or abs(d) > 170) and zz > z + 0.02 else 0.0), w[1], w[2]))(base(zz, d)))
+			shell(b, prof, _keys(edge), points[0][0], bone, columns=20, rows=18, thick=0.015, slot_at=slot,
+				  center=(c.x, c.y), facing=facing)
 		out.append(b)
 	return out
 
@@ -2169,6 +2317,32 @@ def main():
 		build(race)
 
 
+# Parts whose shapes are joined into one solid (`_join_solid`).
+ONE_PIECE = ("Main_", "Off_", "Shield_", "Ranged_")
+
+
+def _join_solid(obj):
+	"""Joins the overlapping shapes of a part into one solid (an exact boolean
+	union of the mesh with itself), so a weapon is one piece: no faces inside
+	it, no seams where its blade, guard and grip meet."""
+	bpy.ops.object.select_all(action="DESELECT")
+	bpy.context.view_layer.objects.active = obj
+	obj.select_set(True)
+	bpy.ops.object.mode_set(mode="EDIT")
+	bpy.ops.mesh.select_all(action="SELECT")
+	bpy.ops.mesh.intersect_boolean(operation="UNION", use_swap=False, use_self=True, solver="EXACT")
+	bpy.ops.mesh.select_all(action="SELECT")
+	bpy.ops.mesh.normals_make_consistent(inside=False)
+	# The union's large faces, some not convex, as triangles.
+	bpy.ops.mesh.quads_convert_to_tris(quad_method="BEAUTY", ngon_method="BEAUTY")
+	bpy.ops.object.mode_set(mode="OBJECT")
+	obj.select_set(False)
+	# The vertices the union made where shapes meet have no weights: a prop
+	# hangs wholly from its one bone, so every vertex goes on it.
+	bone = obj.vertex_groups[0]
+	bone.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+
+
 def build(race):
 	out = os.path.join(ROOT, "assets", "models", race, race + ".glb")
 	blend = os.path.join(HERE, race + ".blend")
@@ -2180,10 +2354,13 @@ def build(race):
 	if RACE.get("species"):
 		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + held_props()
 	else:
-		parts = [body("BodyMale", False), body("BodyFemale", True)] + shoulders() + race_parts() + hairs() + props()
+		bodies = [body("BodyMale", False), body("BodyFemale", True)]
+		parts = bodies + [part for b in bodies for part in b.parts if part.faces] + shoulders() + race_parts() + hairs() + props()
 	tris = {}
 	for builder in parts:
 		obj = builder.build(arm, material)
+		if builder.name.startswith(ONE_PIECE):
+			_join_solid(obj)
 		tris[builder.name] = sum(len(f) - 2 for f in builder.faces)
 	key_animations(arm, all_animations())
 	two_hand_ik(arm, TWO_HAND_ANIMS)

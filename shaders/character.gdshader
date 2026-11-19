@@ -29,7 +29,9 @@ void fragment() {
 	int pattern = slot_pattern[slot];
 	if (pattern > 0) {
 		float grey = texture(gear_patterns, vec3(UV2 / PATTERN_YARDS[pattern], float(pattern - 1))).r;
-		color *= grey * 2.0;
+		// Lighter in its dark spots than doubling the grey would be, so worn
+		// gear isn't muddy, with its highlights kept.
+		color *= 0.45 + grey * 1.15;
 	}
 	color = mix(color, tint.rgb, tint.a);
 	vec3 glow = slot == HANDS_SLOT ? hand_glow.rgb * hand_glow.a : vec3(0.0);
