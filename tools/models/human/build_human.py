@@ -36,7 +36,7 @@ FPS = 30
 SLOT_NAMES = [
 	"skin", "hair", "eyes", "chest", "legs", "feet", "hands", "waist",
 	"shoulders", "wrists", "head", "trim", "blade", "handle", "shield", "shield_trim",
-	"back", "ranged", "ranged_trim", "helm_trim", "tusk", "paint", "gem", "strap", "emblem",
+	"back", "ranged", "ranged_trim", "helm_trim", "tusk", "paint", "gem", "strap", "emblem", "sclera",
 ]
 SLOT = {name: i for i, name in enumerate(SLOT_NAMES)}
 # U steps: room for this many slots (shaders/character.gdshader's array).
@@ -229,6 +229,33 @@ def _along_axis(points, axis):
 	return [(p.dot(across), p.dot(axis)) for p in points]
 
 
+def _outward(bm):
+	"""Turns any piece that came out inside out (recalc_face_normals can get a
+	thin shell, such as a hair shell, the wrong way round) the right way: a
+	closed piece's faces enclose a positive volume."""
+	seen = set()
+	for start in bm.faces:
+		if start in seen:
+			continue
+		island, todo = [], [start]
+		seen.add(start)
+		while todo:
+			f = todo.pop()
+			island.append(f)
+			for e in f.edges:
+				for g in e.link_faces:
+					if g not in seen:
+						seen.add(g)
+						todo.append(g)
+		volume = 0.0
+		for f in island:
+			v = [l.vert.co for l in f.loops]
+			for i in range(1, len(v) - 1):
+				volume += v[0].dot(v[i].cross(v[i + 1]))
+		if volume < 0.0:
+			bmesh.ops.reverse_faces(bm, faces=island)
+
+
 class Builder:
 	"""Geometry for one mesh object, in armature space."""
 
@@ -359,6 +386,7 @@ class Builder:
 		# Every part is a closed shell: turn its faces outward (the mirrored
 		# left side and some lofts are built inside out).
 		bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+		_outward(bm)
 		bm.normal_update()
 		bm.to_mesh(mesh)
 		bm.free()
@@ -388,30 +416,39 @@ def body(name, female):
 		((0, 0, 1.03), 0.19 if f else 0.19, 0.12, "Hips"),
 		((0, 0, 1.09), 0.155 if f else 0.18, 0.11, "Spine"),
 		((0, 0.01, 1.22), 0.17 if f else 0.215, 0.12 if f else 0.13, "Spine"),
+		# Ten sides round, the chest rising from the waist and falling to the
+		# neck in gentler steps.
+		((0, 0.013, 1.3), 0.19 if f else 0.255, 0.128 if f else 0.15, "Chest"),
 		((0, 0.015, 1.37), 0.21 if f else 0.29, 0.135 if f else 0.165, "Chest"),
 		((0, 0.0, 1.45), 0.2 if f else 0.28, 0.125 if f else 0.145, "Chest"),
+		((0, 0, 1.49), 0.15 if f else 0.2, 0.1 if f else 0.115, "Chest"),
 		((0, 0, 1.51), 0.1, 0.08, "Chest"),
 	]
-	b.loft(rings, ["legs", "waist", "waist", "chest", "chest", "chest", "chest"], sides=8)
+	b.loft(rings, ["legs", "waist", "waist", "chest", "chest", "chest", "chest", "chest", "chest"], sides=10)
 	# Belt buckle.
 	b.box((0, 0.125, 1.0), (0.06, 0.02, 0.05), "Hips", "trim")
-	if f:
-		b.box((0, 0.11, 1.32), (0.27, 0.1, 0.12), "Chest", "chest", top=(0.85, 0.6), shift=(0, -0.02))
 	# Neck and head.
 	b.tube((0, 0, 1.46), (0, 0.01, 1.6), 0.062 if f else 0.08, 0.056 if f else 0.072, "Neck", "skin")
 	if RACE.get("species"):
 		return _limbs(b, f)
 	hw = 0.92 if f else 1.0
+	# Twelve sides round, a little smaller than the eight it had so its faces
+	# lie where they did (hair and helms fit it as before): a narrower chin and
+	# fuller cheekbones.
+	r = 0.96
 	head = [
-		((0, 0.04, 1.565), 0.06 * hw, 0.06, "Head"),
-		((0, 0.03, 1.615), 0.11 * hw if f else 0.125, 0.115, "Head"),
-		((0, 0.01, 1.7), 0.125 * hw, 0.135, "Head"),
-		((0, 0.0, 1.78), 0.12 * hw, 0.13, "Head"),
-		((0, -0.005, 1.835), 0.075 * hw, 0.085, "Head"),
+		# The chin forward of the neck, and a little down.
+		((0, 0.075, 1.555), 0.05 * hw * r, 0.055 * r, "Head"),
+		((0, 0.045, 1.615), (0.09 * hw if f else 0.1) * r, 0.11 * r, "Head"),
+		((0, 0.01, 1.69), 0.137 * hw * r, 0.135 * r, "Head"),
+		((0, 0.0, 1.78), 0.12 * hw * r, 0.13 * r, "Head"),
+		((0, -0.005, 1.835), 0.075 * hw * r, 0.085 * r, "Head"),
 	]
-	b.loft(head, ["skin"] * 4, sides=8)
+	b.loft(head, ["skin"] * 4, sides=12)
 	for x in (-1, 1):
-		b.box((0.045 * x, 0.128, 1.705), (0.038, 0.02, 0.022), "Head", "eyes")
+		# The white of the eye, and its iris in front.
+		b.box((0.045 * x, 0.126, 1.705), (0.034, 0.02, 0.018), "Head", "sclera")
+		b.box((0.044 * x, 0.131, 1.705), (0.017, 0.02, 0.018), "Head", "eyes")
 		b.box((0.045 * x, 0.126, 1.737), (0.055, 0.025, 0.016), "Head", "hair")
 		b.box((0.122 * hw * x, 0.0, 1.7), (0.03, 0.05, 0.065), "Head", "skin", shade=0.9)
 	b.box((0, 0.14, 1.668), (0.035, 0.045, 0.06), "Head", "skin", top=(0.8, 0.6), shift=(0, -0.01), shade=0.95)
@@ -549,28 +586,35 @@ def race_parts():
 
 def _limbs(b, f):
 	"""Arms, hands and legs on both sides."""
-	arm_r = (1.0 if f else 1.3) * RACE.get("limbs", 1.0)
+	# Arms and legs eight-sided (the radii a little less than the six-sided
+	# limbs', so they're as thick).
+	arm_r = (1.0 if f else 1.3) * RACE.get("limbs", 1.0) * 0.96
 	for side, x in (("Right", 1), ("Left", -1)):
 		sh = Vector(_side(x, (0.28, 0, 1.42)))
 		el = Vector(_side(x, (0.32, 0, 1.14)))
 		wr = Vector(_side(x, (0.34, 0.03, 0.89)))
-		b.loft([(sh + Vector((0, 0, 0.03)), 0.075 * arm_r, 0.075 * arm_r, side + "UpperArm"),
-				(el, 0.06 * arm_r, 0.06 * arm_r, side + "UpperArm")], ["chest"], sides=6)
+		# The shoulder: a cap rounding from the top of the chest over the head
+		# of the arm, so the arm grows out of the torso.
+		b.loft([(sh + Vector((-0.06 * x, 0, 0.065)), 0.04 * arm_r, 0.055 * arm_r, side + "UpperArm"),
+				(sh + Vector((-0.015 * x, 0, 0.05)), 0.07 * arm_r, 0.075 * arm_r, side + "UpperArm"),
+				(sh + Vector((0.005 * x, 0, 0.0)), 0.08 * arm_r, 0.078 * arm_r, side + "UpperArm"),
+				(el, 0.06 * arm_r, 0.06 * arm_r, side + "UpperArm")], ["chest", "chest", "chest"], sides=8)
 		b.loft([(el + Vector((0, 0, 0.02)), 0.058 * arm_r, 0.058 * arm_r, side + "LowerArm"),
-				(wr + Vector((0, 0, 0.0)), 0.048 * arm_r, 0.048 * arm_r, side + "LowerArm")], ["wrists"], sides=6)
+				(wr + Vector((0, 0, 0.0)), 0.048 * arm_r, 0.048 * arm_r, side + "LowerArm")], ["wrists"], sides=8)
 		hand = 0.85 if f else 1.0
 		b.box(_side(x, (0.345, 0.035, 0.83)), (0.085 * hand, 0.1 * hand, 0.12 * hand), side + "Hand", "hands", top=(1.0, 0.9))
 		b.box(_side(x, (0.32, 0.085, 0.86)), (0.035, 0.035, 0.06), side + "Hand", "hands")
 		leg = (1.0 if f else 1.2) * (1.0 + (RACE.get("limbs", 1.0) - 1.0) * 0.6)
+		limb = leg * 0.96
 		hip = Vector(_side(x, (0.1, 0, 0.97)))
 		knee = Vector(_side(x, (0.12, 0, 0.52)))
-		b.loft([(hip, 0.1 * leg, 0.105 * leg, side + "UpperLeg"),
-				(knee + Vector((0, 0, 0.02)), 0.07 * leg, 0.072 * leg, side + "UpperLeg")], ["legs"], sides=6)
-		b.loft([(knee + Vector((0, 0, 0.02)), 0.068 * leg, 0.07 * leg, side + "LowerLeg"),
-				(Vector(_side(x, (0.12, -0.01, 0.35))), 0.058 * leg, 0.058 * leg, side + "LowerLeg"),
-				(Vector(_side(x, (0.12, -0.01, 0.345))), 0.075 * leg, 0.078 * leg, side + "LowerLeg"),
-				(Vector(_side(x, (0.12, -0.02, 0.1))), 0.064 * leg, 0.066 * leg, side + "LowerLeg")],
-			   ["legs", "feet", "feet"], sides=6)
+		b.loft([(hip, 0.1 * limb, 0.105 * limb, side + "UpperLeg"),
+				(knee + Vector((0, 0, 0.02)), 0.07 * limb, 0.072 * limb, side + "UpperLeg")], ["legs"], sides=8)
+		b.loft([(knee + Vector((0, 0, 0.02)), 0.068 * limb, 0.07 * limb, side + "LowerLeg"),
+				(Vector(_side(x, (0.12, -0.01, 0.35))), 0.058 * limb, 0.058 * limb, side + "LowerLeg"),
+				(Vector(_side(x, (0.12, -0.01, 0.345))), 0.075 * limb, 0.078 * limb, side + "LowerLeg"),
+				(Vector(_side(x, (0.12, -0.02, 0.1))), 0.064 * limb, 0.066 * limb, side + "LowerLeg")],
+			   ["legs", "feet", "feet"], sides=8)
 		b.box(_side(x, (0.12, 0.04, 0.055)), (0.12 * leg, 0.26, 0.11), side + "Foot", "feet", top=(0.9, 0.62), shift=(0, -0.04))
 		b.box(_side(x, (0.12, 0.04, 0.008)), (0.125 * leg, 0.265, 0.016), side + "Foot", "feet", shade=0.55)
 	return b
@@ -659,50 +703,132 @@ def species_parts(species):
 
 
 def hair_cap(b, back=1.66, back_depth=0.16):
-	b.loft([((0, -0.005, 1.715), 0.13, 0.145, "Head"),
-			((0, -0.01, 1.8), 0.132, 0.145, "Head"),
-			((0, -0.01, 1.865), 0.08, 0.095, "Head")], ["hair", "hair"], sides=8)
-	b.box((0, -0.1, back), (0.23, 0.07, back_depth), "Head", "hair", top=(1.05, 1.0))
+	"""The hair over the skull, twelve-sided to hug the head, and a slab down
+	the back of it (none when `back_depth` is 0)."""
+	# Standing out from the skull and up on top, so it reads as hair.
+	b.loft([((0, -0.005, 1.715), 0.137, 0.152, "Head"),
+			((0, -0.01, 1.805), 0.14, 0.153, "Head"),
+			((0, -0.012, 1.885), 0.085, 0.1, "Head")], ["hair", "hair"], sides=12)
+	if back_depth > 0:
+		# Tapering in at the nape.
+		b.box((0, -0.1, back), (0.17, 0.055, back_depth), "Head", "hair", top=(1.38, 1.35), shift=(0, -0.012))
+
+
+# The hair's outer surface round the head, by height: (z, half width, half
+# depth); below the last it hangs straight down.
+HAIR_PROFILE = [(1.92, 0.0, 0.0), (1.89, 0.085, 0.1), (1.85, 0.128, 0.143), (1.8, 0.142, 0.155),
+				(1.72, 0.14, 0.153), (1.66, 0.136, 0.15)]
+
+
+def _lerp_keys(keys, at):
+	"""A value from (position, value) keys in rising order, straight between them."""
+	if at <= keys[0][0]:
+		return keys[0][1]
+	for (a, va), (c, vc) in zip(keys, keys[1:]):
+		if at <= c:
+			return va + (vc - va) * (at - a) / (c - a)
+	return keys[-1][1]
+
+
+def hair_shell(b, edge, fringe=0.0, sweep=0.0, columns=24, rows=7, thick=0.025):
+	"""A style of hair as one piece: a shell over the skull whose lower edge
+	follows `edge`, (degrees from the front, height) keys round to the back:
+	the hairline in front, the sideburns, the nape or the fall of long hair.
+	`fringe` brings the front edge down over the brow that far, in uneven
+	locks, deeper to one side by `sweep` (-1 to 1)."""
+	def outer(z):
+		if z >= HAIR_PROFILE[-1][0]:
+			for (za, wa, da), (zc, wc, dc) in zip(HAIR_PROFILE, HAIR_PROFILE[1:]):
+				if zc <= z <= za:
+					t = (za - z) / (za - zc)
+					return wa + (wc - wa) * t, da + (dc - da) * t
+		return HAIR_PROFILE[-1][1], HAIR_PROFILE[-1][2]
+
+	top = HAIR_PROFILE[0][0]
+	verts, faces = [], []
+	grid = []
+	for c in range(columns):
+		angle = 360.0 * c / columns
+		# 90 degrees is the front (+Y); the edge keys run from the front.
+		from_front = abs(((angle - 90.0) + 180.0) % 360.0 - 180.0)
+		bottom = _lerp_keys(edge, from_front)
+		if fringe and from_front < 50.0:
+			# Which side of the front this column is on: + to the right.
+			side = math.cos(math.radians(angle))
+			lock = 0.6 + 0.4 * ((c % 2) * 2 - 1) * (1 if c % 3 else -0.5)
+			bottom -= fringe * (1.0 - from_front / 50.0) * lock * (1.0 + sweep * side)
+		column = []
+		for r in range(1, rows + 1):
+			z = top - (top - bottom) * r / rows
+			w, d = outer(z)
+			yc = -0.01 - (0.015 if z < 1.66 else 0.0)
+			a = math.radians(angle)
+			out_p = (w * math.cos(a), yc + d * math.sin(a), z)
+			in_p = ((w - thick) * math.cos(a), yc + (d - thick) * math.sin(a), z)
+			column.append((len(verts), len(verts) + 1))
+			verts += [out_p, in_p]
+		grid.append(column)
+	apex_out, apex_in = len(verts), len(verts) + 1
+	verts += [(0, -0.01, top), (0, -0.01, top - thick)]
+	for c in range(columns):
+		n = (c + 1) % columns
+		faces.append([apex_out, grid[c][0][0], grid[n][0][0]])
+		faces.append([apex_in, grid[n][0][1], grid[c][0][1]])
+		for r in range(rows - 1):
+			faces.append([grid[c][r][0], grid[c][r + 1][0], grid[n][r + 1][0], grid[n][r][0]])
+			faces.append([grid[c][r][1], grid[n][r][1], grid[n][r + 1][1], grid[c][r + 1][1]])
+		last = rows - 1
+		faces.append([grid[c][last][0], grid[c][last][1], grid[n][last][1], grid[n][last][0]])
+	b._add(verts, ["Head"] * len(verts), faces, ["hair"] * len(faces), [1.0] * len(faces))
+
+
+# The styles' edges: (degrees from the front, height), front to back.
+HAIR_SHORT = [(0, 1.785), (35, 1.765), (70, 1.66), (110, 1.65), (180, 1.6)]
+HAIR_LONG = [(0, 1.775), (35, 1.75), (70, 1.62), (110, 1.52), (180, 1.5)]
+HAIR_WOMAN_LONG = [(0, 1.79), (30, 1.73), (65, 1.5), (110, 1.44), (180, 1.44)]
+HAIR_TIED = [(0, 1.785), (35, 1.75), (70, 1.68), (110, 1.66), (180, 1.64)]
 
 
 def hairs():
 	out = []
 	b = Builder("HairShort")
-	hair_cap(b)
+	hair_shell(b, HAIR_SHORT, fringe=0.03, sweep=0.6)
 	out.append(b)
 	b = Builder("HairLong")
-	hair_cap(b, 1.56, 0.34)
-	for x in (-1, 1):
-		b.box((0.128 * x, 0.02, 1.66), (0.035, 0.09, 0.18), "Head", "hair", top=(1.0, 1.0))
+	hair_shell(b, HAIR_LONG, fringe=0.025, sweep=-0.4)
 	out.append(b)
 	b = Builder("HairCrest")
 	b.box((0, -0.01, 1.86), (0.06, 0.27, 0.09), "Head", "hair", top=(0.8, 0.85))
 	b.box((0, -0.12, 1.75), (0.06, 0.06, 0.16), "Head", "hair")
 	out.append(b)
 	b = Builder("HairFLong")
-	hair_cap(b, 1.52, 0.42)
-	for x in (-1, 1):
-		b.box((0.125 * x, 0.04, 1.6), (0.04, 0.09, 0.28), "Head", "hair", top=(1.1, 1.0))
+	hair_shell(b, HAIR_WOMAN_LONG, fringe=0.025)
 	out.append(b)
+	# The tail and the bun grow out of the shell: their first ring sunk in it.
 	b = Builder("HairFTail")
-	hair_cap(b)
-	b.beam((0, -0.15, 1.76), (0, -0.2, 1.42), 0.08, 0.07, "Head", "hair", taper=0.55, up=(1, 0, 0))
-	b.box((0, -0.14, 1.77), (0.05, 0.04, 0.04), "Head", "trim")
+	hair_shell(b, HAIR_TIED, fringe=0.02, sweep=0.5)
+	b.loft([((0, -0.11, 1.75), 0.06, 0.05, "Head"), ((0, -0.18, 1.71), 0.05, 0.045, "Head"),
+			((0, -0.205, 1.58), 0.042, 0.038, "Head"), ((0, -0.2, 1.42), 0.015, 0.015, "Head")],
+		   ["hair", "hair", "hair"], sides=8)
 	out.append(b)
 	b = Builder("HairFBun")
-	hair_cap(b)
-	b.loft([((0, -0.13, 1.75), 0.05, 0.05, "Head"), ((0, -0.2, 1.8), 0.075, 0.075, "Head"),
-			((0, -0.25, 1.84), 0.04, 0.04, "Head")], ["hair", "hair"], sides=6)
+	hair_shell(b, HAIR_TIED, fringe=0.02, sweep=-0.5)
+	b.loft([((0, -0.12, 1.76), 0.085, 0.08, "Head"), ((0, -0.19, 1.79), 0.075, 0.07, "Head"),
+			((0, -0.24, 1.81), 0.05, 0.05, "Head"), ((0, -0.255, 1.82), 0.015, 0.015, "Head")],
+		   ["hair", "hair", "hair"], sides=10)
 	out.append(b)
-	b = Builder("BeardShort")
-	b.box((0, 0.105, 1.6), (0.21, 0.07, 0.08), "Head", "hair", top=(1.1, 1.0))
-	b.box((0, 0.13, 1.645), (0.1, 0.03, 0.025), "Head", "hair")
-	out.append(b)
-	b = Builder("BeardLong")
-	b.box((0, 0.105, 1.6), (0.22, 0.08, 0.09), "Head", "hair", top=(1.1, 1.0))
-	b.beam((0, 0.12, 1.57), (0, 0.13, 1.42), 0.14, 0.06, "Head", "hair", taper=0.5, up=(1, 0, 0))
-	b.box((0, 0.13, 1.645), (0.11, 0.03, 0.025), "Head", "hair")
-	out.append(b)
+	# Beards along the jaw from the ears, narrowing to the chin, which stands
+	# forward of the neck; a moustache over the mouth.
+	for name, length in (("BeardShort", 0.0), ("BeardLong", 0.1)):
+		b = Builder(name)
+		# Full along the jaw and at the chin, so the face doesn't show through.
+		for x in (-1, 1):
+			b.beam((0.12 * x, 0.03, 1.71), (0.075 * x, 0.115, 1.575), 0.06, 0.045, "Head", "hair", taper=0.9, up=(0, 1, 0))
+		b.box((0, 0.125, 1.57), (0.15, 0.08, 0.09), "Head", "hair", top=(1.25, 1.0))
+		b.box((0, 0.135, 1.645), (0.11, 0.035, 0.028), "Head", "hair")
+		if length:
+			b.beam((0, 0.145, 1.545), (0, 0.155, 1.545 - length), 0.14, 0.065, "Head", "hair", taper=0.4, up=(1, 0, 0))
+		out.append(b)
 	return out + race_hairs()
 
 
@@ -1720,8 +1846,10 @@ def walk():
 	contact = pose(
 		{"RightUpperLeg": (26, 0, 0), "RightLowerLeg": (-6, 0, 0), "RightFoot": (-10, 0, 0),
 		 "LeftUpperLeg": (-20, 0, 0), "LeftLowerLeg": (-22, 0, 0), "LeftFoot": (20, 0, 0),
-		 "RightUpperArm": (-16, -5, 0), "LeftUpperArm": (18, 5, 0)},
-		both("LowerArm", (16, 0, 0)), Chest=(0, 0, -4), Spine=(-2, 0, 0), loc={"Hips": (0, 0, -0.025)})
+		 "RightUpperArm": (-24, -5, 0), "LeftUpperArm": (26, 5, 0)},
+		# The hips turn with the leading leg, the shoulders against them.
+		both("LowerArm", (18, 0, 0)), Hips=(0, 0, 6), Chest=(0, 0, -11), Spine=(-3, 0, 0), Head=(0, 0, 4),
+		loc={"Hips": (0, 0, -0.028)})
 	passing = pose(
 		{"RightUpperLeg": (0, 0, 0), "RightLowerLeg": (-6, 0, 0), "LeftUpperLeg": (8, 0, 0),
 		 "LeftLowerLeg": (-45, 0, 0), "LeftFoot": (10, 0, 0)},
@@ -1733,14 +1861,14 @@ def run():
 	stride = pose(
 		{"RightUpperLeg": (48, 0, 0), "RightLowerLeg": (-20, 0, 0), "RightFoot": (-10, 0, 0),
 		 "LeftUpperLeg": (-32, 0, 0), "LeftLowerLeg": (-75, 0, 0), "LeftFoot": (30, 0, 0),
-		 "RightUpperArm": (-38, -8, 0), "LeftUpperArm": (48, 8, 0),
-		 "RightLowerArm": (70, 0, 0), "LeftLowerArm": (85, 0, 0)},
-		Spine=(-10, 0, 0), Chest=(-2, 0, -8), Head=(10, 0, 6), loc={"Hips": (0, 0, -0.045)})
+		 "RightUpperArm": (-46, -8, 0), "LeftUpperArm": (56, 8, 0),
+		 "RightLowerArm": (70, 0, 0), "LeftLowerArm": (90, 0, 0)},
+		Hips=(0, 0, 5), Spine=(-12, 0, 0), Chest=(-2, 0, -8), Head=(11, 0, 3), loc={"Hips": (0, 0, -0.03)})
 	flight = pose(
 		{"RightUpperLeg": (12, 0, 0), "RightLowerLeg": (-25, 0, 0), "LeftUpperLeg": (24, 0, 0),
 		 "LeftLowerLeg": (-105, 0, 0), "LeftFoot": (20, 0, 0)},
 		both("UpperArm", (6, -8, 0)), both("LowerArm", (80, 0, 0)),
-		Spine=(-10, 0, 0), Head=(10, 0, 0), loc={"Hips": (0, 0, 0.03)})
+		Spine=(-12, 0, 0), Head=(11, 0, 0), loc={"Hips": (0, 0, 0.018)})
 	return [(0, stride), (5, flight), (10, mirror_pose(stride)), (15, mirror_pose(flight)), (20, stride)]
 
 
@@ -1772,10 +1900,14 @@ def strafe(direction):
 
 
 def idle():
-	a = STAND
-	b = pose(STAND, both("UpperArm", (6, -6, 0)), Chest=(2, 0, 0), Head=(-2, 0, 0), loc={"Hips": (0, 0, -0.005)})
-	c = pose(STAND, Chest=(0, 0, 0), Head=(0, 0, 14))
-	return [(0, a), (30, b), (60, a), (75, c), (90, a)]
+	"""Breathing (the chest lifting, the shoulders rising), the weight swaying
+	slowly from side to side, and a look about."""
+	breath_in = pose(STAND, both("Shoulder", (0, -3, 0)), both("UpperArm", (6, -6, 0)), Chest=(3, 0, 0), Head=(-2, 0, 0),
+					 loc={"Hips": (0, 0, 0.004)})
+	lean_l = pose(STAND, Spine=(0, 2, 0), Chest=(0, -1, 0), Head=(0, 0, -6))
+	lean_r = pose(STAND, Spine=(0, -2, 0), Chest=(0, 1, 0), Head=(0, 0, 6))
+	look = pose(breath_in, Spine=(0, -2, 0), Head=(-4, 0, 16))
+	return [(0, STAND), (25, breath_in), (50, lean_l), (75, breath_in), (100, lean_r), (125, look), (150, STAND)]
 
 
 def ready():
@@ -1794,21 +1926,27 @@ def one_shot(*keys, start=READY, end=None):
 
 def attacks():
 	a = {}
-	wind = pose(READY, {"RightUpperArm": (150, -30, 0), "RightLowerArm": (60, 0, 0), "RightHand": (-20, 0, 0)},
-				Chest=(2, 0, -18), Spine=(-2, 0, -6))
+	wind = pose(READY, {"RightUpperArm": (155, -32, 0), "RightLowerArm": (65, 0, 0), "RightHand": (-25, 0, 0)},
+				Hips=(0, 0, -8), Chest=(4, 0, -22), Spine=(0, 0, -8), Head=(4, 0, 12), loc={"Hips": (0, -0.03, -0.05)})
 	strike = pose(READY, {"RightUpperArm": (40, 14, 0), "RightLowerArm": (12, 0, 0), "RightHand": (20, 0, 0)},
-				  Chest=(-8, 0, 22), Spine=(-10, 0, 8), loc={"Hips": (0, 0.03, -0.07)})
-	a["attack_1h"] = one_shot((5, wind), (9, strike), (12, strike))
-	wind_b = pose(READY, {"RightUpperArm": (85, -75, 0), "RightLowerArm": (35, 0, 0)}, Chest=(0, 0, -30))
-	strike_b = pose(READY, {"RightUpperArm": (80, 35, 0), "RightLowerArm": (10, 0, 0)}, Chest=(-4, 0, 32))
-	a["attack_1h_b"] = one_shot((5, wind_b), (9, strike_b), (12, strike_b))
+				  Hips=(0, 0, 10), Chest=(-10, 0, 24), Spine=(-12, 0, 10), Head=(10, 0, -12), loc={"Hips": (0, 0.06, -0.08)})
+	follow = pose(strike, {"RightUpperArm": (22, 30, 0), "RightLowerArm": (20, 0, 0), "RightHand": (30, 0, 0)},
+				  Hips=(0, 0, 13), Chest=(-12, 0, 30), Spine=(-14, 0, 12), loc={"Hips": (0, 0.07, -0.09)})
+	a["attack_1h"] = one_shot((6, wind), (9, strike), (13, follow))
+	wind_b = pose(READY, {"RightUpperArm": (85, -78, 0), "RightLowerArm": (40, 0, 0)},
+				  Hips=(0, 0, -10), Chest=(2, 0, -32), Spine=(0, 0, -8), loc={"Hips": (0, -0.02, -0.05)})
+	strike_b = pose(READY, {"RightUpperArm": (80, 35, 0), "RightLowerArm": (10, 0, 0)},
+					Hips=(0, 0, 10), Chest=(-6, 0, 32), Spine=(-8, 0, 8), loc={"Hips": (0, 0.05, -0.07)})
+	follow_b = pose(strike_b, {"RightUpperArm": (70, 55, 0), "RightLowerArm": (20, 0, 0)}, Hips=(0, 0, 13), Chest=(-8, 0, 40))
+	a["attack_1h_b"] = one_shot((6, wind_b), (9, strike_b), (13, follow_b))
 	# Two-handed: the right arm places the weapon; the left hand is put on the
 	# handle afterwards by IK (two_hand_ik), so only the right arm is posed.
 	wind2 = pose(READY_2H, {"RightUpperArm": (165, 10, 0), "RightLowerArm": (60, 0, 0), "RightHand": (-20, 0, 0)},
-				 Spine=(6, 0, 0), Chest=(4, 0, -10))
+				 Hips=(0, 0, -6), Spine=(8, 0, -4), Chest=(6, 0, -12), loc={"Hips": (0, -0.03, -0.04)})
 	strike2 = pose(READY_2H, {"RightUpperArm": (40, 18, 0), "RightLowerArm": (10, 0, 0), "RightHand": (10, 0, 0)},
-				   Spine=(-20, 0, 0), Chest=(-6, 0, 12), loc={"Hips": (0, 0.04, -0.1)})
-	a["attack_2h"] = one_shot((7, wind2), (12, strike2), (16, strike2), start=READY_2H)
+				   Hips=(0, 0, 6), Spine=(-22, 0, 4), Chest=(-8, 0, 14), loc={"Hips": (0, 0.06, -0.12)})
+	follow2 = pose(strike2, {"RightUpperArm": (28, 20, 0), "RightHand": (16, 0, 0)}, Spine=(-26, 0, 6), loc={"Hips": (0, 0.07, -0.13)})
+	a["attack_2h"] = one_shot((8, wind2), (12, strike2), (17, follow2), start=READY_2H)
 	sweep_wind = pose(READY_2H, {"RightUpperArm": (75, -55, 0), "RightLowerArm": (55, 0, 0), "RightHand": (-30, 0, 0)},
 					  Chest=(0, 0, -40), Spine=(0, 0, -10))
 	sweep = pose(READY_2H, {"RightUpperArm": (75, 50, 0), "RightLowerArm": (30, 0, 0), "RightHand": (-30, 0, 0)},
@@ -1863,13 +2001,21 @@ def shooting():
 
 def casting():
 	a = {}
-	c1 = pose(STAND, both("UpperArm", (45, 22, 0)), both("LowerArm", (95, 0, 0)), both("Hand", (-10, 0, 0)),
-			  Spine=(3, 0, 0), Head=(-4, 0, 0))
-	c2 = pose(c1, {"RightUpperArm": (52, 18, 0), "LeftUpperArm": (40, 26, 0)}, Chest=(2, 0, 3))
-	c3 = pose(c1, {"RightUpperArm": (40, 26, 0), "LeftUpperArm": (52, 18, 0)}, Chest=(2, 0, -3))
+	# The hands drawn in before the chest and a little forward, the body leaning
+	# in over them, gathering in slow circles.
+	c1 = pose(STAND, both("UpperArm", (38, 30, 0)), both("LowerArm", (112, 0, 0)), both("Hand", (-15, 0, 0)),
+			  both("UpperLeg", (6, -4, 0)), both("LowerLeg", (-10, 0, 0)), both("Foot", (4, 0, 0)),
+			  Spine=(-5, 0, 0), Chest=(-3, 0, 0), Head=(4, 0, 0), loc={"Hips": (0, 0, -0.015)})
+	c2 = pose(c1, {"RightUpperArm": (46, 26, 0), "LeftUpperArm": (32, 34, 0)}, Chest=(-4, 0, 4))
+	c3 = pose(c1, {"RightUpperArm": (32, 34, 0), "LeftUpperArm": (46, 26, 0)}, Chest=(-4, 0, -4))
 	a["cast"] = [(0, c1), (8, c2), (16, c1), (24, c3), (32, c1)]
-	thrust = pose(READY, both("UpperArm", (82, 12, 0)), both("LowerArm", (8, 0, 0)), Spine=(-10, 0, 0), Chest=(-4, 0, 0))
-	a["cast_release"] = one_shot((4, thrust), (8, thrust), start=c1, end=STAND)
+	# Release: a quick draw back, then both arms pushed out, the body leaning
+	# into it with a half step.
+	gather = pose(c1, both("UpperArm", (30, 34, 0)), both("LowerArm", (125, 0, 0)), Spine=(2, 0, 0), Chest=(2, 0, 0),
+				  loc={"Hips": (0, -0.02, -0.015)})
+	thrust = pose(READY, both("UpperArm", (84, 10, 0)), both("LowerArm", (6, 0, 0)), both("Hand", (-25, 0, 0)),
+				  Spine=(-14, 0, 0), Chest=(-6, 0, 0), Head=(8, 0, 0), loc={"Hips": (0, 0.05, -0.06)})
+	a["cast_release"] = one_shot((3, gather), (6, thrust), (10, thrust), start=c1, end=STAND)
 	ch = pose(STAND, both("UpperArm", (75, -6, 0)), both("LowerArm", (25, 0, 0)), both("Hand", (-30, 0, 0)), Spine=(-4, 0, 0))
 	ch2 = pose(ch, both("UpperArm", (78, -8, 0)), Chest=(1, 0, 0))
 	a["channel"] = [(0, ch), (10, ch2), (20, ch)]

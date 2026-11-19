@@ -22,7 +22,7 @@ const RACE_MODELS := {
 const SLOT_COUNT := 32
 
 enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
-	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT, GEM, STRAP, EMBLEM }
+	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT, GEM, STRAP, EMBLEM, SCLERA }
 
 ## Patterns laid under a slot's colour (the shader's slot_pattern): what the
 ## gear is made of, by armour type and item (_armor_pattern). Each is a
@@ -580,6 +580,8 @@ func _apply_appearance() -> void:
 	var hairs: Array = RACE_HAIRS.get(race, HAIR_COLORS)
 	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
 	_colors[EYES] = RACE_EYES.get(race, EYE_COLOR)
+	# The whites of the eyes; races whose eyes glow glow all over.
+	_colors[SCLERA] = RACE_EYES[race] if race in ["undead", "wood_elf"] else Color(0.92, 0.9, 0.86)
 	_colors[TRIM] = TRIM_COLOR
 	# Women are a little smaller.
 	_model.scale = Vector3.ONE * (0.95 if body == 1 else 1.0)
