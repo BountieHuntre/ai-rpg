@@ -11,3 +11,6 @@ build/
 # Blender files the model scripts write (rebuilt by tools/models/*/build_*.py)
 tools/models/**/*.blend
 tools/models/**/*.blend1
+
+# Claude Code session settings (preview servers)
+.claude/
