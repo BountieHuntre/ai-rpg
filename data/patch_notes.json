@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.19.0",
+		"date": "11-20-2026",
+		"notes": [
+			"Weapons are sheathed as in classic: one-handers hang at the hips, two-handers, staves and shields on the back, and a bow or gun on the back when nothing else is there.",
+			"Attacking draws your weapons, shooting draws your bow or gun, and Z (rebindable under Key Bindings) puts them away or draws them. Dying puts them away, and bots put theirs away after a fight.",
+			"Drawing and sheathing have their own motions: reaching across to the hip for the hilt, or over the shoulder.",
+			"Every race's body is rebuilt in solid pieces with rounded shoulders, elbows and knees, so arms and legs no longer poke out or stretch as they bend.",
+			"Sitting is now cross-legged."
+		]
+	},
+	{
 		"version": "0.18.0",
 		"date": "11-19-2026",
 		"notes": [
