@@ -367,7 +367,9 @@ var sheath_state := Sheath.MELEE:
 		if value == sheath_state:
 			return
 		sheath_state = value
-		var anim := "" if _sheath_instant or not _skeleton else _sheath_anim(_sheath_shown, value)
+		# Put away at once for a cast, which has its own pose.
+		var casting: bool = _caster != null and not _caster.casting.is_empty()
+		var anim := "" if _sheath_instant or not _skeleton or casting else _sheath_anim(_sheath_shown, value)
 		if anim == "" or _loco in ["dead", "sit", "stunned"] or _tree.get("parameters/upper/active"):
 			_show_sheath(value)
 			return
@@ -1399,7 +1401,10 @@ func _update_unit(delta: float) -> void:
 	# shooting.
 	if _unit:
 		_unit.update_sheath(delta)
+		_sheath_instant = _unit.sheath_quietly
 		sheath_state = _unit.sheath_state
+		_sheath_instant = false
+		_unit.sheath_quietly = false
 	else:
 		sheath_state = Sheath.RANGED if _combatant.shoot_target != null else Sheath.MELEE
 	_update_loco(delta)

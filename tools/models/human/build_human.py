@@ -197,6 +197,11 @@ BONES += [
 	# through it.
 	("ElbowPoleR", (0.75, 0.35, 1.2), (0.75, 0.35, 1.3), "Chest"),
 	("ElbowPoleL", (-0.75, 0.35, 1.2), (-0.75, 0.35, 1.3), "Chest"),
+	("ElbowBackR", (0.65, -0.45, 1.1), (0.65, -0.45, 1.2), "Chest"),
+	# Where the hands cup together at the front of the right hip while
+	# casting (cast_ik): the right hand's grip below, the left's beside it.
+	("CastR", (0.2, 0.12, 0.98), (0.2, 0.12, 1.08), "Hips"),
+	("CastL", (0.12, 0.17, 1.03), (0.12, 0.17, 1.13), "Hips"),
 	# The cape: a chain hanging down the back from the shoulders, which the
 	# game swings with spring physics (HumanoidModel._cape_springs). The
 	# animations leave it at rest.
@@ -2191,21 +2196,32 @@ def shooting():
 
 def casting():
 	a = {}
-	# The hands drawn in before the chest and a little forward, the body leaning
-	# in over them, gathering in slow circles.
-	c1 = pose(STAND, both("UpperArm", (38, 30, 0)), both("LowerArm", (112, 0, 0)), both("Hand", (-15, 0, 0)),
-			  both("UpperLeg", (6, -4, 0)), both("LowerLeg", (-10, 0, 0)), both("Foot", (4, 0, 0)),
-			  Spine=(-5, 0, 0), Chest=(-3, 0, 0), Head=(4, 0, 0), loc={"Hips": (0, 0, -0.015)})
-	c2 = pose(c1, {"RightUpperArm": (46, 26, 0), "LeftUpperArm": (32, 34, 0)}, Chest=(-4, 0, 4))
-	c3 = pose(c1, {"RightUpperArm": (32, 34, 0), "LeftUpperArm": (46, 26, 0)}, Chest=(-4, 0, -4))
-	a["cast"] = [(0, c1), (8, c2), (16, c1), (24, c3), (32, c1)]
-	# Release: a quick draw back, then both arms pushed out, the body leaning
-	# into it with a half step.
-	gather = pose(c1, both("UpperArm", (30, 34, 0)), both("LowerArm", (125, 0, 0)), Spine=(2, 0, 0), Chest=(2, 0, 0),
-				  loc={"Hips": (0, -0.02, -0.015)})
-	thrust = pose(READY, both("UpperArm", (84, 10, 0)), both("LowerArm", (6, 0, 0)), both("Hand", (-25, 0, 0)),
-				  Spine=(-14, 0, 0), Chest=(-6, 0, 0), Head=(8, 0, 0), loc={"Hips": (0, 0.05, -0.06)})
-	a["cast_release"] = one_shot((3, gather), (6, thrust), (10, thrust), start=c1, end=STAND)
+	# Classic's Human casting (ReadySpellDirected): a wide, low stance, the
+	# left foot forward, the chest turned to the right, both hands cupped
+	# together at the right hip, gathering, bobbing a little.
+	# (Left-side entries written out are mirrored by hand: +Y on a right
+	# limb brings it across the body, -Y on a left one.)
+	legs = {"LeftUpperLeg": (24, 10, 0), "LeftLowerLeg": (-30, 0, 0), "LeftFoot": (8, 0, 0),
+			"RightUpperLeg": (-6, -12, 0), "RightLowerLeg": (-22, 0, 0), "RightFoot": (14, 0, 0)}
+	c1 = pose(STAND, legs, {"RightUpperArm": (-18, -10, 0), "RightLowerArm": (72, 0, 0), "RightHand": (-10, 0, 0),
+							"LeftUpperArm": (18, -58, 0), "LeftLowerArm": (58, 0, 0), "LeftHand": (-10, 0, 0)},
+			  Spine=(-6, 0, -16), Chest=(-4, 0, -32), Head=(6, 0, 42), loc={"Hips": (0, 0, -0.07)})
+	c2 = pose(c1, {"RightLowerArm": (78, 0, 0), "LeftLowerArm": (64, 0, 0)}, Chest=(-6, 0, -35),
+			  loc={"Hips": (0, 0, -0.085)})
+	a["cast"] = [(0, c1), (12, c2), (24, c1)]
+	# The release (SpellCastDirected): the left arm thrust straight at the
+	# target, palm open, the left shoulder leading; the right drawn back low
+	# by the hip.
+	# Thrown from the shoulders: the body leaning back and twisting after
+	# the arm, which keeps a slight bend with the palm pushed out (the legs and hips only
+	# where the release plays on its own: as an upper-body action it leaves
+	# them to the stance or the run).
+	lunge = {"LeftUpperLeg": (38, 10, 0), "LeftLowerLeg": (-42, 0, 0), "LeftFoot": (6, 0, 0),
+			 "RightUpperLeg": (-16, -12, 0), "RightLowerLeg": (-14, 0, 0), "RightFoot": (18, 0, 0)}
+	thrust = pose(STAND, lunge, {"LeftUpperArm": (68, -6, 0), "LeftLowerArm": (20, 0, 0), "LeftHand": (-55, 0, 0),
+								 "RightUpperArm": (-32, -16, 0), "RightLowerArm": (35, 0, 0)},
+				  Spine=(10, 0, -16), Chest=(6, 0, -30), Head=(-10, 0, 36), loc={"Hips": (0, 0.1, -0.11)})
+	a["cast_release"] = one_shot((3, thrust), (11, thrust), start=c1, end=STAND)
 	ch = pose(STAND, both("UpperArm", (75, -6, 0)), both("LowerArm", (25, 0, 0)), both("Hand", (-30, 0, 0)), Spine=(-4, 0, 0))
 	ch2 = pose(ch, both("UpperArm", (78, -8, 0)), Chest=(1, 0, 0))
 	a["channel"] = [(0, ch), (10, ch2), (20, ch)]
@@ -2347,50 +2363,67 @@ HILT_WEIGHT = {"draw_": [(0, 0.0), (6, 1.0), (8, 1.0), (12, 0.0)],
 			   "sheathe_": [(8, 0.0), (12, 1.0), (14, 1.0), (20, 0.0)]}
 
 
-def hilt_ik(arm):
-	"""Puts the hand's grip (the weapon bone's head) on the hilt at the hip as
-	it reaches for it in the hip draws and sheathes, by IK through the hand,
-	forearm and upper arm faded in over the reach, baked into their
-	keyframes."""
+def hand_ik(arm, action_name, hands, weights):
+	"""Puts each hand's grip (its weapon bone's head) on a target bone by IK
+	through the hand, forearm and upper arm, the elbow pointed at a pole
+	bone, weighted by frame, baked into the action's keyframes. `hands` is
+	[(weapon bone, target bone, pole bone)], `weights` [(frame, weight)]."""
 	bpy.context.view_layer.objects.active = arm
 	arm.select_set(True)
 	bpy.ops.object.mode_set(mode="POSE")
-	for kind, hands in HILT_HANDS.items():
-		chains = {}
-		for forearm, hilt in hands:
-			ik = arm.pose.bones[forearm].constraints.new("IK")
-			ik.name = "Hilt"
-			ik.target = arm
-			ik.subtarget = hilt
-			ik.chain_count = 3
-			ik.use_tail = False
-			ik.pole_target = arm
-			ik.pole_subtarget = "ElbowPoleR" if forearm.endswith("R") else "ElbowPoleL"
-			ik.pole_angle = math.radians(ELBOW_POLE_ANGLE)
-			chains[forearm] = ik
-		bones = set()
-		for weapon in chains:
-			side = "Right" if weapon.endswith("R") else "Left"
-			bones |= {side + "Hand", side + "LowerArm", side + "UpperArm"}
-		for bone in arm.data.bones:
-			bone.select = bone.name in bones
-		for prefix, weights in HILT_WEIGHT.items():
-			action = bpy.data.actions[prefix + kind]
-			arm.animation_data.action = action
-			for forearm, ik in chains.items():
-				for frame, weight in weights:
-					ik.influence = weight
-					ik.keyframe_insert("influence", frame=frame)
-			start, end = (int(f) for f in action.frame_range)
-			bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True,
-							 clear_constraints=False, use_current_action=True, bake_types={"POSE"})
-			# The IK's weight keys go with it.
-			for curve in [c for c in action.fcurves if "constraints" in c.data_path]:
-				action.fcurves.remove(curve)
-		for forearm, ik in chains.items():
-			arm.pose.bones[forearm].constraints.remove(ik)
+	chains = []
+	for weapon, target, pole in hands:
+		ik = arm.pose.bones[weapon].constraints.new("IK")
+		ik.name = "Hand"
+		ik.target = arm
+		ik.subtarget = target
+		ik.chain_count = 3
+		ik.use_tail = False
+		ik.pole_target = arm
+		ik.pole_subtarget = pole
+		ik.pole_angle = math.radians(ELBOW_POLE_ANGLE)
+		chains.append((weapon, ik))
+	bones = set()
+	for weapon, _ik in chains:
+		side = "Right" if weapon.endswith("R") else "Left"
+		bones |= {side + "Hand", side + "LowerArm", side + "UpperArm"}
+	for bone in arm.data.bones:
+		bone.select = bone.name in bones
+	action = bpy.data.actions[action_name]
+	arm.animation_data.action = action
+	for _weapon, ik in chains:
+		for frame, weight in weights:
+			ik.influence = weight
+			ik.keyframe_insert("influence", frame=frame)
+	start, end = (int(f) for f in action.frame_range)
+	bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True,
+					 clear_constraints=False, use_current_action=True, bake_types={"POSE"})
+	# The IK's weight keys go with it.
+	for curve in [c for c in action.fcurves if "constraints" in c.data_path]:
+		action.fcurves.remove(curve)
+	for weapon, ik in chains:
+		arm.pose.bones[weapon].constraints.remove(ik)
 	arm.animation_data.action = None
 	bpy.ops.object.mode_set(mode="OBJECT")
+
+
+def hilt_ik(arm):
+	"""Puts the hand's grip on the hilt at the hip as it reaches for it in
+	the hip draws and sheathes, by IK faded in over the reach."""
+	for kind, hands in HILT_HANDS.items():
+		chain = [(weapon, hilt, "ElbowPoleR" if weapon.endswith("R") else "ElbowPoleL") for weapon, hilt in hands]
+		for prefix, weights in HILT_WEIGHT.items():
+			hand_ik(arm, prefix + kind, chain, weights)
+
+
+# The cast's hands cupped at the right hip (CastR, CastL), the right elbow
+# back, the left forward; the release starts from there.
+CAST_HANDS = [("WeaponR", "CastR", "ElbowBackR"), ("WeaponL", "CastL", "ElbowPoleL")]
+
+
+def cast_ik(arm):
+	hand_ik(arm, "cast", CAST_HANDS, [(0, 1.0), (24, 1.0)])
+	hand_ik(arm, "cast_release", CAST_HANDS, [(0, 1.0), (3, 0.0)])
 
 
 def key_animations(arm, anims):
@@ -2601,6 +2634,7 @@ def build(race):
 	key_animations(arm, all_animations())
 	two_hand_ik(arm, TWO_HAND_ANIMS)
 	hilt_ik(arm)
+	cast_ik(arm)
 	os.makedirs(os.path.dirname(out), exist_ok=True)
 	bpy.ops.wm.save_as_mainfile(filepath=blend)
 	bpy.ops.export_scene.gltf(

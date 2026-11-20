@@ -48,12 +48,19 @@ var model: HumanoidModel
 ## draws the melee weapons, starting to shoot or a ranged ability the ranged
 ## one, a melee or ranged ability its own; they stay out after the fight
 ## until the sheathe key (Z, `toggle_sheath`) puts them away, and dying puts
-## them away. Bots put theirs away a few seconds after a fight, as a player
-## would (`BOT_SHEATHE_DELAY`).
+## them away, as does casting a spell with a cast time (in a fight they
+## come out again when it ends, straight into the hands; out of one the next
+## swing draws them). Bots put theirs away a few seconds after a fight, as
+## a player would (`BOT_SHEATHE_DELAY`).
 var sheath_state := HumanoidModel.Sheath.UNARMED
 const BOT_SHEATHE_DELAY := 5.0
 var _was_attacking := false
 var _was_shooting := false
+var _was_casting := false
+## The last change of `sheath_state` happens without a draw or sheathe
+## motion (weapons back in hand after a cast in a fight); the model clears it.
+var sheath_quietly := false
+var _before_cast := HumanoidModel.Sheath.UNARMED
 var _calm_for := 0.0
 
 @onready var combatant: Combatant = $Combatant
@@ -113,6 +120,20 @@ func update_sheath(delta: float) -> void:
 		return
 	var attacking := c.attack_target != null
 	var shooting := c.shoot_target != null
+	# Casting a spell (one with a cast time or channel, not a melee or
+	# ranged ability) puts the weapons away; in a fight they come out again
+	# when it ends (what was in hand before, else the melee ones), out of a
+	# fight the next swing draws them.
+	var caster := get_node_or_null("SpellCaster")
+	var spell_cast: bool = caster != null and not caster.casting.is_empty() 			and int(caster.casting.get("DmgClass", 0)) not in [2, 3]
+	if spell_cast:
+		if not _was_casting:
+			_before_cast = sheath_state
+		sheath_state = HumanoidModel.Sheath.UNARMED
+	elif _was_casting and c.is_in_combat():
+		sheath_state = _before_cast if _before_cast != HumanoidModel.Sheath.UNARMED else HumanoidModel.Sheath.MELEE
+		sheath_quietly = true
+	_was_casting = spell_cast
 	if shooting and not _was_shooting:
 		sheath_state = HumanoidModel.Sheath.RANGED
 	elif attacking and not _was_attacking:
