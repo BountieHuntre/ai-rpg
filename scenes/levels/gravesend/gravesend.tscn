@@ -17,7 +17,8 @@ appearance = {
 race = "undead"
 
 [node name="DarkPriestHalvard" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2512, 5, -4216)
+position = Vector3(-2520, 5.1, -4216)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Dark Priest Halvard"
 subname = ""
 appearance = {
@@ -56,7 +57,7 @@ appearance = {
 race = "undead"
 
 [node name="GrimwardTeague" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2532, 5, -4228)
+position = Vector3(-2516, 5.1, -4210.6)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Grimward Teague"
 subname = "Man-at-Arms Trainer"
@@ -67,7 +68,8 @@ appearance = {
 race = "undead"
 
 [node name="DarkClericAmsel" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2516, 5, -4219)
+position = Vector3(-2516, 5.1, -4221.4)
+rotation = Vector3(0, 0, 0)
 npc_name = "Dark Cleric Amsel"
 subname = "Cleric Trainer"
 trainer = "priest"
@@ -77,7 +79,8 @@ appearance = {
 race = "undead"
 
 [node name="MaraSable" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2490, 5, -4182)
+position = Vector3(-2512.5, 5.1, -4210.6)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Mara Sable"
 subname = "Spellsword Trainer"
 trainer = "spellsword"

@@ -478,7 +478,7 @@ const CARD_RANGE := 62.0
 const BUSH_RANGE := 140.0
 ## The kinds a zone's grass place function can make (add_nature_clutter).
 const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
-	"frost_grass", "heather", "dry_grass"]
+	"frost_grass", "heather", "dry_grass", "dead_blades"]
 
 var _clutter_share := 0.66
 ## Ground built on (BuildingKit footprints): no grass or bushes there.
@@ -548,6 +548,7 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy :=
 		"frost_grass": [Nature.card_mesh(0.9, 0.6), Nature.card_material("frost_grass", patches, 0.1)],
 		"heather": [Nature.card_mesh(0.9, 0.4), Nature.card_material("heather", patches, 0.04)],
 		"dry_grass": [Nature.card_mesh(1.0, 0.55), Nature.card_material("dry_grass", patches, 0.1)],
+		"dead_blades": [Nature.card_mesh(1.0, 0.5), Nature.card_material("dead_blades", patches, 0.1)],
 	}
 	add_child(cards)
 	var bushes := ClutterField.new()

@@ -75,8 +75,8 @@ appearance = {
 race = "undead"
 
 [node name="MorwenGallow" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-1750, 5, -4190)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(-1738.25, 5.1, -4192.36)
+rotation = Vector3(0, 1.5708, 0)
 npc_name = "Morwen Gallow"
 subname = "Innkeeper"
 vendor = 5688
@@ -117,8 +117,8 @@ appearance = {
 race = "undead"
 
 [node name="SergeantDunmore" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-1784, 5, -4190)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-1774, 5.1, -4204.4)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Sergeant Kael Dunmore"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"
@@ -128,8 +128,8 @@ appearance = {
 race = "undead"
 
 [node name="DarkClericYsolde" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-1776, 5, -4170)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-1784.3, 5.1, -4166)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Dark Cleric Ysolde"
 subname = "Cleric Trainer"
 trainer = "priest"

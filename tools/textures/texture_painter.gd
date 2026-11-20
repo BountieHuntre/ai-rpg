@@ -12,6 +12,7 @@ const KEYS := [
 	"grass", "forest_floor", "dirt", "cobbles", "rock",
 	"snow", "frozen_heath", "frozen_dirt", "snow_rock", "frost_grass", "heather", "slate_snow",
 	"red_earth", "dry_scrub", "red_dirt", "red_rock", "sand", "hide", "dry_grass", "cactus",
+	"dead_grass", "dead_leaves", "mud", "slate", "dead_blades",
 	"grass_blades", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"leaves", "needles", "bark", "stone_wall", "roof_tiles", "planks", "thatch", "plaster",
 	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
@@ -671,6 +672,122 @@ func _cactus() -> Image:
 		var y := _rng.randi_range(0, size - 1)
 		_put(image, x, y, Color("e6dcb4"))
 		_put(image, x + 1, y - 1, Color("c8bc94"))
+	return image
+
+
+# The dead lands (Gravesend, the Duskmoor Glades).
+
+const DEAD := [Color("3e3e2c"), Color("4a4832"), Color("56523a"), Color("625c42"), Color("706a4e")]
+
+
+## Dead grass: grey-olive and brown, flattened, with bare patches.
+func _dead_grass() -> Image:
+	var size := 128
+	var image := _base(size, DEAD.slice(0, 4), 0.04, 1.5)
+	var bare := _noise(size, 0.06)
+	for i in 900:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		if bare[y * size + x] < 0.3:
+			continue
+		var length := _rng.randi_range(2, 4)
+		var lean := _rng.randi_range(-1, 1)
+		_put(image, x, y + 1, DEAD[0].darkened(0.2))
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = DEAD[1] if tip < 0.4 else DEAD[3] if tip < 0.9 else DEAD[4]
+			_put(image, x + (lean if step == length - 1 else 0), y - step, color)
+	for i in 300:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		if bare[y * size + x] < 0.3:
+			_put(image, x, y, Color("4a3f30"))
+	return image
+
+
+const LITTER_DEAD := [Color("2e271e"), Color("3a3024"), Color("4a3c2a"), Color("5a4830"), Color("6a5636")]
+
+
+## Dead leaves and twigs on dark soil, under the dead trees.
+func _dead_leaves() -> Image:
+	var size := 128
+	var image := _base(size, LITTER_DEAD.slice(0, 3), 0.05, 1.4)
+	for i in 1100:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var leaf: Color = LITTER_DEAD[_rng.randi_range(2, 4)]
+		_put(image, x, y, leaf)
+		_put(image, x + 1, y, leaf.darkened(0.15))
+		if _rng.randf() < 0.5:
+			_put(image, x, y + 1, leaf.darkened(0.3))
+	for i in 18:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var dx := 1 if _rng.randf() < 0.5 else -1
+		for step in _rng.randi_range(3, 7):
+			_put(image, x + step * dx, y + step / 2, Color("5e5040"))
+	return image
+
+
+## Wet black-brown mud with puddles catching the sky.
+func _mud() -> Image:
+	var size := 128
+	var image := _base(size, [Color("2a241c"), Color("332b22"), Color("3d3428"), Color("483d30")], 0.05, 1.5)
+	var wet := _noise(size, 0.07)
+	for y in size:
+		for x in size:
+			var v := wet[y * size + x]
+			if v > 0.68:
+				image.set_pixel(x, y, Color("5a6066") if v > 0.74 else Color("3e4246"))
+	for i in 200:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("524636"))
+	return image
+
+
+## Plain blue-grey slates in staggered rows.
+func _slate() -> Image:
+	var size := 64
+	var image := _image(size)
+	var palette := [Color("3d4250"), Color("464c5b"), Color("505768"), Color("383c48")]
+	var row_height := 8
+	for row in size / row_height:
+		var offset := (row % 2) * 5
+		for tile in size / 10 + 1:
+			var color: Color = palette[_rng.randi_range(0, palette.size() - 1)]
+			for dy in row_height:
+				for dx in 10:
+					var c := color
+					if dy >= row_height - 2:
+						c = color.darkened(0.35)
+					elif dx == 0:
+						c = color.darkened(0.25)
+					elif dy == 0:
+						c = color.lightened(0.1)
+					_put(image, tile * 10 + dx + offset, row * row_height + dy, c)
+	return image
+
+
+## Dead grass in a tuft: grey-olive blades, brown at the tips.
+func _dead_blades() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 22:
+		var root_x := _rng.randf_range(4, size - 5)
+		var height := _rng.randf_range(size * 0.35, size * 0.85)
+		var bend := _rng.randf_range(-18.0, 18.0)
+		var light := _rng.randf_range(-0.08, 0.08)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := root_x + bend * t * t
+			var y := size - 1 - step
+			var color: Color = DEAD[1] if t < 0.3 else DEAD[2] if t < 0.6 else DEAD[3] if t < 0.85 else Color("7a6648")
+			color = _shade(color, light)
+			var width := 2 if t < 0.5 else 1
+			for w in width:
+				var px := int(x) + w
+				if px >= 0 and px < size:
+					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
 	return image
 
 

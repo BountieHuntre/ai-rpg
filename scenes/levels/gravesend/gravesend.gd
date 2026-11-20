@@ -84,14 +84,10 @@ const CHESTS := [
 	[178090, Vector2(-2536, -4176), 1.0, 1],
 ]
 
-const GRASS := Color(0.4, 0.45, 0.33)
-const DEAD_GRASS := Color(0.5, 0.47, 0.36)
 const SOIL := Color(0.3, 0.27, 0.23)
-const PATH := Color(0.47, 0.45, 0.42)
 const ROCK := Color(0.42, 0.41, 0.4)
 const STONE := Color(0.55, 0.54, 0.52)
 const DARK_STONE := Color(0.36, 0.35, 0.35)
-const BARK := Color(0.24, 0.2, 0.17)
 const ROOF := Color(0.3, 0.27, 0.27)
 const WOOD := Color(0.33, 0.25, 0.18)
 const TENT := Color(0.85, 0.82, 0.75)
@@ -114,10 +110,35 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	enclosures = ENCLOSURES
+
+
+## The dead land's painted ground (Zone.build_ground's layers): dead grass,
+## leaf litter under the trees, dirt for the yard and roads, rock.
+const GROUND_TEXTURES := {
+	"grass_tex": "dead_grass", "forest_tex": "dead_leaves", "cobble_tex": "mud",
+}
+## The chapel: its middle and size (x, height, z), its door to the east.
+const CHAPEL := Vector2(-2510, -4216)
+const CHAPEL_SIZE := Vector3(22, 8, 12.9)
+## Walled places bots go in and out of by the gate or door (Zone.enclosures):
+## the chapel yard (its gap east toward the road) and the chapel inside it.
+const ENCLOSURES := [
+	[-2542.0, -4237.0, -2478.0, -4173.0, Vector2(-2470, -4205), Vector2(-2486, -4205)],
+	[-2521.0, -4222.5, -2499.0, -4209.5, Vector2(-2494, -4216), Vector2(-2502, -4216)],
+]
+const DEAD_TREE_VARIANTS := 4
 
 
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
+	Props.use_texture(STONE, "stone_wall", 4.0)
+	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
+	Props.use_texture(ROOF, "slate", 2.5)
+	Props.use_texture(WOOD, "planks", 2.0)
+	Props.use_texture(Buildings.FLOOR, "planks", 2.0)
+	Props.use_texture(ROCK, "rock", 3.0)
+	Props.use_texture(SOIL, "dirt", 2.0)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
 	build_edges()
 	_build_chapel()
 	_build_crypts()
@@ -160,18 +181,25 @@ func _road_distance(point: Vector2) -> float:
 	return road
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r dirt
+## (the chapel yard, the camps, the roads), b rock (steep and high ground), a
+## dead leaves where the dead trees grow thick.
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.06
-	var patch := Zone.land_noise().get_noise_2d(x * 2.1, z * 2.1)
-	var color := GRASS.lerp(DEAD_GRASS, smoothstep(0.0, 0.35, patch))
-	color = color.lerp(SOIL, 1.0 - smoothstep(26.0, 32.0, _yard_distance(point)))
+	var dirt := (1.0 - smoothstep(26.0, 32.0, _yard_distance(point))) * 0.6
 	for flat: Array in FLATS:
-		color = color.lerp(SOIL, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
-	color = color.lerp(PATH, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point)))
-	color = color.lerp(ROCK, smoothstep(0.84, 0.66, normal.y))
-	color = color.lerp(ROCK, smoothstep(20.0, 30.0, y))
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
+	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point)))
+	var rock := maxf(smoothstep(0.84, 0.66, normal.y), smoothstep(20.0, 30.0, y))
+	var patch := Zone.land_noise().get_noise_2d(x * 2.1, z * 2.1)
+	var leaves := smoothstep(0.1, 0.4, patch)
+	return Color(dirt, 0.0, rock, leaves)
+
+
+## The textured ground's tint: a little noise, greyed.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 0.95 + _detail.get_noise_2d(x, z) * 0.07
+	return Color(shade, shade, shade * 1.02)
 
 
 ## A grave: a headstone, sometimes leaning, on a low mound.
@@ -182,30 +210,29 @@ func _grave(parent: Node3D, at: Vector2, y: float, rng: RandomNumberGenerator) -
 	Props.box(parent, Vector3(at.x, y, at.y + 1.0), Vector3(1.0, 0.25, 1.6), SOIL, yaw, false)
 
 
-# The ruined chapel: a roofless nave of broken walls with a stump of a
-# tower, inside a tumbled yard wall, graves all round.
+# The Gravesend Chapel, open inside: a stone nave with pews up to the altar
+# at its west end, where the Dark Priest keeps and the trainers stand in the
+# side aisles; its broken tower at the west end; a tumbled yard wall round
+# it, graves all about.
 
 func _build_chapel() -> void:
 	var chapel := Node3D.new()
 	chapel.name = "Chapel"
 	add_child(chapel)
 	var y := HUB_HEIGHT
+	var kit := BuildingKit.new(chapel, "Buildings")
 	# The yard wall in broken lengths, gapped east toward the road.
-	for wall in [[Vector2(-2542, -4237), Vector2(-2510, -4237)], [Vector2(-2502, -4237), Vector2(-2478, -4237)],
-			[Vector2(-2542, -4173), Vector2(-2520, -4173)], [Vector2(-2508, -4173), Vector2(-2478, -4173)],
-			[Vector2(-2542, -4237), Vector2(-2542, -4173)], [Vector2(-2478, -4237), Vector2(-2478, -4212)],
-			[Vector2(-2478, -4198), Vector2(-2478, -4173)]]:
+	for wall in [[Vector2(-2542, -4237), Vector2(-2510, -4237), 1.6], [Vector2(-2502, -4237), Vector2(-2478, -4237), 1.1],
+			[Vector2(-2542, -4173), Vector2(-2520, -4173), 1.4], [Vector2(-2508, -4173), Vector2(-2478, -4173), 1.6],
+			[Vector2(-2542, -4237), Vector2(-2542, -4173), 1.6], [Vector2(-2478, -4237), Vector2(-2478, -4212), 1.2],
+			[Vector2(-2478, -4198), Vector2(-2478, -4173), 1.6]]:
 		var a: Vector2 = wall[0]
 		var b: Vector2 = wall[1]
-		var length := a.distance_to(b)
-		Props.box(chapel, Vector3((a.x + b.x) / 2, y, (a.y + b.y) / 2), Vector3(length, 1.6, 0.9), STONE, -(b - a).angle())
-	# The nave: two long walls, a west end and the broken east front.
-	Props.box(chapel, Vector3(-2510, y, -4222), Vector3(22, 6, 1.2), STONE)
-	Props.box(chapel, Vector3(-2510, y, -4210), Vector3(22, 4, 1.2), STONE)
-	Props.box(chapel, Vector3(-2521, y, -4216), Vector3(1.2, 7, 12), STONE)
-	Props.box(chapel, Vector3(-2499, y, -4219.5), Vector3(1.2, 5, 4), STONE)
-	Props.roof(chapel, Vector3(-2515, y + 6, -4216), Vector3(11, 3, 13), ROOF, PI / 2)
-	Props.box(chapel, Vector3(-2524, y, -4226), Vector3(5, 9, 5), DARK_STONE)
+		var middle := (a + b) / 2.0
+		kit.block(Vector3(middle.x, y - 0.2, middle.y), Vector3(a.distance_to(b), wall[2] + 0.2, 0.9), STONE, -(b - a).angle(), true)
+	var look := { "wall": STONE, "roof": ROOF, "trim": WOOD, "stone": DARK_STONE }
+	Buildings.chapel(kit, Vector3(CHAPEL.x, y, CHAPEL.y), CHAPEL_SIZE, 0.0, look, Vector2(1, 0), Vector2(-13.5, 0), 4.0, 14.0, true)
+	kit.finish()
 	# Graves in the yard.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 7
@@ -214,7 +241,7 @@ func _build_chapel() -> void:
 			var at := Vector2(-2536 + col * 5.0 + rng.randf_range(-0.8, 0.8), -4200 + row * 6.0)
 			if at.distance_to(Vector2(GRAVEYARD.x, GRAVEYARD.z)) > 4.0:
 				_grave(chapel, at, y, rng)
-	torch(chapel, Vector3(-2499.5, y + 2.4, -4212), 5.0)
+	torch(chapel, Vector3(-2497.5, y + 2.4, -4219.5), 5.0)
 	torch(chapel, Vector3(-2479, y + 2.0, -4214), 5.0)
 
 
@@ -253,20 +280,27 @@ func _build_vault() -> void:
 		box.rotation.z = strand[1]
 
 
-# The ruined hamlet: a few roofless cottages east of the chapel, where the
-# equipment boxes lie.
+# The ruined hamlet: a few roofless cottages east of the chapel, their
+# walls broken to different heights, where the equipment boxes lie.
 
 func _build_hamlet() -> void:
 	var hamlet := Node3D.new()
 	hamlet.name = "Hamlet"
 	add_child(hamlet)
+	var kit := BuildingKit.new(hamlet, "Buildings")
 	for cottage in [[Vector2(-2450, -4240), 0.2], [Vector2(-2432, -4215), -0.4], [Vector2(-2466, -4210), 1.3]]:
 		var at: Vector2 = cottage[0]
 		var y := height_at(at.x, at.y)
 		var yaw: float = cottage[1]
-		for wall in [[Vector2(0, -3), Vector2(7, 0.7)], [Vector2(-3.5, 0), Vector2(0.7, 6)], [Vector2(3.5, 1), Vector2(0.7, 4)]]:
+		for wall in [[Vector2(0, -3), Vector2(7, 0.7), 2.6], [Vector2(-3.5, 0), Vector2(0.7, 6), 1.8], [Vector2(3.5, 1), Vector2(0.7, 4), 2.2],
+				[Vector2(-2.2, 3), Vector2(2.6, 0.7), 1.2]]:
 			var offset: Vector2 = (wall[0] as Vector2).rotated(-yaw)
-			Props.box(hamlet, Vector3(at.x + offset.x, y - 0.3, at.y + offset.y), Vector3(wall[1].x, 2.6, wall[1].y), STONE, yaw)
+			kit.block(Vector3(at.x + offset.x, y - 0.3, at.y + offset.y), Vector3(wall[1].x, wall[2], wall[1].y), STONE, yaw, true)
+		# Fallen stones.
+		for i in 3:
+			var stone: Vector2 = at + Vector2(-2.0 + i * 1.6, 4.4).rotated(-yaw)
+			kit.block(Vector3(stone.x, y - 0.1, stone.y), Vector3(0.7, 0.4, 0.5), DARK_STONE, yaw + i)
+	kit.finish()
 
 
 # The Sunward Crusade's camp: white and red tents round a fire, with a banner.
@@ -297,17 +331,16 @@ func _clear(point: Vector2) -> bool:
 	return point.distance_to(Vector2(-2450, -4225)) > 22.0
 
 
-# Dead trees (bare trunks with a few crooked limbs) and the odd dark pine.
+# Dead trees, bare and crooked, and the odd dark pine, never on bare rock.
 
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var trunks: Array[Transform3D] = []
-	var limbs: Array[Transform3D] = []
-	var pines: Array[Transform3D] = []
-	var needles: Array[Transform3D] = []
+	var dead := variant_lists(DEAD_TREE_VARIANTS)
+	var pines := variant_lists(TREE_VARIANTS)
+	var unused := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
 	trunk_shape.radius = 0.4
 	trunk_shape.height = 4.0
@@ -315,39 +348,24 @@ func _build_trees() -> void:
 	for attempt in 3000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y > 26.0 or not _clear(point) or rng.randf() > 0.12 + 0.2 * smoothstep(6.0, 14.0, y):
+		if y > 26.0 or not _clear(point) or rng.randf() > 0.12 + 0.2 * smoothstep(6.0, 14.0, y) \
+				or shows_rock(point, y, _ground_layers):
 			continue
 		var size := rng.randf_range(0.8, 1.3)
 		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
 		if rng.randf() < 0.75:
-			trunks.append(base * Transform3D(Basis(), Vector3(0, 2.0, 0)))
-			for i in rng.randi_range(2, 3):
-				var tilt := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.FORWARD, rng.randf_range(0.6, 1.0))
-				limbs.append(base * Transform3D(tilt, Vector3(0, rng.randf_range(2.4, 3.6), 0)) * Transform3D(Basis(), Vector3(0, 0.7, 0)))
+			dead[rng.randi_range(0, DEAD_TREE_VARIANTS - 1)].append(base)
 		else:
-			pines.append(base * Transform3D(Basis(), Vector3(0, 1.0, 0)))
-			needles.append(base * Transform3D(Basis(), Vector3(0, 3.4, 0)))
+			pines[rng.randi_range(0, TREE_VARIANTS - 1)].append(base)
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 2.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.16
-	trunk.bottom_radius = 0.32
-	trunk.height = 4.0
-	trunk.radial_segments = 6
-	var limb := CylinderMesh.new()
-	limb.top_radius = 0.05
-	limb.bottom_radius = 0.12
-	limb.height = 1.6
-	limb.radial_segments = 4
-	var pine_trunk := trunk.duplicate() as CylinderMesh
-	pine_trunk.height = 2.0
+	# Added once its shapes are in.
 	add_child(trees)
-	Props.scatter(trees, trunk, BARK, trunks)
-	Props.scatter(trees, limb, BARK, limbs)
-	Props.scatter(trees, pine_trunk, BARK, pines)
-	Props.scatter(trees, Props.cone(1.7, 4.0), Color(0.18, 0.26, 0.2), needles)
+	draw_trees(trees, pines, unused, SEED)
+	for i in DEAD_TREE_VARIANTS:
+		Nature.scatter(trees, Nature.dead_tree_mesh(SEED + 70 + i), dead[i])
 
 
 func _build_rocks() -> void:
@@ -355,7 +373,7 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 4.0
 	for attempt in 1200:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
@@ -363,7 +381,8 @@ func _build_rocks() -> void:
 		if rng.randf() > 0.05 + 0.4 * smoothstep(9.0, 20.0, y) or not _clear(point):
 			continue
 		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -371,29 +390,53 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED)
 
 
+## Dead grass and dead bushes, made near the camera (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var mushrooms: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 4.0
-	for attempt in 12000:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y > 22.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.05:
-			mushrooms.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.2)), at + Vector3.UP * 0.12))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.4), 1)), at + Vector3.UP * 0.15))
-	add_clutter(clutter, Props.cone(0.16, 0.32, 4), Color(0.45, 0.48, 0.34), grass)
-	add_clutter(clutter, Props.blob(0.12, 5, 3), Color(0.55, 0.42, 0.55), mushrooms)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3, false, true)
+
+
+## Dead grass, thick on open ground and thin under the trees; none on the
+## roads, the yard or rock. Called from a worker thread: it only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y > 22.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3 or layers.r > 0.4:
+		return []
+	if rng.randf() > lerpf(0.6, 0.2, layers.a):
+		return []
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return ["dead_blades", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.3), 1) * rng.randf_range(0.8, 1.15)), Vector3(point.x, y - 0.05, point.y))]
+
+
+## A dead bush now and then.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.06:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y > 22.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.7, 1.2)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.7, 0.9), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## Open ground: not on roads, in the chapel yard or on the camps.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if _yard_distance(point) < HUB_FLAT - 2.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true

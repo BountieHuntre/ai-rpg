@@ -15,6 +15,7 @@ const TEXTURE_AVERAGES := {
 	"thatch": Color(0.62, 0.48, 0.24), "plaster": Color(0.83, 0.79, 0.69),
 	"slate_snow": Color(0.3, 0.32, 0.38), "snow_rock": Color(0.46, 0.46, 0.5),
 	"hide": Color(0.62, 0.48, 0.32), "bark": Color(0.4, 0.27, 0.17), "red_rock": Color(0.58, 0.32, 0.22),
+	"slate": Color(0.28, 0.3, 0.36),
 }
 const TEXTURED_SHADER := preload("res://shaders/textured_prop.gdshader")
 

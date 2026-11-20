@@ -12,13 +12,26 @@ const NATURE_SHADER := preload("res://shaders/nature.gdshader")
 const CARD_SHADER := preload("res://shaders/grass_card.gdshader")
 
 static var _materials: Dictionary = {}
+## While on, every Builder added to a mesh is kept in `recorded` as
+## [builder, material] (the tree bake reads a tree's parts this way).
+static var recording := false
+static var recorded: Array = []
 
 
-## A mesh under construction: flat-shaded triangles with colors.
+## A mesh under construction: flat-shaded triangles with colors, made of
+## closed solids (`starts`: where each begins) that tools/models/nature/
+## bake_trees.gd joins into one; an `overlay` (snow, fronds) isn't a solid
+## and is laid on top as it is.
 class Builder:
 	var points := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
+	var starts := PackedInt32Array()
+	var overlay := false
+
+	## The next triangles are a new closed solid.
+	func begin_piece() -> void:
+		starts.append(points.size())
 
 	## A triangle facing away from `inside`, with a color per corner.
 	func tri(a: Vector3, b: Vector3, c: Vector3, inside: Vector3, ca: Color, cb: Color, cc: Color) -> void:
@@ -39,6 +52,8 @@ class Builder:
 	func add_to(mesh: ArrayMesh, material: Material) -> void:
 		if points.is_empty():
 			return
+		if Nature.recording:
+			Nature.recorded.append([self, material])
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
 		arrays[Mesh.ARRAY_VERTEX] = points
@@ -76,6 +91,78 @@ static func card_material(key: String, patches: Texture2D, sway := 0.08) -> Shad
 	return _materials[id]
 
 
+# Trees, each one solid mesh: their parts joined by CSG and baked to
+# TREE_PATH by tools/models/nature/bake_trees.gd (variant n of a kind is
+# built from TREE_SEEDS[kind] + n). Unbaked, a tree is its parts as built.
+
+const TREE_PATH := "res://assets/models/nature/%s_%d.res"
+const TREE_VARIANTS := 6
+const TREE_SEEDS := { "pine": 8101, "pine_snowy": 8101, "oak": 8201, "dead_tree": 8301, "palm": 8401 }
+
+
+## The unbaked tree of a kind, built from a seed.
+static func build_tree(kind: String, rng_seed: int) -> ArrayMesh:
+	match kind:
+		"pine":
+			return _pine(rng_seed)
+		"pine_snowy":
+			return _pine(rng_seed, true)
+		"oak":
+			return _oak(rng_seed)
+		"dead_tree":
+			return _dead_tree(rng_seed)
+		"palm":
+			return _palm(rng_seed)
+	return ArrayMesh.new()
+
+
+## A tree of a kind (any seed picks one of its variants): baked if it is,
+## its surfaces given the shared materials their names stand for.
+static func tree(kind: String, rng_seed: int) -> ArrayMesh:
+	var variant := posmod(rng_seed, TREE_VARIANTS)
+	var path := TREE_PATH % [kind, variant]
+	if not ResourceLoader.exists(path):
+		return build_tree(kind, TREE_SEEDS[kind] + variant)
+	var mesh := (load(path) as ArrayMesh).duplicate() as ArrayMesh
+	for i in mesh.get_surface_count():
+		var made := material_named(mesh.surface_get_name(i))
+		if made:
+			mesh.surface_set_material(i, made)
+	return mesh
+
+
+## A pine, oak, dead tree or palm, one solid each (tree).
+static func pine_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
+	return tree("pine_snowy" if snowy else "pine", rng_seed)
+
+
+static func oak_mesh(rng_seed: int) -> ArrayMesh:
+	return tree("oak", rng_seed)
+
+
+static func dead_tree_mesh(rng_seed: int) -> ArrayMesh:
+	return tree("dead_tree", rng_seed)
+
+
+static func palm_mesh(rng_seed: int) -> ArrayMesh:
+	return tree("palm", rng_seed)
+
+
+## A material's name for a baked surface ("key|size|sway|sway_from"), and
+## back.
+static func material_name(made: ShaderMaterial) -> String:
+	var texture: Texture2D = made.get_shader_parameter("albedo_tex")
+	return "%s|%s|%s|%s" % [texture.resource_path.get_file().get_basename(), made.get_shader_parameter("texture_size"),
+		made.get_shader_parameter("sway"), made.get_shader_parameter("sway_from")]
+
+
+static func material_named(text: String) -> ShaderMaterial:
+	var parts := text.split("|")
+	if parts.size() != 4:
+		return null
+	return material(parts[0], float(parts[1]), float(parts[2]), float(parts[3]))
+
+
 # Shapes.
 
 ## An icosphere of radius 1: [points, faces as index triples].
@@ -111,6 +198,9 @@ static func icosphere(subdivisions: int) -> Array:
 ## `shade` gives each face's color from its center and normal. Faces `cap`
 ## (f(center, normal) -> bool) picks go to `capped` instead (snow on top).
 static func _blob(builder: Builder, subdivisions: int, form: Transform3D, noise: FastNoiseLite, lump: float, shade: Callable, capped: Builder = null, cap := Callable()) -> void:
+	builder.begin_piece()
+	if capped != null:
+		capped.begin_piece()
 	var sphere := icosphere(subdivisions)
 	var points: Array = sphere[0]
 	var placed: Array[Vector3] = []
@@ -133,10 +223,12 @@ static func _blob(builder: Builder, subdivisions: int, form: Transform3D, noise:
 
 ## A tapering many-sided post from `from` to `to`.
 static func _post(builder: Builder, from: Vector3, to: Vector3, bottom: float, top: float, sides: int, color: Color) -> void:
+	builder.begin_piece()
 	var up := (to - from).normalized()
 	var side := up.cross(Vector3.FORWARD if absf(up.z) < 0.9 else Vector3.RIGHT).normalized()
 	var other := up.cross(side)
 	var middle := (from + to) / 2.0
+	top = maxf(top, 0.005)
 	for i in sides:
 		var a0 := TAU * i / sides
 		var a1 := TAU * (i + 1) / sides
@@ -145,6 +237,9 @@ static func _post(builder: Builder, from: Vector3, to: Vector3, bottom: float, t
 		var lit := color.lightened(0.08) if d0.dot(Vector3(-0.6, 0.0, -0.8)) > 0.0 else color.darkened(0.1)
 		builder.tri(from + d0 * bottom, from + d1 * bottom, to + d0 * top, middle, lit, lit, lit)
 		builder.tri(from + d1 * bottom, to + d1 * top, to + d0 * top, middle, lit, lit, lit)
+		# The ends, so it's a closed solid.
+		builder.tri(from, from + d0 * bottom, from + d1 * bottom, middle, lit, lit, lit)
+		builder.tri(to, to + d1 * top, to + d0 * top, middle, lit, lit, lit)
 
 
 static func _noise(rng_seed: int, frequency: float) -> FastNoiseLite:
@@ -156,7 +251,7 @@ static func _noise(rng_seed: int, frequency: float) -> FastNoiseLite:
 
 ## A broadleaf tree (an oak), about 6 yards tall: a leaning trunk with two
 ## or three boughs and a crown of lumpy clumps, lit on top.
-static func oak_mesh(rng_seed: int) -> ArrayMesh:
+static func _oak(rng_seed: int) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var noise := _noise(rng_seed, 0.9)
@@ -198,12 +293,13 @@ static func oak_mesh(rng_seed: int) -> ArrayMesh:
 
 ## A pine, about 7.5 yards tall: a thin trunk under five drooping tiers of
 ## jagged boughs, darker inside and underneath.
-static func pine_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
+static func _pine(rng_seed: int, snowy := false) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var bark := Builder.new()
 	var needles := Builder.new()
 	var snow := Builder.new()
+	snow.overlay = true
 	var height := rng.randf_range(7.0, 8.0)
 	_post(bark, Vector3(0, -0.3, 0), Vector3(0, height - 0.5, 0), 0.32, 0.06, 6, Color(0.7, 0.7, 0.7))
 	var tiers := 5
@@ -216,6 +312,7 @@ static func pine_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
 		var apex := Vector3(0, base + rise, 0)
 		var under := Vector3(0, base + 0.35, 0)
 		var twist := rng.randf() * TAU
+		needles.begin_piece()
 		var ring: Array[Vector3] = []
 		for k in spokes:
 			var angle := twist + TAU * k / spokes
@@ -436,6 +533,15 @@ static func dead_bush_mesh(rng_seed: int) -> ArrayMesh:
 	return mesh
 
 
+## A small round knot (a coarse ball) at a joint.
+static func _knot(builder: Builder, at: Vector3, radius: float, color: Color) -> void:
+	builder.begin_piece()
+	var sphere := icosphere(0)
+	var points: Array = sphere[0]
+	for face: Array in sphere[1]:
+		builder.tri(at + points[face[0]] * radius, at + points[face[1]] * radius, at + points[face[2]] * radius, at, color, color, color)
+
+
 ## A twig from `from` along `heading`, `length` long and `thick` at its base,
 ## bending a little and forking `depth` more times.
 static func _twig(builder: Builder, rng: RandomNumberGenerator, from: Vector3, heading: Vector3, length: float, thick: float, depth: int) -> void:
@@ -446,10 +552,34 @@ static func _twig(builder: Builder, rng: RandomNumberGenerator, from: Vector3, h
 	_post(builder, from, to, thick, thick * 0.7, 4, grey)
 	if depth <= 0:
 		return
+	# A knot where it forks, so the joint is rounded.
+	_knot(builder, to, thick * 0.8, grey)
 	var forks := rng.randi_range(1, 3) if depth > 1 else rng.randi_range(1, 2)
 	for i in forks:
 		var side := dir.cross(Vector3.UP).normalized().rotated(dir, rng.randf() * TAU)
 		_twig(builder, rng, to, (dir + side * rng.randf_range(0.4, 0.9)).normalized(), length * rng.randf_range(0.6, 0.8), thick * 0.7, depth - 1)
+
+
+## A dead tree about 6 yards tall: a bare, leaning trunk forking into
+## crooked limbs and twigs, no leaves (the dead lands).
+static func _dead_tree(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var wood := Builder.new()
+	var height := rng.randf_range(3.2, 4.2)
+	var lean := Vector3(rng.randf_range(-0.3, 0.3), 1.0, rng.randf_range(-0.3, 0.3)).normalized()
+	var top := Vector3(0, -0.3, 0) + lean * height
+	_post(wood, Vector3(0, -0.3, 0), top, 0.34, 0.18, 7, Color(0.85, 0.85, 0.85))
+	var limbs := rng.randi_range(3, 5)
+	for i in limbs:
+		var angle := TAU * i / limbs + rng.randf_range(-0.4, 0.4)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		var from := Vector3(0, -0.3, 0) + lean * height * rng.randf_range(0.55, 1.0)
+		_twig(wood, rng, from, (out * rng.randf_range(0.7, 1.2) + Vector3.UP).normalized(),
+			rng.randf_range(1.2, 1.8), 0.14, 3)
+	var mesh := ArrayMesh.new()
+	wood.add_to(mesh, material("bark", 1.4))
+	return mesh
 
 
 ## A rounded top on a post of `radius`: two short tapering rings and a
@@ -462,11 +592,12 @@ static func _dome(builder: Builder, at: Vector3, radius: float, sides: int) -> v
 
 ## A palm about 6 yards tall: a leaning, curving trunk and a crown of long
 ## drooping fronds, seen from both sides.
-static func palm_mesh(rng_seed: int) -> ArrayMesh:
+static func _palm(rng_seed: int) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var bark := Builder.new()
 	var fronds := Builder.new()
+	fronds.overlay = true
 	var lean := Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized() * rng.randf_range(0.6, 1.4)
 	var height := rng.randf_range(5.0, 6.5)
 	var steps := 5
