@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.20.0",
+		"date": "11-20-2026",
+		"notes": [
+			"No zone is a square any more: the mountains round every zone wind in and out, opening bays of land and pushing spurs of rock into the valleys.",
+			"Camps, hills, lakes, fields and woods have natural, irregular outlines instead of perfect circles.",
+			"Spellcasting looks as it should: hands gathered at the hip in a wide stance, then thrown at the target.",
+			"Casting a spell puts your weapons away; in a fight they're back in hand the moment the spell is cast.",
+			"The ground now meets exactly everywhere two zones join."
+		]
+	},
+	{
 		"version": "0.19.0",
 		"date": "11-20-2026",
 		"notes": [
