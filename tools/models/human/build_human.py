@@ -138,6 +138,10 @@ def cape_point(chain, i):
 # The left wrist's place on a two-handed weapon, from the right hand's grip:
 # back down the handle (the weapon points +Y in the hand) and a little up.
 TWO_HAND_GRIP = Vector((0, -0.17, 0.05))
+# A weapon's grip put away at the hip is 0.2 out, 0.06 forward and 0.1 above
+# the hips' joint (HumanoidModel._sheath_place).
+HILT_L = Vector((-0.2, 0.06, 0.96 + 0.1))
+HILT_R = Vector((0.2, 0.06, 0.96 + 0.1))
 # Chunky, heroic proportions: the head, hands and feet bigger than life.
 HEAD_AT = Vector((0, 0.01, 1.56))
 HEAD_SCALE = 1.18
@@ -183,6 +187,16 @@ BONES += [
 	# Where the left wrist goes on a two-handed weapon's handle, below the
 	# right hand: the two-handed animations reach it there by IK (two_hand_ik).
 	("GripL", tuple(GRIP_R + TWO_HAND_GRIP), tuple(GRIP_R + TWO_HAND_GRIP + Vector((0, -0.1, 0))), "WeaponR"),
+	# Where a hand's grip goes to take a weapon's hilt at the hip
+	# (HumanoidModel's sheath places): the hip draws reach them by IK
+	# (hilt_ik).
+	("HiltL", tuple(HILT_L), tuple(HILT_L + Vector((0, 0, 0.1))), "Hips"),
+	("HiltR", tuple(HILT_R), tuple(HILT_R + Vector((0, 0, 0.1))), "Hips"),
+	# Out to each side and forward of the shoulders: the elbows point at
+	# them reaching for the hip, so the arm comes round the body, not
+	# through it.
+	("ElbowPoleR", (0.75, 0.35, 1.2), (0.75, 0.35, 1.3), "Chest"),
+	("ElbowPoleL", (-0.75, 0.35, 1.2), (-0.75, 0.35, 1.3), "Chest"),
 	# The cape: a chain hanging down the back from the shoulders, which the
 	# game swings with spring physics (HumanoidModel._cape_springs). The
 	# animations leave it at rest.
@@ -429,10 +443,13 @@ def body(name, female):
 		((0, 0.01, 1.22), 0.17 if f else 0.215, 0.12 if f else 0.13, "Spine"),
 		# Ten sides round, the chest rising from the waist and falling to the
 		# neck in gentler steps.
-		((0, 0.013, 1.3), 0.19 if f else 0.255, 0.128 if f else 0.15, "Chest"),
-		((0, 0.015, 1.37), 0.21 if f else 0.29, 0.135 if f else 0.165, "Chest"),
-		((0, 0.0, 1.45), 0.2 if f else 0.28, 0.125 if f else 0.145, "Chest"),
-		((0, 0, 1.49), 0.15 if f else 0.2, 0.1 if f else 0.115, "Chest"),
+		# The chest no wider than the shoulder joints, so it never pokes out
+		# past an arm lifted away from it: the arms' caps make the shoulders.
+		((0, 0.013, 1.3), 0.19 if f else 0.235, 0.128 if f else 0.15, "Chest"),
+		((0, 0.015, 1.37), 0.2 if f else 0.245, 0.135 if f else 0.165, "Chest"),
+		# The top slopes from the neck down into the shoulders.
+		((0, 0.0, 1.44), 0.18 if f else 0.22, 0.125 if f else 0.145, "Chest"),
+		((0, 0, 1.485), 0.14 if f else 0.16, 0.1 if f else 0.11, "Chest"),
 		((0, 0, 1.51), 0.1, 0.08, "Chest"),
 	]
 	b.loft(rings, ["legs", "waist", "waist", "chest", "chest", "chest", "chest", "chest", "chest"], sides=10)
@@ -603,6 +620,14 @@ def race_parts():
 	return out
 
 
+def _joint_ball(joint, toward, r, bone):
+	"""Rings of a ball of radius `r` centred on a joint, opening toward
+	`toward`: the top end of the limb below it, so it turns in place."""
+	down = (toward - joint).normalized()
+	ball = [(-0.92, 0.39), (-0.7, 0.71), (-0.35, 0.94), (0.0, 1.0), (0.4, 0.92)]
+	return [(joint + down * (t * r), k * r, k * r, bone) for t, k in ball]
+
+
 def _limbs(b, f):
 	"""Arms, hands and legs on both sides."""
 	# Arms and legs eight-sided (the radii a little less than the six-sided
@@ -612,14 +637,19 @@ def _limbs(b, f):
 		sh = Vector(_side(x, (0.28, 0, 1.42)))
 		el = Vector(_side(x, (0.32, 0, 1.14)))
 		wr = Vector(_side(x, (0.34, 0.03, 0.89)))
-		# The shoulder: a cap rounding from the top of the chest over the head
-		# of the arm, so the arm grows out of the torso.
-		b.loft([(sh + Vector((-0.06 * x, 0, 0.065)), 0.04 * arm_r, 0.055 * arm_r, side + "UpperArm"),
-				(sh + Vector((-0.015 * x, 0, 0.05)), 0.07 * arm_r, 0.075 * arm_r, side + "UpperArm"),
-				(sh + Vector((0.005 * x, 0, 0.0)), 0.08 * arm_r, 0.078 * arm_r, side + "UpperArm"),
-				(el, 0.06 * arm_r, 0.06 * arm_r, side + "UpperArm")], ["chest", "chest", "chest"], sides=8)
-		b.loft([(el + Vector((0, 0, 0.02)), 0.058 * arm_r, 0.058 * arm_r, side + "LowerArm"),
-				(wr + Vector((0, 0, 0.0)), 0.048 * arm_r, 0.048 * arm_r, side + "LowerArm")], ["wrists"], sides=8)
+		# The shoulder: the upper arm's top end is a ball centred on the
+		# shoulder joint, so however the arm turns it shows the same round
+		# shape and no edge of it rises out of the chest.
+		down = (el - sh).normalized()
+		r = 0.082 * arm_r
+		ball = [(-0.92, 0.39), (-0.7, 0.71), (-0.35, 0.94), (0.0, 1.0), (0.4, 0.92)]
+		rings = [(sh + down * (t * r), k * r, k * r, side + "UpperArm") for t, k in ball]
+		rings.append((el, 0.06 * arm_r, 0.06 * arm_r, side + "UpperArm"))
+		b.loft(rings, ["chest"] * (len(rings) - 1), sides=8)
+		# The elbow and knee are balls on their joints too, the forearm's
+		# and shin's top ends, so bending them leaves no step.
+		b.loft(_joint_ball(el, wr, 0.062 * arm_r, side + "LowerArm")
+				+ [(wr, 0.048 * arm_r, 0.048 * arm_r, side + "LowerArm")], ["wrists"] * 5, sides=8)
 		hand = 0.85 if f else 1.0
 		b.box(_side(x, (0.345, 0.035, 0.83)), (0.085 * hand, 0.1 * hand, 0.12 * hand), side + "Hand", "hands", top=(1.0, 0.9))
 		b.box(_side(x, (0.32, 0.085, 0.86)), (0.035, 0.035, 0.06), side + "Hand", "hands")
@@ -627,13 +657,16 @@ def _limbs(b, f):
 		limb = leg * 0.96
 		hip = Vector(_side(x, (0.1, 0, 0.97)))
 		knee = Vector(_side(x, (0.12, 0, 0.52)))
-		b.loft([(hip, 0.1 * limb, 0.105 * limb, side + "UpperLeg"),
-				(knee + Vector((0, 0, 0.02)), 0.07 * limb, 0.072 * limb, side + "UpperLeg")], ["legs"], sides=8)
-		b.loft([(knee + Vector((0, 0, 0.02)), 0.068 * limb, 0.07 * limb, side + "LowerLeg"),
-				(Vector(_side(x, (0.12, -0.01, 0.35))), 0.058 * limb, 0.058 * limb, side + "LowerLeg"),
+		# The thigh's lower end is rounded like the shin's top, so the knee
+		# folded as far as sitting cross-legged stays smooth.
+		b.loft([(hip, 0.1 * limb, 0.105 * limb, side + "UpperLeg")]
+				+ _joint_ball(knee, hip, 0.064 * limb, side + "UpperLeg")[::-1], ["legs"] * 5, sides=8)
+		shin = Vector(_side(x, (0.12, -0.01, 0.35)))
+		b.loft(_joint_ball(knee, shin, 0.068 * limb, side + "LowerLeg") + [
+				(shin, 0.058 * limb, 0.058 * limb, side + "LowerLeg"),
 				(Vector(_side(x, (0.12, -0.01, 0.345))), 0.075 * limb, 0.078 * limb, side + "LowerLeg"),
 				(Vector(_side(x, (0.12, -0.02, 0.1))), 0.064 * limb, 0.066 * limb, side + "LowerLeg")],
-			   ["legs", "feet", "feet"], sides=8)
+			   ["legs"] * 5 + ["feet", "feet"], sides=8)
 		b.box(_side(x, (0.12, 0.04, 0.055)), (0.12 * leg, 0.26, 0.11), side + "Foot", "feet", top=(0.9, 0.62), shift=(0, -0.04))
 		b.box(_side(x, (0.12, 0.04, 0.008)), (0.125 * leg, 0.265, 0.016), side + "Foot", "feet", shade=0.55)
 	return b
@@ -1984,10 +2017,15 @@ READY = pose(
 # hand joins it on the handle by IK).
 READY_2H = pose(READY, {"RightUpperArm": (32, 22, 0), "RightLowerArm": (62, 0, 0), "RightHand": (-28, 0, 0)},
 				Chest=(-4, 0, -12), Spine=(-6, 0, -4))
+# Sitting cross-legged on the ground: each thigh forward and out, turned so
+# the knee bends flat, the shins folded across in front, the right over the
+# left, hands resting on the knees.
 SIT = pose(
-	both("UpperLeg", (80, -24, 0)), both("LowerLeg", (-118, 0, 0)), both("Foot", (30, 0, 0)),
-	both("UpperArm", (30, -10, 0)), both("LowerArm", (40, 0, 0)),
-	Spine=(-6, 0, 0), Chest=(-4, 0, 0), Head=(4, 0, 0), loc={"Hips": (0, -0.05, -0.74)})
+	{"RightUpperLeg": (80, 86, -42), "LeftUpperLeg": (80, -94, 42),
+	 "RightLowerLeg": (-140, 0, 0), "LeftLowerLeg": (-140, 0, 0),
+	 "RightFoot": (0, 0, 0), "LeftFoot": (0, 0, 0)},
+	both("UpperArm", (14, -24, 0)), both("LowerArm", (34, 0, 0)),
+	Spine=(8, 0, 0), Chest=(4, 0, 0), Head=(-6, 0, 0), loc={"Hips": (0, 0, -0.82)})
 DEAD = pose(
 	both("UpperArm", (10, -55, 0)), both("LowerArm", (20, 0, 0)), both("UpperLeg", (4, -8, 0)),
 	both("LowerLeg", (-6, 0, 0)), both("Foot", (-20, 0, 0)),
@@ -2228,6 +2266,36 @@ def full_body():
 	return a
 
 
+def sheathing():
+	"""Drawing and sheathing, as classic's: the right hand across to the left
+	hip ("hip"), both hands across ("hips", two weapons), the right hand
+	over the right shoulder ("back": two-handers, guns), the left over the
+	left ("back_left": bows), the right to the hip and the left over the
+	shoulder ("shield"). The weapon comes into the hand at the reach, frame 7
+	of a draw; a sheathe is a draw backwards, letting go at frame 13."""
+	a = {}
+	hip = pose(STAND, {"RightUpperArm": (20, 40, 0), "RightLowerArm": (70, 0, 0)}, Chest=(0, 0, 12), Spine=(4, 0, 0))
+	hip_out = pose(STAND, {"RightUpperArm": (50, -5, 0), "RightLowerArm": (35, 0, 0)})
+	back = pose(STAND, {"RightUpperArm": (165, -15, 0), "RightLowerArm": (100, 0, 0), "RightHand": (-20, 0, 0)})
+	back_out = pose(STAND, {"RightUpperArm": (120, -25, 0), "RightLowerArm": (20, 0, 0)})
+
+	def left(p):
+		return {k: v for k, v in mirror_pose(p).items() if k.startswith("Left")}
+
+	draws = {
+		"hip": (hip, hip_out),
+		"hips": (pose(hip, left(hip), Chest=(0, 0, 0)), pose(hip_out, left(hip_out))),
+		"back": (back, back_out),
+		"back_left": (pose(STAND, left(back)), pose(STAND, left(back_out))),
+		"shield": (pose(hip, left(back)), pose(hip_out, left(back_out))),
+	}
+	for name, (reach, out) in draws.items():
+		keys = [(0, STAND), (6, reach), (8, reach), (13, out), (20, STAND)]
+		a["draw_" + name] = keys
+		a["sheathe_" + name] = [(20 - f, p) for f, p in reversed(keys)]
+	return a
+
+
 def all_animations():
 	anims = {
 		"idle": idle(), "ready": ready(), "walk": walk(), "run": run(), "backpedal": backpedal(),
@@ -2237,6 +2305,7 @@ def all_animations():
 	anims.update(casting())
 	anims.update(shooting())
 	anims.update(full_body())
+	anims.update(sheathing())
 	return anims
 
 
@@ -2265,6 +2334,61 @@ def two_hand_ik(arm, names):
 		bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True,
 						 clear_constraints=False, use_current_action=True, bake_types={"POSE"})
 	arm.pose.bones["LeftLowerArm"].constraints.remove(ik)
+	arm.animation_data.action = None
+	bpy.ops.object.mode_set(mode="OBJECT")
+
+
+# The hip draws and sheathes: each hand that takes a hilt, by its forearm and
+# the hilt bone it reaches, and when (the IK's weight by frame).
+HILT_HANDS = {"hip": [("WeaponR", "HiltL")], "hips": [("WeaponR", "HiltL"), ("WeaponL", "HiltR")],
+			  "shield": [("WeaponR", "HiltL")]}
+ELBOW_POLE_ANGLE = -90.0
+HILT_WEIGHT = {"draw_": [(0, 0.0), (6, 1.0), (8, 1.0), (12, 0.0)],
+			   "sheathe_": [(8, 0.0), (12, 1.0), (14, 1.0), (20, 0.0)]}
+
+
+def hilt_ik(arm):
+	"""Puts the hand's grip (the weapon bone's head) on the hilt at the hip as
+	it reaches for it in the hip draws and sheathes, by IK through the hand,
+	forearm and upper arm faded in over the reach, baked into their
+	keyframes."""
+	bpy.context.view_layer.objects.active = arm
+	arm.select_set(True)
+	bpy.ops.object.mode_set(mode="POSE")
+	for kind, hands in HILT_HANDS.items():
+		chains = {}
+		for forearm, hilt in hands:
+			ik = arm.pose.bones[forearm].constraints.new("IK")
+			ik.name = "Hilt"
+			ik.target = arm
+			ik.subtarget = hilt
+			ik.chain_count = 3
+			ik.use_tail = False
+			ik.pole_target = arm
+			ik.pole_subtarget = "ElbowPoleR" if forearm.endswith("R") else "ElbowPoleL"
+			ik.pole_angle = math.radians(ELBOW_POLE_ANGLE)
+			chains[forearm] = ik
+		bones = set()
+		for weapon in chains:
+			side = "Right" if weapon.endswith("R") else "Left"
+			bones |= {side + "Hand", side + "LowerArm", side + "UpperArm"}
+		for bone in arm.data.bones:
+			bone.select = bone.name in bones
+		for prefix, weights in HILT_WEIGHT.items():
+			action = bpy.data.actions[prefix + kind]
+			arm.animation_data.action = action
+			for forearm, ik in chains.items():
+				for frame, weight in weights:
+					ik.influence = weight
+					ik.keyframe_insert("influence", frame=frame)
+			start, end = (int(f) for f in action.frame_range)
+			bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True,
+							 clear_constraints=False, use_current_action=True, bake_types={"POSE"})
+			# The IK's weight keys go with it.
+			for curve in [c for c in action.fcurves if "constraints" in c.data_path]:
+				action.fcurves.remove(curve)
+		for forearm, ik in chains.items():
+			arm.pose.bones[forearm].constraints.remove(ik)
 	arm.animation_data.action = None
 	bpy.ops.object.mode_set(mode="OBJECT")
 
@@ -2343,6 +2467,116 @@ def _join_solid(obj):
 	bone.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
 
 
+# Races whose body and head are each joined into one solid too (an
+# experiment, starting with the Human): `_join_skinned`.
+ONE_PIECE_RACES = tuple(RACES)
+ONE_PIECE_BODY = ("Body", "Head")
+
+
+def _region(bone):
+	"""Which solid of a joined body a bone's shapes go in: each bone of an
+	arm or leg its own (upper arm, forearm, hand, thigh, shin, foot), their
+	round ends overlapping at the joints, so nothing stretches when a joint
+	bends; the rest (hips, spine, chest, neck) the torso."""
+	if bone.startswith(("Left", "Right")):
+		return bone
+	return "Torso"
+
+
+def _join_by_region(obj):
+	"""Joins a skinned part into one solid per region (`_region`): the torso,
+	and each bone of the arms and legs, so the limbs move on their own,
+	apart from the body, and bend at the joints without stretching."""
+	names = [g.name for g in obj.vertex_groups]
+	mesh = bmesh.new()
+	mesh.from_mesh(obj.data)
+	deform = mesh.verts.layers.deform.verify()
+	mesh.faces.ensure_lookup_table()
+	regions = {}
+	seen = set()
+	for face in mesh.faces:
+		if face.index in seen:
+			continue
+		island, todo = [], [face]
+		seen.add(face.index)
+		while todo:
+			f = todo.pop()
+			island.append(f.index)
+			for edge in f.edges:
+				for g in edge.link_faces:
+					if g.index not in seen:
+						seen.add(g.index)
+						todo.append(g)
+		weights = face.verts[0][deform]
+		bone = names[max(weights.keys(), key=lambda k: weights[k])] if weights else "Hips"
+		regions.setdefault(_region(bone), []).extend(island)
+	mesh.free()
+	parts = []
+	for faces in regions.values():
+		part = obj.copy()
+		part.data = obj.data.copy()
+		bpy.context.scene.collection.objects.link(part)
+		keep = set(faces)
+		cut = bmesh.new()
+		cut.from_mesh(part.data)
+		cut.faces.ensure_lookup_table()
+		bmesh.ops.delete(cut, geom=[f for f in cut.faces if f.index not in keep], context="FACES")
+		loose = [v for v in cut.verts if not v.link_faces]
+		bmesh.ops.delete(cut, geom=loose, context="VERTS")
+		cut.to_mesh(part.data)
+		cut.free()
+		_join_skinned(part)
+		parts.append(part)
+	empty = bmesh.new()
+	empty.to_mesh(obj.data)
+	empty.free()
+	bpy.ops.object.select_all(action="DESELECT")
+	for part in parts:
+		part.select_set(True)
+	obj.select_set(True)
+	bpy.context.view_layer.objects.active = obj
+	bpy.ops.object.join()
+	obj.select_set(False)
+
+
+def _join_skinned(obj):
+	"""Joins a skinned part's overlapping shapes (torso, neck, limbs, hands,
+	feet) into one solid, as `_join_solid` does, then gives every vertex its
+	bone weights from the nearest point of the part as it was built, blended
+	across the faces there, so the joints where shapes now meet bend with
+	both bones."""
+	source = obj.copy()
+	source.data = obj.data.copy()
+	bpy.context.scene.collection.objects.link(source)
+	bpy.ops.object.select_all(action="DESELECT")
+	bpy.context.view_layer.objects.active = obj
+	obj.select_set(True)
+	bpy.ops.object.mode_set(mode="EDIT")
+	bpy.ops.mesh.select_all(action="SELECT")
+	bpy.ops.mesh.intersect_boolean(operation="UNION", use_swap=False, use_self=True, solver="EXACT")
+	bpy.ops.mesh.select_all(action="SELECT")
+	bpy.ops.mesh.normals_make_consistent(inside=False)
+	bpy.ops.mesh.quads_convert_to_tris(quad_method="BEAUTY", ngon_method="BEAUTY")
+	bpy.ops.object.mode_set(mode="OBJECT")
+	# Weights from the part as built.
+	for group in list(obj.vertex_groups):
+		obj.vertex_groups.remove(group)
+	for group in source.vertex_groups:
+		obj.vertex_groups.new(name=group.name)
+	transfer = obj.modifiers.new("Weights", "DATA_TRANSFER")
+	transfer.object = source
+	transfer.use_vert_data = True
+	transfer.data_types_verts = {"VGROUP_WEIGHTS"}
+	transfer.vert_mapping = "POLYINTERP_NEAREST"
+	transfer.layers_vgroup_select_src = "ALL"
+	transfer.layers_vgroup_select_dst = "NAME"
+	# Applied before the armature, so it goes first in the stack.
+	bpy.ops.object.modifier_move_to_index(modifier="Weights", index=0)
+	bpy.ops.object.modifier_apply(modifier="Weights")
+	obj.select_set(False)
+	bpy.data.objects.remove(source, do_unlink=True)
+
+
 def build(race):
 	out = os.path.join(ROOT, "assets", "models", race, race + ".glb")
 	blend = os.path.join(HERE, race + ".blend")
@@ -2361,9 +2595,12 @@ def build(race):
 		obj = builder.build(arm, material)
 		if builder.name.startswith(ONE_PIECE):
 			_join_solid(obj)
+		elif race in ONE_PIECE_RACES and builder.name.startswith(ONE_PIECE_BODY):
+			_join_by_region(obj)
 		tris[builder.name] = sum(len(f) - 2 for f in builder.faces)
 	key_animations(arm, all_animations())
 	two_hand_ik(arm, TWO_HAND_ANIMS)
+	hilt_ik(arm)
 	os.makedirs(os.path.dirname(out), exist_ok=True)
 	bpy.ops.wm.save_as_mainfile(filepath=blend)
 	bpy.ops.export_scene.gltf(

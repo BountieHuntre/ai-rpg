@@ -112,6 +112,7 @@ const ACTIONS := [
 	["strafe_left", "Strafe Left", "Movement"], ["strafe_right", "Strafe Right", "Movement"],
 	["jump", "Jump", "Movement"], ["autorun", "Toggle Autorun", "Movement"],
 	["toggle_walk", "Toggle Run/Walk", "Movement"], ["sit", "Sit/Stand", "Movement"],
+	["toggle_sheath", "Sheathe/Unsheathe Weapon", "Combat"],
 	["target_next", "Target Nearest Enemy", "Targeting"],
 	["bags", "Open All Bags", "Interface"], ["character_window", "Character Info", "Interface"],
 	["spellbook", "Spellbook", "Interface"], ["talents", "Talents", "Interface"],

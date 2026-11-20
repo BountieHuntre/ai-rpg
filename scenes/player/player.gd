@@ -81,6 +81,8 @@ func handle_action(event: InputEvent) -> void:
 		autorunning = not autorunning
 	elif Settings.pressed(event, "sit"):
 		sitting = not sitting
+	elif Settings.pressed(event, "toggle_sheath"):
+		toggle_sheath()
 	elif Settings.pressed(event, "toggle_walk"):
 		walking = not walking
 	elif Settings.pressed(event, "move_up") or Settings.pressed(event, "move_down"):

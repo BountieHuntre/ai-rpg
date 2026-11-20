@@ -265,7 +265,12 @@ const LOOPS := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "str
 const LOCO := ["idle", "ready", "walk", "run", "backpedal", "strafe_left", "strafe_right", "fall", "sit",
 	"stunned", "dead", "cast", "channel", "dance", "aim_bow", "aim_gun", "ready_2h"]
 const UPPER := ["attack_1h", "attack_1h_b", "attack_2h", "attack_off", "punch", "block", "parry", "dodge", "hit",
-	"cast_release", "shoot_bow", "shoot_gun", "throw", "shoot_wand", "attack_2h_b", "parry_2h", "hit_2h"]
+	"cast_release", "shoot_bow", "shoot_gun", "throw", "shoot_wand", "attack_2h_b", "parry_2h", "hit_2h",
+	"draw_hip", "draw_hips", "draw_back", "draw_back_left", "draw_shield",
+	"sheathe_hip", "sheathe_hips", "sheathe_back", "sheathe_back_left", "sheathe_shield"]
+## When a draw's weapon reaches the hand, and a sheathe's leaves it (seconds).
+const DRAW_SWAP := 7.0 / 30.0
+const SHEATHE_SWAP := 13.0 / 30.0
 ## Creature props held in both hands, as two-handed items are.
 const TWO_HANDED_PROPS := ["sword2h", "axe2h", "mace2h", "staff", "polearm"]
 const FULL := ["jump", "land", "sit_down", "stand_up", "death", "wave", "bow", "cheer", "nod", "laugh", "cry"]
@@ -349,6 +354,29 @@ var _caster: SpellCaster
 var _parts: Dictionary
 ## Shooting: the ranged weapon is drawn in place of the melee ones.
 var _drawn := false
+## Classic's sheath states (UNIT_FIELD_BYTES_2): weapons put away, melee
+## weapons in hand, or the ranged weapon in hand. Put away, weapons hang at
+## the hips and on the back (`_sheath_place`) as still copies of their props
+## on a body bone, `_sheathed` (part -> MeshInstance3D).
+## A change plays classic's draw or sheathe (`_sheath_anim`) and swaps the
+## props when the hand reaches the weapon (`_swap_left`); `_sheath_shown` is
+## what's shown meanwhile.
+enum Sheath { UNARMED, MELEE, RANGED }
+var sheath_state := Sheath.MELEE:
+	set(value):
+		if value == sheath_state:
+			return
+		sheath_state = value
+		var anim := "" if _sheath_instant or not _skeleton else _sheath_anim(_sheath_shown, value)
+		if anim == "" or _loco in ["dead", "sit", "stunned"] or _tree.get("parameters/upper/active"):
+			_show_sheath(value)
+			return
+		_upper(anim)
+		_swap_left = DRAW_SWAP if anim.begins_with("draw") else SHEATHE_SWAP
+var _sheath_shown := Sheath.MELEE
+var _sheath_instant := false
+var _swap_left := 0.0
+var _sheathed: Dictionary = {}
 var _was_casting := false
 ## While casting, the hands glow in the spell's school colour (the shader's
 ## hand_glow, pulsing) and cubes drift up from each (Vfx.hand_glow on the hand
@@ -688,40 +716,53 @@ func _apply_equipment() -> void:
 	_apply_props()
 
 
-## Weapons and shield in hand, or the ranged weapon while shooting.
+## Weapons and shield in hand, or the ranged weapon while shooting, and what
+## isn't in hand put away at the hips and on the back.
 func _apply_props() -> void:
 	var main := _item(Inventory.Slot.MAIN_HAND)
 	var off := _item(Inventory.Slot.OFF_HAND)
-	var main_prop := ""
-	if main.size() > 0 and int(main.get("class", 0)) == 2:
-		main_prop = "Main_" + _shape(MAIN_PROPS.get(int(main.subclass), ""), main)
-	var off_prop := ""
-	if off.size() > 0:
-		if int(off.get("class", 0)) == 2:
-			off_prop = "Off_" + _shape(OFF_PROPS.get(int(off.subclass), "sword"), off)
-		elif int(off.get("subclass", 0)) == Inventory.ARMOR_SUBCLASS_SHIELD:
-			off_prop = _shape("shield", off)
-		else:
-			off_prop = "Off_" + _shape("orb", off)
-	if not creature_gear.is_empty():
-		main_prop = "Main_" + str(creature_gear.get("main", "")) if creature_gear.get("main", "") != "" else ""
-		off_prop = str(creature_gear.get("off", ""))
+	var names := _prop_names()
+	var main_prop: String = names[0]
+	var off_prop: String = names[1]
+	var ranged_prop: String = names[2]
 	var ranged := _item(Inventory.Slot.RANGED)
-	if _drawn and ranged.size() > 0:
-		main_prop = RANGED_PROPS.get(int(ranged.subclass), "")
-		for shape: String in RANGED_WORDS.get(main_prop, {}):
-			if _named(ranged, RANGED_WORDS[main_prop][shape]):
-				main_prop = shape
-		off_prop = ""
+	if ranged.size() > 0:
 		_colors[RANGED] = _handle_color(ranged).lightened(0.15)
 		_colors[RANGED_TRIM] = Color(0.3, 0.3, 0.33)
-		if main_prop == "Main_wand":
+	var hand_main := main_prop
+	var hand_off := off_prop
+	var put_away := {}
+	if _sheath_shown != Sheath.MELEE:
+		hand_main = ""
+		hand_off = ""
+		put_away[main_prop] = true
+		put_away[off_prop] = true
+	if _sheath_shown == Sheath.RANGED and ranged_prop != "":
+		hand_main = ranged_prop
+		if ranged_prop == "Main_wand":
+			# The wand takes the main hand's colours; the weapon it replaces
+			# isn't shown at the hip meanwhile.
 			main = ranged
+			put_away.erase(main_prop)
+	elif ranged_prop.begins_with("Ranged_") and not ranged_prop.begins_with("Ranged_thrown"):
+		put_away[ranged_prop] = true
+	# A bow or gun shows on the back only where no melee weapon or shield
+	# hangs there.
+	for part: String in put_away.keys():
+		if part != "" and not part.begins_with("Ranged_") and _sheath_place(part)[1] == "Chest":
+			for ranged_part: String in put_away.keys():
+				if ranged_part.begins_with("Ranged_"):
+					put_away.erase(ranged_part)
+	# Held off-hand things, wands and thrown weapons aren't worn put away.
+	for part: String in put_away.keys():
+		if part == "" or part.begins_with("Off_orb") or part.begins_with("Main_wand") or part.begins_with("Ranged_thrown"):
+			put_away.erase(part)
 	for part: String in _parts:
 		if part.begins_with("Main_") or part.begins_with("Ranged_"):
-			_show(part, part == main_prop)
+			_show(part, part == hand_main)
 		elif part.begins_with("Off_") or part.begins_with("Shield_"):
-			_show(part, part == off_prop)
+			_show(part, part == hand_off)
+	_show_sheathed(put_away)
 	_patterns[BLADE] = Pattern.NONE
 	_patterns[HANDLE] = Pattern.WOOD
 	_patterns[RANGED] = Pattern.WOOD
@@ -768,6 +809,182 @@ func _apply_props() -> void:
 
 
 ## Sends the slots' colours and patterns to the shader.
+func _show_sheath(state: Sheath) -> void:
+	_swap_left = 0.0
+	_sheath_shown = state
+	_drawn = state == Sheath.RANGED
+	if _skeleton:
+		_apply_props()
+		_push_colors()
+
+
+## The draw or sheathe going from what's shown to `to`, or "" for none: the
+## melee weapons' by where they hang (a two-hander or one weapon at the back
+## over the shoulder, a weapon and shield the hip and shoulder, two weapons
+## both hips, one the hip), the ranged weapon's over the shoulder (a bow the
+## left), wands and thrown weapons none.
+func _sheath_anim(from: Sheath, to: Sheath) -> String:
+	var names := _prop_names()
+	var main: String = names[0]
+	var off: String = names[1]
+	var ranged: String = names[2]
+	var ranged_anim := ""
+	if ranged.begins_with("Ranged_bow") or ranged.begins_with("Ranged_longbow"):
+		ranged_anim = "back_left"
+	elif ranged.begins_with("Ranged_") and not ranged.begins_with("Ranged_thrown"):
+		ranged_anim = "back"
+	if to == Sheath.RANGED:
+		return "draw_" + ranged_anim if ranged_anim != "" else ""
+	if from == Sheath.RANGED and to == Sheath.UNARMED:
+		return "sheathe_" + ranged_anim if ranged_anim != "" else ""
+	var melee := ""
+	if main != "" and _sheath_place(main)[1] == "Chest":
+		melee = "back"
+	elif off.begins_with("Shield_"):
+		melee = "shield"
+	elif main != "" and off.begins_with("Off_") and not off.begins_with("Off_orb"):
+		melee = "hips"
+	elif main != "" or (off.begins_with("Off_") and not off.begins_with("Off_orb")):
+		melee = "hip"
+	if melee == "":
+		return ""
+	return ("draw_" if to == Sheath.MELEE else "sheathe_") + melee
+
+
+## The props for what's worn: [main hand, off hand, ranged], "" for none.
+func _prop_names() -> Array:
+	var main := _item(Inventory.Slot.MAIN_HAND)
+	var off := _item(Inventory.Slot.OFF_HAND)
+	var main_prop := ""
+	if main.size() > 0 and int(main.get("class", 0)) == 2:
+		main_prop = "Main_" + _shape(MAIN_PROPS.get(int(main.subclass), ""), main)
+	var off_prop := ""
+	if off.size() > 0:
+		if int(off.get("class", 0)) == 2:
+			off_prop = "Off_" + _shape(OFF_PROPS.get(int(off.subclass), "sword"), off)
+		elif int(off.get("subclass", 0)) == Inventory.ARMOR_SUBCLASS_SHIELD:
+			off_prop = _shape("shield", off)
+		else:
+			off_prop = "Off_" + _shape("orb", off)
+	if not creature_gear.is_empty():
+		main_prop = "Main_" + str(creature_gear.get("main", "")) if creature_gear.get("main", "") != "" else ""
+		off_prop = str(creature_gear.get("off", ""))
+	var ranged := _item(Inventory.Slot.RANGED)
+	var ranged_prop := ""
+	if ranged.size() > 0:
+		ranged_prop = RANGED_PROPS.get(int(ranged.subclass), "")
+		for shape: String in RANGED_WORDS.get(ranged_prop, {}):
+			if _named(ranged, RANGED_WORDS[ranged_prop][shape]):
+				ranged_prop = shape
+	return [main_prop, off_prop, ranged_prop]
+
+
+## Shows still copies of the props in `parts` where they hang put away, and
+## takes away any others.
+func _show_sheathed(parts: Dictionary) -> void:
+	for part: String in _sheathed.keys():
+		if not parts.has(part):
+			_sheathed[part].get_parent().queue_free()
+			_sheathed.erase(part)
+	for part: String in parts:
+		if _sheathed.has(part) or not _parts.has(part):
+			continue
+		var place := _sheath_place(part)
+		var grip: String = place[0]
+		var attach := BoneAttachment3D.new()
+		attach.bone_name = place[1]
+		_skeleton.add_child(attach)
+		var mesh := MeshInstance3D.new()
+		mesh.name = part
+		mesh.mesh = _parts[part][0]
+		mesh.material_override = _material
+		mesh.layers = Targeting.UNIT_RENDER_LAYER
+		_part_graphics(part, mesh)
+		attach.add_child(mesh)
+		# The prop's vertices as bound to its grip bone, with that bone where
+		# it hangs, seen from the body bone it hangs on.
+		var skin: Skin = _parts[part][1]
+		var grip_bone := _skeleton.find_bone(grip)
+		var bind := Transform3D.IDENTITY
+		for i in skin.get_bind_count():
+			if skin.get_bind_name(i) == grip or (skin.get_bind_name(i) == "" and skin.get_bind_bone(i) == grip_bone):
+				bind = skin.get_bind_pose(i)
+		var body_rest := _skeleton.get_bone_global_rest(_skeleton.find_bone(place[1]))
+		mesh.transform = body_rest.affine_inverse() * place[2] * bind
+		_sheathed[part] = mesh
+
+
+## Where a prop hangs put away, as classic wears them: [its grip bone, the
+## body bone it hangs on, its grip bone's frame there (skeleton space)].
+## One-handers at the hips (the main hand's on the left, for a cross draw;
+## the off hand's on the right), hilts at the belt just touching the hips,
+## blades down, back and out, clear of the legs as they swing; two-handed swords
+## across the back, hilt over the right shoulder; other two-handers, staves
+## and polearms across it head up; shields, bows, guns and crossbows on the
+## back. Staves and polearms, held by the middle, hang by the middle. Sized
+## from the skeleton, so it fits every race.
+func _sheath_place(part: String) -> Array:
+	var grip := "WeaponR"
+	if part.begins_with("Off_") or part.begins_with("Ranged_bow") or part.begins_with("Ranged_longbow"):
+		grip = "WeaponL"
+	elif part.begins_with("Shield_"):
+		grip = "ShieldL"
+	var hips := _rest("Hips").origin
+	var chest := _rest("Chest").origin
+	var tall := hips.y / 0.96
+	var legs := absf(_rest("LeftUpperLeg").origin.x) / 0.11
+	var wide := absf(_rest("RightUpperArm").origin.x) / 0.28
+	var weapon := _rest(grip)
+	var body := "Chest"
+	var at := Vector3.ZERO
+	var turn := Basis.IDENTITY
+	var two_hand := false
+	for kind: String in TWO_HANDED_PROPS:
+		if part.begins_with("Main_" + kind):
+			two_hand = true
+	if part.begins_with("Shield_"):
+		turn = Basis(Vector3.UP, PI / 2.0)
+		at = chest + Vector3(0, -0.05 * tall, 0.2 * wide)
+	elif part.begins_with("Ranged_bow") or part.begins_with("Ranged_longbow"):
+		turn = Basis(Vector3.BACK, 0.6) * Basis(Vector3.UP, PI / 2.0)
+		at = chest + Vector3(0, 0, 0.24 * wide)
+	elif part.begins_with("Ranged_"):
+		turn = _aim(Vector3(-0.35, 1, 0), Vector3.BACK)
+		at = chest + Vector3(0.12 * wide, -0.2 * tall, 0.22 * wide)
+	elif part.begins_with("Main_sword2h"):
+		turn = _aim(Vector3(-0.45, -1, 0), Vector3.BACK)
+		at = chest + Vector3(0.17 * wide, 0.28 * tall, 0.2 * wide)
+	elif part.begins_with("Main_staff") or part.begins_with("Main_polearm"):
+		# Held by the middle, so hung by the middle, steeply across.
+		turn = _aim(Vector3(0.75, 1, 0), Vector3.BACK)
+		at = chest + Vector3(0, 0.02 * tall, 0.2 * wide)
+	elif two_hand:
+		turn = _aim(Vector3(0.4, 1, 0), Vector3.BACK)
+		at = chest + Vector3(-0.12 * wide, -0.2 * tall, 0.2 * wide)
+	elif part.begins_with("Off_"):
+		body = "Hips"
+		turn = _aim(Vector3(0.28, -1, 0.45), Vector3.RIGHT)
+		at = hips + Vector3(0.2 * legs, 0.1 * tall, -0.06 * tall)
+	else:
+		body = "Hips"
+		turn = _aim(Vector3(-0.28, -1, 0.45), Vector3.LEFT)
+		at = hips + Vector3(-0.2 * legs, 0.1 * tall, -0.06 * tall)
+	return [grip, body, Transform3D(turn * weapon.basis, at)]
+
+
+func _rest(bone: String) -> Transform3D:
+	return _skeleton.get_bone_global_rest(_skeleton.find_bone(bone))
+
+
+## The turn that points a prop's length (forward, -Z, as held at rest) along
+## `along` and its side (+X) toward `side`.
+static func _aim(along: Vector3, side: Vector3) -> Basis:
+	var d := along.normalized()
+	var x := (side - d * side.dot(d)).normalized()
+	var z := -d
+	return Basis(x, z.cross(x), z)
+
+
 func _push_colors() -> void:
 	_material.set_shader_parameter("slot_colors", PackedColorArray(_colors.map(func(c: Color) -> Color: return c.srgb_to_linear())))
 	_material.set_shader_parameter("slot_pattern", _patterns)
@@ -952,6 +1169,10 @@ func attach(unit: PlayerUnit) -> void:
 	_profile = unit.profile
 	_caster = unit.get_node_or_null("SpellCaster")
 	_follow(unit, unit.combatant)
+	# As the unit's weapons are, without drawing or sheathing them.
+	_sheath_instant = true
+	sheath_state = unit.sheath_state
+	_sheath_instant = false
 	if _caster:
 		_caster.spell_finished.connect(_on_spell)
 
@@ -1136,6 +1357,11 @@ func _update_cape(delta: float) -> void:
 func _process(delta: float) -> void:
 	if _body:
 		_update_unit(delta)
+	# A draw's or sheathe's weapon reaching the hand.
+	if _swap_left > 0.0:
+		_swap_left -= delta
+		if _swap_left <= 0.0:
+			_show_sheath(sheath_state)
 	_advance(delta)
 
 
@@ -1168,12 +1394,14 @@ func _update_unit(delta: float) -> void:
 		if key != _gear_key:
 			_gear_key = key
 			show_equipment(_profile.equipment)
-	# The ranged weapon is out while shooting.
-	var drawn := _combatant.shoot_target != null
-	if drawn != _drawn:
-		_drawn = drawn
-		_apply_props()
-		_push_colors()
+	# Weapons in hand or put away: a player's or bot's by classic's rules
+	# (PlayerUnit.update_sheath); anyone else's in hand, the ranged one while
+	# shooting.
+	if _unit:
+		_unit.update_sheath(delta)
+		sheath_state = _unit.sheath_state
+	else:
+		sheath_state = Sheath.RANGED if _combatant.shoot_target != null else Sheath.MELEE
 	_update_loco(delta)
 	_update_glow()
 	_update_cape(delta)
@@ -1331,7 +1559,7 @@ func _attack(off_hand: bool) -> void:
 ## Holding a two-handed weapon (not while its ranged weapon is out): it's
 ## held in both hands in a fight.
 func _two_handed() -> bool:
-	if _drawn:
+	if _sheath_shown != Sheath.MELEE:
 		return false
 	if not creature_gear.is_empty():
 		return str(creature_gear.get("main", "")) in TWO_HANDED_PROPS
