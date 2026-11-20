@@ -48,7 +48,34 @@ const MOUNTAIN_ROUGHNESS := 14.0
 ## through a pass.
 const EDGE_INSET := 4.0
 
+## The edge mountains wind in and out (`edge_ring`): along each side of the
+## square they start anywhere from EDGE_NEAR yards in to EDGE_FAR (EDGE_FAR_SMALL
+## on the 400-yard starting zones), by noise every EDGE_STEP yards, but never
+## nearer than EDGE_CLEAR to anything the zone keeps clear (`edge_keep`).
+const EDGE_NEAR := 25.0
+const EDGE_FAR := 150.0
+const EDGE_FAR_SMALL := 100.0
+const EDGE_STEP := 8.0
+const EDGE_CLEAR := 15.0
+const EDGE_FULL := 6.0
+## The mountains rise to full height over this many yards from where they
+## start, so a deep spur is a solid ridge, not a long slope.
+const EDGE_RISE := 45.0
+## Within PASS_RIDGE_SPAN yards along an edge of where a pass crosses it, the
+## mountains start at least PASS_RIDGE yards in, so the pass is cut through a
+## ridge and climbs gently to its crest.
+const PASS_RIDGE := 60.0
+const PASS_RIDGE_SPAN := 45.0
+
+## Ragged places (`ragged_distance`): a circle's rim wobbles in and out by up
+## to this share of its radius.
+const RAGGED := 0.3
+
 static var _land: FastNoiseLite
+static var _ragged: FastNoiseLite
+## Per side (west, east, north, south), how far in the mountains start at
+## each EDGE_STEP along it, from its -x or -z end.
+var _edge_depths: Array[PackedFloat32Array] = []
 
 ## The continent the zone is on (World.CONTINENTS), for its passes.
 var continent := "aldmark"
@@ -89,6 +116,34 @@ static func land_noise() -> FastNoiseLite:
 	return _land
 
 
+## The noise ragged places' rims follow.
+static func ragged_noise() -> FastNoiseLite:
+	if _ragged == null:
+		_ragged = FastNoiseLite.new()
+		_ragged.seed = LAND_SEED + 7
+		_ragged.frequency = 1.0
+		_ragged.fractal_type = FastNoiseLite.FRACTAL_NONE
+	return _ragged
+
+
+## How far a point is from a ragged place's middle, as a share of what it
+## would be from a round one: the circle of `radius` round `spot` has its rim
+## wobbled in and out by up to RAGGED of the radius, by noise along it, so a
+## flat, field, lake, wood or hill has a natural outline. Used everywhere the
+## place is tested, so the ground, its layers, trees and grass agree. With
+## `grow` the rim only reaches further out (flats under buildings).
+static func ragged_distance(point: Vector2, spot: Vector2, radius: float, grow := false) -> float:
+	var offset := point - spot
+	var length := offset.length()
+	if length < 0.001:
+		return 0.0
+	# Round a small ring in the noise, the same size for every place, so each
+	# has a few broad lobes whatever its size; where it lies picks which.
+	var n := clampf(ragged_noise().get_noise_2dv(spot / 40.0 + offset / length * 0.5) * 1.2, -0.5, 0.5)
+	var wobble := 1.0 + (RAGGED * (n + 0.5) if grow else RAGGED * 2.0 * n)
+	return length / wobble
+
+
 ## Whether a point (x, z) is in this zone's square.
 func contains(point: Vector2) -> bool:
 	var half := size / 2.0
@@ -110,6 +165,185 @@ static func mountain_height(x: float, z: float, ring: float) -> float:
 	return ring * (MOUNTAIN_HEIGHT + land_noise().get_noise_2d(x * 3.1, z * 3.1) * MOUNTAIN_ROUGHNESS)
 
 
+## How far up the edge mountains a point is (0 to 1): each side's ring by
+## its winding depth there (`_edge_depths`), joined so corners round off.
+## Heights at the square's edge are full mountain on every side, so zones
+## still meet exactly.
+func edge_ring(point: Vector2) -> float:
+	if _edge_depths.is_empty():
+		make_edges()
+	var local := point - center
+	var half := size / 2.0
+	var open := 1.0
+	for side in 4:
+		var inward: float
+		var along: float
+		match side:
+			0:
+				inward = local.x + half
+				along = local.y + half
+			1:
+				inward = half - local.x
+				along = local.y + half
+			2:
+				inward = local.y + half
+				along = local.x + half
+			_:
+				inward = half - local.y
+				along = local.x + half
+		var depths := _edge_depths[side]
+		var at := clampf(along / EDGE_STEP, 0.0, depths.size() - 1.0)
+		var i := mini(int(at), depths.size() - 2)
+		var depth := lerpf(depths[i], depths[i + 1], at - i)
+		var t := clampf((depth - inward) / minf(EDGE_RISE, maxf(depth - EDGE_FULL, 1.0)), 0.0, 1.0)
+		open *= 1.0 - t * t * (3.0 - 2.0 * t)
+	return 1.0 - open
+
+
+## What the edge mountains keep clear of: circles [center, radius] and
+## lines (each a list of points). By default the zone's places (not the
+## big ones, woods and hills that may run up into the mountains), spawns,
+## walled places, things to use, chests, graveyard and the ends of its
+## passes; a zone adds its flats, lakes, fields and roads (`edge_keep_more`).
+func edge_keep() -> Array:
+	var circles: Array = []
+	var lines: Array = []
+	for place: Array in places:
+		if float(place[2]) <= 40.0:
+			circles.append([place[1], place[2]])
+	# Creatures may roam the foot of a slope: a spawn keeps its middle clear.
+	for spawn: Array in spawns:
+		circles.append([spawn[1], spawn[2] * 0.5])
+	for wall: Array in enclosures:
+		var box := Rect2(wall[0], wall[1], wall[2] - wall[0], wall[3] - wall[1])
+		circles.append([box.get_center(), box.size.length() / 2.0])
+	for thing: Array in quest_objects:
+		circles.append([thing[2], 6.0])
+	for chest: Array in chests:
+		circles.append([chest[1], chest[2]])
+	circles.append([Vector2(graveyard.x, graveyard.z), 12.0])
+	# A pass cuts through the mountains: only its two ends are kept clear,
+	# so the valley reaches the road on each side.
+	for line: Dictionary in passes():
+		var points: Array = line.line
+		circles.append([points[0], 10.0])
+		circles.append([points[-1], 10.0])
+	var more := edge_keep_more()
+	circles.append_array(more[0])
+	lines.append_array(more[1])
+	return [circles, lines]
+
+
+## A zone's own things the edge mountains keep clear of: [circles, lines].
+func edge_keep_more() -> Array:
+	return [[], []]
+
+
+## Works out each side's winding depths (`edge_ring`): noise by the world
+## position along it, pulled in short of anything kept clear, then smoothed
+## so the pulling leaves no kinks.
+func make_edges() -> void:
+	var noise := FastNoiseLite.new()
+	noise.seed = hash(zone_name) & 0xFFFF
+	noise.frequency = 1.0 / 130.0
+	noise.fractal_octaves = 3
+	var far := EDGE_FAR if size > 500.0 else EDGE_FAR_SMALL
+	var keep := edge_keep()
+	# Nothing reaching into a pass's way counts (a place named for it, a
+	# road into it): the pass cuts its own way. Its two ends do.
+	var ends: Array[Vector2] = []
+	for each: Dictionary in passes():
+		ends.append(each.line[0])
+		ends.append(each.line[-1])
+	var circles: Array = []
+	for circle: Array in keep[0]:
+		if circle[0] in ends or distance_to_pass(circle[0]) > float(circle[1]) + PASS_FLOOR + PASS_SIDES:
+			circles.append(circle)
+	for line: Array in keep[1]:
+		for i in line.size() - 1:
+			var a: Vector2 = line[i]
+			var b: Vector2 = line[i + 1]
+			var steps := maxi(1, int(a.distance_to(b) / 6.0))
+			for k in steps + 1:
+				# Not where it runs into a pass, which cuts its own way.
+				var spot := a.lerp(b, float(k) / steps)
+				if distance_to_pass(spot) > PASS_FLOOR + PASS_SIDES + 10.0:
+					circles.append([spot, 8.0])
+	var half := size / 2.0
+	var count := int(size / EDGE_STEP) + 1
+	var depths: Array[PackedFloat32Array] = []
+	for side in 4:
+		var row := PackedFloat32Array()
+		var limit := PackedFloat32Array()
+		row.resize(count)
+		limit.resize(count)
+		for i in count:
+			var along := i * EDGE_STEP - half
+			var edge: Vector2
+			match side:
+				0: edge = center + Vector2(-half, along)
+				1: edge = center + Vector2(half, along)
+				2: edge = center + Vector2(along, -half)
+				_: edge = center + Vector2(along, half)
+			var n := clampf((noise.get_noise_2dv(edge) + 0.55) / 1.1, 0.0, 1.0)
+			row[i] = lerpf(EDGE_NEAR, far, n)
+			var allowed := far
+			for circle: Array in circles:
+				var spot: Vector2 = circle[0] - center
+				var inward: float
+				var lateral: float
+				match side:
+					0:
+						inward = spot.x + half
+						lateral = absf(spot.y - along)
+					1:
+						inward = half - spot.x
+						lateral = absf(spot.y - along)
+					2:
+						inward = spot.y + half
+						lateral = absf(spot.x - along)
+					_:
+						inward = half - spot.y
+						lateral = absf(spot.x - along)
+				# The mountains stop short of the circle, grown by EDGE_CLEAR:
+				# a round notch where it comes near.
+				# Not something beyond this edge (a pass's far end, in the
+				# neighbouring zone).
+				var reach: float = circle[1] + EDGE_CLEAR
+				if lateral < reach and inward > 0.0:
+					allowed = minf(allowed, inward - sqrt(reach * reach - lateral * lateral))
+			limit[i] = maxf(allowed, EDGE_FULL + 6.0)
+			row[i] = minf(row[i], limit[i])
+		for pass_count in 2:
+			var smooth := row.duplicate()
+			for i in count:
+				var total := 0.0
+				var weight := 0.0
+				for k in range(-2, 3):
+					var j := clampi(i + k, 0, count - 1)
+					total += row[j]
+					weight += 1.0
+				smooth[i] = minf(total / weight, limit[i])
+			row = smooth
+		# A ridge where a pass crosses this side.
+		var a: Vector2 = center + [Vector2(-half, -half), Vector2(half, -half), Vector2(-half, -half), Vector2(-half, half)][side]
+		var b: Vector2 = center + [Vector2(-half, half), Vector2(half, half), Vector2(half, -half), Vector2(half, half)][side]
+		for each: Dictionary in passes():
+			var line: Array = each.line
+			for k in line.size() - 1:
+				var hit: Variant = Geometry2D.segment_intersects_segment(a, b, line[k], line[k + 1])
+				if hit == null:
+					continue
+				var at: float = (hit as Vector2).distance_to(a)
+				for i in count:
+					var lateral := absf(i * EDGE_STEP - at)
+					if lateral < PASS_RIDGE_SPAN:
+						var ridge := PASS_RIDGE * _bump(lateral / PASS_RIDGE_SPAN * 0.5)
+						row[i] = maxf(row[i], minf(ridge, limit[i]))
+		depths.append(row)
+	_edge_depths = depths
+
+
 ## This zone's continent's passes (PASSES).
 func passes() -> Array:
 	return PASSES.get(continent, [])
@@ -117,8 +351,19 @@ func passes() -> Array:
 
 ## Cuts the passes into a height: a road-wide floor a little above the land
 ## around, its sides easing up into the mountains, highest at the border.
+## Every zone's height ends here, so it also makes the last yards before the
+## border the same in every zone.
 func carve_passes(x: float, z: float, height: float) -> float:
 	var point := Vector2(x, z)
+	# Within EDGE_FULL of the border the ground is plain full mountain, which
+	# every zone works out alike, so neighbours meet exactly whatever either
+	# has near its edge (a gate's flat, a raised upland). The passes are cut
+	# after, alike on both sides.
+	var local := point - center
+	var inward := size / 2.0 - maxf(absf(local.x), absf(local.y))
+	if inward < EDGE_FULL:
+		var border := base_height(x, z) + mountain_height(x, z, 1.0)
+		height = lerpf(border, height, smoothstep(0.0, EDGE_FULL, inward))
 	for each: Dictionary in passes():
 		var line: Array = each.line
 		var along := Vector2.ZERO
@@ -134,7 +379,10 @@ func carve_passes(x: float, z: float, height: float) -> float:
 		if distance > PASS_FLOOR + PASS_SIDES:
 			continue
 		var from_border := absf(along.y - float(each.z)) if each.has("z") else absf(along.x - float(each.x))
-		var crest := PASS_CREST * _bump(from_border / 70.0)
+		# The crest grows with how far into the mountains the road is, so it
+		# climbs over the whole rise, not up the mountains' foot.
+		var rise := 1.0 if from_border < EDGE_FULL else edge_ring(along)
+		var crest := PASS_CREST * _bump(from_border / 70.0) * rise
 		var floor_height := base_height(along.x, along.y) + crest
 		var cut := lerpf(floor_height, height, smoothstep(PASS_FLOOR, PASS_FLOOR + PASS_SIDES, distance))
 		height = minf(height, cut)
@@ -185,8 +433,12 @@ func build_ground(step: float, color: Callable, weights := Callable(), textures 
 		flat.vertex_color_use_as_albedo = true
 		flat.vertex_color_is_srgb = true
 		material = flat
-	# The shared noise is made now, before the worker threads read it.
+	# The shared noise and the winding edges are made now, before the worker
+	# threads read them.
 	land_noise()
+	ragged_noise()
+	if _edge_depths.is_empty():
+		make_edges()
 	ground.build(size, step, height_at, color, material, center, weights, _ground_across)
 	_ground = ground
 

@@ -15,8 +15,6 @@ const ZONE_NAME := "The Tallgrass"
 const CENTER := Vector2(-900, 400)
 const SIZE := 1200.0
 const STEP := 2.5
-const MOUNTAIN_START := 56.0
-const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 1.4
 const ROAD_WIDTH := 2.6
 const SEED := 4701
@@ -192,21 +190,27 @@ func _ready() -> void:
 	spawn_objects(SEED + 6, WATER_LEVEL)
 
 
+## The town, the flats and the roads stay clear of the edge
+## mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[TOWN, TOWN_FLAT + 16.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	height += mountain_height(x, z, edge_ring(point))
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
 	# Mesas: steep sides up to a flat top.
 	for mesa: Array in MESAS:
-		height = maxf(height, base_height(x, z) + mesa[2] * (1.0 - smoothstep(mesa[1] * 0.75, mesa[1], point.distance_to(mesa[0]))))
-	height = lerpf(TOWN_HEIGHT, height, smoothstep(TOWN_FLAT, TOWN_FLAT + 18.0, point.distance_to(TOWN)))
+		height = maxf(height, base_height(x, z) + mesa[2] * (1.0 - smoothstep(mesa[1] * 0.75, mesa[1], ragged_distance(point, mesa[0], mesa[1]))))
+	height = lerpf(TOWN_HEIGHT, height, smoothstep(TOWN_FLAT, TOWN_FLAT + 18.0, ragged_distance(point, TOWN, TOWN_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, point.distance_to(flat[0])))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, ragged_distance(point, flat[0], flat[1], true)))
 	return carve_passes(x, z, height)
 
 
@@ -224,9 +228,9 @@ func _road_distance(point: Vector2, limit: float) -> float:
 ## Stones), b rock (steep and high ground, the mesas), a golden grass.
 func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var dirt := (1.0 - smoothstep(TOWN_FLAT - 8.0, TOWN_FLAT - 2.0, point.distance_to(TOWN))) * 0.7
+	var dirt := (1.0 - smoothstep(TOWN_FLAT - 8.0, TOWN_FLAT - 2.0, ragged_distance(point, TOWN, TOWN_FLAT, true))) * 0.7
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.6)
 	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point, ROAD_WIDTH + 1.5)))
 	var stones: Array = FLATS[STONES]
 	var ochre := 1.0 - smoothstep(stones[1] - 2.0, stones[1] + 10.0, point.distance_to(stones[0]))
@@ -372,10 +376,10 @@ func _build_lifts() -> void:
 
 
 func _clear(point: Vector2) -> bool:
-	if point.distance_to(TOWN) < TOWN_FLAT + 4.0 or _road_distance(point, ROAD_WIDTH + 3.0) < ROAD_WIDTH + 2.0:
+	if ragged_distance(point, TOWN, TOWN_FLAT, true) < TOWN_FLAT + 4.0 or _road_distance(point, ROAD_WIDTH + 3.0) < ROAD_WIDTH + 2.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return true
 
@@ -495,9 +499,9 @@ func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0, depth :=
 
 ## Open ground: not on roads, in the village or on the camps.
 func _clear_for_clutter(point: Vector2) -> bool:
-	if point.distance_to(TOWN) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
+	if ragged_distance(point, TOWN, TOWN_FLAT, true) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

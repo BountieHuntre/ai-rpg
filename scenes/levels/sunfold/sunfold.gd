@@ -12,8 +12,6 @@ const ZONE_NAME := "Sunfold Camp"
 const CENTER := Vector2(-500, 1200)
 const SIZE := 400.0
 const STEP := 2.0
-const MOUNTAIN_START := 62.0
-const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 1.4
 const ROAD_WIDTH := 2.4
 const SEED := 4501
@@ -126,19 +124,25 @@ func _ready() -> void:
 	spawn_objects(SEED + 6, WATER_LEVEL)
 
 
+## The camp, the flats, the water and the roads stay clear of the edge
+## mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[HUB, HUB_FLAT + 16.0], [SPRING, SPRING_RADIUS + 8.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	height += mountain_height(x, z, edge_ring(point))
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	height = lerpf(HUB_HEIGHT, height, smoothstep(HUB_FLAT, HUB_FLAT + 16.0, point.distance_to(HUB)))
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
+	height = lerpf(HUB_HEIGHT, height, smoothstep(HUB_FLAT, HUB_FLAT + 16.0, ragged_distance(point, HUB, HUB_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, point.distance_to(flat[0])))
-	height = minf(height, lerpf(0.4, height, smoothstep(SPRING_RADIUS, SPRING_RADIUS + 8.0, point.distance_to(SPRING))))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, ragged_distance(point, flat[0], flat[1], true)))
+	height = minf(height, lerpf(0.4, height, smoothstep(SPRING_RADIUS, SPRING_RADIUS + 8.0, ragged_distance(point, SPRING, SPRING_RADIUS))))
 	return carve_passes(x, z, height)
 
 
@@ -154,9 +158,9 @@ func _road_distance(point: Vector2) -> float:
 ## golden grass in patches.
 func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var dirt := (1.0 - smoothstep(HUB_FLAT - 10.0, HUB_FLAT - 4.0, point.distance_to(HUB))) * 0.7
+	var dirt := (1.0 - smoothstep(HUB_FLAT - 10.0, HUB_FLAT - 4.0, ragged_distance(point, HUB, HUB_FLAT, true))) * 0.7
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.8)
 	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point)))
 	var rock := maxf(smoothstep(0.84, 0.66, normal.y), smoothstep(22.0, 32.0, y))
 	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
@@ -218,12 +222,12 @@ func _build_ravine() -> void:
 
 
 func _clear(point: Vector2) -> bool:
-	if point.distance_to(HUB) < HUB_FLAT + 3.0 or _road_distance(point) < ROAD_WIDTH + 2.0:
+	if ragged_distance(point, HUB, HUB_FLAT, true) < HUB_FLAT + 3.0 or _road_distance(point) < ROAD_WIDTH + 2.0:
 		return false
-	if point.distance_to(SPRING) < SPRING_RADIUS + 6.0:
+	if ragged_distance(point, SPRING, SPRING_RADIUS) < SPRING_RADIUS + 6.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return true
 
@@ -343,11 +347,11 @@ func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0, depth :=
 
 ## Open ground: not on roads, in the camp or the ravine, or by the spring.
 func _clear_for_clutter(point: Vector2) -> bool:
-	if point.distance_to(HUB) < HUB_FLAT - 2.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
+	if ragged_distance(point, HUB, HUB_FLAT, true) < HUB_FLAT - 2.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
 		return false
-	if point.distance_to(SPRING) < SPRING_RADIUS + 1.0:
+	if ragged_distance(point, SPRING, SPRING_RADIUS) < SPRING_RADIUS + 1.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

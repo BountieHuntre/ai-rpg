@@ -19,9 +19,6 @@ const CENTER := Vector2(0, 700)
 const SIZE := 1000.0
 ## Yards between the ground's vertices (Ashford Vale's are 2; this one is big).
 const STEP := 2.5
-## How far in from the edge the mountains start, and where they're full height.
-const MOUNTAIN_START := 56.0
-const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 1.4
 const STREAM_BED := 0.2
 const STREAM_WIDTH := 4.0
@@ -301,23 +298,27 @@ func _ready() -> void:
 
 # Shape of the land.
 
+## Wexford, the flats, the mere, the Coombe fields and the roads stay clear
+## of the edge mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[VILLAGE, VILLAGE_FLAT + 16.0], [LAKE, LAKE_RADIUS + 8.0], [FIELDS, FIELDS_RADIUS]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
-	# Mountains round the edges, squarer than the vale's ring, so the
-	# farmland reaches further into the corners. They're as deep as the
-	# vale's (MOUNTAIN_START yards), however big the zone, so where the two
-	# meet the ground is the same.
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	# Mountains round the edges, winding in and out (Zone.edge_ring), full
+	# height at the border so the ground meets the vale's.
+	height += mountain_height(x, z, edge_ring(point))
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	height = lerpf(VILLAGE_HEIGHT, height, smoothstep(VILLAGE_FLAT, VILLAGE_FLAT + 16.0, point.distance_to(VILLAGE)))
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
+	height = lerpf(VILLAGE_HEIGHT, height, smoothstep(VILLAGE_FLAT, VILLAGE_FLAT + 16.0, ragged_distance(point, VILLAGE, VILLAGE_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, point.distance_to(flat[0])))
-	var lake := point.distance_to(LAKE)
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, ragged_distance(point, flat[0], flat[1], true)))
+	var lake := ragged_distance(point, LAKE, LAKE_RADIUS)
 	height = minf(height, lerpf(LAKE_BED, height, smoothstep(LAKE_RADIUS - 8.0, LAKE_RADIUS + 6.0, lake)))
 	var stream := distance_to_line(point, STREAM)
 	height = minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
@@ -332,7 +333,7 @@ func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	# The Coombe fields are ploughed soil (their wheat is clutter, _grass_at).
 	var dirt := _field(point) * 0.95
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.7)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.7)
 	var road := minf(distance_to_pass(point), _road_distance(point, ROAD_WIDTH + 2.0))
 	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, road))
 	dirt = maxf(dirt, _mud(point))
@@ -343,7 +344,7 @@ func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 
 ## Wet ground by the stream and the mere.
 func _mud(point: Vector2) -> float:
-	var water := minf(distance_to_line(point, STREAM) - STREAM_WIDTH, point.distance_to(LAKE) - LAKE_RADIUS)
+	var water := minf(distance_to_line(point, STREAM) - STREAM_WIDTH, ragged_distance(point, LAKE, LAKE_RADIUS) - LAKE_RADIUS)
 	return 1.0 - smoothstep(1.0, 4.0, water)
 
 
@@ -376,7 +377,7 @@ func _road_distance(point: Vector2, reach: float) -> float:
 func _woods_density(point: Vector2) -> float:
 	var density := 0.0
 	for wood: Array in WOODS:
-		density = maxf(density, 1.0 - smoothstep(wood[1] * 0.5, wood[1], point.distance_to(wood[0])))
+		density = maxf(density, 1.0 - smoothstep(wood[1] * 0.5, wood[1], ragged_distance(point, wood[0], wood[1])))
 	return density
 
 
@@ -787,16 +788,16 @@ func _build_trees() -> void:
 func _clear_for_tree(point: Vector2, y: float) -> bool:
 	if y < WATER_LEVEL + 0.6 or y > 34.0:
 		return false
-	if point.distance_to(VILLAGE) < VILLAGE_FLAT + 4.0 or point.distance_to(LAKE) < LAKE_RADIUS + 4.0:
+	if ragged_distance(point, VILLAGE, VILLAGE_FLAT, true) < VILLAGE_FLAT + 4.0 or ragged_distance(point, LAKE, LAKE_RADIUS) < LAKE_RADIUS + 4.0:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 4.0 or distance_to_pass(point) < PASS_FLOOR + 3.0:
 		return false
-	if point.distance_to(FIELDS) < FIELDS_RADIUS - 2.0:
+	if ragged_distance(point, FIELDS, FIELDS_RADIUS) < FIELDS_RADIUS - 2.0:
 		return false
 	if _road_distance(point, ROAD_WIDTH + 2.5) < ROAD_WIDTH + 2.5:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return point.distance_to(Vector2(BRIDGE_X, (BRIDGE_START + BRIDGE_END) / 2.0)) > 16.0
 
@@ -892,18 +893,18 @@ func _steep(point: Vector2, y: float) -> bool:
 
 ## How far into the Coombe fields a point is, 0 to 1.
 func _field(point: Vector2) -> float:
-	return 1.0 - smoothstep(FIELDS_RADIUS - 8.0, FIELDS_RADIUS, point.distance_to(FIELDS))
+	return 1.0 - smoothstep(FIELDS_RADIUS - 8.0, FIELDS_RADIUS, ragged_distance(point, FIELDS, FIELDS_RADIUS))
 
 
 ## Open ground: not on roads, water, cobbles or camps.
 func _clear_for_clutter(point: Vector2, y: float) -> bool:
-	if y < WATER_LEVEL + 0.4 or point.distance_to(VILLAGE) < 24.0 or point.distance_to(LAKE) < LAKE_RADIUS:
+	if y < WATER_LEVEL + 0.4 or point.distance_to(VILLAGE) < 24.0 or ragged_distance(point, LAKE, LAKE_RADIUS) < LAKE_RADIUS:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5 or distance_to_pass(point) < ROAD_WIDTH + 0.8:
 		return false
 	if _road_distance(point, ROAD_WIDTH + 0.8) < ROAD_WIDTH + 0.8:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

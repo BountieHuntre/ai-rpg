@@ -155,16 +155,24 @@ func _ready() -> void:
 
 # Shape of the land.
 
+## The priory, the camps and the roads stay clear of the edge mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[PRIORY, PRIORY_FLAT + 16.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 16.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
-	# Mountains all around the valley.
-	height += mountain_height(x, z, smoothstep(0.78, 1.05, point.length() / 185.0))
+	# Mountains all around the valley, winding in and out (Zone.edge_ring).
+	height += mountain_height(x, z, edge_ring(point))
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	height = lerpf(PRIORY_HEIGHT, height, smoothstep(PRIORY_FLAT, PRIORY_FLAT + 16.0, point.distance_to(PRIORY)))
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
+	height = lerpf(PRIORY_HEIGHT, height, smoothstep(PRIORY_FLAT, PRIORY_FLAT + 16.0, ragged_distance(point, PRIORY, PRIORY_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 16.0, point.distance_to(flat[0])))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 16.0, ragged_distance(point, flat[0], flat[1], true)))
 	var stream := distance_to_line(point, STREAM)
 	height = minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
 	# The pass south to Harrowfield.
@@ -178,7 +186,7 @@ func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
 	var dirt := 0.0
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.9)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.9)
 	var road := distance_to_pass(point)
 	for line: Array in ROADS:
 		road = minf(road, distance_to_line(point, line))
@@ -203,7 +211,7 @@ func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
 func _woods_density(point: Vector2) -> float:
 	var density := 0.0
 	for wood: Array in WOODS:
-		density = maxf(density, 1.0 - smoothstep(wood[1] * 0.5, wood[1], point.distance_to(wood[0])))
+		density = maxf(density, 1.0 - smoothstep(wood[1] * 0.5, wood[1], ragged_distance(point, wood[0], wood[1])))
 	return density
 
 
@@ -381,7 +389,7 @@ func _clear_for_tree(point: Vector2, y: float) -> bool:
 		if distance_to_line(point, line) < ROAD_WIDTH + 2.5:
 			return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return point.distance_to(Vector2(0, 86)) > 16.0
 
@@ -470,6 +478,6 @@ func _clear_for_clutter(point: Vector2, y: float) -> bool:
 		if distance_to_line(point, line) < ROAD_WIDTH + 0.8:
 			return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

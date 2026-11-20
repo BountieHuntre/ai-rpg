@@ -18,8 +18,6 @@ const ZONE_NAME := "Redsand Coast"
 const CENTER := Vector2(1800, -1900)
 const SIZE := 1000.0
 const STEP := 2.5
-const MOUNTAIN_START := 56.0
-const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 1.4
 ## The sea's floor: shallow enough to wade, as everywhere in the game.
 const SEA_BED := -0.9
@@ -288,27 +286,33 @@ func _ready() -> void:
 
 # Shape of the land.
 
+## The town, the flats and the roads stay clear of the edge
+## mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[TOWN, TOWN_FLAT + 16.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
 	for hill: Array in HILLS:
 		if hill[2] < 5.0:
 			continue
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	var ring := smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach)
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
+	var ring := edge_ring(point)
 	# The sea south of the shore, the isles rising out of it; none under the
 	# mountains at the edges, so at the border the ground is Emberhollow's.
 	var sea := smoothstep(-8.0, 26.0, z - _coast_z(x)) * (1.0 - ring)
 	height = lerpf(height, SEA_BED, sea)
 	for hill: Array in HILLS:
 		if hill[2] < 5.0:
-			height = maxf(height, lerpf(SEA_BED, hill[2], _bump(point.distance_to(hill[0]) / hill[1])))
-	height = lerpf(TOWN_HEIGHT, height, smoothstep(TOWN_FLAT, TOWN_FLAT + 18.0, point.distance_to(TOWN)))
+			height = maxf(height, lerpf(SEA_BED, hill[2], _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])))
+	height = lerpf(TOWN_HEIGHT, height, smoothstep(TOWN_FLAT, TOWN_FLAT + 18.0, ragged_distance(point, TOWN, TOWN_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, point.distance_to(flat[0])))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, ragged_distance(point, flat[0], flat[1], true)))
 	var stream := distance_to_line(point, STREAM)
 	height = minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
 	# Mountains round the edges last, as deep as every zone's, so the ground
@@ -343,9 +347,9 @@ func _road_distance(point: Vector2, limit: float) -> float:
 ## scrub in patches.
 func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var dirt := (1.0 - smoothstep(TOWN_FLAT - 6.0, TOWN_FLAT, point.distance_to(TOWN))) * 0.85
+	var dirt := (1.0 - smoothstep(TOWN_FLAT - 6.0, TOWN_FLAT, ragged_distance(point, TOWN, TOWN_FLAT, true))) * 0.85
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.7)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.7)
 	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point, ROAD_WIDTH + 1.5)))
 	dirt = maxf(dirt, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM)))
 	var sand := 1.0 - smoothstep(2.2, 3.6, y)
@@ -653,12 +657,12 @@ func _build_cacti() -> void:
 
 
 func _clear(point: Vector2) -> bool:
-	if point.distance_to(TOWN) < TOWN_FLAT + 4.0 or _road_distance(point, ROAD_WIDTH + 3.0) < ROAD_WIDTH + 2.0:
+	if ragged_distance(point, TOWN, TOWN_FLAT, true) < TOWN_FLAT + 4.0 or _road_distance(point, ROAD_WIDTH + 3.0) < ROAD_WIDTH + 2.0:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 3.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return true
 
@@ -729,11 +733,11 @@ func _normal_at(point: Vector2, y: float) -> Vector3:
 
 ## Open ground: not on roads, in Spikewall, on the camps or by the Redwater.
 func _clear_for_clutter(point: Vector2) -> bool:
-	if point.distance_to(TOWN) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
+	if ragged_distance(point, TOWN, TOWN_FLAT, true) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
 		return false
 	if distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

@@ -13,8 +13,6 @@ const ZONE_NAME := "Frosthollow"
 const CENTER := Vector2(-900, -1000)
 const SIZE := 400.0
 const STEP := 2.0
-const MOUNTAIN_START := 62.0
-const MOUNTAIN_FULL := 6.0
 const WATER_LEVEL := 0.4
 const ROAD_WIDTH := 2.4
 const SEED := 5101
@@ -142,18 +140,27 @@ func _ready() -> void:
 	spawn_objects(SEED + 6, WATER_LEVEL)
 
 
+## The camp, the flats and the roads stay clear of the edge
+## mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[HUB, HUB_FLAT + 16.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
-	var height := base_height(x, z) + 1.5
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	# The snowy uplands sit a little higher, but not under the edge
+	# mountains, so at the borders the ground is every zone's.
+	var ring := edge_ring(point)
+	var height := base_height(x, z) + 1.5 * (1.0 - ring)
+	height += mountain_height(x, z, ring)
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	height = lerpf(HUB_HEIGHT, height, smoothstep(HUB_FLAT, HUB_FLAT + 16.0, point.distance_to(HUB)))
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
+	height = lerpf(HUB_HEIGHT, height, smoothstep(HUB_FLAT, HUB_FLAT + 16.0, ragged_distance(point, HUB, HUB_FLAT, true)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 12.0, point.distance_to(flat[0])))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 12.0, ragged_distance(point, flat[0], flat[1], true)))
 	return carve_passes(x, z, height)
 
 
@@ -170,9 +177,9 @@ func _road_distance(point: Vector2) -> float:
 ## the lower ground, in patches). High ground is deep snow.
 func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var path := (1.0 - smoothstep(HUB_FLAT - 12.0, HUB_FLAT - 6.0, point.distance_to(HUB))) * 0.55
+	var path := (1.0 - smoothstep(HUB_FLAT - 12.0, HUB_FLAT - 6.0, ragged_distance(point, HUB, HUB_FLAT, true))) * 0.55
 	for flat: Array in FLATS:
-		path = maxf(path, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
+		path = maxf(path, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.8)
 	path = maxf(path, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point)))
 	var yard := 1.0 - smoothstep(9.0, 13.0, point.distance_to(HUB + Vector2(0, -10)))
 	var rock := smoothstep(0.8, 0.62, normal.y)
@@ -303,10 +310,10 @@ func _build_diggings() -> void:
 
 
 func _clear(point: Vector2) -> bool:
-	if point.distance_to(HUB) < HUB_FLAT + 3.0 or _road_distance(point) < ROAD_WIDTH + 2.0:
+	if ragged_distance(point, HUB, HUB_FLAT, true) < HUB_FLAT + 3.0 or _road_distance(point) < ROAD_WIDTH + 2.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return true
 
@@ -413,9 +420,9 @@ func _normal_at(point: Vector2, y: float) -> Vector3:
 
 ## Open ground: not on paths, camps or the hall's grounds.
 func _clear_for_clutter(point: Vector2) -> bool:
-	if point.distance_to(HUB) < HUB_FLAT - 4.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
+	if ragged_distance(point, HUB, HUB_FLAT, true) < HUB_FLAT - 4.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true

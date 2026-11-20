@@ -15,10 +15,6 @@ const ZONE_NAME := "Emberhollow"
 const CENTER := Vector2(2500, -1700)
 const SIZE := 400.0
 const STEP := 2.0
-## How far in from the edge the canyon walls start, and where they're full
-## height (as deep as every zone's, so the ground joins at the borders).
-const MOUNTAIN_START := 70.0
-const MOUNTAIN_FULL := 6.0
 ## No water in the canyon.
 const WATER_LEVEL := -100.0
 const ROAD_WIDTH := 2.6
@@ -174,19 +170,25 @@ func _ready() -> void:
 
 # Shape of the land.
 
+## The camp, the flats and the roads stay clear of the edge
+## mountains.
+func edge_keep_more() -> Array:
+	var circles: Array = [[HUB, HUB_FLAT + 16.0]]
+	for flat: Array in FLATS:
+		circles.append([flat[0], flat[1] + 14.0])
+	return [circles, ROADS]
+
+
 func height_at(x: float, z: float) -> float:
 	var point := Vector2(x, z)
 	var height := base_height(x, z)
 	# Canyon walls round the edges, as deep as every zone's at the border.
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	height += mountain_height(x, z, edge_ring(point))
 	for hill: Array in HILLS:
-		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
+		height += hill[2] * _bump(ragged_distance(point, hill[0], hill[1]) / hill[1])
 	height = lerpf(HUB_HEIGHT, height, smoothstep(HUB_FLAT, HUB_FLAT + 16.0, _wall_distance(point)))
 	for flat: Array in FLATS:
-		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, point.distance_to(flat[0])))
+		height = lerpf(flat[2], height, smoothstep(flat[1], flat[1] + 14.0, ragged_distance(point, flat[0], flat[1], true)))
 	return carve_passes(x, z, height)
 
 
@@ -213,7 +215,7 @@ func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
 	var dirt := (1.0 - smoothstep(24.0, 30.0, _wall_distance(point))) * 0.85
 	for flat: Array in FLATS:
-		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, ragged_distance(point, flat[0], flat[1], true))) * 0.8)
 	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point)))
 	var rock := maxf(smoothstep(0.84, 0.66, normal.y), smoothstep(20.0, 30.0, y))
 	var patch := Zone.land_noise().get_noise_2d(x * 2.3, z * 2.3)
@@ -363,7 +365,7 @@ func _clear(point: Vector2) -> bool:
 	if _wall_distance(point) < HUB_FLAT + 2.0 or _road_distance(point) < ROAD_WIDTH + 2.0:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1] + 3.0:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1] + 3.0:
 			return false
 	return true
 
@@ -440,6 +442,6 @@ func _clear_for_clutter(point: Vector2) -> bool:
 	if _wall_distance(point) < HUB_FLAT - 2.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
 		return false
 	for flat: Array in FLATS:
-		if point.distance_to(flat[0]) < flat[1]:
+		if ragged_distance(point, flat[0], flat[1], true) < flat[1]:
 			return false
 	return true
