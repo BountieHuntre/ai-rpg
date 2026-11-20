@@ -478,7 +478,7 @@ const CARD_RANGE := 62.0
 const BUSH_RANGE := 140.0
 ## The kinds a zone's grass place function can make (add_nature_clutter).
 const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
-	"frost_grass", "heather", "dry_grass", "dead_blades"]
+	"frost_grass", "heather", "dry_grass", "dead_blades", "elf_blades"]
 
 var _clutter_share := 0.66
 ## Ground built on (BuildingKit footprints): no grass or bushes there.
@@ -496,6 +496,28 @@ func is_cleared(point: Vector2) -> bool:
 		if square.has_point(point):
 			return true
 	return false
+
+
+## One baked solid (Nature.tree: a great tree, a bower, a hut...) at `place`
+## (scale and all), with collision from its own faces when `solid`.
+func place_baked(parent: Node3D, kind: String, place: Transform3D, solid := true, variant := 0) -> MeshInstance3D:
+	var mesh := Nature.tree(kind, variant)
+	var view := MeshInstance3D.new()
+	view.mesh = mesh
+	view.transform = place
+	parent.add_child(view)
+	if solid:
+		var faces := mesh.get_faces()
+		for i in faces.size():
+			faces[i] = place * faces[i]
+		var shape := ConcavePolygonShape3D.new()
+		shape.set_faces(faces)
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		var body := StaticBody3D.new()
+		body.add_child(collision)
+		parent.add_child(body)
+	return view
 
 
 ## A list per variant, for placing trees, rocks or bushes in.
@@ -524,8 +546,9 @@ func draw_rocks(parent: Node3D, rocks: Array, rng_seed: int, snowy := false, tex
 ## Grass, flowers and ferns, and bushes, made near the camera (ClutterField):
 ## `grass` is f(point, rng) -> [one of CARD_KINDS, Transform3D] or [], tried
 ## every yard; `bush` the same with a variant number, tried every 4 yards.
-## `snowy` puts snow on the bushes; `dry` makes them dead bushes, bare twigs.
-func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy := false, dry := false) -> void:
+## `snowy` puts snow on the bushes; `dry` makes them dead bushes, bare twigs;
+## `leaves` is the bushes' leaf texture.
+func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy := false, dry := false, leaves := "leaves") -> void:
 	var square := Rect2(center - Vector2.ONE * size / 2.0, Vector2.ONE * size)
 	var patches := patch_noise()
 	var clump := Nature.card_mesh(1.1, 0.45)
@@ -549,6 +572,7 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy :=
 		"heather": [Nature.card_mesh(0.9, 0.4), Nature.card_material("heather", patches, 0.04)],
 		"dry_grass": [Nature.card_mesh(1.0, 0.55), Nature.card_material("dry_grass", patches, 0.1)],
 		"dead_blades": [Nature.card_mesh(1.0, 0.5), Nature.card_material("dead_blades", patches, 0.1)],
+		"elf_blades": [Nature.card_mesh(1.0, 0.55), Nature.card_material("elf_blades", patches, 0.1)],
 	}
 	add_child(cards)
 	var bushes := ClutterField.new()
@@ -564,7 +588,7 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy :=
 	bushes.thinned = false
 	bushes.place = bush
 	for i in BUSH_VARIANTS:
-		bushes.kinds[str(i)] = [Nature.dead_bush_mesh(rng_seed + 40 + i) if dry else Nature.bush_mesh(rng_seed + 40 + i, snowy), null]
+		bushes.kinds[str(i)] = [Nature.dead_bush_mesh(rng_seed + 40 + i) if dry else Nature.bush_mesh(rng_seed + 40 + i, snowy, leaves), null]
 	add_child(bushes)
 
 

@@ -47,7 +47,7 @@ appearance = {
 race = "wood_elf"
 
 [node name="Keldara" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-2080, 6, -4398)
+position = Vector3(-2080, 6.4, -4408.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Keldara"
 subname = "Innkeeper"

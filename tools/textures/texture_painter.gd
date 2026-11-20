@@ -13,6 +13,7 @@ const KEYS := [
 	"snow", "frozen_heath", "frozen_dirt", "snow_rock", "frost_grass", "heather", "slate_snow",
 	"red_earth", "dry_scrub", "red_dirt", "red_rock", "sand", "hide", "dry_grass", "cactus",
 	"dead_grass", "dead_leaves", "mud", "slate", "dead_blades",
+	"elf_grass", "moss_floor", "elf_path", "blue_rock", "elf_blades", "elf_leaves", "pale_bark", "elf_roof",
 	"grass_blades", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"leaves", "needles", "bark", "stone_wall", "roof_tiles", "planks", "thatch", "plaster",
 	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
@@ -788,6 +789,169 @@ func _dead_blades() -> Image:
 				var px := int(x) + w
 				if px >= 0 and px < size:
 					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
+	return image
+
+
+# The elven woods (Mossglen, Eldergrove Isle).
+
+const ELF_GRASS := [Color("1f3a36"), Color("27463f"), Color("2e5248"), Color("365e53"), Color("3f6a5e")]
+
+
+## Dusky blue-green grass under the moon, with pale flecks.
+func _elf_grass() -> Image:
+	var size := 128
+	var image := _base(size, ELF_GRASS.slice(0, 4), 0.035, 1.5)
+	for i in 900:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var length := _rng.randi_range(2, 4)
+		var lean := _rng.randi_range(-1, 1)
+		_put(image, x, y + 1, ELF_GRASS[0])
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = ELF_GRASS[2] if tip < 0.5 else ELF_GRASS[3] if tip < 0.9 else ELF_GRASS[4]
+			_put(image, x + (lean if step == length - 1 else 0), y - step, color)
+	for i in 30:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("a8c4d8"))
+	return image
+
+
+## Deep moss over the forest floor, cushioned, with tiny pale sprigs.
+func _moss_floor() -> Image:
+	var size := 128
+	var image := _base(size, [Color("1c3324"), Color("234029"), Color("2b4d30"), Color("345a37")], 0.06, 1.6)
+	var lumps := _noise(size, 0.12)
+	for y in size:
+		for x in size:
+			if lumps[y * size + x] > 0.62:
+				image.set_pixel(x, y, Color("3e6a40") if lumps[y * size + x] > 0.7 else Color("37603b"))
+	for i in 160:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("6f9a6a"))
+	return image
+
+
+## A soft earth path, lavender-grey, with fallen violet leaves.
+func _elf_path() -> Image:
+	var size := 128
+	var image := _base(size, [Color("4a4048"), Color("554a52"), Color("61555c"), Color("6c6068")], 0.05, 1.4)
+	for i in 120:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var leaf := Color("7a5a8a") if _rng.randf() < 0.6 else Color("4f8a80")
+		_put(image, x, y, leaf)
+		_put(image, x + 1, y, leaf.darkened(0.2))
+	for i in 90:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		_put(image, x, y, Color("8c8290"))
+		_put(image, x, y + 1, Color("3a3238"))
+	return image
+
+
+## Cool blue-grey stone in strata, with moss in the cracks.
+func _blue_rock() -> Image:
+	var size := 128
+	var image := _image(size)
+	var warp := _noise(size, 0.05)
+	var grain := _noise(size, 0.12)
+	var palette := [Color("2e3040"), Color("3c3f52"), Color("4b4e63"), Color("5d6076"), Color("727590")]
+	for y in size:
+		for x in size:
+			var band := fposmod((y + warp[y * size + x] * 18.0) / 11.0, 1.0)
+			var v := 0.2 + grain[y * size + x] * 0.6
+			if band < 0.14:
+				v -= 0.4
+			elif band < 0.22:
+				v -= 0.15
+			elif band > 0.8:
+				v += 0.3
+			image.set_pixel(x, y, _pick(palette, clampf(v, 0.0, 1.0), x, y))
+	for i in 14:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(6, 16):
+			x += _rng.randi_range(-1, 1)
+			y += 1
+			_put(image, x, y, Color("22232e"))
+			_put(image, x - 1, y, Color("3e6a50"))
+	return image
+
+
+## Blue-green grass in a tuft, for the elven woods.
+func _elf_blades() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 24:
+		var root_x := _rng.randf_range(4, size - 5)
+		var height := _rng.randf_range(size * 0.4, size * 0.95)
+		var bend := _rng.randf_range(-12.0, 12.0)
+		var light := _rng.randf_range(-0.08, 0.1)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := root_x + bend * t * t
+			var y := size - 1 - step
+			var color: Color = ELF_GRASS[1] if t < 0.3 else ELF_GRASS[2] if t < 0.6 else ELF_GRASS[3] if t < 0.85 else ELF_GRASS[4]
+			color = _shade(color, light)
+			var width := 2 if t < 0.55 else 1
+			for w in width:
+				var px := int(x) + w
+				if px >= 0 and px < size:
+					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
+	return image
+
+
+## The elven trees' leaves: teal and blue-green with violet among them.
+func _elf_leaves() -> Image:
+	var image := _leaves()
+	var palette := [Color("173430"), Color("1f4540"), Color("2a5a52"), Color("357063"), Color("4a8a7a")]
+	for y in image.get_height():
+		for x in image.get_width():
+			var c := image.get_pixel(x, y)
+			if c.a < 0.5:
+				continue
+			var v := clampf((c.get_luminance() - 0.12) * 2.6, 0.0, 1.0)
+			var color: Color = _pick(palette, v, x, y)
+			if (x * 7 + y * 13) % 23 == 0:
+				color = Color("6a4a86")
+			image.set_pixel(x, y, color)
+	return image
+
+
+## Silver-grey bark, smooth, with dark marks across it.
+func _pale_bark() -> Image:
+	var size := 64
+	var image := _base(size, [Color("8a8590"), Color("98939e"), Color("a6a1ac"), Color("b4afba")], 0.08, 1.2)
+	for i in 40:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(2, 6):
+			_put(image, x + step, y, Color("5a5560"))
+	for i in 60:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("6c8078"))
+	return image
+
+
+## Leaf-shaped shingles, pale, to be tinted violet or teal.
+func _elf_roof() -> Image:
+	var size := 64
+	var image := _image(size)
+	var row_height := 8
+	for row in size / row_height:
+		var offset := (row % 2) * 4
+		for tile in size / 8 + 1:
+			var v := _rng.randf_range(0.82, 1.0)
+			for dy in row_height:
+				for dx in 8:
+					var curve := absf(dx - 3.5) / 3.5
+					var c := Color(v, v, v)
+					if dy >= row_height - 1 - int(curve * 3.0):
+						c = c.darkened(0.4)
+					elif dx == 0:
+						c = c.darkened(0.2)
+					elif dy < 2:
+						c = c.lightened(0.1)
+					_put(image, tile * 8 + dx + offset, row * row_height + dy, c)
 	return image
 
 

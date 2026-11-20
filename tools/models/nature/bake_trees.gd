@@ -18,7 +18,7 @@ func _initialize() -> void:
 		if arg.begins_with("--only="):
 			kinds = Array(arg.trim_prefix("--only=").split(","))
 	for kind: String in kinds:
-		for variant in NatureScript.TREE_VARIANTS:
+		for variant in NatureScript.variants_of(kind):
 			await _bake(kind, variant)
 	quit()
 

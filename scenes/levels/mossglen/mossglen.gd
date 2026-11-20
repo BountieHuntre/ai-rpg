@@ -84,16 +84,8 @@ const CHESTS := [
 	[152095, POND, POND_RADIUS + 3.0, 5],
 ]
 
-const GRASS := Color(0.24, 0.36, 0.3)
-const BLUE_GRASS := Color(0.3, 0.33, 0.38)
-const MOSS := Color(0.3, 0.42, 0.26)
-const PATH := Color(0.42, 0.36, 0.34)
 const ROCK := Color(0.36, 0.36, 0.44)
-const BARK := Color(0.32, 0.26, 0.3)
 const PALE_WOOD := Color(0.6, 0.52, 0.48)
-const LEAVES := Color(0.24, 0.4, 0.34)
-const VIOLET := Color(0.42, 0.3, 0.55)
-const TEAL := Color(0.2, 0.45, 0.5)
 const MOONWATER := Color(0.55, 0.8, 0.95)
 
 var _detail := FastNoiseLite.new()
@@ -117,9 +109,18 @@ func _init() -> void:
 	spell_focuses = [[19549, Vector2(-2200, -4992)]]
 
 
+## The elven woods' painted ground (Zone.build_ground's layers): dusky
+## grass, deep moss, soft paths, blue-grey rock.
+const GROUND_TEXTURES := {
+	"grass_tex": "elf_grass", "forest_tex": "moss_floor", "dirt_tex": "elf_path", "rock_tex": "blue_rock",
+}
+
+
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
-	build_water(WATER_LEVEL)
+	Props.use_texture(ROCK, "blue_rock", 3.0)
+	Props.use_texture(PALE_WOOD, "pale_bark", 2.0)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
+	build_water(WATER_LEVEL, true)
 	build_edges()
 	_build_elderbough()
 	_build_caves()
@@ -153,17 +154,26 @@ func _road_distance(point: Vector2) -> float:
 	return road
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r the
+## paths (roads, the camps, round the Elderbough), b rock (steep and high
+## ground), a moss in patches.
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.05
-	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
-	var color := GRASS.lerp(BLUE_GRASS, smoothstep(0.0, 0.5, patch)).lerp(MOSS, smoothstep(-0.1, -0.5, patch))
-	color = color.lerp(PATH, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point)))
+	var path := 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point))
 	for flat: Array in FLATS:
-		color = color.lerp(PATH, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.4)
-	color = color.lerp(ROCK, smoothstep(0.84, 0.64, normal.y))
-	color = color.lerp(ROCK, smoothstep(24.0, 34.0, y))
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+		path = maxf(path, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
+	var ring := point.distance_to(HUB + Vector2(0, -12))
+	path = maxf(path, (1.0 - smoothstep(TREE_RADIUS + 6.0, TREE_RADIUS + 12.0, ring)) * 0.7)
+	var rock := maxf(smoothstep(0.84, 0.64, normal.y), smoothstep(24.0, 34.0, y))
+	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
+	var moss := smoothstep(-0.05, -0.4, patch)
+	return Color(path, 0.0, rock, moss)
+
+
+## The textured ground's tint: a little noise.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.06
+	return Color(shade, shade, shade)
 
 
 func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
@@ -182,22 +192,14 @@ func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
 	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
 
 
-## An elven bower: a round wooden floor under a sweeping violet roof on posts.
-func _bower(parent: Node3D, at: Vector3, radius: float, roof_color: Color) -> void:
-	Props.cylinder(parent, at, radius, 0.4, PALE_WOOD)
-	for i in 4:
-		var angle := TAU * i / 4.0 + PI / 4.0
-		Props.box(parent, at + Vector3(cos(angle), 0, sin(angle)) * (radius - 0.5), Vector3(0.3, 3.2, 0.3), PALE_WOOD, 0.0, false)
-	Props.cylinder(parent, at + Vector3(0, 3.2, 0), radius + 0.8, 1.6, roof_color, false, 0.2)
-
-
-## A moonwell: a ring of pale stone round still, glowing water.
+## A moonwell: a ring of pale stones (one solid, Nature's "moonwell_ring")
+## round still, glowing water.
 func _moonwell(parent: Node3D, at: Vector3, radius: float) -> void:
-	Props.cylinder(parent, at, radius, 0.7, PALE_WOOD.lightened(0.3))
+	place_baked(parent, "moonwell_ring", Transform3D(Basis().scaled(Vector3(radius, 1.0, radius)), at))
 	var water := MeshInstance3D.new()
 	var disc := CylinderMesh.new()
-	disc.top_radius = radius - 0.5
-	disc.bottom_radius = radius - 0.5
+	disc.top_radius = radius - 0.3
+	disc.bottom_radius = radius - 0.3
 	disc.height = 0.1
 	water.mesh = disc
 	var glow := StandardMaterial3D.new()
@@ -206,7 +208,7 @@ func _moonwell(parent: Node3D, at: Vector3, radius: float) -> void:
 	glow.emission = MOONWATER
 	glow.emission_energy_multiplier = 0.6
 	water.material_override = glow
-	water.position = at + Vector3(0, 0.72, 0)
+	water.position = at + Vector3(0, 0.55, 0)
 	parent.add_child(water)
 	var light := OmniLight3D.new()
 	light.light_color = MOONWATER
@@ -226,25 +228,15 @@ func _build_elderbough() -> void:
 	add_child(tree)
 	var t := HUB
 	var y := HUB_HEIGHT
-	Props.cylinder(tree, _near(t, Vector2(0, -12), y - 1.0), TREE_RADIUS, 70.0, BARK, true, TREE_RADIUS * 0.6)
-	for i in 7:
-		var angle := TAU * i / 7.0 + 0.3
-		var root := Props.box(tree, _near(t, Vector2(0, -12) + Vector2(cos(angle), sin(angle)) * (TREE_RADIUS + 2.0), y - 0.6), Vector3(3.0, 2.4, 7.0), BARK, -angle + PI / 2, false)
-		root.rotation.x = 0.15
-	var crowns: Array[Transform3D] = []
-	for i in 9:
-		var angle := TAU * i / 9.0
-		var reach := 14.0 + (i % 3) * 5.0
-		crowns.append(Transform3D(Basis().scaled(Vector3(1.4, 0.6, 1.4)), _near(t, Vector2(0, -12) + Vector2(cos(angle), sin(angle)) * reach, y + 58.0 + (i % 2) * 6.0)))
-	crowns.append(Transform3D(Basis().scaled(Vector3(1.8, 0.8, 1.8)), _near(t, Vector2(0, -12), y + 70.0)))
-	Props.scatter(tree, Props.blob(12.0), LEAVES, crowns)
+	# The great tree, one solid: its trunk TREE_RADIUS round on its roots.
+	place_baked(tree, "great_tree", Transform3D(Basis().scaled(Vector3.ONE * TREE_RADIUS), _near(t, Vector2(0, -12), y - 0.5)))
 	_moonwell(tree, _near(t, Vector2(0, 18), y), 3.2)
 	for i in 6:
 		var angle := TAU * i / 6.0 + 0.5
 		var at := t + Vector2(0, -12) + Vector2(cos(angle), sin(angle)) * 26.0
 		if at.y > t.y + 6.0 and absf(at.x - t.x) < 10.0:
 			continue
-		_bower(tree, Vector3(at.x, y, at.y), 3.6, VIOLET if i % 2 == 0 else TEAL)
+		place_baked(tree, "bower_violet" if i % 2 == 0 else "bower_teal", Transform3D(Basis(Vector3.UP, -angle), Vector3(at.x, y, at.y)))
 	for lamp in [Vector2(-8, 10), Vector2(8, 10), Vector2(-14, -2), Vector2(14, -2)]:
 		Props.box(tree, _near(t, lamp, y), Vector3(0.25, 2.4, 0.25), PALE_WOOD, 0.0, false)
 		torch(tree, _near(t, lamp, y + 2.4), 6.0)
@@ -282,14 +274,13 @@ func _clear(point: Vector2) -> bool:
 	return true
 
 
-## Tall elven trees: pale-barked trunks under broad crowns.
+## Tall elven trees (Nature's, one solid each), never on bare rock.
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var trunks: Array[Transform3D] = []
-	var crowns: Array[Transform3D] = []
+	var placed := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
 	trunk_shape.radius = 0.6
 	trunk_shape.height = 6.0
@@ -297,24 +288,20 @@ func _build_trees() -> void:
 	for attempt in 1600:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.6 or y > 28.0 or not _clear(point) or rng.randf() > 0.1 + 0.15 * smoothstep(8.0, 16.0, y):
+		if y < WATER_LEVEL + 0.6 or y > 28.0 or not _clear(point) or rng.randf() > 0.1 + 0.15 * smoothstep(8.0, 16.0, y) \
+				or shows_rock(point, y, _ground_layers):
 			continue
-		var size := rng.randf_range(0.9, 1.5)
-		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
-		trunks.append(base * Transform3D(Basis(), Vector3(0, 3.0, 0)))
-		crowns.append(base * Transform3D(Basis().scaled(Vector3(1.4, 0.75, 1.4)), Vector3(0, 7.0, 0)))
+		var size := rng.randf_range(0.9, 1.4)
+		placed[rng.randi_range(0, TREE_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y)))
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 3.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.3
-	trunk.bottom_radius = 0.55
-	trunk.height = 6.0
-	trunk.radial_segments = 6
+	# Added once its shapes are in.
 	add_child(trees)
-	Props.scatter(trees, trunk, PALE_WOOD.darkened(0.2), trunks)
-	Props.scatter(trees, Props.blob(2.8), LEAVES, crowns)
+	for i in TREE_VARIANTS:
+		Nature.scatter(trees, Nature.elf_tree_mesh(i), placed[i])
 
 
 func _build_rocks() -> void:
@@ -322,7 +309,7 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 4.0
 	for attempt in 800:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
@@ -330,7 +317,8 @@ func _build_rocks() -> void:
 		if y < WATER_LEVEL + 0.4 or rng.randf() > 0.03 + 0.4 * smoothstep(10.0, 22.0, y) or not _clear(point):
 			continue
 		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -338,30 +326,60 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED, false, "blue_rock")
 
 
-## Ferns and blue-white moonflowers.
+## Blue-green grass, ferns and moonflowers, and bushes, made near the camera
+## (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var ferns: Array[Transform3D] = []
-	var flowers: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 4.0
-	for attempt in 14000:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.4 or y > 22.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.08:
-			flowers.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.1)), at + Vector3.UP * 0.25))
-		else:
-			ferns.append(Transform3D(spin.scaled(Vector3(1.3, rng.randf_range(0.8, 1.4), 1.3)), at + Vector3.UP * 0.2))
-	add_clutter(clutter, Props.cone(0.22, 0.4, 5), Color(0.26, 0.46, 0.34), ferns)
-	add_clutter(clutter, Props.blob(0.1, 5, 3), Color(0.7, 0.8, 0.98), flowers)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3, false, false, "elf_leaves")
+
+
+## What grows at a point: ferns on the moss, grass elsewhere, moonflowers
+## here and there; none on paths or rock. Called from a worker thread: it
+## only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.6 or y > 24.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3 or layers.r > 0.4 or rng.randf() > 0.7:
+		return []
+	var at := Vector3(point.x, y - 0.05, point.y)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	if layers.a > 0.4 and rng.randf() < 0.5:
+		return ["ferns", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.3)), at)]
+	if rng.randf() < 0.05:
+		return ["flowers_blue" if rng.randf() < 0.6 else "flowers_white", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.1)), at)]
+	return ["elf_blades", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.3), 1) * rng.randf_range(0.8, 1.15)), at)]
+
+
+## A bush now and then, more on the moss.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.06:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.8 or y > 24.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.8, 1.4)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.8, 1.1), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## Open ground: not on roads, round the Elderbough or on the camps.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if point.distance_to(HUB) < HUB_FLAT - 2.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
+		return false
+	if point.distance_to(POND) < POND_RADIUS:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true

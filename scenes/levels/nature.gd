@@ -97,7 +97,16 @@ static func card_material(key: String, patches: Texture2D, sway := 0.08) -> Shad
 
 const TREE_PATH := "res://assets/models/nature/%s_%d.res"
 const TREE_VARIANTS := 6
-const TREE_SEEDS := { "pine": 8101, "pine_snowy": 8101, "oak": 8201, "dead_tree": 8301, "palm": 8401 }
+## Kinds made just once (buildings, the great tree): one variant.
+const SINGLE_KINDS := ["great_tree", "bower_violet", "bower_teal", "long_bower", "moonwell_ring", "silver_gate"]
+
+
+## How many variants a kind has.
+static func variants_of(kind: String) -> int:
+	return 1 if kind in SINGLE_KINDS else TREE_VARIANTS
+const TREE_SEEDS := { "pine": 8101, "pine_snowy": 8101, "oak": 8201, "dead_tree": 8301, "palm": 8401,
+	"elf_tree": 8501, "great_tree": 8601, "bower_violet": 8701, "bower_teal": 8711, "long_bower": 8721,
+	"log_hut": 8801, "moonwell_ring": 8901, "silver_gate": 9001 }
 
 
 ## The unbaked tree of a kind, built from a seed.
@@ -113,13 +122,29 @@ static func build_tree(kind: String, rng_seed: int) -> ArrayMesh:
 			return _dead_tree(rng_seed)
 		"palm":
 			return _palm(rng_seed)
+		"elf_tree":
+			return _elf_tree(rng_seed)
+		"great_tree":
+			return _great_tree(rng_seed)
+		"bower_violet":
+			return _bower(rng_seed, Color(0.78, 0.6, 1.0))
+		"bower_teal":
+			return _bower(rng_seed, Color(0.5, 0.92, 0.95))
+		"long_bower":
+			return _long_bower(rng_seed)
+		"log_hut":
+			return _log_hut(rng_seed)
+		"moonwell_ring":
+			return _moonwell_ring(rng_seed)
+		"silver_gate":
+			return _silver_gate(rng_seed)
 	return ArrayMesh.new()
 
 
 ## A tree of a kind (any seed picks one of its variants): baked if it is,
 ## its surfaces given the shared materials their names stand for.
 static func tree(kind: String, rng_seed: int) -> ArrayMesh:
-	var variant := posmod(rng_seed, TREE_VARIANTS)
+	var variant := posmod(rng_seed, variants_of(kind))
 	var path := TREE_PATH % [kind, variant]
 	if not ResourceLoader.exists(path):
 		return build_tree(kind, TREE_SEEDS[kind] + variant)
@@ -129,6 +154,17 @@ static func tree(kind: String, rng_seed: int) -> ArrayMesh:
 		if made:
 			mesh.surface_set_material(i, made)
 	return mesh
+
+
+## An elven tree, a great tree (scaled up where it stands), a bower, the long
+## bower, a bearfolk's log hut, a moonwell's ring or the Silverbough Gate,
+## one solid each (tree).
+static func elf_tree_mesh(rng_seed: int) -> ArrayMesh:
+	return tree("elf_tree", rng_seed)
+
+
+static func baked(kind: String, variant := 0) -> ArrayMesh:
+	return tree(kind, variant)
 
 
 ## A pine, oak, dead tree or palm, one solid each (tree).
@@ -375,7 +411,8 @@ static func rock_mesh(rng_seed: int, snowy := false, texture := "rock") -> Array
 
 ## A bush about a yard and a half across: a few low leafy clumps on the
 ## ground, lit on top.
-static func bush_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
+## `leaves` is its leaves' texture (elf_leaves in the elven woods).
+static func bush_mesh(rng_seed: int, snowy := false, leaves_key := "leaves") -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var noise := _noise(rng_seed, 1.2)
@@ -399,7 +436,7 @@ static func bush_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
 			return Color(v + hue, v, v - hue)
 		_blob(leaves, 1, form, noise, 0.25, shade, snow, snow_cap)
 	var mesh := ArrayMesh.new()
-	leaves.add_to(mesh, material("leaves", 1.6, 0.25, 0.3))
+	leaves.add_to(mesh, material(leaves_key, 1.6, 0.25, 0.3))
 	snow.add_to(mesh, material("snow", 1.6, 0.25, 0.3))
 	return mesh
 
@@ -530,6 +567,203 @@ static func dead_bush_mesh(rng_seed: int) -> ArrayMesh:
 			rng.randf_range(0.5, 0.75), 0.06, 3)
 	var mesh := ArrayMesh.new()
 	wood.add_to(mesh, material("bark", 0.8))
+	return mesh
+
+
+## A closed box, a piece of its own: its middle, size, and a turn about up.
+static func _box(builder: Builder, middle: Vector3, size: Vector3, color: Color, yaw := 0.0) -> void:
+	builder.begin_piece()
+	var basis := Basis(Vector3.UP, yaw)
+	var half := size / 2.0
+	var corners: Array[Vector3] = []
+	for x in [-1.0, 1.0]:
+		for y in [-1.0, 1.0]:
+			for z in [-1.0, 1.0]:
+				corners.append(middle + basis * Vector3(x * half.x, y * half.y, z * half.z))
+	# Corners indexed by (x, y, z) bits: 4x + 2y + z.
+	for quad in [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]:
+		var top := color.lightened(0.08) if quad == [2, 3, 7, 6] else color
+		builder.tri(corners[quad[0]], corners[quad[1]], corners[quad[2]], middle, top, top, top)
+		builder.tri(corners[quad[0]], corners[quad[2]], corners[quad[3]], middle, top, top, top)
+
+
+## An elven tree about 9 yards tall: a tall silver trunk, two or three boughs
+## and a crown of broad, flattened tiers of teal leaves.
+static func _elf_tree(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var noise := _noise(rng_seed, 0.9)
+	var bark := Builder.new()
+	var leaves := Builder.new()
+	var height := rng.randf_range(6.0, 7.5)
+	var lean := Vector3(rng.randf_range(-0.3, 0.3), 0.0, rng.randf_range(-0.3, 0.3))
+	var top := Vector3(0, height, 0) + lean
+	_post(bark, Vector3(0, -0.3, 0), top, 0.5, 0.28, 8, Color(0.85, 0.85, 0.85))
+	for i in 4:
+		var angle := TAU * i / 4.0 + rng.randf()
+		var out := Vector3(cos(angle), 0, sin(angle))
+		_post(bark, out * 0.25 + Vector3(0, -0.2, 0), out * 0.85 + Vector3(0, -0.15, 0), 0.2, 0.05, 5, Color(0.75, 0.75, 0.75))
+	var boughs := rng.randi_range(2, 3)
+	for i in boughs:
+		var angle := TAU * i / boughs + rng.randf_range(-0.4, 0.4)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		_post(bark, top - Vector3(0, 1.8, 0), top + out * 1.6 + Vector3(0, 0.4, 0), 0.18, 0.08, 5, Color(0.8, 0.8, 0.8))
+	var tiers := 3
+	for tier in tiers:
+		var t := float(tier) / (tiers - 1)
+		var radius := lerpf(2.8, 1.6, t) * rng.randf_range(0.9, 1.1)
+		var at := top + Vector3(rng.randf_range(-0.3, 0.3), -0.6 + tier * 1.3, rng.randf_range(-0.3, 0.3))
+		var form := Transform3D(Basis().scaled(Vector3(radius, radius * 0.38, radius)), at)
+		var hue := rng.randf_range(-0.04, 0.04)
+		_blob(leaves, 1, form, noise, 0.2, func(middle: Vector3, normal: Vector3) -> Color:
+			var v := clampf(0.55 + t * 0.25 + normal.y * 0.15 + rng.randf_range(-0.05, 0.05), 0.3, 1.0)
+			return Color(v + hue, v, v + hue * 0.5))
+	var mesh := ArrayMesh.new()
+	bark.add_to(mesh, material("pale_bark", 1.6))
+	leaves.add_to(mesh, material("elf_leaves", 2.2, 0.25, 4.0))
+	return mesh
+
+
+## A great tree at 1/9 of the Elderbough's size (scaled up where it stands):
+## a vast trunk on spreading roots, thick boughs and a broad crown.
+static func _great_tree(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var noise := _noise(rng_seed, 0.6)
+	var bark := Builder.new()
+	var leaves := Builder.new()
+	var height := 7.0
+	var top := Vector3(0, height, 0)
+	_post(bark, Vector3(0, -0.4, 0), top, 1.0, 0.6, 12, Color(0.85, 0.85, 0.85))
+	for i in 7:
+		var angle := TAU * i / 7.0 + 0.3
+		var out := Vector3(cos(angle), 0, sin(angle))
+		_post(bark, out * 0.5 + Vector3(0, 0.8, 0), out * 1.9 + Vector3(0, -0.3, 0), 0.45, 0.12, 6, Color(0.75, 0.75, 0.75))
+	for i in 5:
+		var angle := TAU * i / 5.0 + rng.randf_range(-0.3, 0.3)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		var reach := rng.randf_range(1.6, 2.3)
+		_post(bark, top - Vector3(0, 1.4, 0), top + out * reach + Vector3(0, 0.9, 0), 0.4, 0.2, 7, Color(0.8, 0.8, 0.8))
+		var form := Transform3D(Basis().scaled(Vector3(1.6, 0.7, 1.6)), top + out * reach + Vector3(0, 1.3, 0))
+		_blob(leaves, 1, form, noise, 0.2, func(_middle: Vector3, normal: Vector3) -> Color:
+			var v := clampf(0.6 + normal.y * 0.2 + rng.randf_range(-0.05, 0.05), 0.3, 1.0)
+			return Color(v, v, v))
+	var crown := Transform3D(Basis().scaled(Vector3(2.0, 0.9, 2.0)), top + Vector3(0, 1.8, 0))
+	_blob(leaves, 1, crown, noise, 0.2, func(_middle: Vector3, normal: Vector3) -> Color:
+		var v := clampf(0.7 + normal.y * 0.2, 0.3, 1.0)
+		return Color(v, v, v))
+	var mesh := ArrayMesh.new()
+	bark.add_to(mesh, material("pale_bark", 0.6))
+	leaves.add_to(mesh, material("elf_leaves", 0.8))
+	return mesh
+
+
+## An elven bower about 3.6 yards round: a round floor of planks, four posts
+## and a sweeping roof of leaf shingles in `tint`.
+static func _bower(rng_seed: int, tint: Color) -> ArrayMesh:
+	var wood := Builder.new()
+	var floor := Builder.new()
+	var roof := Builder.new()
+	var radius := 3.6
+	_post(floor, Vector3(0, -0.3, 0), Vector3(0, 0.4, 0), radius, radius, 12, Color(0.9, 0.9, 0.9))
+	for i in 4:
+		var angle := TAU * i / 4.0 + PI / 4.0
+		var at := Vector3(cos(angle), 0, sin(angle)) * (radius - 0.5)
+		_post(wood, at + Vector3(0, 0.2, 0), at + Vector3(0, 3.4, 0), 0.18, 0.15, 6, Color(0.9, 0.9, 0.9))
+	_post(roof, Vector3(0, 3.2, 0), Vector3(0, 4.0, 0), radius + 0.8, radius * 0.6, 12, tint * 0.9)
+	_post(roof, Vector3(0, 4.0, 0), Vector3(0, 5.2, 0), radius * 0.6, 0.15, 12, tint)
+	_post(wood, Vector3(0, 5.0, 0), Vector3(0, 6.0, 0), 0.12, 0.02, 5, Color(0.95, 0.95, 0.95))
+	var mesh := ArrayMesh.new()
+	floor.add_to(mesh, material("planks", 1.5))
+	wood.add_to(mesh, material("pale_bark", 1.2))
+	roof.add_to(mesh, material("elf_roof", 1.4))
+	return mesh
+
+
+## Fernwatch's inn: a long open bower, 18 by 9, a plank floor, posts and a
+## sweeping violet roof.
+static func _long_bower(rng_seed: int) -> ArrayMesh:
+	var wood := Builder.new()
+	var floor := Builder.new()
+	var roof := Builder.new()
+	_box(floor, Vector3(0, 0.0, 0), Vector3(18, 0.8, 9), Color(0.9, 0.9, 0.9))
+	for x in [-8.5, -2.8, 2.8, 8.5]:
+		for z in [-4.0, 4.0]:
+			_post(wood, Vector3(x, 0.3, z), Vector3(x, 3.9, z), 0.2, 0.17, 6, Color(0.9, 0.9, 0.9))
+	var violet := Color(0.78, 0.6, 1.0)
+	# The roof: two sweeping slopes meeting at a ridge, as boxes tilted.
+	for side in [-1.0, 1.0]:
+		roof.begin_piece()
+		var eave := Vector3(0, 3.6, side * 5.8)
+		var ridge := Vector3(0, 6.2, 0)
+		var corners: Array[Vector3] = []
+		for x in [-10.0, 10.0]:
+			corners.append(Vector3(x, eave.y, eave.z))
+			corners.append(Vector3(x, ridge.y, ridge.z))
+			corners.append(Vector3(x, eave.y + 0.35, eave.z))
+			corners.append(Vector3(x, ridge.y + 0.35, ridge.z))
+		var inside := Vector3(0, 4.9, side * 2.9)
+		for quad in [[0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5], [0, 2, 3, 1], [4, 5, 7, 6]]:
+			var c := violet * (1.0 if quad == [2, 6, 7, 3] else 0.7)
+			roof.tri(corners[quad[0]], corners[quad[1]], corners[quad[2]], inside, c, c, c)
+			roof.tri(corners[quad[0]], corners[quad[2]], corners[quad[3]], inside, c, c, c)
+	_box(wood, Vector3(0, 6.3, 0), Vector3(20.4, 0.3, 0.4), Color(0.95, 0.95, 0.95))
+	var mesh := ArrayMesh.new()
+	floor.add_to(mesh, material("planks", 1.5))
+	wood.add_to(mesh, material("pale_bark", 1.2))
+	roof.add_to(mesh, material("elf_roof", 1.4))
+	return mesh
+
+
+## A bearfolk hut: logs leaning together in a cone round a dark doorway.
+static func _log_hut(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var logs := Builder.new()
+	var radius := 3.0
+	_post(logs, Vector3(0, -0.2, 0), Vector3(0, 3.4, 0), radius * 0.85, 0.3, 10, Color(0.6, 0.6, 0.6))
+	var count := 14
+	for i in count:
+		var angle := TAU * i / count
+		var out := Vector3(cos(angle), 0, sin(angle))
+		if absf(wrapf(angle - PI / 2.0, -PI, PI)) < 0.35:
+			continue
+		var foot := out * (radius + rng.randf_range(-0.1, 0.2)) + Vector3(0, -0.2, 0)
+		var head := out * 0.2 + Vector3(0, 4.0 + rng.randf_range(-0.2, 0.4), 0)
+		_post(logs, foot, head, 0.22, 0.15, 6, Color(0.85, 0.85, 0.85) * rng.randf_range(0.85, 1.05))
+	# The doorway: a dark opening in the logs to the south (+z).
+	_box(logs, Vector3(0, 0.9, radius * 0.75), Vector3(1.3, 1.9, 0.6), Color(0.08, 0.06, 0.05))
+	var mesh := ArrayMesh.new()
+	logs.add_to(mesh, material("bark", 1.4))
+	return mesh
+
+
+## A moonwell's ring: pale stones round the water, with a lip on top.
+static func _moonwell_ring(rng_seed: int) -> ArrayMesh:
+	var stone := Builder.new()
+	var count := 12
+	var radius := 1.0
+	for i in count:
+		var angle := TAU * (i + 0.5) / count
+		var at := Vector3(cos(angle), 0, sin(angle)) * radius
+		_box(stone, at + Vector3(0, 0.33, 0), Vector3(0.6, 0.72, 0.3), Color(0.95, 0.95, 1.0), -angle + PI / 2.0)
+	var mesh := ArrayMesh.new()
+	stone.add_to(mesh, material("stone_wall", 1.2))
+	return mesh
+
+
+## The Silverbough Gate: two tall pale pillars, a lintel and shut doors.
+static func _silver_gate(rng_seed: int) -> ArrayMesh:
+	var wood := Builder.new()
+	var doors := Builder.new()
+	for side in [-1.0, 1.0]:
+		_post(wood, Vector3(0, -0.3, side * 6.0), Vector3(0, 12.0, side * 6.0), 1.0, 0.7, 10, Color(0.95, 0.95, 0.95))
+		_post(wood, Vector3(0, 12.0, side * 6.0), Vector3(0, 13.4, side * 6.0), 0.7, 0.05, 10, Color(1, 1, 1))
+	_box(wood, Vector3(0, 11.7, 0), Vector3(2.0, 1.4, 14.0), Color(0.95, 0.95, 0.95))
+	_box(doors, Vector3(0.6, 5.0, 0), Vector3(0.6, 10.5, 11.0), Color(0.55, 0.42, 0.75))
+	var mesh := ArrayMesh.new()
+	wood.add_to(mesh, material("pale_bark", 1.6))
+	doors.add_to(mesh, material("planks", 1.5))
 	return mesh
 
 
