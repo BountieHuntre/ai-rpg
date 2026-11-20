@@ -7,7 +7,7 @@
 script = ExtResource("1_script")
 
 [node name="GorzaIronhand" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2510, 6, -1699)
+position = Vector3(2510, 6.05, -1708.5)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Commander Gorza Ironhand"
 subname = ""
@@ -46,8 +46,8 @@ appearance = {
 race = "orc"
 
 [node name="BrakkaBonecrusher" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2497, 6, -1699)
-rotation = Vector3(0, 3.14159, 0)
+position = Vector3(2490.74, 6.05, -1704.98)
+rotation = Vector3(0, -2.2318, 0)
 npc_name = "Brakka Bonecrusher"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"
@@ -57,8 +57,8 @@ appearance = {
 race = "orc"
 
 [node name="Mojinzi" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2518, 6, -1680)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(2529.26, 6.05, -1675.02)
+rotation = Vector3(0, 0.9098, 0)
 npc_name = "Mojinzi"
 subname = "Cleric Trainer"
 trainer = "priest"
@@ -68,8 +68,8 @@ appearance = {
 race = "troll"
 
 [node name="RajakBladeweaver" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2500, 6, -1681)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(2490.74, 6.05, -1675.02)
+rotation = Vector3(0, -0.9098, 0)
 npc_name = "Rajak Bladeweaver"
 subname = "Spellsword Trainer"
 trainer = "spellsword"
@@ -235,8 +235,8 @@ appearance = {
 race = "orc"
 
 [node name="Rakuzi" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2522, 6, -1696)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(2529.26, 6.05, -1704.98)
+rotation = Vector3(0, 2.2318, 0)
 npc_name = "Rakuzi"
 subname = "Ranger Trainer"
 trainer = "hunter"

@@ -75,7 +75,7 @@ const MESAS := [
 	[Vector2(-1300, -120), 80.0, 36.0],
 	[Vector2(-1130, -150), 50.0, 30.0],
 ]
-const PASS_END := Vector2(-520, 930)
+const PASS_END := Vector2(-560, 875)
 const ROADS := [
 	# The pass road up to Longhorn Village.
 	[PASS_END, Vector2(-600, 820), Vector2(-728, 666)],

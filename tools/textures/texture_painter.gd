@@ -10,6 +10,8 @@ extends RefCounted
 
 const KEYS := [
 	"grass", "forest_floor", "dirt", "cobbles", "rock",
+	"snow", "frozen_heath", "frozen_dirt", "snow_rock", "frost_grass", "heather", "slate_snow",
+	"red_earth", "dry_scrub", "red_dirt", "red_rock", "sand", "hide", "dry_grass", "cactus",
 	"grass_blades", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"leaves", "needles", "bark", "stone_wall", "roof_tiles", "planks", "thatch", "plaster",
 	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
@@ -278,6 +280,397 @@ func _rock() -> Image:
 		var lichen := Color("8a8a5a") if _rng.randf() < 0.5 else Color("6f7a4a")
 		_put(image, x, y, lichen)
 		_put(image, x + 1, y, lichen.darkened(0.1))
+	return image
+
+
+# Snow lands (Frosthollow, Highpeak).
+
+const SNOW := [Color("9aa6bd"), Color("b3bfd3"), Color("c9d3e2"), Color("dce3ee"), Color("eef2f8")]
+
+
+## Snow: soft drifts rippled by the wind, blue in their hollows, with a
+## glint here and there.
+func _snow() -> Image:
+	var size := 128
+	var image := _image(size)
+	var drift := _noise(size, 0.03)
+	var ripple := _noise(size, 0.09)
+	for y in size:
+		for x in size:
+			var wave := sin((x * 0.35 + y * 0.12) + ripple[y * size + x] * 6.0) * 0.08
+			var v := 0.45 + (drift[y * size + x] - 0.5) * 0.9 + wave
+			image.set_pixel(x, y, _pick(SNOW.slice(1), clampf(v, 0.0, 1.0), x, y))
+	# Footprint-like dimples and blue shadows under small lumps.
+	for i in 70:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		_put(image, x, y, SNOW[4])
+		_put(image, x + 1, y, SNOW[3])
+		_put(image, x, y + 1, SNOW[1])
+		_put(image, x + 1, y + 1, SNOW[0])
+	for i in 50:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("ffffff"))
+	return image
+
+
+const HEATH := [Color("4a4a32"), Color("5e5a3a"), Color("736c46"), Color("8a8156")]
+
+
+## Thin snow over heath: dry grass and heather poking through in tufts.
+func _frozen_heath() -> Image:
+	var size := 128
+	var image := _snow()
+	var cover := _noise(size, 0.05)
+	for i in 1100:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		if cover[y * size + x] < 0.4:
+			continue
+		var length := _rng.randi_range(2, 4)
+		var lean := _rng.randi_range(-1, 1)
+		_put(image, x, y + 1, SNOW[0])
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = HEATH[0] if tip < 0.3 else HEATH[1] if tip < 0.7 else HEATH[2] if tip < 0.95 else HEATH[3]
+			_put(image, x + (lean if step == length - 1 else 0), y - step, color)
+	# Heather sprigs, frosted purple.
+	for i in 45:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		if cover[y * size + x] < 0.5:
+			continue
+		for offset in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, -1)]:
+			_put(image, x + offset.x, y + offset.y, Color("8f7a9a"))
+		_put(image, x + 1, y - 1, Color("b7a6c0"))
+	return image
+
+
+## A trodden path: packed snow and slush over mud, ruts and pebbles.
+func _frozen_dirt() -> Image:
+	var size := 128
+	var image := _dirt()
+	var slush := _noise(size, 0.06)
+	for y in size:
+		for x in size:
+			var v := slush[y * size + x]
+			if v > 0.52:
+				var t := clampf((v - 0.52) * 4.0, 0.0, 1.0)
+				image.set_pixel(x, y, _pick(SNOW.slice(0, 4), t * 0.9, x, y))
+			elif v > 0.46:
+				image.set_pixel(x, y, image.get_pixel(x, y).lerp(SNOW[0], 0.5))
+	return image
+
+
+## Grey rock with snow lying on its ledges and frost in its cracks.
+func _snow_rock() -> Image:
+	var size := 128
+	var image := _image(size)
+	var warp := _noise(size, 0.05)
+	var grain := _noise(size, 0.12)
+	var palette := [Color("3c3d42"), Color("4f5057"), Color("63646c"), Color("7a7b84"), Color("92939c")]
+	for y in size:
+		for x in size:
+			var band := fposmod((y + warp[y * size + x] * 18.0) / 11.0, 1.0)
+			var v := 0.2 + grain[y * size + x] * 0.6
+			var color: Color
+			if band > 0.84 and grain[y * size + x] > 0.3:
+				color = _pick(SNOW.slice(2), grain[y * size + x], x, y)
+			else:
+				if band < 0.14:
+					v -= 0.4
+				elif band < 0.22:
+					v -= 0.15
+				elif band > 0.76:
+					v += 0.3
+				color = _pick(palette, clampf(v, 0.0, 1.0), x, y)
+			image.set_pixel(x, y, color)
+	for i in 14:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(6, 16):
+			x += _rng.randi_range(-1, 1)
+			y += 1
+			_put(image, x, y, Color("2f3036"))
+			_put(image, x - 1, y, SNOW[2])
+	return image
+
+
+## Dry, pale grass standing out of the snow.
+func _frost_grass() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 20:
+		var root_x := _rng.randf_range(4, size - 5)
+		var height := _rng.randf_range(size * 0.4, size * 0.9)
+		var bend := _rng.randf_range(-14.0, 14.0)
+		var light := _rng.randf_range(-0.08, 0.1)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := root_x + bend * t * t
+			var y := size - 1 - step
+			var color: Color = HEATH[0] if t < 0.25 else HEATH[1] if t < 0.55 else HEATH[2] if t < 0.85 else Color("c8c6b8")
+			color = _shade(color, light)
+			var width := 2 if t < 0.5 else 1
+			for w in width:
+				var px := int(x) + w
+				if px >= 0 and px < size:
+					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
+	return image
+
+
+## Low heather, frosted: a mound of twiggy stems with pale purple bells.
+func _heather() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 34:
+		var root_x := _rng.randf_range(10, size - 11)
+		var height := _rng.randf_range(size * 0.25, size * 0.55)
+		var bend := _rng.randf_range(-10.0, 10.0)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := int(root_x + bend * t)
+			var y := size - 1 - step
+			if x < 0 or x >= size:
+				continue
+			image.set_pixel(x, y, Color("4a3e3a") if t < 0.5 else Color("5d4f52"))
+			if t > 0.45 and _rng.randf() < 0.55:
+				var bell := Color("9b82a8") if _rng.randf() < 0.6 else Color("c7b8d2")
+				for dx in [-1, 1]:
+					if x + dx >= 0 and x + dx < size:
+						image.set_pixel(x + dx, y, bell)
+	return image
+
+
+## Slates in staggered rows, blue-grey, with snow lying along the rows.
+func _slate_snow() -> Image:
+	var size := 64
+	var image := _image(size)
+	var palette := [Color("3d4250"), Color("464c5b"), Color("505768"), Color("383c48")]
+	var drift := _noise(size, 0.08)
+	var row_height := 8
+	for row in size / row_height:
+		var offset := (row % 2) * 5
+		for tile in size / 10 + 1:
+			var color: Color = palette[_rng.randi_range(0, palette.size() - 1)]
+			for dy in row_height:
+				for dx in 10:
+					var x := tile * 10 + dx + offset
+					var y := row * row_height + dy
+					var c := color
+					if dy >= row_height - 2:
+						c = color.darkened(0.35)
+					elif dx == 0:
+						c = color.darkened(0.25)
+					elif dy == 0:
+						c = color.lightened(0.1)
+					# Snow along each row's top, deeper where the drift is.
+					var deep := drift[posmod(y, size) * size + posmod(x, size)]
+					if deep > 0.5 and dy < int((deep - 0.5) * 9.0) + 1 and dy < row_height - 3:
+						c = _pick(SNOW.slice(2), deep, x, y)
+					_put(image, x, y, c)
+	return image
+
+
+# Red lands (Emberhollow, the Redsand Coast).
+
+const RED_EARTH := [Color("8a4a2c"), Color("9a5532"), Color("a8613a"), Color("b46d43"), Color("c27c4f")]
+
+
+## Red earth: baked, cracked, with pebbles and a little grit.
+func _red_earth() -> Image:
+	var size := 128
+	var image := _base(size, RED_EARTH.slice(0, 4), 0.045, 1.5)
+	for i in 120:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var stone := Color("b79a7c") if _rng.randf() < 0.5 else Color("8c6a52")
+		_put(image, x, y, stone.lightened(0.15))
+		_put(image, x + 1, y, stone)
+		_put(image, x, y + 1, Color("5e3220"))
+	# Cracks in the baked crust.
+	for i in 16:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(4, 10):
+			x += _rng.randi_range(-1, 1)
+			y += _rng.randi_range(0, 1)
+			_put(image, x, y, Color("6a361f"))
+	for i in 500:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), RED_EARTH[4])
+	return image
+
+
+const SCRUB := [Color("6e5a2a"), Color("8a7434"), Color("a48c42"), Color("bba250")]
+
+
+## Red earth with dry grass in tufts.
+func _dry_scrub() -> Image:
+	var size := 128
+	var image := _red_earth()
+	var cover := _noise(size, 0.05)
+	for i in 1300:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		if cover[y * size + x] < 0.35:
+			continue
+		var length := _rng.randi_range(2, 4)
+		var lean := _rng.randi_range(-1, 1)
+		_put(image, x, y + 1, Color("6a361f"))
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = SCRUB[0] if tip < 0.3 else SCRUB[1] if tip < 0.7 else SCRUB[2] if tip < 0.95 else SCRUB[3]
+			_put(image, x + (lean if step == length - 1 else 0), y - step, color)
+	return image
+
+
+const RED_DIRT := [Color("7a4a30"), Color("8a5838"), Color("966442"), Color("a3704c"), Color("b07e58")]
+
+
+## A trodden red road: packed earth, ruts and pebbles.
+func _red_dirt() -> Image:
+	var size := 128
+	var image := _base(size, RED_DIRT.slice(0, 4), 0.05, 1.4)
+	for i in 160:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var stone := Color("a8907a") if _rng.randf() < 0.6 else Color("80695a")
+		var wide := _rng.randi_range(1, 3)
+		for dx in wide:
+			_put(image, x + dx, y, stone.lightened(0.15))
+			_put(image, x + dx, y + 1, stone)
+			_put(image, x + dx, y + 2, Color("553321"))
+	for i in 12:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(5, 12):
+			x += _rng.randi_range(-1, 1)
+			y += 1
+			_put(image, x, y, Color("5a3624"))
+	for i in 400:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), RED_DIRT[4])
+	return image
+
+
+## Red sandstone in bent strata, with dark cracks.
+func _red_rock() -> Image:
+	var size := 128
+	var image := _image(size)
+	var warp := _noise(size, 0.05)
+	var grain := _noise(size, 0.12)
+	var palette := [Color("5a2a1c"), Color("723824"), Color("8a462c"), Color("a25836"), Color("b86c44")]
+	for y in size:
+		for x in size:
+			var band := fposmod((y + warp[y * size + x] * 18.0) / 9.0, 1.0)
+			var v := 0.2 + grain[y * size + x] * 0.6
+			if band < 0.14:
+				v -= 0.4
+			elif band < 0.22:
+				v -= 0.15
+			elif band > 0.78:
+				v += 0.3
+			image.set_pixel(x, y, _pick(palette, clampf(v, 0.0, 1.0), x, y))
+	for i in 14:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(6, 16):
+			x += _rng.randi_range(-1, 1)
+			y += 1
+			_put(image, x, y, Color("41200f"))
+			_put(image, x - 1, y, palette[4])
+	return image
+
+
+const SAND := [Color("c49a64"), Color("d0a870"), Color("dab57c"), Color("e4c28a"), Color("eecf9a")]
+
+
+## Beach sand: wind ripples, shells and dark grains.
+func _sand() -> Image:
+	var size := 128
+	var image := _image(size)
+	var ripple := _noise(size, 0.08)
+	var drift := _noise(size, 0.03)
+	for y in size:
+		for x in size:
+			var wave := sin(y * 0.7 + ripple[y * size + x] * 5.0) * 0.12
+			var v := 0.45 + (drift[y * size + x] - 0.5) * 0.7 + wave
+			image.set_pixel(x, y, _pick(SAND, clampf(v, 0.0, 1.0), x, y))
+	for i in 25:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		_put(image, x, y, Color("f6eee0"))
+		_put(image, x + 1, y, Color("e0d2bc"))
+	for i in 300:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("a07a4c"))
+	return image
+
+
+const HIDE := [Color("8a6440"), Color("9a7248"), Color("a87f52"), Color("b48c5e")]
+
+
+## Stitched hides: uneven panels with darker seams and stitch marks.
+func _hide() -> Image:
+	var size := 64
+	var image := _base(size, HIDE, 0.07, 1.3)
+	# Seams across and down, wavering, stitched.
+	for seam in 3:
+		var y := seam * 21 + _rng.randi_range(2, 8)
+		for x in size:
+			y += _rng.randi_range(-1, 1) if _rng.randf() < 0.2 else 0
+			_put(image, x, y, Color("5a3e24"))
+			if x % 4 == 0:
+				_put(image, x, y - 1, Color("d8c39a"))
+				_put(image, x, y + 1, Color("d8c39a"))
+	for seam in 2:
+		var x := seam * 32 + _rng.randi_range(4, 20)
+		for y in size:
+			x += _rng.randi_range(-1, 1) if _rng.randf() < 0.15 else 0
+			_put(image, x, y, Color("5a3e24"))
+	for i in 120:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("6e4c2c"))
+	return image
+
+
+## Dry, straw-yellow grass in a tuft.
+func _dry_grass() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 22:
+		var root_x := _rng.randf_range(4, size - 5)
+		var height := _rng.randf_range(size * 0.35, size * 0.85)
+		var bend := _rng.randf_range(-16.0, 16.0)
+		var light := _rng.randf_range(-0.08, 0.1)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := root_x + bend * t * t
+			var y := size - 1 - step
+			var color: Color = SCRUB[0] if t < 0.25 else SCRUB[1] if t < 0.55 else SCRUB[2] if t < 0.85 else SCRUB[3]
+			color = _shade(color, light)
+			var width := 2 if t < 0.5 else 1
+			for w in width:
+				var px := int(x) + w
+				if px >= 0 and px < size:
+					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
+	return image
+
+
+## A cactus's skin: ribs running up it, lit on one side, with pale spines.
+func _cactus() -> Image:
+	var size := 32
+	var image := _image(size)
+	var palette := [Color("2c4a24"), Color("3a5e2c"), Color("4a7034"), Color("5c823e")]
+	for y in size:
+		for x in size:
+			var rib := fposmod(x, 8.0) / 8.0
+			var v := 0.25 + sin(rib * PI) * 0.65
+			image.set_pixel(x, y, _pick(palette, clampf(v, 0.0, 1.0), x, y))
+	for i in 40:
+		var x := _rng.randi_range(0, size / 8 - 1) * 8 + 4
+		var y := _rng.randi_range(0, size - 1)
+		_put(image, x, y, Color("e6dcb4"))
+		_put(image, x + 1, y - 1, Color("c8bc94"))
 	return image
 
 

@@ -10,7 +10,11 @@ extends StaticBody3D
 ## given, is f(x, z, height, normal) -> Color of a textured ground's layers
 ## (shaders/terrain.gdshader: r dirt, g cobbles, b rock, a forest floor),
 ## stored in UV and UV2.
-func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO, weights := Callable()) -> void:
+## `across`, if given, is f(x, z) -> float of the ground on both sides of
+## the edges (this zone's inside, a neighbour's beyond): the edge points'
+## normals are taken from it, so zones side by side shade their shared edge
+## alike and no outline is drawn along the border.
+func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO, weights := Callable(), across := Callable()) -> void:
 	var cells := roundi(size / step)
 	var width := cells + 1
 	var half := size / 2.0
@@ -78,21 +82,97 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 		colors.append_array(row[2])
 		uvs.append_array(row[3])
 		uv2s.append_array(row[4])
-	# Two triangles a quad: a b c and b d c.
+	# Two triangles a quad: a b c and b d c. Cells along the edges also take
+	# the points where a neighbouring zone's grid meets the edge (`_edge_points`),
+	# so both zones' ground shares the same points along their border and
+	# joins in one piece, with no cracks between grids of different steps.
 	var indices := PackedInt32Array()
 	indices.resize(cells * cells * 6)
 	var i := 0
+	# Packed arrays are copied into lambdas, so the extra points are listed
+	# in an Array and filled in after.
+	var extra: Array[Vector2] = []
+	var extra_indices := PackedInt32Array()
+	var add_point := func(x: float, z: float) -> int:
+		extra.append(Vector2(x, z))
+		return width * width + extra.size() - 1
 	for row in cells:
 		for column in cells:
 			var a := row * width + column
 			var c := a + width
-			indices[i] = a
-			indices[i + 1] = a + 1
-			indices[i + 2] = c
-			indices[i + 3] = a + 1
-			indices[i + 4] = c + 1
-			indices[i + 5] = c
-			i += 6
+			var x0 := origin.x + column * step
+			var z0 := origin.y + row * step
+			var top := _edge_points(x0, x0 + step) if row == 0 else []
+			var right := _edge_points(z0, z0 + step) if column == cells - 1 else []
+			var bottom := _edge_points(x0, x0 + step) if row == cells - 1 else []
+			var left := _edge_points(z0, z0 + step) if column == 0 else []
+			if top.is_empty() and right.is_empty() and bottom.is_empty() and left.is_empty():
+				indices[i] = a
+				indices[i + 1] = a + 1
+				indices[i + 2] = c
+				indices[i + 3] = a + 1
+				indices[i + 4] = c + 1
+				indices[i + 5] = c
+				i += 6
+				continue
+			# The cell's outline, round from a: a, along the top, b, down the
+			# right, d, back along the bottom, c, up the left.
+			var outline: Array[int] = [a]
+			for x: float in top:
+				outline.append(add_point.call(x, z0))
+			var corner_b := outline.size()
+			outline.append(a + 1)
+			for z: float in right:
+				outline.append(add_point.call(x0 + step, z))
+			var corner_d := outline.size()
+			outline.append(c + 1)
+			bottom.reverse()
+			for x: float in bottom:
+				outline.append(add_point.call(x, z0 + step))
+			var corner_c := outline.size()
+			outline.append(c)
+			left.reverse()
+			for z: float in left:
+				outline.append(add_point.call(x0, z))
+			# A fan from the corner whose sides have no extra points (the
+			# outline is convex, so any such corner will do).
+			var start := 0
+			if not (top.is_empty() and left.is_empty()):
+				if top.is_empty() and right.is_empty():
+					start = corner_b
+				elif right.is_empty() and bottom.is_empty():
+					start = corner_d
+				else:
+					start = corner_c
+			var count := outline.size()
+			for k in range(1, count - 1):
+				extra_indices.append_array([outline[start], outline[(start + k) % count], outline[(start + k + 1) % count]])
+	indices.resize(i)
+	indices.append_array(extra_indices)
+	var slope_of := across if across.is_valid() else height
+	for at in extra:
+		points.append(Vector3(at.x, height.call(at.x, at.y), at.y))
+		normals.append(Vector3.UP)
+		colors.append(Color())
+		if weights.is_valid():
+			uvs.append(Vector2.ZERO)
+			uv2s.append(Vector2.ZERO)
+	# Every point on the edges: its normal from the ground on both sides,
+	# and its color and layers again for it.
+	var edge: Array[int] = []
+	for k in width:
+		edge.append_array([k, cells * width + k, k * width, k * width + cells])
+	for k in extra.size():
+		edge.append(width * width + k)
+	for index in edge:
+		var at := points[index]
+		var normal := _edge_normal(slope_of, at.x, at.z)
+		normals[index] = normal
+		colors[index] = color.call(at.x, at.z, at.y, normal)
+		if weights.is_valid():
+			var layers: Color = weights.call(at.x, at.z, at.y, normal)
+			uvs[index] = Vector2(layers.r, layers.g)
+			uv2s[index] = Vector2(layers.b, layers.a)
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = points
@@ -122,6 +202,35 @@ static func parallel(count: int, work: Callable) -> void:
 		return
 	var task := WorkerThreadPool.add_group_task(work, count)
 	WorkerThreadPool.wait_for_group_task_completion(task)
+
+
+## How far either side of an edge point its slope is measured, the same for
+## every zone so neighbours agree.
+const EDGE_SLOPE_SPAN := 1.0
+
+
+static func _edge_normal(ground: Callable, x: float, z: float) -> Vector3:
+	var d := EDGE_SLOPE_SPAN
+	return Vector3(ground.call(x - d, z) - ground.call(x + d, z), 2.0 * d,
+		ground.call(x, z - d) - ground.call(x, z + d)).normalized()
+
+
+## The steps zones' grids use. Every zone's corners are at whole hundreds of
+## yards, so each grid's points lie on world multiples of its step.
+const ZONE_STEPS: Array[float] = [2.0, 2.5]
+
+
+## The points strictly between two coordinates along an edge where any
+## zone's grid has one, in order.
+static func _edge_points(from: float, to: float) -> Array:
+	var found: Array = []
+	for each in ZONE_STEPS:
+		for k in range(ceili(from / each), floori(to / each) + 1):
+			var at: float = k * each
+			if at > from + 0.001 and at < to - 0.001 and not found.has(at):
+				found.append(at)
+	found.sort()
+	return found
 
 
 var _heights := PackedFloat32Array()

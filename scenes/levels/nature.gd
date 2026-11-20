@@ -108,8 +108,9 @@ static func icosphere(subdivisions: int) -> Array:
 
 
 ## A lumpy blob: an icosphere pushed in and out by noise, placed by `form`;
-## `shade` gives each face's color from its center and normal.
-static func _blob(builder: Builder, subdivisions: int, form: Transform3D, noise: FastNoiseLite, lump: float, shade: Callable) -> void:
+## `shade` gives each face's color from its center and normal. Faces `cap`
+## (f(center, normal) -> bool) picks go to `capped` instead (snow on top).
+static func _blob(builder: Builder, subdivisions: int, form: Transform3D, noise: FastNoiseLite, lump: float, shade: Callable, capped: Builder = null, cap := Callable()) -> void:
 	var sphere := icosphere(subdivisions)
 	var points: Array = sphere[0]
 	var placed: Array[Vector3] = []
@@ -126,7 +127,8 @@ static func _blob(builder: Builder, subdivisions: int, form: Transform3D, noise:
 		if normal.dot(middle - center) < 0.0:
 			normal = -normal
 		var color: Color = shade.call(middle, normal)
-		builder.tri(a, b, c, center, color, color, color)
+		var into := capped if capped != null and cap.call(middle, normal) else builder
+		into.tri(a, b, c, center, color, color, color)
 
 
 ## A tapering many-sided post from `from` to `to`.
@@ -196,11 +198,12 @@ static func oak_mesh(rng_seed: int) -> ArrayMesh:
 
 ## A pine, about 7.5 yards tall: a thin trunk under five drooping tiers of
 ## jagged boughs, darker inside and underneath.
-static func pine_mesh(rng_seed: int) -> ArrayMesh:
+static func pine_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var bark := Builder.new()
 	var needles := Builder.new()
+	var snow := Builder.new()
 	var height := rng.randf_range(7.0, 8.0)
 	_post(bark, Vector3(0, -0.3, 0), Vector3(0, height - 0.5, 0), 0.32, 0.06, 6, Color(0.7, 0.7, 0.7))
 	var tiers := 5
@@ -228,40 +231,59 @@ static func pine_mesh(rng_seed: int) -> ArrayMesh:
 			var side := clampf(0.5 + 0.5 * Vector2(a.x, a.z).normalized().dot(Vector2(-0.6, -0.8)), 0.0, 1.0) * 0.12
 			needles.tri(apex, a, b, Vector3(0, base, 0), Color.WHITE * (lit + 0.05 + side), Color.WHITE * (tip_a + side), Color.WHITE * (tip_b + side))
 			needles.tri(under, b, a, Vector3(0, base + rise, 0), Color.WHITE * 0.35, Color.WHITE * 0.5, Color.WHITE * 0.5)
+			# Snow lying on the bough's top, short of its tips.
+			if snowy:
+				var lift := Vector3(0, 0.07, 0)
+				var reach_a := rng.randf_range(0.55, 0.85)
+				var reach_b := rng.randf_range(0.55, 0.85)
+				var glow := clampf(0.85 + t * 0.12 + side, 0.0, 1.1)
+				snow.tri(apex + lift, apex.lerp(a, reach_a) + lift, apex.lerp(b, reach_b) + lift, Vector3(0, base, 0),
+					Color.WHITE * glow, Color.WHITE * (glow - 0.08), Color.WHITE * (glow - 0.08))
 	var mesh := ArrayMesh.new()
 	bark.add_to(mesh, material("bark", 1.6))
 	needles.add_to(mesh, material("needles", 2.0, 0.18, 2.0))
+	snow.add_to(mesh, material("snow", 2.0, 0.18, 2.0))
 	return mesh
 
 
 ## A boulder about 2 yards across and 1.3 high (scaled where it's placed):
 ## a lumpy, flat-faced stone, sunk at the bottom, with moss on top.
-static func rock_mesh(rng_seed: int) -> ArrayMesh:
+## `texture` is the stone's (red_rock for the red lands, no moss on it).
+static func rock_mesh(rng_seed: int, snowy := false, texture := "rock") -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var noise := _noise(rng_seed, 0.8)
 	var stone := Builder.new()
+	var snow := Builder.new()
 	var squash := Vector3(rng.randf_range(0.9, 1.15), rng.randf_range(0.6, 0.75), rng.randf_range(0.85, 1.1))
 	var form := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(squash), Vector3.ZERO)
 	var moss := Color(0.62, 0.8, 0.45)
-	_blob(stone, 1, form, noise, 0.35, func(middle: Vector3, normal: Vector3) -> Color:
+	var snow_cap := func(_middle: Vector3, normal: Vector3) -> bool:
+		return snowy and normal.y > 0.45
+	var shade := func(middle: Vector3, normal: Vector3) -> Color:
 		var v := clampf(0.62 + normal.y * 0.18 + noise.get_noise_3dv(middle * 3.0) * 0.12, 0.35, 1.0)
 		var color := Color(v, v, v)
-		if normal.y > 0.55 and noise.get_noise_3dv(middle * 2.0 + Vector3(9, 9, 9)) > -0.15:
+		if snowy and normal.y > 0.45:
+			var white := clampf(0.82 + normal.y * 0.18, 0.0, 1.0)
+			return Color(white, white, white)
+		if not snowy and texture == "rock" and normal.y > 0.55 and noise.get_noise_3dv(middle * 2.0 + Vector3(9, 9, 9)) > -0.15:
 			color = Color(v * moss.r, v * moss.g, v * moss.b)
-		return color)
+		return color
+	_blob(stone, 1, form, noise, 0.35, shade, snow, snow_cap)
 	var mesh := ArrayMesh.new()
-	stone.add_to(mesh, material("rock", 2.2))
+	stone.add_to(mesh, material(texture, 2.2))
+	snow.add_to(mesh, material("snow", 2.2))
 	return mesh
 
 
 ## A bush about a yard and a half across: a few low leafy clumps on the
 ## ground, lit on top.
-static func bush_mesh(rng_seed: int) -> ArrayMesh:
+static func bush_mesh(rng_seed: int, snowy := false) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var noise := _noise(rng_seed, 1.2)
 	var leaves := Builder.new()
+	var snow := Builder.new()
 	var clumps := rng.randi_range(3, 5)
 	var hue := rng.randf_range(-0.04, 0.05)
 	for i in clumps:
@@ -270,11 +292,208 @@ static func bush_mesh(rng_seed: int) -> ArrayMesh:
 		var radius := rng.randf_range(0.45, 0.7)
 		var at := Vector3(cos(angle) * spread, radius * 0.55, sin(angle) * spread)
 		var form := Transform3D(Basis().scaled(Vector3(radius, radius * 0.8, radius)), at)
-		_blob(leaves, 1, form, noise, 0.25, func(middle: Vector3, normal: Vector3) -> Color:
+		var snow_cap := func(_middle: Vector3, normal: Vector3) -> bool:
+			return snowy and normal.y > 0.5
+		var shade := func(middle: Vector3, normal: Vector3) -> Color:
+			if snowy and normal.y > 0.5:
+				var white := clampf(0.85 + normal.y * 0.15, 0.0, 1.0)
+				return Color(white, white, white)
 			var v := clampf(0.5 + middle.y * 0.32 + normal.y * 0.1 + rng.randf_range(-0.05, 0.05), 0.3, 1.0)
-			return Color(v + hue, v, v - hue))
+			return Color(v + hue, v, v - hue)
+		_blob(leaves, 1, form, noise, 0.25, shade, snow, snow_cap)
 	var mesh := ArrayMesh.new()
 	leaves.add_to(mesh, material("leaves", 1.6, 0.25, 0.3))
+	snow.add_to(mesh, material("snow", 1.6, 0.25, 0.3))
+	return mesh
+
+
+## How many cacti there are, baked to CACTUS_PATH by
+## tools/models/nature/bake_cacti.gd: each one solid, its trunk and arms
+## joined by CSG (cactus_parts), so it's one mesh with no seams.
+const CACTUS_VARIANTS := 6
+const CACTUS_SEED := 7301
+const CACTUS_PATH := "res://assets/models/nature/cactus_%d.res"
+
+
+## A cactus (variant 0 to CACTUS_VARIANTS - 1): the baked mesh with the
+## cactus skin, or its parts unjoined while it isn't baked.
+static func cactus_mesh(variant: int) -> ArrayMesh:
+	var path := CACTUS_PATH % variant
+	var mesh: ArrayMesh
+	if ResourceLoader.exists(path):
+		mesh = (load(path) as ArrayMesh).duplicate()
+	else:
+		mesh = ArrayMesh.new()
+		for part: ArrayMesh in cactus_parts(CACTUS_SEED + variant):
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, part.surface_get_arrays(0))
+	for i in mesh.get_surface_count():
+		mesh.surface_set_material(i, material("cactus", 1.0))
+	return mesh
+
+
+## A cactus about 3 yards tall as closed solids to be joined: a ribbed
+## trunk with a rounded top and up to two arms, each one tube that runs out
+## of the trunk, bends up round a curved elbow and ends rounded.
+static func cactus_parts(rng_seed: int) -> Array[ArrayMesh]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var parts: Array[ArrayMesh] = []
+	var height := rng.randf_range(2.4, 3.4)
+	var radius := rng.randf_range(0.28, 0.36)
+	parts.append(_tube([Vector3(0, -0.3, 0), Vector3(0, height * 0.5, 0), Vector3(0, height, 0)],
+		[radius, radius * 0.97, radius * 0.92], 10))
+	var arms := rng.randi_range(1, 2)
+	var turn := rng.randf() * TAU
+	for i in arms:
+		var out := Vector3(cos(turn + PI * i), 0, sin(turn + PI * i))
+		var r := radius * rng.randf_range(0.58, 0.68)
+		var from := Vector3(0, rng.randf_range(height * 0.35, height * 0.6), 0)
+		var reach := rng.randf_range(0.7, 0.95)
+		var bend := r * 1.4
+		var path: Array[Vector3] = [from, from + out * (reach - bend)]
+		var corner := from + out * (reach - bend) + Vector3.UP * bend
+		for k in range(1, 5):
+			var angle := PI / 2.0 * k / 4.0
+			path.append(corner - Vector3.UP * cos(angle) * bend + out * sin(angle) * bend)
+		path.append(path[path.size() - 1] + Vector3.UP * rng.randf_range(0.6, 1.1))
+		var radii: Array[float] = []
+		for k in path.size():
+			radii.append(r * (1.0 if k < path.size() - 1 else 0.92))
+		parts.append(_tube(path, radii, 8))
+	return parts
+
+
+## A closed tube along `path` with a radius at each point and `sides` sides:
+## a flat end at the start, a dome at the end. Rings turn with the path
+## (parallel transport), so bends don't twist.
+static func _tube(path: Array, radii: Array, sides: int) -> ArrayMesh:
+	var points := PackedVector3Array()
+	var indices := PackedInt32Array()
+	var first: Vector3 = path[0]
+	var heading: Vector3 = ((path[1] as Vector3) - first).normalized()
+	var across := heading.cross(Vector3.FORWARD if absf(heading.z) < 0.9 else Vector3.RIGHT).normalized()
+	# The path with its dome: rings shrinking to a point past the last.
+	var centers: Array[Vector3] = []
+	var sizes: Array[float] = []
+	for k in path.size():
+		centers.append(path[k])
+		sizes.append(radii[k])
+	var last: Vector3 = path[path.size() - 1]
+	var tip_heading := (last - (path[path.size() - 2] as Vector3)).normalized()
+	var end_radius: float = radii[radii.size() - 1]
+	for step in [0.45, 0.75, 0.93]:
+		centers.append(last + tip_heading * end_radius * step)
+		sizes.append(end_radius * sqrt(1.0 - step * step))
+	var rings := centers.size()
+	for k in rings:
+		var forward := ((centers[mini(k + 1, rings - 1)] - centers[maxi(k - 1, 0)])).normalized()
+		# Parallel transport: keep `across` square to the path as it turns.
+		across = (across - forward * across.dot(forward)).normalized()
+		var other := forward.cross(across)
+		for j in sides:
+			var angle := TAU * j / sides
+			points.append(centers[k] + (across * cos(angle) + other * sin(angle)) * sizes[k])
+	for k in rings - 1:
+		for j in sides:
+			var a := k * sides + j
+			var b := k * sides + (j + 1) % sides
+			var c := a + sides
+			var d := b + sides
+			indices.append_array([a, c, b, b, c, d])
+	# The flat start and the dome's point.
+	var start := points.size()
+	points.append(first)
+	var tip := points.size()
+	points.append(centers[rings - 1] + tip_heading * end_radius * 0.07)
+	for j in sides:
+		indices.append_array([start, j, (j + 1) % sides])
+		var a := (rings - 1) * sides + j
+		var b := (rings - 1) * sides + (j + 1) % sides
+		indices.append_array([a, tip, b])
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in indices:
+		surface.add_vertex(points[index])
+	surface.index()
+	surface.generate_normals()
+	return surface.commit()
+
+
+## A dead bush about a yard and a half across: bare, twisted grey twigs
+## forking out of the ground, no leaves (the red lands).
+static func dead_bush_mesh(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var wood := Builder.new()
+	var stems := rng.randi_range(4, 6)
+	for i in stems:
+		var angle := TAU * i / stems + rng.randf_range(-0.4, 0.4)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		_twig(wood, rng, Vector3(0, -0.1, 0), (out * rng.randf_range(0.4, 0.8) + Vector3.UP).normalized(),
+			rng.randf_range(0.5, 0.75), 0.06, 3)
+	var mesh := ArrayMesh.new()
+	wood.add_to(mesh, material("bark", 0.8))
+	return mesh
+
+
+## A twig from `from` along `heading`, `length` long and `thick` at its base,
+## bending a little and forking `depth` more times.
+static func _twig(builder: Builder, rng: RandomNumberGenerator, from: Vector3, heading: Vector3, length: float, thick: float, depth: int) -> void:
+	var bend := Vector3(rng.randf_range(-0.35, 0.35), rng.randf_range(-0.1, 0.15), rng.randf_range(-0.35, 0.35))
+	var dir := (heading + bend).normalized()
+	var to := from + dir * length
+	var grey := Color.WHITE * rng.randf_range(0.75, 0.95)
+	_post(builder, from, to, thick, thick * 0.7, 4, grey)
+	if depth <= 0:
+		return
+	var forks := rng.randi_range(1, 3) if depth > 1 else rng.randi_range(1, 2)
+	for i in forks:
+		var side := dir.cross(Vector3.UP).normalized().rotated(dir, rng.randf() * TAU)
+		_twig(builder, rng, to, (dir + side * rng.randf_range(0.4, 0.9)).normalized(), length * rng.randf_range(0.6, 0.8), thick * 0.7, depth - 1)
+
+
+## A rounded top on a post of `radius`: two short tapering rings and a
+## low point.
+static func _dome(builder: Builder, at: Vector3, radius: float, sides: int) -> void:
+	_post(builder, at, at + Vector3(0, radius * 0.35, 0), radius, radius * 0.75, sides, Color(0.95, 0.95, 0.95))
+	_post(builder, at + Vector3(0, radius * 0.35, 0), at + Vector3(0, radius * 0.6, 0), radius * 0.75, radius * 0.35, sides, Color(1, 1, 1))
+	_post(builder, at + Vector3(0, radius * 0.6, 0), at + Vector3(0, radius * 0.7, 0), radius * 0.35, 0.02, sides, Color(1, 1, 1))
+
+
+## A palm about 6 yards tall: a leaning, curving trunk and a crown of long
+## drooping fronds, seen from both sides.
+static func palm_mesh(rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var bark := Builder.new()
+	var fronds := Builder.new()
+	var lean := Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized() * rng.randf_range(0.6, 1.4)
+	var height := rng.randf_range(5.0, 6.5)
+	var steps := 5
+	var last := Vector3(0, -0.3, 0)
+	for i in steps:
+		var t := float(i + 1) / steps
+		var next := Vector3(0, height * t, 0) + lean * t * t
+		_post(bark, last, next, lerpf(0.28, 0.16, float(i) / steps), lerpf(0.28, 0.16, t), 6, Color(0.8, 0.8, 0.8).lightened(0.05 * (i % 2)))
+		last = next
+	var crown := last
+	var count := rng.randi_range(7, 9)
+	for i in count:
+		var angle := TAU * i / count + rng.randf_range(-0.2, 0.2)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		var across := out.cross(Vector3.UP).normalized()
+		var length := rng.randf_range(2.6, 3.4)
+		var mid := crown + out * length * 0.5 + Vector3(0, 0.45, 0)
+		var tip := crown + out * length + Vector3(0, -rng.randf_range(0.9, 1.5), 0)
+		var width := rng.randf_range(0.45, 0.6)
+		var lit := Color.WHITE * rng.randf_range(0.8, 1.0)
+		for flip in [1.0, -1.0]:
+			var under := crown + Vector3(0, -flip * 2.0, 0)
+			fronds.tri(crown, mid + across * width, mid - across * width, under, lit, lit, lit)
+			fronds.tri(mid + across * width, tip, mid - across * width, under, lit, lit * 0.9, lit)
+	var mesh := ArrayMesh.new()
+	bark.add_to(mesh, material("bark", 1.6))
+	fronds.add_to(mesh, material("leaves", 1.4, 0.2, 3.0))
 	return mesh
 
 

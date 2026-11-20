@@ -27,7 +27,10 @@ const PASSES := {
 		# The Redsand Coast's road east up to Emberhollow.
 		{ "line": [Vector2(2235, -1745), Vector2(2270, -1745), Vector2(2300, -1735), Vector2(2335, -1712), Vector2(2370, -1690)], "x": 2300.0 },
 		# Sunfold Camp's trail north up into the Tallgrass.
-		{ "line": [Vector2(-500, 1070), Vector2(-505, 1035), Vector2(-510, 1000), Vector2(-515, 965), Vector2(-520, 930)], "z": 1000.0 },
+		# It runs on past the Tallgrass's mountains, which reach further in
+		# towards that corner, down to the plain where the road starts.
+		{ "line": [Vector2(-500, 1070), Vector2(-505, 1035), Vector2(-510, 1000), Vector2(-515, 965), Vector2(-520, 930),
+			Vector2(-538, 903), Vector2(-560, 875)], "z": 1000.0 },
 		# Mossglen's road south down the great tree's roots onto Eldergrove Isle.
 		{ "line": [Vector2(-2200, -4870), Vector2(-2203, -4835), Vector2(-2206, -4800), Vector2(-2209, -4765), Vector2(-2212, -4730)], "z": -4800.0 },
 	],
@@ -168,13 +171,15 @@ func ground_point(x: float, z: float) -> Vector3:
 ## Ground over the zone's square, colored by `color` (f(x, z, y, normal)).
 ## With `weights` (f(x, z, y, normal) -> Color of dirt, cobbles, rock and
 ## forest floor) it's textured (terrain_material), and `color` tints it.
-func build_ground(step: float, color: Callable, weights := Callable()) -> void:
+## `textures` replaces the textured ground's layers (TERRAIN_TEXTURES keys
+## to painted texture names) for a land of its own, such as snow.
+func build_ground(step: float, color: Callable, weights := Callable(), textures := {}) -> void:
 	var ground := Terrain.new()
 	ground.name = "Ground"
 	add_child(ground)
 	var material: Material
 	if weights.is_valid():
-		material = terrain_material()
+		material = terrain_material(textures)
 	else:
 		var flat := StandardMaterial3D.new()
 		flat.vertex_color_use_as_albedo = true
@@ -182,8 +187,19 @@ func build_ground(step: float, color: Callable, weights := Callable()) -> void:
 		material = flat
 	# The shared noise is made now, before the worker threads read it.
 	land_noise()
-	ground.build(size, step, height_at, color, material, center, weights)
+	ground.build(size, step, height_at, color, material, center, weights, _ground_across)
 	_ground = ground
+
+
+## The ground's height function inside the zone, and the neighbouring zone's
+## beyond its edges (so the edges' slopes are worked out alike on both sides).
+func _ground_across(x: float, z: float) -> float:
+	var point := Vector2(x, z)
+	if not contains(point) and get_parent():
+		for other in get_parent().get_children():
+			if other is Zone and other != self and other.contains(point):
+				return other.height_at(x, z)
+	return height_at(x, z)
 
 
 const TERRAIN_SHADER := preload("res://shaders/terrain.gdshader")
@@ -196,11 +212,12 @@ const TERRAIN_TEXTURES := {
 
 ## The textured ground's material (shaders/terrain.gdshader), with the
 ## painted textures (tools/textures) and a seamless noise for its borders.
-static func terrain_material() -> ShaderMaterial:
+static func terrain_material(textures := {}) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = TERRAIN_SHADER
 	for uniform: String in TERRAIN_TEXTURES:
-		material.set_shader_parameter(uniform, load("res://assets/textures/%s.png" % TERRAIN_TEXTURES[uniform]))
+		var key: String = textures.get(uniform, TERRAIN_TEXTURES[uniform])
+		material.set_shader_parameter(uniform, load("res://assets/textures/%s.png" % key))
 	material.set_shader_parameter("blend_noise", patch_noise())
 	return material
 
@@ -223,6 +240,48 @@ static func patch_noise() -> NoiseTexture2D:
 		_patch_noise.generate_mipmaps = true
 		_patch_noise.noise = noise
 	return _patch_noise
+
+
+static var _patch_image: Image
+
+
+## The patch noise at a point of the ground as the terrain shader reads it
+## (its `blend_noise` at `uv`, repeating, filtered between texels).
+static func patch_value(uv: Vector2) -> float:
+	if _patch_image == null:
+		var texture := patch_noise()
+		# The same image the texture makes (its defaults: no invert, 2D, a
+		# skirt of 0.1, normalized).
+		_patch_image = texture.noise.get_seamless_image(texture.width, texture.height, false, false, 0.1, true)
+	var size := Vector2(_patch_image.get_width(), _patch_image.get_height())
+	var at := Vector2(fposmod(uv.x, 1.0), fposmod(uv.y, 1.0)) * size - Vector2(0.5, 0.5)
+	var x0 := floori(at.x)
+	var y0 := floori(at.y)
+	var f := at - Vector2(x0, y0)
+	var w := int(size.x)
+	var h := int(size.y)
+	var a := _patch_image.get_pixel(posmod(x0, w), posmod(y0, h)).r
+	var b := _patch_image.get_pixel(posmod(x0 + 1, w), posmod(y0, h)).r
+	var c := _patch_image.get_pixel(posmod(x0, w), posmod(y0 + 1, h)).r
+	var d := _patch_image.get_pixel(posmod(x0 + 1, w), posmod(y0 + 1, h)).r
+	return lerpf(lerpf(a, b, f.x), lerpf(c, d, f.x), f.y)
+
+
+## Whether the textured ground shows rock at a point (its `weights`, the
+## zone's layers function, read as shaders/terrain.gdshader does: rock takes
+## over where its weight beats the noise), rather than grass or dirt. Trees
+## don't grow there.
+func shows_rock(point: Vector2, y: float, weights: Callable) -> bool:
+	var step := 1.0
+	var normal := Vector3(height_at(point.x - step, point.y) - height_at(point.x + step, point.y), 2.0 * step,
+		height_at(point.x, point.y - step) - height_at(point.x, point.y + step)).normalized()
+	var rock: float = (weights.call(point.x, point.y, y, normal) as Color).b
+	if rock <= 0.001:
+		return false
+	if rock >= 0.999:
+		return true
+	var threshold := lerpf(0.2, 0.8, patch_value(point * 0.11))
+	return rock > threshold
 
 
 var _ground: Terrain
@@ -418,7 +477,8 @@ const BUSH_VARIANTS := 4
 const CARD_RANGE := 62.0
 const BUSH_RANGE := 140.0
 ## The kinds a zone's grass place function can make (add_nature_clutter).
-const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat"]
+const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
+	"frost_grass", "heather", "dry_grass"]
 
 var _clutter_share := 0.66
 ## Ground built on (BuildingKit footprints): no grass or bushes there.
@@ -446,22 +506,26 @@ static func variant_lists(count: int) -> Array:
 	return lists
 
 
-## Pines and oaks (lists per variant of where they stand) under `parent`.
-func draw_trees(parent: Node3D, pines: Array, oaks: Array, rng_seed: int) -> void:
+## Pines and oaks (lists per variant of where they stand) under `parent`;
+## `snowy` lays snow on their boughs.
+func draw_trees(parent: Node3D, pines: Array, oaks: Array, rng_seed: int, snowy := false) -> void:
 	for i in TREE_VARIANTS:
-		Nature.scatter(parent, Nature.pine_mesh(rng_seed + 10 + i), pines[i])
+		Nature.scatter(parent, Nature.pine_mesh(rng_seed + 10 + i, snowy), pines[i])
 		Nature.scatter(parent, Nature.oak_mesh(rng_seed + 20 + i), oaks[i])
 
 
-func draw_rocks(parent: Node3D, rocks: Array, rng_seed: int) -> void:
+## Boulders; `snowy` caps them with snow rather than moss, `texture` is
+## their stone.
+func draw_rocks(parent: Node3D, rocks: Array, rng_seed: int, snowy := false, texture := "rock") -> void:
 	for i in ROCK_VARIANTS:
-		Nature.scatter(parent, Nature.rock_mesh(rng_seed + 30 + i), rocks[i])
+		Nature.scatter(parent, Nature.rock_mesh(rng_seed + 30 + i, snowy, texture), rocks[i])
 
 
 ## Grass, flowers and ferns, and bushes, made near the camera (ClutterField):
 ## `grass` is f(point, rng) -> [one of CARD_KINDS, Transform3D] or [], tried
 ## every yard; `bush` the same with a variant number, tried every 4 yards.
-func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int) -> void:
+## `snowy` puts snow on the bushes; `dry` makes them dead bushes, bare twigs.
+func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy := false, dry := false) -> void:
 	var square := Rect2(center - Vector2.ONE * size / 2.0, Vector2.ONE * size)
 	var patches := patch_noise()
 	var clump := Nature.card_mesh(1.1, 0.45)
@@ -481,6 +545,9 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int) -> void:
 		"flowers_blue": [clump, Nature.card_material("flowers_blue", patches)],
 		"ferns": [Nature.card_mesh(1.3, 0.85), Nature.card_material("ferns", patches, 0.05)],
 		"wheat": [Nature.card_mesh(1.0, 1.0, 2), Nature.card_material("wheat", patches, 0.1)],
+		"frost_grass": [Nature.card_mesh(0.9, 0.6), Nature.card_material("frost_grass", patches, 0.1)],
+		"heather": [Nature.card_mesh(0.9, 0.4), Nature.card_material("heather", patches, 0.04)],
+		"dry_grass": [Nature.card_mesh(1.0, 0.55), Nature.card_material("dry_grass", patches, 0.1)],
 	}
 	add_child(cards)
 	var bushes := ClutterField.new()
@@ -496,7 +563,7 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int) -> void:
 	bushes.thinned = false
 	bushes.place = bush
 	for i in BUSH_VARIANTS:
-		bushes.kinds[str(i)] = [Nature.bush_mesh(rng_seed + 40 + i), null]
+		bushes.kinds[str(i)] = [Nature.dead_bush_mesh(rng_seed + 40 + i) if dry else Nature.bush_mesh(rng_seed + 40 + i, snowy), null]
 	add_child(bushes)
 
 

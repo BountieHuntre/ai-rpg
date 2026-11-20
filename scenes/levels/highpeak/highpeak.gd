@@ -162,9 +162,15 @@ const CHESTS := [
 	[176785, Vector2(362, -334), 2.0, 1],
 ]
 
-const SNOW := Color(0.8, 0.82, 0.87)
-const BLUE_SNOW := Color(0.64, 0.7, 0.82)
-const PATH := Color(0.56, 0.5, 0.44)
+## Walled places bots go in and out of by the door (Zone.enclosures):
+## Kettlefold's inn and its three houses with trainers inside.
+const ENCLOSURES := [
+	[-161.0, -812.0, -139.0, -800.0, Vector2(-150, -796), Vector2(-150, -802.5)],  # the Thornbrew inn
+	[-182.5, -792.0, -173.5, -780.0, Vector2(-170.5, -786), Vector2(-175.5, -786)],  # the west house
+	[-126.0, -793.0, -118.0, -783.0, Vector2(-129, -788), Vector2(-124.5, -788)],  # the east house
+	[-181.0, -762.0, -171.0, -754.0, Vector2(-168, -758), Vector2(-173, -758)],  # the south-west house
+]
+
 const ROCK := Color(0.46, 0.46, 0.5)
 const QUARRY_ROCK := Color(0.52, 0.48, 0.44)
 const STONE := Color(0.55, 0.53, 0.5)
@@ -174,7 +180,10 @@ const TIMBER := Color(0.4, 0.28, 0.18)
 const CANVAS := Color(0.62, 0.55, 0.42)
 const BRASS := Color(0.7, 0.55, 0.25)
 const IRON := Color(0.32, 0.32, 0.34)
-const PINE := Color(0.2, 0.34, 0.28)
+
+## Kettlefold's stone buildings: stone under snowy slates, timber trim.
+const STONE_LOOK := { "wall": STONE, "roof": SLATE, "trim": TIMBER, "stone": DARK_STONE, "shutter": TIMBER,
+	"cloth": Color(0.2, 0.3, 0.55) }
 
 var _detail := FastNoiseLite.new()
 var _road_segments: Array = []
@@ -200,11 +209,25 @@ func _init() -> void:
 	spawns = SPAWNS
 	quest_objects = QUEST_OBJECTS
 	chests = CHESTS
+	enclosures = ENCLOSURES
+
+
+## The snow land's painted ground, as Frosthollow's (Zone.build_ground).
+const GROUND_TEXTURES := {
+	"grass_tex": "snow", "forest_tex": "frozen_heath", "dirt_tex": "frozen_dirt", "rock_tex": "snow_rock",
+}
 
 
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
-	build_water(WATER_LEVEL)
+	Props.use_texture(STONE, "stone_wall", 4.0)
+	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
+	Props.use_texture(SLATE, "slate_snow", 2.5)
+	Props.use_texture(TIMBER, "planks", 2.0)
+	Props.use_texture(Buildings.FLOOR, "planks", 2.0)
+	Props.use_texture(ROCK, "snow_rock", 3.0)
+	Props.use_texture(QUARRY_ROCK, "rock", 3.0)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
+	build_water(WATER_LEVEL, true)
 	build_edges()
 	_build_village()
 	_build_depot()
@@ -276,33 +299,40 @@ func _road_distance(point: Vector2, limit: float) -> float:
 	return best
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r the
+## trodden paths (Kettlefold, the camps, the roads, the tarn's shore), g the
+## village's cobbled yard, b rock (steep ground and the quarry's floor), a
+## frozen heath (thin snow on the lower ground, in patches).
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.04
-	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
-	var color := SNOW.lerp(BLUE_SNOW, smoothstep(0.0, 0.5, patch))
-	color = color.lerp(PATH, (1.0 - smoothstep(TOWN_FLAT - 12.0, TOWN_FLAT - 4.0, point.distance_to(TOWN))) * 0.7)
-	var quarry: Array = FLATS[QUARRY]
-	color = color.lerp(QUARRY_ROCK, 1.0 - smoothstep(quarry[1] - 4.0, quarry[1] + 8.0, point.distance_to(quarry[0])))
+	var path := (1.0 - smoothstep(TOWN_FLAT - 12.0, TOWN_FLAT - 4.0, point.distance_to(TOWN))) * 0.55
 	for flat: Array in FLATS:
-		color = color.lerp(PATH, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.4)
-	color = color.lerp(PATH, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point, ROAD_WIDTH + 1.0)))
-	color = color.lerp(Color(0.6, 0.66, 0.72), 1.0 - smoothstep(WATER_LEVEL, WATER_LEVEL + 1.0, y))
-	color = color.lerp(ROCK, smoothstep(0.82, 0.6, normal.y))
-	color = color.lerp(SNOW, smoothstep(32.0, 42.0, y) * 0.8)
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+		path = maxf(path, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
+	path = maxf(path, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point, ROAD_WIDTH + 1.5)))
+	path = maxf(path, 1.0 - smoothstep(WATER_LEVEL + 0.2, WATER_LEVEL + 1.2, y))
+	var yard := 1.0 - smoothstep(13.0, 17.0, point.distance_to(TOWN))
+	var quarry: Array = FLATS[QUARRY]
+	var rock := maxf(smoothstep(0.8, 0.62, normal.y), 1.0 - smoothstep(quarry[1] - 4.0, quarry[1] + 8.0, point.distance_to(quarry[0])))
+	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
+	var heath := smoothstep(-0.05, 0.35, patch) * (1.0 - smoothstep(14.0, 22.0, y))
+	return Color(path, yard, rock, heath)
+
+
+## The textured ground's tint: a little noise, and the quarry's floor warmer
+## (its rock is the plain grey rock, not the frosted).
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.06
+	return Color(shade, shade, shade)
 
 
 func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 	return Vector3(at.x + offset.x, y, at.y + offset.y)
 
 
-## A dwarven house: stone walls under a slate roof, a chimney at one end.
-func _house(parent: Node3D, at: Vector3, length: float, depth: float, yaw := 0.0) -> void:
-	Props.box(parent, at, Vector3(length, 4.2, depth), STONE, yaw)
-	Props.roof(parent, at + Vector3(0, 4.2, 0), Vector3(length + 1.0, 2.6, depth + 1.0), SLATE, yaw)
-	var chimney := Vector3(cos(yaw), 0, -sin(yaw)) * (length / 2.0 - 1.0)
-	Props.box(parent, at + chimney + Vector3(0, 4.2, 0), Vector3(1.2, 3.6, 1.2), DARK_STONE, yaw, false)
+## A dwarven house: stone walls under a snowy slate roof, open inside
+## (Buildings.house), its door on `door_side`; returns the room.
+func _house(kit: BuildingKit, at: Vector3, size: Vector3, door_side: Vector2) -> Dictionary:
+	return Buildings.house(kit, at, size, 0.0, STONE_LOOK, door_side, 0.0, 1, true, true)
 
 
 ## A cave mouth: a dark opening framed in rough stone, facing `yaw` (0 faces north).
@@ -333,32 +363,41 @@ func _great_gate(parent: Node3D, at: Vector3, yaw: float) -> void:
 		torch(gate, Vector3(brazier, 1.2, -4), 8.0)
 
 
-# Kettlefold: stone houses round a yard, the Thornbrew inn to the north, a
-# smithy, a well, and the graveyard's cairns south of the yard.
+# Kettlefold: stone houses round a cobbled yard, open inside: the Thornbrew
+# inn to the north (its keeper behind the bar), the trainers' houses west,
+# east and south-west of the yard; a smithy, a well, braziers, and the
+# graveyard's cairns south of the yard.
 
 func _build_village() -> void:
 	var village := Node3D.new()
 	village.name = "Kettlefold"
 	add_child(village)
+	var kit := BuildingKit.new(village, "Buildings")
 	var t := TOWN
 	var y := TOWN_HEIGHT
-	# The inn, the biggest house, with a brew kettle by its door.
-	_house(village, _near(t, Vector2(0, -26), y), 22.0, 12.0)
-	Props.cylinder(village, _near(t, Vector2(14, -18), y), 1.6, 2.2, BRASS)
-	_house(village, _near(t, Vector2(-28, -6), y), 12.0, 9.0, PI / 2)
-	_house(village, _near(t, Vector2(28, -8), y), 10.0, 8.0, PI / 2)
-	_house(village, _near(t, Vector2(-26, 22), y), 10.0, 8.0)
-	# The smithy: a forge and anvil under a lean-to.
-	Props.box(village, _near(t, Vector2(26, 16), y), Vector3(3, 2, 3), DARK_STONE)
-	Props.box(village, _near(t, Vector2(26, 16), y + 2), Vector3(1.6, 3.4, 1.6), DARK_STONE, 0.0, false)
-	Props.box(village, _near(t, Vector2(22, 20), y), Vector3(1.2, 0.9, 0.6), IRON)
-	Props.roof(village, _near(t, Vector2(25, 18), y + 3.4), Vector3(8, 1.6, 7), SLATE)
+	var inn := _house(kit, _near(t, Vector2(0, -26), y), Vector3(22, 5, 12), Vector2(0, 1))
+	Buildings.furnish(kit, inn, "inn", STONE_LOOK)
+	# The brew kettle by the inn's door.
+	kit.cylinder(_near(t, Vector2(14, -18), y), 1.6, 2.2, BRASS, 10, -1.0, true)
+	# The trainers' houses: Templar and Cleric west, Man-at-Arms and
+	# Spellsword east, Ranger and pet trainer south-west.
+	for house: Array in [[Vector2(-28, -6), Vector3(9, 4.5, 12), Vector2(1, 0)],
+			[Vector2(28, -8), Vector3(8, 4.5, 10), Vector2(-1, 0)],
+			[Vector2(-26, 22), Vector3(10, 4.5, 8), Vector2(1, 0)]]:
+		_house(kit, _near(t, house[0], y), house[1], house[2])
+		Buildings.rug(kit, _near(t, house[0], y + 0.1), 0.0, 3.0, 4.0, Color(0.2, 0.3, 0.55))
+	# The smithy: a slate roof on posts over a forge with its hood and an anvil.
+	Buildings.shed(kit, _near(t, Vector2(25, 18), y), Vector3(8, 3.6, 7), 0.0, TIMBER, SLATE)
+	kit.block(_near(t, Vector2(26, 16), y), Vector3(3, 1.6, 2.5), DARK_STONE, 0.0, true)
+	kit.block(_near(t, Vector2(26, 16), y + 1.6), Vector3(2.2, 0.15, 1.8), Color(0.55, 0.2, 0.08))
+	kit.cylinder(_near(t, Vector2(26, 16), y + 2.6), 1.3, 1.6, DARK_STONE, 4, 0.35)
+	kit.block(_near(t, Vector2(26, 16), y + 4.2), Vector3(0.7, 2.2, 0.7), DARK_STONE)
+	kit.block(_near(t, Vector2(22, 20), y), Vector3(0.6, 0.6, 0.45), TIMBER, 0.0, true)
+	kit.block(_near(t, Vector2(22, 20), y + 0.6), Vector3(1.2, 0.3, 0.55), IRON)
+	# The well in the yard.
+	Buildings.well(kit, _near(t, Vector2(0, 0), y), DARK_STONE, TIMBER, SLATE)
+	kit.finish()
 	torch(village, _near(t, Vector2(26, 17.6), y + 2.0), 6.0)
-	# The well and the yard's braziers.
-	Props.cylinder(village, _near(t, Vector2(0, 0), y), 1.3, 1.0, STONE)
-	for side in [-1, 1]:
-		Props.box(village, _near(t, Vector2(side * 1.1, 0), y), Vector3(0.2, 2.4, 0.2), TIMBER, 0.0, false)
-	Props.roof(village, _near(t, Vector2(0, 0), y + 2.4), Vector3(3, 0.9, 2.4), SLATE)
 	for brazier in [Vector2(-12, -12), Vector2(12, -12), Vector2(-12, 12)]:
 		Props.cylinder(village, _near(t, brazier, y), 0.6, 1.0, DARK_STONE, false, 0.8)
 		torch(village, _near(t, brazier, y + 1.0), 7.0)
@@ -366,7 +405,8 @@ func _build_village() -> void:
 		Props.cylinder(village, _near(t, cairn, y), 0.7, 0.8, DARK_STONE, false, 0.3)
 
 
-# Steelgrip's Depot: a hangar of brass and iron with a flying machine before it.
+# Steelgrip's Depot: a plank hangar under slates with its doors open on a
+# flying machine.
 
 func _build_depot() -> void:
 	var depot := Node3D.new()
@@ -375,10 +415,12 @@ func _build_depot() -> void:
 	var flat: Array = FLATS[DEPOT]
 	var d: Vector2 = flat[0]
 	var y: float = flat[2]
-	Props.box(depot, _near(d, Vector2(0, -8), y), Vector3(14, 6, 9), STONE)
-	Props.roof(depot, _near(d, Vector2(0, -8), y + 6), Vector3(15, 2.4, 10), IRON)
+	var kit := BuildingKit.new(depot, "Buildings")
+	Buildings.barn(kit, _near(d, Vector2(0, -8), y), Vector3(14, 6, 9), 0.0, TIMBER, DARK_STONE, SLATE, 1.0)
+	Buildings.crate(kit, _near(d, Vector2(-8, 4), y), 1.4, TIMBER, DARK_STONE)
+	Buildings.barrel(kit, _near(d, Vector2(-9.6, 3), y), 0.45, 1.0, TIMBER)
+	kit.finish()
 	_flying_machine(depot, _near(d, Vector2(2, 6), y), 0.4)
-	Props.box(depot, _near(d, Vector2(-8, 4), y), Vector3(1.4, 1.2, 1.4), TIMBER)
 	torch(depot, _near(d, Vector2(-5, -2), y + 0.6), 6.0)
 
 
@@ -393,7 +435,8 @@ func _flying_machine(parent: Node3D, at: Vector3, yaw: float, wrecked := false) 
 	Props.box(craft, Vector3(0, 1.2, -2.2), Vector3(0.2, 2.2, 0.2), IRON, 0.0, false)
 
 
-# Amberfield Ranch: a farmhouse, a barn and fenced pens for the rams.
+# Amberfield Ranch: a stone farmhouse, open inside, a barn and fenced pens
+# for the rams.
 
 func _build_ranch() -> void:
 	var ranch := Node3D.new()
@@ -402,13 +445,16 @@ func _build_ranch() -> void:
 	var flat: Array = FLATS[RANCH]
 	var r: Vector2 = flat[0]
 	var y: float = flat[2]
-	_house(ranch, _near(r, Vector2(-8, -8), y), 10.0, 8.0)
-	Props.box(ranch, _near(r, Vector2(10, -6), y), Vector3(10, 5, 8), TIMBER)
-	Props.roof(ranch, _near(r, Vector2(10, -6), y + 5), Vector3(11, 3, 9), SLATE)
+	var kit := BuildingKit.new(ranch, "Buildings")
+	var home := _house(kit, _near(r, Vector2(-8, -8), y), Vector3(10, 4.2, 8), Vector2(0, 1))
+	Buildings.furnish(kit, home, "cottage", STONE_LOOK)
+	Buildings.barn(kit, _near(r, Vector2(10, -6), y), Vector3(10, 5, 8), 0.0, TIMBER, DARK_STONE, SLATE, -1.0)
 	for i in 8:
 		var at := r + Vector2(-12 + i * 3.4, 12)
-		Props.box(ranch, Vector3(at.x, y, at.y), Vector3(0.25, 1.2, 0.25), TIMBER, 0.0, false)
-	Props.box(ranch, _near(r, Vector2(0, 12), y + 0.9), Vector3(24, 0.15, 0.15), TIMBER, 0.0, false)
+		kit.block(Vector3(at.x, y, at.y), Vector3(0.25, 1.2, 0.25), TIMBER, 0.0, true)
+	kit.box(_near(r, Vector2(0, 12), y + 0.9), Vector3(24, 0.15, 0.15), TIMBER)
+	kit.box(_near(r, Vector2(0, 12), y + 0.5), Vector3(24, 0.15, 0.15), TIMBER)
+	kit.finish()
 
 
 # The Grey Quarry: terraces cut into the rim, trogg-dug burrows and a crane.
@@ -477,7 +523,8 @@ func _build_den() -> void:
 	Props.scatter(den, BoxMesh.new(), Color(0.9, 0.88, 0.8), bones)
 
 
-# Barleyhall: the brewers' hamlet on the tarn's shore, with a jetty.
+# Barleyhall: the brewers' hamlet on the tarn's shore: two stone houses,
+# open inside, barrels and a jetty.
 
 func _build_barleyhall() -> void:
 	var hamlet := Node3D.new()
@@ -486,10 +533,14 @@ func _build_barleyhall() -> void:
 	var flat: Array = FLATS[BARLEYHALL]
 	var b: Vector2 = flat[0]
 	var y: float = flat[2]
-	_house(hamlet, _near(b, Vector2(6, -2), y), 12.0, 8.0, PI / 2)
-	_house(hamlet, _near(b, Vector2(-4, 10), y), 8.0, 7.0)
+	var kit := BuildingKit.new(hamlet, "Buildings")
+	var brewhouse := _house(kit, _near(b, Vector2(6, -2), y), Vector3(8, 4.2, 12), Vector2(-1, 0))
+	Buildings.furnish(kit, brewhouse, "cottage", STONE_LOOK)
+	var cottage := _house(kit, _near(b, Vector2(-6, 16), y), Vector3(8, 4.2, 7), Vector2(0, -1))
+	Buildings.furnish(kit, cottage, "cottage", STONE_LOOK)
 	for barrel in [Vector2(-2, -4), Vector2(-3.4, -3), Vector2(-1.6, -2.2)]:
-		Props.cylinder(hamlet, _near(b, barrel, y), 0.55, 1.1, TIMBER)
+		Buildings.barrel(kit, _near(b, barrel, y), 0.55, 1.1, TIMBER)
+	kit.finish()
 	plank(hamlet, _near(b, Vector2(-12, -4), y + 0.3), _near(b, Vector2(-26, -10), WATER_LEVEL + 0.4))
 	torch(hamlet, _near(b, Vector2(0, 2), y + 0.6), 6.0)
 
@@ -543,43 +594,37 @@ func _clear(point: Vector2) -> bool:
 	return true
 
 
-## Snowy pines, in stands and thicker on the slopes.
+## Snowy pines, in stands and thicker on the slopes, never on bare rock.
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var trunks: Array[Transform3D] = []
-	var crowns: Array[Transform3D] = []
-	var caps: Array[Transform3D] = []
+	var pines := variant_lists(TREE_VARIANTS)
+	var unused := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
-	trunk_shape.radius = 0.4
+	trunk_shape.radius = 0.45
 	trunk_shape.height = 4.0
 	var edge := SIZE / 2.0 - 10.0
 	for attempt in 12000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
 		var stand := smoothstep(0.05, 0.3, Zone.land_noise().get_noise_2d(point.x * 3.0 + 400.0, point.y * 3.0))
-		if y < WATER_LEVEL + 0.6 or y > 32.0 or not _clear(point) or rng.randf() > 0.02 + 0.12 * stand + 0.15 * smoothstep(10.0, 20.0, y):
+		if y < WATER_LEVEL + 0.6 or y > 32.0 or not _clear(point) \
+				or rng.randf() > 0.02 + 0.12 * stand + 0.15 * smoothstep(10.0, 20.0, y) \
+				or shows_rock(point, y, _ground_layers):
 			continue
-		var size := rng.randf_range(0.8, 1.5)
-		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
-		trunks.append(base * Transform3D(Basis(), Vector3(0, 0.9, 0)))
-		crowns.append(base * Transform3D(Basis(), Vector3(0, 3.6, 0)))
-		caps.append(base * Transform3D(Basis().scaled(Vector3(0.7, 0.7, 0.7)), Vector3(0, 5.4, 0)))
+		var size := rng.randf_range(0.75, 1.3)
+		pines[rng.randi_range(0, TREE_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y)))
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 2.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.2
-	trunk.bottom_radius = 0.35
-	trunk.height = 1.8
-	trunk.radial_segments = 6
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
 	add_child(trees)
-	Props.scatter(trees, trunk, TIMBER, trunks)
-	Props.scatter(trees, Props.cone(1.8, 4.4, 7), PINE, crowns)
-	Props.scatter(trees, Props.cone(1.3, 2.6, 7), SNOW, caps)
+	draw_trees(trees, pines, unused, SEED, true)
 
 
 func _build_rocks() -> void:
@@ -587,15 +632,16 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 6.0
 	for attempt in 3000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
 		if y < WATER_LEVEL + 0.4 or rng.randf() > 0.03 + 0.4 * smoothstep(11.0, 24.0, y) or not _clear(point):
 			continue
-		var size := Vector3(rng.randf_range(0.6, 2.4), rng.randf_range(0.4, 1.6), rng.randf_range(0.6, 2.4))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -603,29 +649,58 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED, true)
 
 
+## Dry grass and frosted heather poking through the snow, and snowy
+## bushes now and then, made near the camera (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var heather: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 6.0
-	for attempt in 30000:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.5 or y > 24.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.15:
-			heather.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.2)), at + Vector3.UP * 0.15))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.4), 1)), at + Vector3.UP * 0.15))
-	add_clutter(clutter, Props.cone(0.14, 0.34, 4), Color(0.6, 0.58, 0.44), grass)
-	add_clutter(clutter, Props.blob(0.16, 5, 3), Color(0.7, 0.66, 0.78), heather)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3, true)
+
+
+## What grows at a point: mostly on the heath, thin on open snow, none on
+## paths, rock, the shore or high ground. Called from a worker thread: it
+## only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.8 or y > 24.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3 or layers.r > 0.5:
+		return []
+	if rng.randf() > lerpf(0.06, 0.55, layers.a):
+		return []
+	var at := Vector3(point.x, y - 0.05, point.y)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	if rng.randf() < 0.22:
+		return ["heather", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.2)), at)]
+	return ["frost_grass", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.3), 1) * rng.randf_range(0.8, 1.15)), at)]
+
+
+## A snowy bush now and then.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.05:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.8 or y > 24.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.7, 1.3)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.8, 1.1), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## Open ground: not on roads, in the village or on the camps.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if point.distance_to(TOWN) < TOWN_FLAT - 4.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true

@@ -7,7 +7,7 @@
 script = ExtResource("1_script")
 
 [node name="CommanderThrogg" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2060, 5, -1804)
+position = Vector3(2060.5, 5.1, -1812.8)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Commander Throgg"
 subname = ""
@@ -45,8 +45,8 @@ appearance = {
 race = "orc"
 
 [node name="ZargaEmberbrew" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2075, 5, -1792)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(2085.3, 5.1, -1792.4)
+rotation = Vector3(0, 1.5708, 0)
 npc_name = "Zarga Emberbrew"
 subname = "Innkeeper"
 vendor = 6928
@@ -65,8 +65,8 @@ appearance = {
 race = "troll"
 
 [node name="TorgSkullsplitter" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2054, 5, -1794)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(2054.5, 5.1, -1812.8)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Torg Skullsplitter"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"
@@ -76,7 +76,7 @@ appearance = {
 race = "orc"
 
 [node name="Jinwazi" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2068, 5, -1802)
+position = Vector3(2057.5, 5.1, -1812.8)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Jin'wazi"
 subname = "Cleric Trainer"
@@ -87,8 +87,8 @@ appearance = {
 race = "troll"
 
 [node name="VashkaRuneblade" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2072, 5, -1798)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(2063.5, 5.1, -1812.8)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Vashka Runeblade"
 subname = "Spellsword Trainer"
 trainer = "spellsword"
@@ -208,8 +208,8 @@ appearance = {
 race = "gnome"
 
 [node name="TharkaBloodarrow" parent="." instance=ExtResource("2_npc")]
-position = Vector3(2062, 5, -1786)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(2053.0, 5.1, -1810)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Tharka Bloodarrow"
 subname = "Ranger Trainer"
 trainer = "hunter"

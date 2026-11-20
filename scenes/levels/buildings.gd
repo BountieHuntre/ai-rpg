@@ -905,3 +905,67 @@ static func barrel(kit: BuildingKit, base: Vector3, radius: float, height: float
 	for y: float in [height * 0.15, height * 0.5, height * 0.85]:
 		kit.cylinder(Vector3(0, y - 0.04, 0), radius * (0.96 if absf(y - height * 0.5) < 0.01 else 0.92) + 0.02, 0.08, DARK, 10)
 	kit.frame = Transform3D.IDENTITY
+
+
+## An orc's round hut you walk into: a ring of log walls `height` tall round
+## `base`, open in a doorway facing `door` (x, z), under a cone of hides seen
+## from inside too, with a spike on top, a hide rug on the floor and a lamp
+## (a fire pit in the middle of a great hut, `radius` over 5). The look's
+## "wall" (logs), "roof" (hides), "trim" (the spike, bone), "cloth" (the
+## rug). Returns the room: its middle, radius and door.
+static func round_hut(kit: BuildingKit, base: Vector3, radius: float, height: float, look: Dictionary, door: Vector2) -> Dictionary:
+	kit.footprint(base, Vector3(radius * 2.0, height, radius * 2.0), 0.0)
+	var wall: Color = look.wall
+	var roof_color: Color = look.roof
+	var trim: Color = _look(look, "trim", Color(0.88, 0.84, 0.72))
+	var sides := 16
+	var door_angle := atan2(door.y, door.x)
+	var door_half := asin(clampf(1.05 / radius, 0.0, 1.0)) + PI / sides * 0.5
+	var inner := radius * cos(PI / sides)
+	var chord := 2.0 * radius * sin(PI / sides) + 0.08
+	var thick := 0.45
+	for i in sides:
+		var middle := TAU * (i + 0.5) / sides
+		var out := Vector3(cos(middle), 0, sin(middle))
+		var turn := Basis(Vector3.UP, -middle - PI / 2.0)
+		var gap := absf(wrapf(middle - door_angle, -PI, PI)) < door_half
+		if gap:
+			# Over the doorway only.
+			kit.box(base + out * inner + Vector3.UP * (DOOR_HEIGHT + (height - DOOR_HEIGHT) / 2.0),
+				Vector3(chord, height - DOOR_HEIGHT, thick), wall, turn, true)
+		else:
+			kit.box(base + out * inner + Vector3.UP * height / 2.0, Vector3(chord, height, thick), wall, turn, true)
+	# Door posts either side of the gap.
+	var door_out := Vector3(cos(door_angle), 0, sin(door_angle))
+	var door_side := door_out.cross(Vector3.UP).normalized()
+	for s: float in [-1.0, 1.0]:
+		kit.cylinder(base + door_out * inner + door_side * s * 1.1, 0.2, height + 0.3, wall, 6, -1.0, true)
+	# The cone of hides, outside and in, and the spike through its top.
+	var rise := radius * 1.0
+	var eave := radius * 1.25
+	var top := base + Vector3.UP * (height + rise)
+	kit.cylinder(base + Vector3.UP * height, eave, rise, roof_color, sides, 0.0)
+	for i in sides:
+		var a0 := TAU * i / sides
+		var a1 := TAU * (i + 1) / sides
+		var p0 := base + Vector3.UP * height + Vector3(cos(a0), 0, sin(a0)) * eave
+		var p1 := base + Vector3.UP * height + Vector3(cos(a1), 0, sin(a1)) * eave
+		var outward := Vector3(cos((a0 + a1) / 2.0), rise / eave, sin((a0 + a1) / 2.0)).normalized()
+		kit._tri(roof_color, kit.frame * p0, kit.frame * p1, kit.frame * top, kit.frame.basis * -outward)
+	kit.block(top - Vector3.UP * 0.4, Vector3(0.25, 1.8, 0.25), trim)
+	# The camera stops under the roof.
+	kit.collider(base + Vector3.UP * (height + 0.4), Vector3(radius * 1.4, 0.3, radius * 1.4))
+	# A hide rug, and a fire pit in a great hut or a hanging lamp in a small one.
+	rug(kit, base + Vector3.UP * 0.03, door_angle, radius * 1.1, radius * 0.9, _look(look, "cloth", Color(0.42, 0.3, 0.2)))
+	if radius > 5.0:
+		for i in 8:
+			var angle := TAU * i / 8.0
+			kit.block(base + Vector3(cos(angle), 0, sin(angle)) * 0.9, Vector3(0.45, 0.3, 0.45), Color(0.42, 0.25, 0.19), angle)
+		kit.block(base, Vector3(0.9, 0.12, 0.9), FIRE)
+		kit.light(base + Vector3.UP * 0.8, WARM, radius * 2.2, 1.2)
+	else:
+		var lamp := base + Vector3.UP * (height - 0.2)
+		kit.block(lamp, Vector3(0.18, 0.3, 0.18), FLAME)
+		kit.light(lamp, WARM, radius * 2.5, 0.7)
+	kit.dust(base + Vector3.UP * (height / 2.0 + 0.5), Vector3(radius * 1.4, height + 1.0, radius * 1.4))
+	return { "center": base, "radius": radius, "door": door }

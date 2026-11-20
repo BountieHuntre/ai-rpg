@@ -194,15 +194,8 @@ const CHESTS := [
 	[3237, Vector2(1500, -1513), 1.0, 1],
 ]
 
-const SAND := Color(0.76, 0.52, 0.34)
-const BEACH := Color(0.86, 0.74, 0.52)
-const DRY_GRASS := Color(0.64, 0.57, 0.33)
-const OCHRE := Color(0.8, 0.6, 0.36)
 const RED_ROCK := Color(0.58, 0.32, 0.22)
 const DARK_ROCK := Color(0.42, 0.25, 0.19)
-const PACKED_EARTH := Color(0.62, 0.45, 0.3)
-const ROAD := Color(0.68, 0.52, 0.36)
-const MUD := Color(0.45, 0.34, 0.24)
 const HIDE := Color(0.62, 0.48, 0.32)
 const DARK_HIDE := Color(0.42, 0.3, 0.2)
 const LOG := Color(0.4, 0.27, 0.17)
@@ -211,8 +204,6 @@ const STONE := Color(0.62, 0.6, 0.56)
 const DARK_STONE := Color(0.42, 0.41, 0.4)
 const THATCH := Color(0.72, 0.62, 0.36)
 const BAMBOO := Color(0.6, 0.55, 0.3)
-const CACTUS := Color(0.32, 0.5, 0.26)
-const THORN := Color(0.42, 0.38, 0.22)
 const BANNER := Color(0.62, 0.12, 0.1)
 const SAIL := Color(0.86, 0.84, 0.76)
 const IRON := Color(0.32, 0.3, 0.3)
@@ -240,11 +231,44 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	enclosures = ENCLOSURES
+
+
+## The red land's painted ground (Zone.build_ground's layers), as
+## Emberhollow's, with beach sand in the cobbles' place along the shore.
+const GROUND_TEXTURES := {
+	"grass_tex": "red_earth", "forest_tex": "dry_scrub", "dirt_tex": "red_dirt", "cobble_tex": "sand", "rock_tex": "red_rock",
+}
+## Walled places bots go in and out of by the door (Zone.enclosures):
+## Spikewall's longhouse and inn, and its round huts.
+const ENCLOSURES := [
+	[2052.0, -1814.0, 2068.0, -1806.0, Vector2(2060, -1802), Vector2(2060, -1807.5)],  # the longhouse, door south
+	[2077.5, -1801.0, 2086.5, -1787.0, Vector2(2074, -1794), Vector2(2079.5, -1794)],  # the inn, door west
+	[2034.0, -1808.0, 2042.0, -1800.0, Vector2(2043.1, -1800.8), Vector2(2040.2, -1802.6)],
+	[2032.0, -1788.0, 2040.0, -1780.0, Vector2(2041.8, -1785.5), Vector2(2038.5, -1784.6)],
+	[2046.0, -1774.0, 2054.0, -1766.0, Vector2(2052.7, -1775.4), Vector2(2051.2, -1772.3)],
+	[2070.0, -1774.0, 2078.0, -1766.0, Vector2(2070.6, -1774.9), Vector2(2072.5, -1772.1)],
+	[2076.0, -1814.0, 2084.0, -1806.0, Vector2(2075.8, -1805.8), Vector2(2078.2, -1808.2)],
+]
+## Spikewall's round huts, as offsets from the town's middle.
+const HUTS := [Vector2(-22, -14), Vector2(-24, 6), Vector2(-10, 20), Vector2(14, 20), Vector2(20, -20)]
+const CACTUS_VARIANTS := 4
+const PALM_VARIANTS := 3
 
 
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
-	build_water(WATER_LEVEL)
+	Props.use_texture(LOG, "bark", 2.0)
+	Props.use_texture(HIDE, "hide", 2.5)
+	Props.use_texture(DARK_HIDE, "hide", 2.5)
+	Props.use_texture(RED_ROCK, "red_rock", 3.0)
+	Props.use_texture(DARK_ROCK, "red_rock", 3.0)
+	Props.use_texture(STONE, "stone_wall", 4.0)
+	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
+	Props.use_texture(THATCH, "thatch", 2.0)
+	Props.use_texture(BAMBOO, "planks", 1.5)
+	Props.use_texture(Buildings.FLOOR, "planks", 2.0)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
+	build_water(WATER_LEVEL, true)
 	build_edges()
 	_build_town()
 	_build_village()
@@ -271,8 +295,13 @@ func height_at(x: float, z: float) -> float:
 		if hill[2] < 5.0:
 			continue
 		height += hill[2] * _bump(point.distance_to(hill[0]) / hill[1])
-	# The sea south of the shore, the isles rising out of it.
-	var sea := smoothstep(-8.0, 26.0, z - _coast_z(x))
+	var offset := point - CENTER
+	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
+	var half := SIZE / 2.0
+	var ring := smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach)
+	# The sea south of the shore, the isles rising out of it; none under the
+	# mountains at the edges, so at the border the ground is Emberhollow's.
+	var sea := smoothstep(-8.0, 26.0, z - _coast_z(x)) * (1.0 - ring)
 	height = lerpf(height, SEA_BED, sea)
 	for hill: Array in HILLS:
 		if hill[2] < 5.0:
@@ -284,10 +313,7 @@ func height_at(x: float, z: float) -> float:
 	height = minf(height, lerpf(STREAM_BED, height, smoothstep(STREAM_WIDTH, STREAM_WIDTH + 7.0, stream)))
 	# Mountains round the edges last, as deep as every zone's, so the ground
 	# joins at the borders whatever is near them.
-	var offset := point - CENTER
-	var reach := lerpf(offset.length(), maxf(absf(offset.x), absf(offset.y)), 0.6)
-	var half := SIZE / 2.0
-	height += mountain_height(x, z, smoothstep(half - MOUNTAIN_START, half - MOUNTAIN_FULL, reach))
+	height += mountain_height(x, z, ring)
 	return carve_passes(x, z, height)
 
 
@@ -311,21 +337,29 @@ func _road_distance(point: Vector2, limit: float) -> float:
 	return best
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r
+## packed dirt (Spikewall, the camps, the roads, the Redwater's mud), g beach
+## sand (low ground by the sea), b red rock (steep and high ground), a dry
+## scrub in patches.
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.07
-	var patch := Zone.land_noise().get_noise_2d(x * 2.3, z * 2.3)
-	var color := SAND.lerp(DRY_GRASS, smoothstep(0.05, 0.35, patch) * 0.7)
-	color = color.lerp(OCHRE, smoothstep(-0.1, -0.4, patch) * 0.6)
-	color = color.lerp(BEACH, 1.0 - smoothstep(1.6, 3.4, y))
-	color = color.lerp(PACKED_EARTH, 1.0 - smoothstep(TOWN_FLAT - 6.0, TOWN_FLAT, point.distance_to(TOWN)))
+	var dirt := (1.0 - smoothstep(TOWN_FLAT - 6.0, TOWN_FLAT, point.distance_to(TOWN))) * 0.85
 	for flat: Array in FLATS:
-		color = color.lerp(PACKED_EARTH, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.7)
-	color = color.lerp(ROAD, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point, ROAD_WIDTH + 1.0)))
-	color = color.lerp(MUD, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM)))
-	color = color.lerp(RED_ROCK, smoothstep(0.84, 0.66, normal.y))
-	color = color.lerp(RED_ROCK, smoothstep(22.0, 32.0, y))
-	return Color(color.r + shade, color.g + shade * 0.8, color.b + shade * 0.6)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.7)
+	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point, ROAD_WIDTH + 1.5)))
+	dirt = maxf(dirt, 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(point, STREAM)))
+	var sand := 1.0 - smoothstep(2.2, 3.6, y)
+	var rock := maxf(smoothstep(0.84, 0.66, normal.y), smoothstep(22.0, 32.0, y))
+	var patch := Zone.land_noise().get_noise_2d(x * 2.3, z * 2.3)
+	var scrub := smoothstep(-0.05, 0.3, patch)
+	return Color(dirt, sand, rock, scrub)
+
+
+## The textured ground's tint: a little noise, the Redwater's mud darker.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var mud := 1.0 - smoothstep(STREAM_WIDTH + 1.0, STREAM_WIDTH + 4.0, distance_to_line(Vector2(x, z), STREAM))
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.07 - mud * 0.25
+	return Color(shade, shade, shade)
 
 
 ## A point on the ground near a place, for the builders.
@@ -334,8 +368,9 @@ func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 
 
 # Spikewall: the Horde's town where the pass road comes down. A palisade
-# along its north and its sides, round huts, the commander's longhouse, the
-# inn, a smithy, two watchtowers and the graveyard by the north wall.
+# along its north and its sides; the commander's longhouse, where the
+# trainers keep, the inn with its keeper behind the bar, and round huts, all
+# open inside; a smithy, two watchtowers and the graveyard by the north wall.
 
 func _build_town() -> void:
 	var town := Node3D.new()
@@ -346,36 +381,37 @@ func _build_town() -> void:
 	palisade(town, t + Vector2(-34, -30), t + Vector2(34, -30), y, LOG)
 	palisade(town, t + Vector2(-34, -30), t + Vector2(-34, -6), y, LOG)
 	palisade(town, t + Vector2(34, -30), t + Vector2(34, -10), y, LOG)
-	# The commander's longhouse to the north.
-	Props.box(town, _near(t, Vector2(0, -20), y), Vector3(16, 4, 8), LOG)
-	Props.roof(town, _near(t, Vector2(0, -20), y + 4), Vector3(17, 3.5, 9.5), HIDE)
-	Props.box(town, _near(t, Vector2(0, -15.9), y), Vector3(2.4, 3.2, 0.3), DARK_HIDE, 0.0, false)
-	Props.box(town, _near(t, Vector2(-0.2, -15.6), y + 4.5), Vector3(0.1, 2.0, 2.2), BANNER, 0.0, false)
-	# The inn to the east: a long hut with a hide roof.
-	Props.box(town, _near(t, Vector2(22, -4), y), Vector3(9, 4, 14), LOG)
-	Props.roof(town, _near(t, Vector2(22, -4), y + 4), Vector3(15, 3.5, 10), HIDE, PI / 2)
-	Props.box(town, _near(t, Vector2(17.4, -2), y), Vector3(0.3, 2.8, 1.8), DARK_HIDE, 0.0, false)
-	# Round huts round the yard.
-	for hut in [Vector2(-22, -14), Vector2(-24, 6), Vector2(-10, 20), Vector2(14, 20), Vector2(20, -20)]:
-		round_hut(town, t + hut, 4.0, y, LOG, HIDE, BONE)
+	var kit := BuildingKit.new(town, "Buildings")
+	var look := { "wall": LOG, "roof": HIDE, "trim": DARK_HIDE, "stone": DARK_ROCK, "shutter": DARK_HIDE,
+		"cloth": BANNER, "trim_bone": BONE }
+	# The commander's longhouse to the north, a long table down it.
+	var hall := Buildings.house(kit, _near(t, Vector2(0, -20), y), Vector3(16, 4.5, 8), 0.0, look, Vector2(0, 1), 0.0, 1, true, true)
+	Buildings.furnish(kit, hall, "hall", look)
+	# The inn to the east, its door to the yard.
+	var inn := Buildings.house(kit, _near(t, Vector2(22, -4), y), Vector3(9, 4.5, 14), 0.0, look, Vector2(-1, 0), 0.0, 1, true, true)
+	Buildings.furnish(kit, inn, "inn", look)
+	# Round huts round the yard, their doors to its middle.
+	var hut_look := { "wall": LOG, "roof": HIDE, "trim": BONE, "cloth": DARK_HIDE }
+	for hut: Vector2 in HUTS:
+		Buildings.round_hut(kit, _near(t, hut, y), 4.0, 3.2, hut_look, -hut.normalized())
 	# The smithy to the west: a hide roof on posts over a forge and an anvil.
-	for post in [Vector2(-18, -6), Vector2(-10, -6), Vector2(-18, 1), Vector2(-10, 1)]:
-		Props.box(town, _near(t, post, y), Vector3(0.4, 3.6, 0.4), LOG)
-	Props.roof(town, _near(t, Vector2(-14, -2.5), y + 3.6), Vector3(9, 2, 8), HIDE, PI / 2)
-	Props.box(town, _near(t, Vector2(-16.5, -4), y), Vector3(2.4, 1.8, 2.2), DARK_ROCK)
-	Props.box(town, _near(t, Vector2(-12, 0), y), Vector3(1.1, 0.9, 0.6), IRON)
+	Buildings.shed(kit, _near(t, Vector2(-14, -2.5), y), Vector3(8, 3.6, 7), PI / 2, LOG, HIDE)
+	kit.block(_near(t, Vector2(-16.5, -4), y), Vector3(2.4, 1.8, 2.2), DARK_ROCK, 0.0, true)
+	kit.block(_near(t, Vector2(-16.5, -4), y + 1.8), Vector3(1.8, 0.12, 1.6), Color(0.55, 0.2, 0.08))
+	kit.block(_near(t, Vector2(-12, 0), y), Vector3(0.6, 0.6, 0.45), LOG, 0.0, true)
+	kit.block(_near(t, Vector2(-12, 0), y + 0.6), Vector3(1.1, 0.3, 0.55), IRON)
 	# Watchtowers at the pass road and the west road.
 	for tower in [Vector2(34, 2), Vector2(-36, 2)]:
-		for corner in [Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(-1.5, 1.5), Vector2(1.5, 1.5)]:
-			Props.box(town, _near(t, tower + corner, y), Vector3(0.4, 8, 0.4), LOG)
-		Props.box(town, _near(t, tower, y + 7), Vector3(4, 0.4, 4), LOG, 0.0, false)
-		Props.roof(town, _near(t, tower, y + 8.6), Vector3(4.6, 2, 4.6), HIDE)
+		Buildings.watchtower(kit, _near(t, tower, y), 7.0, 4.0, LOG, DARK_HIDE, HIDE)
+	# A war drum in the yard.
+	kit.cylinder(_near(t, Vector2(4, -4), y), 1.3, 1.6, DARK_HIDE, 12, -1.0, true)
+	kit.cylinder(_near(t, Vector2(4, -4), y + 1.6), 1.35, 0.15, HIDE, 12)
+	kit.finish()
 	# The graveyard by the north wall: cairns and grave markers.
 	for grave in [Vector2(-14, -26), Vector2(-10, -26), Vector2(-6, -26), Vector2(-14, -23), Vector2(-10, -23)]:
 		Props.cylinder(town, _near(t, grave, y), 0.6, 0.6, DARK_ROCK, false)
 		Props.box(town, _near(t, grave + Vector2(0, -0.6), y), Vector3(0.2, 1.4, 0.2), BONE, 0.0, false)
-	# A war drum and the cook's fire in the yard.
-	Props.cylinder(town, _near(t, Vector2(4, -4), y), 1.3, 1.6, DARK_HIDE)
+	# The cook's fire in the yard, and torches.
 	Props.cylinder(town, _near(t, Vector2(-4, 10), y), 1.0, 0.3, DARK_ROCK, false)
 	torch(town, _near(t, Vector2(-4, 10), y + 0.6), 6.0)
 	for torch_at in [Vector2(16.8, -6), Vector2(-6, -16), Vector2(30, -26)]:
@@ -441,18 +477,19 @@ func _build_keep() -> void:
 	var flat: Array = FLATS[KEEP]
 	var k: Vector2 = flat[0]
 	var y: float = flat[2]
-	Props.box(keep, _near(k, Vector2(0, -13), y), Vector3(26, 3.5, 1.2), STONE)
-	Props.box(keep, _near(k, Vector2(-13, 0), y), Vector3(1.2, 3.5, 26), STONE)
-	Props.box(keep, _near(k, Vector2(13, 0), y), Vector3(1.2, 3.5, 26), STONE)
+	var kit := BuildingKit.new(keep, "Buildings")
+	Buildings.wall(kit, _near(k, Vector2(0, -13), y), Vector3(26, 3.5, 1.2), STONE, DARK_STONE)
+	Buildings.wall(kit, _near(k, Vector2(-13, 0), y), Vector3(1.2, 3.5, 26), STONE, DARK_STONE)
+	Buildings.wall(kit, _near(k, Vector2(13, 0), y), Vector3(1.2, 3.5, 26), STONE, DARK_STONE)
 	for side in [-1, 1]:
-		Props.box(keep, _near(k, Vector2(side * 8, 13), y), Vector3(10, 3.5, 1.2), STONE)
-	Props.box(keep, _near(k, Vector2(5, -5), y), Vector3(8, 12, 8), STONE)
-	Props.box(keep, _near(k, Vector2(5, -5), y + 12), Vector3(9, 1, 9), DARK_STONE, 0.0, false)
-	Props.box(keep, _near(k, Vector2(5, -0.9), y), Vector3(2, 3, 0.3), LOG, 0.0, false)
-	Props.box(keep, _near(k, Vector2(5, -5), y + 13), Vector3(0.2, 4, 0.2), LOG, 0.0, false)
-	Props.box(keep, _near(k, Vector2(5.8, -5), y + 15.5), Vector3(1.4, 1.0, 0.1), Color(0.2, 0.3, 0.6), 0.0, false)
+		Buildings.wall(kit, _near(k, Vector2(side * 8, 13), y), Vector3(10, 3.5, 1.2), STONE, DARK_STONE)
+	Buildings.tower(kit, _near(k, Vector2(5, -5), y), Vector3(8, 12, 8), STONE, DARK_STONE)
+	kit.block(_near(k, Vector2(5, -0.95), y), Vector3(2, 3, 0.2), LOG)
+	kit.block(_near(k, Vector2(5, -5), y + 12.6), Vector3(0.2, 4, 0.2), LOG)
+	kit.block(_near(k, Vector2(5.8, -5), y + 15.1), Vector3(1.4, 1.0, 0.1), Color(0.2, 0.3, 0.6))
 	for crate in [Vector2(-6, 4), Vector2(-5, 5.2), Vector2(-8, -6)]:
-		Props.box(keep, _near(k, crate, y), Vector3(1.1, 1.1, 1.1), LOG)
+		Buildings.crate(kit, _near(k, crate, y), 1.1, LOG, DARK_HIDE)
+	kit.finish()
 	torch(keep, _near(k, Vector2(-2, 12), y + 2.6))
 
 
@@ -518,8 +555,12 @@ func _build_camps() -> void:
 		camps.add_child(mound)
 		spikes.append(Transform3D(Basis(Vector3.FORWARD, 0.4), Vector3(at.x, gulch[2] + 2.2, at.y)))
 	Props.scatter(camps, Props.cone(0.25, 1.8, 4), BONE, spikes)
+	var kit := BuildingKit.new(camps, "Buildings")
 	for hut_flat in [FLATS[RUZGA], FLATS[BREKA]]:
-		round_hut(camps, hut_flat[0], 3.4, hut_flat[2], LOG, DARK_HIDE, BONE)
+		var at: Vector2 = hut_flat[0]
+		Buildings.round_hut(kit, Vector3(at.x, hut_flat[2], at.y), 3.4, 3.0,
+			{ "wall": LOG, "roof": DARK_HIDE, "trim": BONE, "cloth": HIDE }, Vector2(0, 1))
+	kit.finish()
 	var wagon: Array = FLATS[WAGON]
 	Props.box(camps, _near(wagon[0], Vector2(0, 0), wagon[2] + 0.6), Vector3(4.5, 1.4, 2.2), LOG, 0.3)
 	Props.roof(camps, _near(wagon[0], Vector2(0, 0), wagon[2] + 2.0), Vector3(4.2, 1.6, 2.4), SAIL, 0.3)
@@ -569,18 +610,16 @@ func _build_bridge() -> void:
 	plank(bridge, Vector3(east, deck, z), ground_point(east + 8.0, z) + sink)
 
 
-# Cacti and thorn bushes, placed by a seeded random walk over the land.
+# Cacti inland and palms by the shore, placed by a seeded random walk over
+# the land; dead bushes come with the clutter.
 
 func _build_cacti() -> void:
 	var plants := StaticBody3D.new()
 	plants.name = "Cacti"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var stems: Array[Transform3D] = []
-	var arms: Array[Transform3D] = []
-	var bushes: Array[Transform3D] = []
-	var palms: Array[Transform3D] = []
-	var fronds: Array[Transform3D] = []
+	var cacti := variant_lists(CACTUS_VARIANTS)
+	var palms := variant_lists(PALM_VARIANTS)
 	var stem_shape := CylinderShape3D.new()
 	stem_shape.radius = 0.35
 	stem_shape.height = 3.0
@@ -588,53 +627,29 @@ func _build_cacti() -> void:
 	for attempt in 9000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.6 or y > 26.0 or not _clear(point):
+		if y < WATER_LEVEL + 0.6 or y > 26.0 or not _clear(point) or shows_rock(point, y, _ground_layers):
 			continue
-		if rng.randf() > 0.09:
+		if rng.randf() > 0.06:
 			continue
-		var size := rng.randf_range(0.8, 1.4)
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var base := Transform3D(spin.scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
-		var collide := false
+		var size := rng.randf_range(0.8, 1.3)
+		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
 		if y < 3.6 and rng.randf() < 0.6:
 			# Palms by the shore.
-			palms.append(base * Transform3D(Basis(), Vector3(0, 2.4, 0)))
-			fronds.append(base * Transform3D(Basis().scaled(Vector3(1, 0.4, 1)), Vector3(0, 4.9, 0)))
-			collide = true
-		elif rng.randf() < 0.5:
-			stems.append(base * Transform3D(Basis(), Vector3(0, 1.4, 0)))
-			for side in [-1, 1]:
-				if rng.randf() < 0.7:
-					arms.append(base * Transform3D(Basis(Vector3.FORWARD, side * 0.25), Vector3(side * 0.55, 1.6 + rng.randf() * 0.6, 0)))
-			collide = true
+			palms[rng.randi_range(0, PALM_VARIANTS - 1)].append(base)
+		elif rng.randf() < 0.6:
+			cacti[rng.randi_range(0, CACTUS_VARIANTS - 1)].append(base)
 		else:
-			bushes.append(Transform3D(spin.scaled(Vector3(size, size * 0.6, size)), Vector3(point.x, y + 0.3, point.y)))
-		if collide:
-			var collision := CollisionShape3D.new()
-			collision.shape = stem_shape
-			collision.position = Vector3(point.x, y + 1.5, point.y)
-			plants.add_child(collision)
-	var stem := CylinderMesh.new()
-	stem.top_radius = 0.28
-	stem.bottom_radius = 0.34
-	stem.height = 2.8
-	stem.radial_segments = 6
-	var arm := CylinderMesh.new()
-	arm.top_radius = 0.18
-	arm.bottom_radius = 0.2
-	arm.height = 1.2
-	arm.radial_segments = 5
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.18
-	trunk.bottom_radius = 0.28
-	trunk.height = 4.8
-	trunk.radial_segments = 6
+			continue
+		var collision := CollisionShape3D.new()
+		collision.shape = stem_shape
+		collision.position = Vector3(point.x, y + 1.5, point.y)
+		plants.add_child(collision)
+	# Added once its shapes are in.
 	add_child(plants)
-	Props.scatter(plants, stem, CACTUS, stems)
-	Props.scatter(plants, arm, CACTUS, arms)
-	Props.scatter(plants, Props.blob(0.9, 6, 3), THORN, bushes)
-	Props.scatter(plants, trunk, LOG, palms)
-	Props.scatter(plants, Props.blob(2.2, 7, 3), Color(0.3, 0.5, 0.22), fronds)
+	for i in CACTUS_VARIANTS:
+		Nature.scatter(plants, Nature.cactus_mesh((SEED + i) % Nature.CACTUS_VARIANTS), cacti[i])
+	for i in PALM_VARIANTS:
+		Nature.scatter(plants, Nature.palm_mesh(SEED + 60 + i), palms[i])
 
 
 func _clear(point: Vector2) -> bool:
@@ -653,15 +668,16 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 6.0
 	for attempt in 4000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
 		if y < WATER_LEVEL + 0.4 or rng.randf() > 0.05 + 0.45 * smoothstep(8.0, 20.0, y) or not _clear(point):
 			continue
-		var size := Vector3(rng.randf_range(0.7, 2.8), rng.randf_range(0.5, 1.9), rng.randf_range(0.7, 2.8))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		var size := Vector3(rng.randf_range(0.7, 2.6), rng.randf_range(0.5, 1.8), rng.randf_range(0.7, 2.6))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -669,33 +685,55 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), RED_ROCK, placed)
+	draw_rocks(rocks, placed, SEED, false, "red_rock")
 
 
-const CLUTTER_ATTEMPTS := 30000
-
-
-## Dry grass tufts and pebbles on open ground, only for looks.
+## Dry grass and dead bushes, made near the camera (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var pebbles: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 6.0
-	for attempt in CLUTTER_ATTEMPTS:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.5 or y > 22.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.25:
-			pebbles.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.6, 1.2)), at + Vector3.UP * 0.05))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.4), 1)), at + Vector3.UP * 0.15))
-	add_clutter(clutter, Props.cone(0.16, 0.32, 4), Color(0.66, 0.6, 0.34), grass)
-	add_clutter(clutter, Props.blob(0.12, 5, 3), DARK_ROCK, pebbles)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3, false, true)
+
+
+## Dry grass, thick on the scrub and thin on bare earth; none on the roads,
+## the sand or rock. Called from a worker thread: it only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.8 or y > 22.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3 or layers.r > 0.4 or layers.g > 0.3:
+		return []
+	if rng.randf() > lerpf(0.03, 0.45, layers.a):
+		return []
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return ["dry_grass", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.3), 1) * rng.randf_range(0.8, 1.15)), Vector3(point.x, y - 0.05, point.y))]
+
+
+## A dead bush now and then.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.05:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y < 3.6 or y > 22.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.7, 1.2)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.6, 0.85), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## Open ground: not on roads, in Spikewall, on the camps or by the Redwater.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if point.distance_to(TOWN) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
+		return false
+	if distance_to_line(point, STREAM) < STREAM_WIDTH + 1.5:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true

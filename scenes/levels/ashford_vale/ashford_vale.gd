@@ -352,7 +352,9 @@ func _build_trees() -> void:
 		var chance := 0.03 + 0.55 * _woods_density(point)
 		var y := height_at(point.x, point.y)
 		chance += 0.25 * smoothstep(8.0, 14.0, y) * (1.0 - smoothstep(26.0, 32.0, y))
-		if rng.randf() > chance or not _clear_for_tree(point, y):
+		# Not where the ground shows rock (mountain slopes), only on its
+		# grass and dirt.
+		if rng.randf() > chance or not _clear_for_tree(point, y) or shows_rock(point, y, _ground_layers):
 			continue
 		var size := rng.randf_range(0.8, 1.3)
 		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))

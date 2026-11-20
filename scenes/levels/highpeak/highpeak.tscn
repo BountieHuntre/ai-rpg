@@ -7,7 +7,7 @@
 script = ExtResource("1_script")
 
 [node name="BelvaHearthstone" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-150, 7, -797)
+position = Vector3(-152.6, 7.1, -810.7)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Belva Hearthstone"
 subname = "Innkeeper"
@@ -102,8 +102,8 @@ appearance = {
 race = "dwarf"
 
 [node name="GrunaSteelaxe" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-136, 7, -784)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(-123.5, 7.1, -791.5)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Gruna Steelaxe"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"
@@ -113,8 +113,8 @@ appearance = {
 race = "dwarf"
 
 [node name="AzgarStrongmantle" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-164, 7, -784)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-180, 7.1, -790.5)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Azgar Strongmantle"
 subname = "Templar Trainer"
 trainer = "paladin"
@@ -124,8 +124,8 @@ appearance = {
 race = "dwarf"
 
 [node name="MattanAnvell" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-166, 7, -789)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-176, 7.1, -790.5)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Mattan Anvell"
 subname = "Cleric Trainer"
 trainer = "priest"
@@ -135,8 +135,8 @@ appearance = {
 race = "dwarf"
 
 [node name="PipGlimmerwick" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-134, 7, -790)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(-120.5, 7.1, -791.5)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Pip Glimmerwick"
 subname = "Spellsword Trainer"
 trainer = "spellsword"
@@ -297,7 +297,8 @@ appearance = {
 race = "dwarf"
 
 [node name="HildaIronsight" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-152, 7, -762)
+position = Vector3(-177, 7.1, -761)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Hilda Ironsight"
 subname = "Ranger Trainer"
 trainer = "hunter"
@@ -307,7 +308,8 @@ appearance = {
 race = "dwarf"
 
 [node name="BrandtFurmantle" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-144, 7, -760)
+position = Vector3(-174, 7.1, -755)
+rotation = Vector3(0, 0, 0)
 npc_name = "Brandt Furmantle"
 subname = "Pet Trainer"
 trainer = "pet"

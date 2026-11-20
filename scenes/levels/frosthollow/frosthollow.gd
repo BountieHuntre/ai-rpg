@@ -82,16 +82,17 @@ const CHESTS := [
 	[178085, Vector2(-782, -945), 6.0, 1],
 ]
 
-const SNOW := Color(0.8, 0.82, 0.87)
-const BLUE_SNOW := Color(0.64, 0.7, 0.82)
-const PATH := Color(0.56, 0.5, 0.44)
+## Walled places bots go in and out of by the door (Zone.enclosures).
+const ENCLOSURES := [
+	[-905.0, -1032.0, -875.0, -1020.0, Vector2(-890, -1016), Vector2(-890, -1024)],  # the Hollow Hall, door to the south
+]
+
 const ROCK := Color(0.46, 0.46, 0.5)
 const STONE := Color(0.55, 0.53, 0.5)
 const DARK_STONE := Color(0.36, 0.35, 0.36)
 const SLATE := Color(0.3, 0.32, 0.38)
 const TIMBER := Color(0.4, 0.28, 0.18)
 const CANVAS := Color(0.62, 0.55, 0.42)
-const PINE := Color(0.2, 0.34, 0.28)
 
 var _detail := FastNoiseLite.new()
 
@@ -110,10 +111,25 @@ func _init() -> void:
 	places = PLACES
 	spawns = SPAWNS
 	chests = CHESTS
+	enclosures = ENCLOSURES
+
+
+## The snow land's painted ground (Zone.build_ground's layers): snow over
+## all, frozen heath where it lies thin, trodden paths, the hall's yard in
+## cobbles, frosted rock on steep ground.
+const GROUND_TEXTURES := {
+	"grass_tex": "snow", "forest_tex": "frozen_heath", "dirt_tex": "frozen_dirt", "rock_tex": "snow_rock",
+}
 
 
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
+	Props.use_texture(STONE, "stone_wall", 4.0)
+	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
+	Props.use_texture(SLATE, "slate_snow", 2.5)
+	Props.use_texture(TIMBER, "planks", 2.0)
+	Props.use_texture(Buildings.FLOOR, "planks", 2.0)
+	Props.use_texture(ROCK, "snow_rock", 3.0)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
 	build_edges()
 	_build_hall()
 	_build_camps()
@@ -148,18 +164,27 @@ func _road_distance(point: Vector2) -> float:
 	return road
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r the
+## trodden paths (the hall's grounds, the camps, the roads), g the hall's
+## cobbled yard, b frosted rock (steep ground), a frozen heath (thin snow on
+## the lower ground, in patches). High ground is deep snow.
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.04
-	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
-	var color := SNOW.lerp(BLUE_SNOW, smoothstep(0.0, 0.5, patch))
-	color = color.lerp(PATH, (1.0 - smoothstep(HUB_FLAT - 12.0, HUB_FLAT - 6.0, point.distance_to(HUB))) * 0.7)
+	var path := (1.0 - smoothstep(HUB_FLAT - 12.0, HUB_FLAT - 6.0, point.distance_to(HUB))) * 0.55
 	for flat: Array in FLATS:
-		color = color.lerp(PATH, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.5)
-	color = color.lerp(PATH, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point)))
-	color = color.lerp(ROCK, smoothstep(0.82, 0.6, normal.y))
-	color = color.lerp(SNOW, smoothstep(30.0, 40.0, y) * 0.8)
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+		path = maxf(path, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.8)
+	path = maxf(path, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point)))
+	var yard := 1.0 - smoothstep(9.0, 13.0, point.distance_to(HUB + Vector2(0, -10)))
+	var rock := smoothstep(0.8, 0.62, normal.y)
+	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
+	var heath := smoothstep(-0.05, 0.35, patch) * (1.0 - smoothstep(12.0, 20.0, y))
+	return Color(path, yard, rock, heath)
+
+
+## The textured ground's tint: a little noise.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.06
+	return Color(shade, shade, shade)
 
 
 func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
@@ -178,33 +203,46 @@ func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
 	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
 
 
-# The Hollow Hall: a long stone hall with a slate roof, its great doors facing
-# south onto the yard, a forge and anvil by its east end and braziers.
+# The Hollow Hall: a long stone hall under snowy slates, open inside, its
+# great doors facing south onto the yard: a long table and benches, banners
+# and a hearth at its east end. Its smithy, a slate roof on posts over a forge
+# and anvil, stands by its east end; two stone houses, open inside too, for
+# the hall's folk, and braziers about the yard.
 
 func _build_hall() -> void:
 	var hall := Node3D.new()
 	hall.name = "HollowHall"
 	add_child(hall)
+	var kit := BuildingKit.new(hall, "Buildings")
 	var t := HUB
 	var y := HUB_HEIGHT
-	Props.box(hall, _near(t, Vector2(0, -26), y), Vector3(30, 7, 12), STONE)
-	Props.roof(hall, _near(t, Vector2(0, -26), y + 7), Vector3(32, 4, 13.5), SLATE)
-	Props.box(hall, _near(t, Vector2(0, -19.9), y), Vector3(5, 5, 0.3), TIMBER, 0.0, false)
+	var stone := { "wall": STONE, "roof": SLATE, "trim": TIMBER, "stone": DARK_STONE, "shutter": TIMBER,
+		"cloth": Color(0.2, 0.3, 0.55) }
+	var room := Buildings.house(kit, _near(t, Vector2(0, -26), y), Vector3(30, 7, 12), 0.0, stone, Vector2(0, 1), 0.0, 1, true, true)
+	Buildings.furnish(kit, room, "hall", stone)
+	# Squat pillars flanking the doors, and stone ends rising over the eaves.
 	for side in [-1, 1]:
-		Props.box(hall, _near(t, Vector2(side * 4.5, -19.5), y), Vector3(1.4, 6.5, 1.4), DARK_STONE)
-		Props.box(hall, _near(t, Vector2(side * 16, -26), y + 7), Vector3(1.6, 5.5, 1.6), DARK_STONE)
-	# The smithy: a stone forge and an anvil under a lean-to.
-	Props.box(hall, _near(t, Vector2(22, -14), y), Vector3(3, 2, 3), DARK_STONE)
-	Props.box(hall, _near(t, Vector2(22, -14), y + 2), Vector3(1.6, 3.5, 1.6), DARK_STONE, 0.0, false)
-	Props.box(hall, _near(t, Vector2(18, -10), y), Vector3(1.2, 0.9, 0.6), Color(0.28, 0.28, 0.3))
-	Props.roof(hall, _near(t, Vector2(21, -12), y + 3.4), Vector3(8, 1.6, 7), SLATE)
-	for post in [Vector2(17.5, -8.8), Vector2(24.5, -8.8)]:
-		Props.box(hall, _near(t, post, y), Vector3(0.3, 3.4, 0.3), TIMBER, 0.0, false)
+		kit.block(_near(t, Vector2(side * 2.6, -19.6), y), Vector3(1.4, 6.0, 1.2), DARK_STONE, 0.0, true)
+		kit.block(_near(t, Vector2(side * 2.6, -19.6), y + 6.0), Vector3(1.8, 0.5, 1.6), DARK_STONE)
+		kit.block(_near(t, Vector2(side * 15.6, -26), y), Vector3(1.6, 9.5, 1.6), DARK_STONE, 0.0, true)
+	# The smithy: a slate roof on posts over a forge with its hood and an anvil.
+	Buildings.shed(kit, _near(t, Vector2(21, -12), y), Vector3(8, 3.8, 7), 0.0, TIMBER, SLATE)
+	kit.block(_near(t, Vector2(22, -14), y), Vector3(3, 1.6, 2.5), DARK_STONE, 0.0, true)
+	kit.block(_near(t, Vector2(22, -14), y + 1.6), Vector3(2.2, 0.15, 1.8), Color(0.55, 0.2, 0.08))
+	kit.cylinder(_near(t, Vector2(22, -14), y + 2.6), 1.3, 1.6, DARK_STONE, 4, 0.35)
+	kit.block(_near(t, Vector2(22, -14), y + 4.2), Vector3(0.7, 2.4, 0.7), DARK_STONE)
+	kit.block(_near(t, Vector2(18, -10), y), Vector3(0.6, 0.6, 0.45), TIMBER, 0.0, true)
+	kit.block(_near(t, Vector2(18, -10), y + 0.6), Vector3(1.2, 0.3, 0.55), Color(0.25, 0.25, 0.28))
+	# Two houses, their doors to the yard.
+	for house: Array in [[Vector2(-24, -4), Vector2(1, 0)], [Vector2(26, 8), Vector2(-1, 0)]]:
+		var home := Buildings.house(kit, _near(t, house[0], y), Vector3(8, 4, 7), 0.0, stone, house[1], 0.0, 1, true, true)
+		Buildings.furnish(kit, home, "cottage", stone)
+	# Crates and barrels by the smithy.
+	Buildings.crate(kit, _near(t, Vector2(16, -15.5), y), 1.0, TIMBER, DARK_STONE)
+	Buildings.crate(kit, _near(t, Vector2(16.2, -15.4), y + 1.0), 0.85, TIMBER, DARK_STONE, 0.4)
+	Buildings.barrel(kit, _near(t, Vector2(26, -15), y), 0.45, 1.0, TIMBER)
+	kit.finish()
 	torch(hall, _near(t, Vector2(22, -12.4), y + 2.0), 6.0)
-	# A pair of houses for the hall's folk.
-	for house in [Vector2(-24, -4), Vector2(26, 8)]:
-		Props.box(hall, _near(t, house, y), Vector3(8, 4, 7), STONE)
-		Props.roof(hall, _near(t, house, y + 4), Vector3(9, 2.4, 8), SLATE)
 	for brazier in [Vector2(-8, -14), Vector2(8, -14), Vector2(-10, 14), Vector2(10, 14)]:
 		Props.cylinder(hall, _near(t, brazier, y), 0.6, 1.0, DARK_STONE, false, 0.8)
 		torch(hall, _near(t, brazier, y + 1.0), 7.0)
@@ -273,42 +311,36 @@ func _clear(point: Vector2) -> bool:
 	return true
 
 
-## Snowy pines, thicker up the slopes.
+## Snowy pines, thicker up the slopes, on snow and heath but never on bare
+## rock.
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var trunks: Array[Transform3D] = []
-	var crowns: Array[Transform3D] = []
-	var caps: Array[Transform3D] = []
+	var pines := variant_lists(TREE_VARIANTS)
+	var unused := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
-	trunk_shape.radius = 0.4
+	trunk_shape.radius = 0.45
 	trunk_shape.height = 4.0
 	var edge := SIZE / 2.0 - 8.0
 	for attempt in 1800:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y > 30.0 or not _clear(point) or rng.randf() > 0.05 + 0.25 * smoothstep(9.0, 18.0, y):
+		if y > 30.0 or not _clear(point) or rng.randf() > 0.05 + 0.25 * smoothstep(9.0, 18.0, y) \
+				or shows_rock(point, y, _ground_layers):
 			continue
-		var size := rng.randf_range(0.8, 1.4)
-		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
-		trunks.append(base * Transform3D(Basis(), Vector3(0, 0.9, 0)))
-		crowns.append(base * Transform3D(Basis(), Vector3(0, 3.6, 0)))
-		caps.append(base * Transform3D(Basis().scaled(Vector3(0.7, 0.7, 0.7)), Vector3(0, 5.4, 0)))
+		var size := rng.randf_range(0.75, 1.25)
+		pines[rng.randi_range(0, TREE_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y)))
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 2.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.2
-	trunk.bottom_radius = 0.35
-	trunk.height = 1.8
-	trunk.radial_segments = 6
+	# Added once its shapes are in: adding shapes to a body in the world
+	# rebuilds the body each time.
 	add_child(trees)
-	Props.scatter(trees, trunk, TIMBER, trunks)
-	Props.scatter(trees, Props.cone(1.8, 4.4, 7), PINE, crowns)
-	Props.scatter(trees, Props.cone(1.3, 2.6, 7), SNOW, caps)
+	draw_trees(trees, pines, unused, SEED, true)
 
 
 func _build_rocks() -> void:
@@ -316,15 +348,16 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 4.0
 	for attempt in 1000:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
 		if rng.randf() > 0.05 + 0.4 * smoothstep(10.0, 22.0, y) or not _clear(point):
 			continue
-		var size := Vector3(rng.randf_range(0.6, 2.4), rng.randf_range(0.4, 1.5), rng.randf_range(0.6, 2.4))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -332,30 +365,57 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED, true)
 
 
-## Tufts of dry grass and frost-white heather poking through the snow.
+## Dry grass and frosted heather poking through the snow, and snowy
+## bushes now and then, made near the camera (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var heather: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 4.0
-	for attempt in 9000:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y > 22.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.15:
-			heather.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.2)), at + Vector3.UP * 0.15))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.4), 1)), at + Vector3.UP * 0.15))
-	add_clutter(clutter, Props.cone(0.14, 0.34, 4), Color(0.6, 0.58, 0.44), grass)
-	add_clutter(clutter, Props.blob(0.16, 5, 3), Color(0.7, 0.66, 0.78), heather)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3, true)
+
+
+## What grows at a point: mostly on the heath, thin on open snow, none on
+## paths, rock or high ground. Called from a worker thread: it only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y > 22.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3:
+		return []
+	if rng.randf() > lerpf(0.06, 0.55, layers.a):
+		return []
+	var at := Vector3(point.x, y - 0.05, point.y)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	if rng.randf() < 0.22:
+		return ["heather", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.2)), at)]
+	return ["frost_grass", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.3), 1) * rng.randf_range(0.8, 1.15)), at)]
+
+
+## A snowy bush now and then.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.05:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y > 22.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.7, 1.3)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.8, 1.1), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## Open ground: not on paths, camps or the hall's grounds.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if point.distance_to(HUB) < HUB_FLAT - 4.0 or _road_distance(point) < ROAD_WIDTH + 0.8:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true
