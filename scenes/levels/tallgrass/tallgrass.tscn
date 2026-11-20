@@ -7,7 +7,8 @@
 script = ExtResource("1_script")
 
 [node name="ChiefLonghorn" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-760, 6, 626)
+position = Vector3(-760, 6.05, 615.4)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Chief Longhorn"
 subname = ""
 appearance = {
@@ -46,8 +47,8 @@ appearance = {
 race = "hornkin"
 
 [node name="KrangBullhide" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-776, 6, 632)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-786.6, 6.05, 632.5)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Krang Bullhide"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"
@@ -77,8 +78,8 @@ appearance = {
 race = "hornkin"
 
 [node name="HamaWindhorn" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-743, 6, 634)
-rotation = Vector3(0, 1.57080, 0)
+position = Vector3(-733.4, 6.05, 636)
+rotation = Vector3(0, 1.5708, 0)
 npc_name = "Hama Windhorn"
 subname = "Innkeeper"
 vendor = 6747
@@ -107,8 +108,8 @@ appearance = {
 race = "hornkin"
 
 [node name="TormLongstride" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-780, 6, 642)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-786.6, 6.05, 636)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Torm Longstride"
 subname = "Ranger Trainer"
 trainer = "hunter"
@@ -118,8 +119,8 @@ appearance = {
 race = "hornkin"
 
 [node name="HelaMossfoot" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-786, 6, 648)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-786.6, 6.05, 639.5)
+rotation = Vector3(0, -1.5708, 0)
 npc_name = "Hela Mossfoot"
 subname = "Pet Trainer"
 trainer = "pet"

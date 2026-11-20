@@ -117,9 +117,6 @@ const CHESTS := [
 	[2912, Vector2(-880, 240), 30.0, 6],
 ]
 
-const GRASS := Color(0.42, 0.55, 0.28)
-const GOLD_GRASS := Color(0.62, 0.6, 0.32)
-const DIRT := Color(0.55, 0.42, 0.28)
 const ROCK := Color(0.55, 0.42, 0.34)
 const OCHRE := Color(0.72, 0.42, 0.24)
 const HIDE := Color(0.72, 0.6, 0.42)
@@ -149,14 +146,37 @@ func _init() -> void:
 	hub = TOWN
 	hub_name = "Longhorn Village"
 	places = PLACES
+	enclosures = ENCLOSURES
 	spawns = SPAWNS
 	chests = CHESTS
 	spell_focuses = SPELL_FOCUSES
 
 
+## The plains' painted ground (Zone.build_ground's layers): green-gold
+## grass, golden tall grass in patches, dirt for the camps and roads, ochre
+## earth (in the cobbles' layer) at the Ochre Stones, tan rock.
+const GROUND_TEXTURES := {
+	"grass_tex": "plains_grass", "forest_tex": "gold_grass", "cobble_tex": "ochre_dirt", "rock_tex": "tan_rock",
+}
+## Walled places bots go in and out of by the door (Zone.enclosures):
+## Longhorn Village's three longhouses.
+const ENCLOSURES := [
+	[-769.0, 614.5, -751.0, 621.5, Vector2(-760, 625.5), Vector2(-760, 619.5)],  # the chief's, door south
+	[-739.5, 629.0, -732.5, 643.0, Vector2(-743.5, 636), Vector2(-737.5, 636)],  # the inn, door west
+	[-787.5, 630.0, -780.5, 642.0, Vector2(-776.5, 636), Vector2(-782.5, 636)],  # the trainers', door east
+]
+const TREE_ATTEMPTS := 9000
+const ROCK_ATTEMPTS := 3000
+
+
 func _ready() -> void:
-	build_ground(STEP, _ground_color)
-	build_water(WATER_LEVEL)
+	Props.use_texture(ROCK, "tan_rock", 3.0)
+	Props.use_texture(OCHRE, "red_rock", 3.0)
+	Props.use_texture(POLE, "bark", 2.0)
+	Props.use_texture(HIDE, "hide", 2.5)
+	Props.use_texture(DARK_HIDE, "hide", 2.5)
+	build_ground(STEP, _ground_tint, _ground_layers, GROUND_TEXTURES)
+	build_water(WATER_LEVEL, true)
 	build_edges()
 	_build_village()
 	_build_wells()
@@ -199,30 +219,31 @@ func _road_distance(point: Vector2, limit: float) -> float:
 	return best
 
 
-func _ground_color(x: float, z: float, y: float, normal: Vector3) -> Color:
+## The textured ground's layers (Zone.build_ground, GROUND_TEXTURES): r dirt
+## (Longhorn Village, the camps, the roads), g ochre earth (the Ochre
+## Stones), b rock (steep and high ground, the mesas), a golden grass.
+func _ground_layers(x: float, z: float, y: float, normal: Vector3) -> Color:
 	var point := Vector2(x, z)
-	var shade := _detail.get_noise_2d(x, z) * 0.06
-	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
-	var color := GRASS.lerp(GOLD_GRASS, smoothstep(0.0, 0.4, patch))
-	color = color.lerp(DIRT, 1.0 - smoothstep(TOWN_FLAT - 8.0, TOWN_FLAT - 2.0, point.distance_to(TOWN)))
-	var stones: Array = FLATS[STONES]
-	color = color.lerp(OCHRE, 1.0 - smoothstep(stones[1] - 2.0, stones[1] + 10.0, point.distance_to(stones[0])))
+	var dirt := (1.0 - smoothstep(TOWN_FLAT - 8.0, TOWN_FLAT - 2.0, point.distance_to(TOWN))) * 0.7
 	for flat: Array in FLATS:
-		color = color.lerp(DIRT, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
-	color = color.lerp(DIRT, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.0, _road_distance(point, ROAD_WIDTH + 1.0)))
-	color = color.lerp(ROCK, smoothstep(0.84, 0.62, normal.y))
-	color = color.lerp(ROCK, smoothstep(24.0, 34.0, y))
-	return Color(color.r + shade, color.g + shade, color.b + shade)
+		dirt = maxf(dirt, (1.0 - smoothstep(flat[1] - 4.0, flat[1] + 2.0, point.distance_to(flat[0]))) * 0.6)
+	dirt = maxf(dirt, 1.0 - smoothstep(ROAD_WIDTH, ROAD_WIDTH + 1.5, _road_distance(point, ROAD_WIDTH + 1.5)))
+	var stones: Array = FLATS[STONES]
+	var ochre := 1.0 - smoothstep(stones[1] - 2.0, stones[1] + 10.0, point.distance_to(stones[0]))
+	var rock := maxf(smoothstep(0.84, 0.62, normal.y), smoothstep(24.0, 34.0, y))
+	var patch := Zone.land_noise().get_noise_2d(x * 2.0, z * 2.0)
+	var gold := smoothstep(0.0, 0.35, patch)
+	return Color(dirt, ochre, rock, gold)
+
+
+## The textured ground's tint: a little noise.
+func _ground_tint(x: float, z: float, _y: float, _normal: Vector3) -> Color:
+	var shade := 1.0 + _detail.get_noise_2d(x, z) * 0.06
+	return Color(shade, shade, shade)
 
 
 func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 	return Vector3(at.x + offset.x, y, at.y + offset.y)
-
-
-## A Hornkin longhouse: hide walls under a long hide roof.
-func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0) -> void:
-	Props.box(parent, at, Vector3(length, 3.6, 7), DARK_HIDE, yaw)
-	Props.roof(parent, at + Vector3(0, 3.6, 0), Vector3(length + 1.0, 3.2, 8.4), HIDE, yaw)
 
 
 # Longhorn Village: tipis and longhouses round a great totem, the inn
@@ -234,15 +255,17 @@ func _build_village() -> void:
 	add_child(village)
 	var t := TOWN
 	var y := TOWN_HEIGHT
-	_longhouse(village, _near(t, Vector2(0, -22), y), 18.0)        # the chief's longhouse
-	_longhouse(village, _near(t, Vector2(24, -4), y), 14.0, PI / 2)  # the inn
+	# The chief's longhouse, the inn (its keeper inside) and the trainers'
+	# longhouse, their doorways to the village's middle.
+	_longhouse(village, _near(t, Vector2(0, -22), y), 18.0)
+	_longhouse(village, _near(t, Vector2(24, -4), y), 14.0, -PI / 2)
 	_longhouse(village, _near(t, Vector2(-24, -4), y), 12.0, PI / 2)
 	for i in 6:
 		var angle := TAU * i / 6.0 + 0.9
 		var at := t + Vector2(cos(angle), sin(angle)) * 30.0
 		if angle > PI * 0.35 and angle < PI * 0.65:
 			continue
-		tipi(village, at, y, 3.2, HIDE if i % 2 == 0 else DARK_HIDE, POLE)
+		tipi(village, at, y, 3.2, HIDE if i % 2 == 0 else DARK_HIDE, POLE, t)
 	totem(village, t + Vector2(0, 2), y, 10.0, PAINT)
 	Props.cylinder(village, _near(t, Vector2(8, 12), y), 1.2, 1.0, ROCK)
 	for side in [-1, 1]:
@@ -357,38 +380,35 @@ func _clear(point: Vector2) -> bool:
 	return true
 
 
+## Round oaks on the grass and pines on the hills (Nature's, one solid
+## each), never on bare rock.
 func _build_trees() -> void:
 	var trees := StaticBody3D.new()
 	trees.name = "Trees"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
-	var trunks: Array[Transform3D] = []
-	var crowns: Array[Transform3D] = []
+	var pines := variant_lists(TREE_VARIANTS)
+	var oaks := variant_lists(TREE_VARIANTS)
 	var trunk_shape := CylinderShape3D.new()
 	trunk_shape.radius = 0.45
 	trunk_shape.height = 4.0
-	var edge := SIZE / 2.0 - 10.0
-	for attempt in 9000:
+	var edge := SIZE / 2.0 - 8.0
+	for attempt in TREE_ATTEMPTS:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.6 or y > 30.0 or not _clear(point) or rng.randf() > 0.03 + 0.15 * smoothstep(9.0, 18.0, y):
+		if y < WATER_LEVEL + 0.6 or y > 28.0 or not _clear(point) or rng.randf() > 0.03 + 0.18 * smoothstep(8.0, 16.0, y) \
+				or shows_rock(point, y, _ground_layers):
 			continue
-		var size := rng.randf_range(0.8, 1.4)
+		var size := rng.randf_range(0.8, 1.3)
 		var base := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), Vector3(point.x, y, point.y))
-		trunks.append(base * Transform3D(Basis(), Vector3(0, 1.4, 0)))
-		crowns.append(base * Transform3D(Basis().scaled(Vector3(1.4, 0.65, 1.4)), Vector3(0, 4.0, 0)))
+		(pines if y > 12.0 and rng.randf() < 0.6 else oaks)[rng.randi_range(0, TREE_VARIANTS - 1)].append(base)
 		var collision := CollisionShape3D.new()
 		collision.shape = trunk_shape
 		collision.position = Vector3(point.x, y + 2.0, point.y)
 		trees.add_child(collision)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.25
-	trunk.bottom_radius = 0.4
-	trunk.height = 2.8
-	trunk.radial_segments = 6
+	# Added once its shapes are in.
 	add_child(trees)
-	Props.scatter(trees, trunk, POLE, trunks)
-	Props.scatter(trees, Props.blob(2.2), Color(0.32, 0.5, 0.24), crowns)
+	draw_trees(trees, pines, oaks, SEED)
 
 
 func _build_rocks() -> void:
@@ -396,15 +416,16 @@ func _build_rocks() -> void:
 	rocks.name = "Rocks"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 2
-	var placed: Array[Transform3D] = []
+	var placed := variant_lists(ROCK_VARIANTS)
 	var edge := SIZE / 2.0 - 6.0
-	for attempt in 3000:
+	for attempt in ROCK_ATTEMPTS:
 		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
 		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.4 or rng.randf() > 0.03 + 0.4 * smoothstep(10.0, 22.0, y) or not _clear(point):
+		if y < WATER_LEVEL + 0.4 or rng.randf() > 0.04 + 0.4 * smoothstep(9.0, 20.0, y) or not _clear(point):
 			continue
-		var size := Vector3(rng.randf_range(0.6, 2.4), rng.randf_range(0.4, 1.6), rng.randf_range(0.6, 2.4))
-		placed.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.3, point.y)))
+		var size := Vector3(rng.randf_range(0.6, 2.2), rng.randf_range(0.4, 1.4), rng.randf_range(0.6, 2.2))
+		placed[rng.randi_range(0, ROCK_VARIANTS - 1)].append(
+			Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), Vector3(point.x, y + size.y * 0.15, point.y)))
 		if size.x > 1.2 and size.z > 1.2:
 			var collision := CollisionShape3D.new()
 			var shape := SphereShape3D.new()
@@ -412,29 +433,71 @@ func _build_rocks() -> void:
 			collision.shape = shape
 			collision.position = Vector3(point.x, y, point.y)
 			rocks.add_child(collision)
+	# Added once its shapes are in.
 	add_child(rocks)
-	Props.scatter(rocks, Props.blob(1.0, 6, 3), ROCK, placed)
+	draw_rocks(rocks, placed, SEED, false, "tan_rock")
 
 
+## Tall plains grass and yellow flowers, and bushes, made near the camera
+## (Zone.add_nature_clutter).
 func _build_clutter() -> void:
-	var clutter := Node3D.new()
-	clutter.name = "Clutter"
-	add_child(clutter)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED + 3
-	var grass: Array[Transform3D] = []
-	var flowers: Array[Transform3D] = []
-	var edge := SIZE / 2.0 - 6.0
-	for attempt in 40000:
-		var point := CENTER + Vector2(rng.randf_range(-edge, edge), rng.randf_range(-edge, edge))
-		var y := height_at(point.x, point.y)
-		if y < WATER_LEVEL + 0.5 or y > 24.0 or not _clear(point):
-			continue
-		var spin := Basis(Vector3.UP, rng.randf() * TAU)
-		var at := Vector3(point.x, y, point.y)
-		if rng.randf() < 0.06:
-			flowers.append(Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.7, 1.1)), at + Vector3.UP * 0.25))
-		else:
-			grass.append(Transform3D(spin.scaled(Vector3(1, rng.randf_range(1.0, 1.9), 1)), at + Vector3.UP * 0.2))
-	add_clutter(clutter, Props.cone(0.16, 0.42, 4), Color(0.5, 0.6, 0.3), grass)
-	add_clutter(clutter, Props.blob(0.09, 5, 3), Color(0.92, 0.75, 0.3), flowers)
+	add_nature_clutter(_grass_at, _bush_at, SEED + 3)
+
+
+## What grows at a point: tall grass, thickest on the golden patches, yellow
+## flowers here and there; none on paths or rock. Called from a worker
+## thread: it only reads.
+func _grass_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.6 or y > 24.0 or not _clear_for_clutter(point):
+		return []
+	var layers := _ground_layers(point.x, point.y, y, _normal_at(point, y))
+	if layers.b > 0.3 or layers.r > 0.4 or layers.g > 0.4:
+		return []
+	if rng.randf() > lerpf(0.5, 0.85, layers.a):
+		return []
+	var at := Vector3(point.x, y - 0.05, point.y)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	if rng.randf() < 0.04:
+		return ["flowers_yellow", Transform3D(spin.scaled(Vector3.ONE * rng.randf_range(0.8, 1.1)), at)]
+	return ["plains_blades", Transform3D(spin.scaled(Vector3(1, rng.randf_range(0.8, 1.4), 1) * rng.randf_range(0.8, 1.15)), at)]
+
+
+## A bush now and then.
+func _bush_at(point: Vector2, rng: RandomNumberGenerator) -> Array:
+	if rng.randf() > 0.04:
+		return []
+	var y := ground_height(point.x, point.y)
+	if y < WATER_LEVEL + 0.8 or y > 24.0 or not _clear_for_clutter(point) or _normal_at(point, y).y < 0.8:
+		return []
+	var size := rng.randf_range(0.8, 1.3)
+	var spin := Basis(Vector3.UP, rng.randf() * TAU)
+	return [str(rng.randi_range(0, BUSH_VARIANTS - 1)),
+		Transform3D(spin.scaled(Vector3(size, size * rng.randf_range(0.8, 1.1), size)), Vector3(point.x, y - 0.05, point.y))]
+
+
+func _normal_at(point: Vector2, y: float) -> Vector3:
+	return Vector3(y - ground_height(point.x + 0.8, point.y), 0.8, y - ground_height(point.x, point.y + 0.8)).normalized()
+
+
+## A Hornkin longhouse you walk into (one solid, Nature's, 14 yards long,
+## stretched to `length` and `depth`), its doorway turned by `yaw` (0 faces
+## south), with a warm lamp inside.
+func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0, depth := 7.0) -> void:
+	place_baked(parent, "longhouse", Transform3D(Basis(Vector3.UP, yaw) * Basis().scaled(Vector3(length / 14.0, 1.0, depth / 7.0)), at))
+	var lamp := OmniLight3D.new()
+	lamp.light_color = Color(1.0, 0.75, 0.45)
+	lamp.omni_range = length * 0.7
+	lamp.light_energy = 0.9
+	lamp.position = at + Vector3(0, 2.8, 0)
+	parent.add_child(lamp)
+
+
+## Open ground: not on roads, in the village or on the camps.
+func _clear_for_clutter(point: Vector2) -> bool:
+	if point.distance_to(TOWN) < TOWN_FLAT - 2.0 or _road_distance(point, ROAD_WIDTH + 1.0) < ROAD_WIDTH + 0.8:
+		return false
+	for flat: Array in FLATS:
+		if point.distance_to(flat[0]) < flat[1]:
+			return false
+	return true

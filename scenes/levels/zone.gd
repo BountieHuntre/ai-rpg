@@ -406,34 +406,19 @@ func round_hut(parent: Node3D, at: Vector2, radius: float, y: float, wall: Color
 	Props.box(parent, Vector3(at.x, y + 2.6 + radius * 1.1, at.y), Vector3(0.25, 1.6, 0.25), spike, 0.0, false)
 
 
-## A Hornkin tipi: a hide cone round a frame of poles that cross at the top.
-func tipi(parent: Node3D, at: Vector2, y: float, radius: float, hide: Color, pole: Color) -> void:
-	var cone := MeshInstance3D.new()
-	cone.mesh = Props.cone(radius, radius * 2.2, 8)
-	cone.material_override = Props.material(hide)
-	cone.position = Vector3(at.x, y + radius * 1.1, at.y)
-	parent.add_child(cone)
-	var body := StaticBody3D.new()
-	var shape := CollisionShape3D.new()
-	var cylinder := CylinderShape3D.new()
-	cylinder.radius = radius * 0.8
-	cylinder.height = radius * 1.6
-	shape.shape = cylinder
-	shape.position = Vector3(at.x, y + radius * 0.8, at.y)
-	body.add_child(shape)
-	parent.add_child(body)
-	for i in 4:
-		var angle := TAU * i / 4.0 + 0.4
-		var stick := Props.box(parent, Vector3(at.x, y + radius * 2.2, at.y), Vector3(0.12, 1.4, 0.12), pole, 0.0, false)
-		stick.rotation = Vector3(cos(angle) * 0.4, 0.0, sin(angle) * 0.4)
+## A Hornkin tipi `radius` round (one solid, Nature's: light or dark hides
+## by `hide`), its door turned toward `facing` (x, z) or south.
+func tipi(parent: Node3D, at: Vector2, y: float, radius: float, hide: Color, _pole: Color, facing := Vector2.ZERO) -> void:
+	var yaw := 0.0 if facing == Vector2.ZERO else atan2((facing - at).x, (facing - at).y)
+	var kind := "tipi_light" if hide.get_luminance() > 0.5 else "tipi_dark"
+	place_baked(parent, kind, Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * radius / 3.0), Vector3(at.x, y, at.y)),
+		true, int(absf(at.x * 7.0 + at.y * 13.0)))
 
 
-## A carved totem pole of stacked blocks in turn colours.
-func totem(parent: Node3D, at: Vector2, y: float, height: float, colors: Array) -> void:
-	var block := height / 4.0
-	for i in 4:
-		Props.box(parent, Vector3(at.x, y + i * block, at.y), Vector3(1.0 - i * 0.08, block, 1.0 - i * 0.08), colors[i % colors.size()], i * 0.3, i == 0)
-	Props.box(parent, Vector3(at.x, y + height * 0.8, at.y), Vector3(2.6, 0.3, 0.4), colors[0], 0.0, false)
+## A great totem `height` tall (one solid, Nature's, painted in the Hornkin's
+## colours).
+func totem(parent: Node3D, at: Vector2, y: float, height: float, _colors: Array) -> void:
+	place_baked(parent, "totem", Transform3D(Basis().scaled(Vector3.ONE * height / 8.0), Vector3(at.x, y, at.y)))
 
 
 func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:
@@ -478,7 +463,7 @@ const CARD_RANGE := 62.0
 const BUSH_RANGE := 140.0
 ## The kinds a zone's grass place function can make (add_nature_clutter).
 const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
-	"frost_grass", "heather", "dry_grass", "dead_blades", "elf_blades"]
+	"frost_grass", "heather", "dry_grass", "dead_blades", "elf_blades", "plains_blades"]
 
 var _clutter_share := 0.66
 ## Ground built on (BuildingKit footprints): no grass or bushes there.
@@ -573,6 +558,7 @@ func add_nature_clutter(grass: Callable, bush: Callable, rng_seed: int, snowy :=
 		"dry_grass": [Nature.card_mesh(1.0, 0.55), Nature.card_material("dry_grass", patches, 0.1)],
 		"dead_blades": [Nature.card_mesh(1.0, 0.5), Nature.card_material("dead_blades", patches, 0.1)],
 		"elf_blades": [Nature.card_mesh(1.0, 0.55), Nature.card_material("elf_blades", patches, 0.1)],
+		"plains_blades": [Nature.card_mesh(0.9, 0.85), Nature.card_material("plains_blades", patches, 0.14)],
 	}
 	add_child(cards)
 	var bushes := ClutterField.new()

@@ -7,7 +7,7 @@
 script = ExtResource("1_script")
 
 [node name="ChiefSkymane" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-490, 5, 1180)
+position = Vector3(-492.5, 5.05, 1174)
 rotation = Vector3(0, 3.14159, 0)
 npc_name = "Chief Skymane"
 subname = ""
@@ -47,8 +47,8 @@ appearance = {
 race = "hornkin"
 
 [node name="HarrokStormhorn" parent="." instance=ExtResource("2_npc")]
-position = Vector3(-474, 5, 1200)
-rotation = Vector3(0, -1.57080, 0)
+position = Vector3(-487.5, 5.05, 1174)
+rotation = Vector3(0, 3.14159, 0)
 npc_name = "Harrok Stormhorn"
 subname = "Man-at-Arms Trainer"
 trainer = "warrior"

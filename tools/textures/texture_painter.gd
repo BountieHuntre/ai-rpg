@@ -14,6 +14,7 @@ const KEYS := [
 	"red_earth", "dry_scrub", "red_dirt", "red_rock", "sand", "hide", "dry_grass", "cactus",
 	"dead_grass", "dead_leaves", "mud", "slate", "dead_blades",
 	"elf_grass", "moss_floor", "elf_path", "blue_rock", "elf_blades", "elf_leaves", "pale_bark", "elf_roof",
+	"plains_grass", "gold_grass", "ochre_dirt", "tan_rock", "plains_blades",
 	"grass_blades", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"leaves", "needles", "bark", "stone_wall", "roof_tiles", "planks", "thatch", "plaster",
 	"gear_weave", "gear_quilted", "gear_stripes", "gear_leather", "gear_studded", "gear_tooled",
@@ -952,6 +953,114 @@ func _elf_roof() -> Image:
 					elif dy < 2:
 						c = c.lightened(0.1)
 					_put(image, tile * 8 + dx + offset, row * row_height + dy, c)
+	return image
+
+
+# The plains (Sunfold Camp, the Tallgrass).
+
+const PLAINS := [Color("4a6026"), Color("566c2c"), Color("637832"), Color("72843a"), Color("848f44")]
+const GOLD := [Color("7a6a2c"), Color("8c7a32"), Color("9e8a3a"), Color("b09a44"), Color("c2aa50")]
+
+
+## Plains grass: green going gold, in long strokes leaning with the wind.
+func _plains_grass() -> Image:
+	var size := 128
+	var image := _base(size, PLAINS.slice(0, 4), 0.035, 1.5)
+	var gold := _noise(size, 0.04)
+	for i in 1000:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var palette: Array = GOLD if gold[y * size + x] > 0.62 else PLAINS
+		var length := _rng.randi_range(3, 5)
+		_put(image, x, y + 1, palette[0])
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = palette[2] if tip < 0.5 else palette[3] if tip < 0.9 else palette[4]
+			_put(image, x + (1 if step >= length - 2 else 0), y - step, color)
+	for i in 30:
+		_put(image, _rng.randi_range(0, size - 1), _rng.randi_range(0, size - 1), Color("e0c060"))
+	return image
+
+
+## Golden tall grass, thick, leaning one way.
+func _gold_grass() -> Image:
+	var size := 128
+	var image := _base(size, GOLD.slice(0, 4), 0.05, 1.4)
+	for i in 1500:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		var length := _rng.randi_range(3, 6)
+		_put(image, x, y + 1, GOLD[0].darkened(0.2))
+		for step in length:
+			var tip := float(step) / float(length - 1)
+			var color: Color = GOLD[1] if tip < 0.4 else GOLD[3] if tip < 0.85 else GOLD[4]
+			_put(image, x + (1 if step >= length - 2 else 0), y - step, color)
+	return image
+
+
+## Ochre earth: orange-red clay with pale stones.
+func _ochre_dirt() -> Image:
+	var size := 128
+	var image := _base(size, [Color("8a4a24"), Color("9c562a"), Color("ad6232"), Color("bc6e3a")], 0.05, 1.5)
+	for i in 140:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		_put(image, x, y, Color("d8b890"))
+		_put(image, x + 1, y, Color("b89870"))
+		_put(image, x, y + 1, Color("5e3018"))
+	return image
+
+
+## Tan sandstone in strata.
+func _tan_rock() -> Image:
+	var size := 128
+	var image := _image(size)
+	var warp := _noise(size, 0.05)
+	var grain := _noise(size, 0.12)
+	var palette := [Color("5a4634"), Color("6e5640"), Color("84684c"), Color("9a7c5a"), Color("b0926a")]
+	for y in size:
+		for x in size:
+			var band := fposmod((y + warp[y * size + x] * 18.0) / 10.0, 1.0)
+			var v := 0.2 + grain[y * size + x] * 0.6
+			if band < 0.14:
+				v -= 0.4
+			elif band < 0.22:
+				v -= 0.15
+			elif band > 0.8:
+				v += 0.3
+			image.set_pixel(x, y, _pick(palette, clampf(v, 0.0, 1.0), x, y))
+	for i in 14:
+		var x := _rng.randi_range(0, size - 1)
+		var y := _rng.randi_range(0, size - 1)
+		for step in _rng.randi_range(6, 16):
+			x += _rng.randi_range(-1, 1)
+			y += 1
+			_put(image, x, y, Color("3e3024"))
+			_put(image, x - 1, y, palette[4])
+	return image
+
+
+## Tall plains grass in a tuft, green with golden tips.
+func _plains_blades() -> Image:
+	var size := 64
+	var image := _image(size, true)
+	for i in 24:
+		var root_x := _rng.randf_range(4, size - 5)
+		var height := _rng.randf_range(size * 0.5, size * 0.98)
+		var bend := _rng.randf_range(4.0, 16.0)
+		var light := _rng.randf_range(-0.08, 0.1)
+		var steps := int(height)
+		for step in steps:
+			var t := float(step) / steps
+			var x := root_x + bend * t * t
+			var y := size - 1 - step
+			var color: Color = PLAINS[1] if t < 0.3 else PLAINS[3] if t < 0.65 else GOLD[3] if t < 0.9 else GOLD[4]
+			color = _shade(color, light)
+			var width := 2 if t < 0.5 else 1
+			for w in width:
+				var px := int(x) + w
+				if px >= 0 and px < size:
+					image.set_pixel(px, y, color if w == 0 else color.darkened(0.12))
 	return image
 
 

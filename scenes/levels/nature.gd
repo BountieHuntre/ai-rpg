@@ -98,7 +98,8 @@ static func card_material(key: String, patches: Texture2D, sway := 0.08) -> Shad
 const TREE_PATH := "res://assets/models/nature/%s_%d.res"
 const TREE_VARIANTS := 6
 ## Kinds made just once (buildings, the great tree): one variant.
-const SINGLE_KINDS := ["great_tree", "bower_violet", "bower_teal", "long_bower", "moonwell_ring", "silver_gate"]
+const SINGLE_KINDS := ["great_tree", "bower_violet", "bower_teal", "long_bower", "moonwell_ring", "silver_gate",
+	"longhouse", "totem"]
 
 
 ## How many variants a kind has.
@@ -106,7 +107,8 @@ static func variants_of(kind: String) -> int:
 	return 1 if kind in SINGLE_KINDS else TREE_VARIANTS
 const TREE_SEEDS := { "pine": 8101, "pine_snowy": 8101, "oak": 8201, "dead_tree": 8301, "palm": 8401,
 	"elf_tree": 8501, "great_tree": 8601, "bower_violet": 8701, "bower_teal": 8711, "long_bower": 8721,
-	"log_hut": 8801, "moonwell_ring": 8901, "silver_gate": 9001 }
+	"log_hut": 8801, "moonwell_ring": 8901, "silver_gate": 9001,
+	"tipi_light": 9101, "tipi_dark": 9111, "longhouse": 9201, "totem": 9301 }
 
 
 ## The unbaked tree of a kind, built from a seed.
@@ -138,6 +140,14 @@ static func build_tree(kind: String, rng_seed: int) -> ArrayMesh:
 			return _moonwell_ring(rng_seed)
 		"silver_gate":
 			return _silver_gate(rng_seed)
+		"tipi_light":
+			return _tipi(rng_seed, Color(1.0, 0.95, 0.88))
+		"tipi_dark":
+			return _tipi(rng_seed, Color(0.72, 0.64, 0.56))
+		"longhouse":
+			return _longhouse(rng_seed)
+		"totem":
+			return _totem(rng_seed)
 	return ArrayMesh.new()
 
 
@@ -764,6 +774,118 @@ static func _silver_gate(rng_seed: int) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	wood.add_to(mesh, material("pale_bark", 1.6))
 	doors.add_to(mesh, material("planks", 1.5))
+	return mesh
+
+
+## The Hornkin's paints: red, blue, ochre, green.
+const PAINTS := [Color(0.95, 0.4, 0.32), Color(0.45, 0.62, 0.95), Color(1.0, 0.88, 0.5), Color(0.5, 0.8, 0.55)]
+
+
+## A Hornkin tipi 3 yards round: a cone of hides with a painted band and a
+## door flap, its poles crossing out of the top.
+static func _tipi(rng_seed: int, shade: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var hide := Builder.new()
+	var poles := Builder.new()
+	var radius := 3.0
+	var height := 6.2
+	_post(hide, Vector3(0, -0.2, 0), Vector3(0, height, 0), radius, 0.2, 12, shade)
+	# A painted band round it, a little proud of the hides.
+	var band_low := 1.6
+	var band_high := 2.3
+	var r_low := lerpf(radius, 0.2, (band_low + 0.2) / (height + 0.2)) + 0.04
+	var r_high := lerpf(radius, 0.2, (band_high + 0.2) / (height + 0.2)) + 0.04
+	_post(hide, Vector3(0, band_low, 0), Vector3(0, band_high, 0), r_low, r_high, 12, PAINTS[rng.randi_range(0, PAINTS.size() - 1)] * shade)
+	# The door flap, dark, on the south (+z).
+	_box(hide, Vector3(0, 0.75, radius * 0.78), Vector3(1.1, 1.6, 0.5), Color(0.2, 0.15, 0.1))
+	var apex := Vector3(0, height + 0.1, 0)
+	for i in 6:
+		var angle := TAU * i / 6.0 + 0.3
+		var foot := Vector3(cos(angle), 0, sin(angle)) * radius * 0.97 + Vector3(0, -0.2, 0)
+		var past := apex + (apex - foot).normalized() * 1.2
+		_post(poles, foot, past, 0.09, 0.06, 5, Color(0.9, 0.9, 0.9))
+	var mesh := ArrayMesh.new()
+	hide.add_to(mesh, material("hide", 1.6))
+	poles.add_to(mesh, material("bark", 0.8))
+	return mesh
+
+
+## A closed prism along x from -half_length to half_length: a triangle
+## across it, eaves at `eave` height `width` apart, its ridge at `ridge`.
+static func _prism(builder: Builder, half_length: float, width: float, eave: float, ridge: float, color: Color) -> void:
+	builder.begin_piece()
+	var inside := Vector3(0, (eave * 2.0 + ridge) / 3.0, 0)
+	var ends: Array = []
+	for x in [-half_length, half_length]:
+		ends.append([Vector3(x, eave, -width / 2.0), Vector3(x, eave, width / 2.0), Vector3(x, ridge, 0)])
+	var a: Array = ends[0]
+	var b: Array = ends[1]
+	builder.tri(a[0], a[1], a[2], inside, color, color, color)
+	builder.tri(b[0], b[1], b[2], inside, color, color, color)
+	for k in 3:
+		var p0: Vector3 = a[k]
+		var p1: Vector3 = a[(k + 1) % 3]
+		var q0: Vector3 = b[k]
+		var q1: Vector3 = b[(k + 1) % 3]
+		var lit := color if k != 0 else color.darkened(0.3)
+		builder.tri(p0, p1, q1, inside, lit, lit, lit)
+		builder.tri(p0, q1, q0, inside, lit, lit, lit)
+
+
+## A Hornkin longhouse you walk into, 14 by 7 (scaled to its length where it
+## stands): hide walls on poles, its doorway in the middle of the south (+z)
+## wall, a long hide roof and a rug on the earth floor.
+static func _longhouse(rng_seed: int) -> ArrayMesh:
+	var hide := Builder.new()
+	var roof := Builder.new()
+	var poles := Builder.new()
+	var half := 7.0
+	var depth := 7.0
+	var wall := 3.4
+	var thick := 0.35
+	var walls := Color(0.78, 0.7, 0.6)
+	_box(hide, Vector3(0, wall / 2.0 - 0.1, -depth / 2.0), Vector3(half * 2.0, wall + 0.2, thick), walls)
+	for side in [-1.0, 1.0]:
+		_box(hide, Vector3(side * (half + 0.9) / 2.0, wall / 2.0 - 0.1, depth / 2.0), Vector3(half - 0.9, wall + 0.2, thick), walls)
+		_box(hide, Vector3(side * half, wall / 2.0 - 0.1, 0), Vector3(thick, wall + 0.2, depth), walls)
+	_box(hide, Vector3(0, (wall + 2.6) / 2.0, depth / 2.0), Vector3(1.8, wall - 2.6, thick), walls)
+	_prism(roof, half + 0.6, depth + 1.4, wall - 0.1, wall + 3.0, Color(1.0, 0.95, 0.85))
+	for x in [-half, -half / 2.0, 0.0, half / 2.0, half]:
+		for z in [-1.0, 1.0]:
+			if x == 0.0 and z > 0.0:
+				continue
+			var at := Vector3(x, -0.2, z * (depth / 2.0 + 0.15))
+			_post(poles, at, at + Vector3(0, wall + 0.4, 0), 0.14, 0.12, 6, Color(0.9, 0.9, 0.9))
+	# Door posts either side of the doorway.
+	for side in [-1.0, 1.0]:
+		var at := Vector3(side * 1.0, -0.2, depth / 2.0 + 0.2)
+		_post(poles, at, at + Vector3(0, 2.9, 0), 0.13, 0.11, 6, Color(0.9, 0.9, 0.9))
+	# A rug on the floor.
+	_box(hide, Vector3(0, 0.02, 0), Vector3(half * 1.2, 0.06, depth * 0.55), Color(0.85, 0.42, 0.32))
+	var mesh := ArrayMesh.new()
+	hide.add_to(mesh, material("hide", 2.0))
+	roof.add_to(mesh, material("hide", 1.6))
+	poles.add_to(mesh, material("bark", 0.8))
+	return mesh
+
+
+## A great totem 8 yards tall (scaled where it stands): four carved, painted
+## blocks, each narrower and turned a little, wings spread near the top, a
+## beaked head on top.
+static func _totem(rng_seed: int) -> ArrayMesh:
+	var wood := Builder.new()
+	var block := 1.8
+	for i in 4:
+		var width := 1.0 - i * 0.08
+		_box(wood, Vector3(0, i * block + block / 2.0 - 0.2, 0), Vector3(width, block, width), PAINTS[i % PAINTS.size()], i * 0.3)
+		# A carved band where each block meets the next.
+		_box(wood, Vector3(0, (i + 1) * block - 0.25, 0), Vector3(width + 0.12, 0.18, width + 0.12), Color(0.6, 0.5, 0.4), i * 0.3)
+	_box(wood, Vector3(0, 6.4, 0), Vector3(2.8, 0.35, 0.4), PAINTS[0])
+	_box(wood, Vector3(0, 7.4, 0.2), Vector3(0.7, 0.8, 0.9), PAINTS[2])
+	_box(wood, Vector3(0, 7.25, 0.75), Vector3(0.25, 0.25, 0.5), PAINTS[0])
+	var mesh := ArrayMesh.new()
+	wood.add_to(mesh, material("planks", 1.2))
 	return mesh
 
 
