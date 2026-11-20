@@ -1,5 +1,18 @@
 [
 	{
+		"version": "0.18.0",
+		"date": "11-19-2026",
+		"notes": [
+			"Every land has its own painted ground now: snow and frozen heath in the dwarves' mountains, red earth and beach sand on the orcs' coast, dead grass and mud in the Undead's glades, moss and blue-green grass in the elven woods, and golden plains for the Hornkin.",
+			"Trees and plants are remade for each land: snowy pines, cacti and palms, bare dead trees, silver-barked elven trees, the Elderbough on its roots, and tall swaying grass, frosty heather and dead bushes underfoot.",
+			"Every tree, cactus and building is one solid piece, with no seams.",
+			"Halls, inns, longhouses and huts in every starting area and town can be walked into, with the trainers and innkeepers inside: the Hollow Hall, Kettlefold, the Proving Ground's huts, Spikewall, Gravesend's chapel, Gallowfield, Fernwatch's bowers and Longhorn Village.",
+			"Trees no longer grow on the bare rock of mountain slopes.",
+			"The ground joins up where zones meet: no more cracks to see the sky through by the passes.",
+			"The pass from Sunfold Camp now leads all the way down into the Tallgrass."
+		]
+	},
+	{
 		"version": "0.17.0",
 		"date": "11-19-2026",
 		"notes": [
