@@ -217,6 +217,18 @@ static func effect_value(spell: Dictionary, effect: int, caster_level: int, cast
 	return value
 
 
+## effect_range with a caster's talents (the modifiers effect_value applies),
+## for tooltips: the least and most the caster's spell does.
+static func effect_span(spell: Dictionary, effect: int, caster_level: int, caster: Combatant = null) -> Vector2:
+	var span := effect_range(spell, effect, caster_level)
+	if caster == null:
+		return span
+	var aura := int(spell.get("EffectApplyAuraName%d" % (effect + 1), 0))
+	for op: int in [SpellMods.ALL_EFFECTS] + ([SpellMods.SPEED] if aura == AURA_MOD_INCREASE_SPEED else []) 			+ ([SpellMods.ATTACK_POWER] if aura == AURA_MOD_ATTACK_POWER else []):
+		span = Vector2(SpellMods.apply(caster, spell, op, span.x), SpellMods.apply(caster, spell, op, span.y))
+	return span
+
+
 ## The lowest and highest value an effect can roll at a level.
 static func effect_range(spell: Dictionary, effect: int, caster_level: int) -> Vector2:
 	var i := effect + 1
@@ -233,26 +245,27 @@ static func effect_range(spell: Dictionary, effect: int, caster_level: int) -> V
 ## Cast time, duration, range and the rest take an optional caster, whose
 ## talents may change them (SpellMods; times in the modifiers are milliseconds).
 static func cast_time(spell: Dictionary, caster: Combatant = null) -> float:
-	var time: float = CAST_TIMES.get(int(spell.get("CastingTimeIndex", 1)), 0.0)
+	# A design's seconds that no classic index holds come as CastTime.
+	var time: float = float(spell.CastTime) if spell.has("CastTime") else CAST_TIMES.get(int(spell.get("CastingTimeIndex", 1)), 0.0)
 	if caster == null or time <= 0.0:
 		return time
 	return maxf(SpellMods.apply(caster, spell, SpellMods.CASTING_TIME, time * 1000.0) / 1000.0, 0.0)
 
 
 static func duration(spell: Dictionary, caster: Combatant = null) -> float:
-	var length: float = DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+	var length: float = float(spell.Duration) if spell.has("Duration") else DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
 	if caster == null or length <= 0.0:
 		return length
 	return maxf(SpellMods.apply(caster, spell, SpellMods.DURATION, length * 1000.0) / 1000.0, 0.0)
 
 
 static func spell_range(spell: Dictionary, caster: Combatant = null) -> float:
-	var reach: float = RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+	var reach: float = float(spell.Range) if spell.has("Range") else RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
 	return SpellMods.apply(caster, spell, SpellMods.RANGE, reach) if caster and reach > 5.0 else reach
 
 
 static func min_range(spell: Dictionary) -> float:
-	return MIN_RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
+	return float(spell.MinRange) if spell.has("MinRange") else MIN_RANGES.get(int(spell.get("RangeIndex", 1)), 0.0)
 
 
 ## Whether a spell costs rage (its ManaCost is in tenths of a rage point).
@@ -361,7 +374,8 @@ static func holy_shock_spells(id: int) -> Array:
 
 ## The radius of a spell's effect in yards.
 static func effect_radius(spell: Dictionary, effect := 0, caster: Combatant = null) -> float:
-	var radius: float = RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
+	var direct := "EffectRadius%d" % (effect + 1)
+	var radius: float = float(spell[direct]) if spell.has(direct) else RADII.get(int(spell.get("EffectRadiusIndex%d" % (effect + 1), 0)), 0.0)
 	return SpellMods.apply(caster, spell, SpellMods.RADIUS, radius) if caster and radius > 0.0 else radius
 
 
@@ -525,8 +539,29 @@ static func _get_data() -> Dictionary:
 		for extra: Dictionary in ClassicData.class_files():
 			for key in ["spells", "chains", "start_spells", "talents", "book_tabs", "links", "trainers"]:
 				(_data[key] as Dictionary).merge(extra.get(key, {}), true)
+		# Every class's spells and talents as its design file has them
+		# (data/designs, SpellDesigns), over both.
+		SpellDesigns.apply(_data)
 		_lengthen_buffs()
 	return _data
+
+
+## Reads the spell data again with the designs as they are now (the
+## Developer tab's spell editor, SpellDesigns.edited), and forgets what was
+## worked out from the old data. Returns the designs' warnings.
+static func reload_designs() -> Array[String]:
+	_data = {}
+	_weapon_skills = {}
+	Talents._rank_of.clear()
+	Talents._first_of.clear()
+	TalentText._player_spells.clear()
+	TalentText._talent_ranks.clear()
+	SpellswordAbilities._ids.clear()
+	_get_data()
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree:
+		Combatant.refresh_aura_spells(tree)
+	return SpellDesigns.warnings.duplicate()
 
 
 ## The game's own rule (unlike classic): class buffs that last 5 minutes or
@@ -535,10 +570,13 @@ static func _get_data() -> Dictionary:
 ## The classic duration stays as ClassicDurationIndex.
 static func _lengthen_buffs() -> void:
 	for spell: Dictionary in _data.spells.values():
-		var length: float = DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
+		var length: float = float(spell.Duration) if spell.has("Duration") else DURATIONS.get(int(spell.get("DurationIndex", 0)), 0.0)
 		if int(spell.get("SpellFamilyName", 0)) in CLASS_SPELL_FAMILIES and length >= LONG_BUFF_FROM and length < LONG_BUFF 				and int(spell.get("Effect1", 0)) == EFFECT_APPLY_AURA and target_type(spell) != TARGET_ENEMY:
-			spell.ClassicDurationIndex = spell.DurationIndex
-			spell.DurationIndex = LONG_BUFF_DURATION_INDEX
+			if spell.has("Duration"):
+				spell.Duration = LONG_BUFF
+			else:
+				spell.ClassicDurationIndex = spell.DurationIndex
+				spell.DurationIndex = LONG_BUFF_DURATION_INDEX
 
 
 ## Spells that open a menu of others instead of casting (the action bar's

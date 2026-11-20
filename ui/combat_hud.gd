@@ -224,6 +224,14 @@ func _watch_combatants() -> void:
 			if combatant == _player.combatant:
 				_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
 		)
+		# Mana and rage from your talents, as classic shows them: "+12 Mana"
+		# in blue (red for rage), and a line in the chat.
+		combatant.energized.connect(func(amount: int, power: int, source: String) -> void:
+			if combatant == _player.combatant:
+				var what := "Rage" if power == SpellDB.POWER_RAGE else "Mana"
+				_add_float(combatant, "+%d %s" % [amount, what], Color(1, 0.35, 0.3) if power == SpellDB.POWER_RAGE else Color(0.4, 0.6, 1))
+				Chat.system("You gain %d %s from %s." % [amount, what, source])
+		)
 		combatant.cast_interrupted.connect(func() -> void:
 			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
 				_add_float(combatant, "Interrupted", Color(1, 0.9, 0.3))

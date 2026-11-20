@@ -152,10 +152,25 @@ func _fire(talent: Dictionary, effect: int, kind: int, other: Combatant, spell: 
 		match int(trigger.get("Effect%d" % (i + 1), 0)):
 			SpellDB.EFFECT_ENERGIZE:
 				var gain := SpellDB.effect_value(trigger, i, level)
-				if int(trigger.get("EffectMiscValue%d" % (i + 1), 0)) == SpellDB.POWER_RAGE:
+				# The game's own: a share (%) of the mana the spell that set it
+				# off cost, or with `cost_of` "oath" the Oath you have up
+				# (a design effect's `cost_share` and `cost_of`).
+				var share := float(trigger.get("EffectCostShare%d" % (i + 1), 0))
+				if share > 0.0:
+					var paid_for := spell
+					if str(trigger.get("EffectCostOf%d" % (i + 1), "")) == "oath":
+						var oath: Dictionary = _caster()._judgeable_seal()
+						paid_for = oath.spell if not oath.is_empty() else {}
+					gain = _caster().mana_cost(paid_for) * share / 100.0 if not paid_for.is_empty() else 0.0
+				var before := me.mana
+				var rage := int(trigger.get("EffectMiscValue%d" % (i + 1), 0)) == SpellDB.POWER_RAGE
+				if rage:
 					me.gain_rage(gain / 10.0)
 				else:
 					me.mana = minf(me.mana + gain, me.max_mana)
+				# What was really gained (none past the top), for the HUD.
+				if roundi(me.mana - before) > 0:
+					me.energized.emit(roundi(me.mana - before), SpellDB.POWER_RAGE if rage else 0, str(talent.SpellName))
 			EFFECT_ADD_EXTRA_ATTACKS:
 				if me.attack_target and me.attack_target.is_alive():
 					me.extra_attacks += maxi(roundi(SpellDB.effect_value(trigger, i, level)), 1)

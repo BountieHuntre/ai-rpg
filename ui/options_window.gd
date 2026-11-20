@@ -125,7 +125,7 @@ const DEV_BUTTONS := [
 	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
 	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
 	["Reload Game", "reload"], ["Train All Spells", "trainall"], ["BiS", "bis"],
-	["Randomize Bots", "randomizebots"],
+	["Randomize Bots", "randomizebots"], ["Reset Talents", "resettalents"],
 ]
 const RESULT := Color(0.6, 0.9, 0.6)
 ## The open "Reset Character?" confirmation, or null.
@@ -155,6 +155,13 @@ var console: DevConsole
 
 ## The Developer tab is showing its item list instead of its commands.
 var _item_list := false
+## The Developer tab is showing its spell editor (a class's design file,
+## SpellDesigns): the class's file name, the search, and the entry shown
+## ("spell:<n>" for the nth spell group, "tree:<n>" for a talent tree).
+var _spell_editor := false
+var _edit_class := "man_at_arms"
+var _edit_filter := ""
+var _edit_entry := ""
 var _item_filter := ""
 ## The item search's filters and sort (kept while the window is open):
 ## category (ITEM_CATEGORIES), type and slot within it ("" for any), quality
@@ -215,6 +222,7 @@ func open(category := "Video") -> void:
 func show_tab(category: String) -> void:
 	_category = category
 	_item_list = false
+	_spell_editor = false
 	_binding = []
 	_build()
 
@@ -352,6 +360,7 @@ func _close() -> void:
 	close_confirm()
 	_binding = []
 	_item_list = false
+	_spell_editor = false
 	if _item_tooltip:
 		_item_tooltip.show_item({})
 	visible = false
@@ -419,7 +428,7 @@ func _build() -> void:
 	_note.custom_minimum_size = Vector2(10, NOTE_HEIGHT) * _ui_scale
 	if _category == KEY_BINDINGS:
 		_build_keys(content)
-	elif not (_category == DEVELOPER and _item_list):
+	elif not (_category == DEVELOPER and (_item_list or _spell_editor)):
 		# The item search has the page to itself (no console or cape options).
 		for row: Array in CATEGORIES[_category]:
 			content.add_child(_row(row))
@@ -481,6 +490,9 @@ func _build_developer(content: VBoxContainer) -> void:
 		return
 	if _item_list:
 		_build_item_list(content)
+		return
+	if _spell_editor:
+		_build_spell_editor(content)
 		return
 	var player := console.player()
 	var god := HBoxContainer.new()
@@ -552,11 +564,19 @@ func _build_developer(content: VBoxContainer) -> void:
 	row.add_child(field)
 	row.add_child(_button("Run", run))
 	content.add_child(row)
-	content.add_child(_button("Add Items...", func() -> void:
-		_item_list = true
-		_note.text = ""
-		_build()
-	))
+	var pages := HBoxContainer.new()
+	pages.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	for page: Array in [["Add Items...", "items"], ["Edit Spells...", "spells"]]:
+		var which: String = page[1]
+		var open := _button(page[0], func() -> void:
+			_item_list = which == "items"
+			_spell_editor = which == "spells"
+			_note.text = ""
+			_build()
+		)
+		open.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pages.add_child(open)
+	content.add_child(pages)
 	var reset := _button("Reset Character...", _confirm_reset)
 	reset.add_theme_color_override("font_color", ERROR_COLOR)
 	content.add_child(reset)
@@ -652,6 +672,222 @@ func close_confirm() -> bool:
 
 ## Every item in the game, searchable by name. Click one to put it in the bags;
 ## Shift-click adds a full stack. Hover for its tooltip.
+## The spell editor: a class's design (data/designs, SpellDesigns) as the
+## game has it, a spell group or talent tree at a time as JSON, the fields
+## in docs/spells/FIELDS.md. Apply reads the changed design over the spell
+## data at once (unsaved; Revert drops it), Save writes the file.
+func _build_spell_editor(content: VBoxContainer) -> void:
+	var player := console.player()
+	var small := roundi((FONT_SIZE - 1) * _ui_scale)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	top.add_child(_button("< Back", func() -> void:
+		_spell_editor = false
+		_note.text = ""
+		_build()
+	))
+	var classes := OptionButton.new()
+	classes.add_theme_font_size_override("font_size", small)
+	for spec: Array in SpellDesigns.CLASSES:
+		classes.add_item(str(ClassicData.CLASS_NAMES.get(int(spec[0]), spec[2])))
+		classes.set_item_metadata(classes.item_count - 1, str(spec[2]))
+		if str(spec[2]) == _edit_class:
+			classes.select(classes.item_count - 1)
+	classes.item_selected.connect(func(index: int) -> void:
+		_edit_class = str(classes.get_item_metadata(index))
+		_edit_entry = ""
+		_build.call_deferred()
+	)
+	top.add_child(classes)
+	var search := LineEdit.new()
+	search.placeholder_text = "Search spells and talents"
+	search.text = _edit_filter
+	search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	search.add_theme_font_size_override("font_size", small)
+	search.focus_entered.connect(func() -> void: player.typing = true)
+	search.focus_exited.connect(func() -> void: player.typing = false)
+	top.add_child(search)
+	content.add_child(top)
+	var entries := ItemList.new()
+	entries.custom_minimum_size = Vector2(WIDTH + 30, 52) * _ui_scale
+	entries.add_theme_font_size_override("font_size", small)
+	content.add_child(entries)
+	# Line numbers down the left, as Apply Live's errors give a line.
+	var text := CodeEdit.new()
+	text.gutters_draw_line_numbers = true
+	text.gutters_zero_pad_line_numbers = false
+	text.add_theme_color_override("line_number_color", Color(0.55, 0.5, 0.4))
+	# The game's theme styles TextEdit; a CodeEdit takes the same frame.
+	for box in ["normal", "focus", "read_only"]:
+		text.add_theme_stylebox_override(box, UiStyle.theme().get_stylebox(box, "TextEdit"))
+	text.custom_minimum_size = Vector2(WIDTH + 30, LIST_HEIGHT - 86 + EXTRA_PAGE) * _ui_scale
+	text.add_theme_font_size_override("font_size", small)
+	text.wrap_mode = TextEdit.LINE_WRAPPING_NONE
+	text.placeholder_text = "Pick a spell or a talent tree."
+	text.focus_entered.connect(func() -> void: player.typing = true)
+	text.focus_exited.connect(func() -> void: player.typing = false)
+	content.add_child(text)
+	# The list: spell groups by name with their ids, then the talent trees.
+	var fill := func() -> void:
+		entries.clear()
+		var design := SpellDesigns.design_of(_edit_class)
+		var words := _edit_filter.strip_edges().to_lower()
+		var groups: Array = design.get("spells", [])
+		for i in groups.size():
+			var group: Dictionary = groups[i]
+			var ids: Array[String] = []
+			for rank: Dictionary in group.get("ranks", []):
+				ids.append(str(int(rank.get("id", 0))))
+			var label := "%s  (%s)" % [group.get("name", "?"), ", ".join(ids)]
+			if words.is_empty() or words in label.to_lower():
+				entries.add_item(label)
+				entries.set_item_metadata(entries.item_count - 1, "spell:%d" % i)
+		var trees: Array = design.get("talents", [])
+		for i in trees.size():
+			var label := "Talents: %s" % trees[i].get("name", "?")
+			if words.is_empty() or words in label.to_lower():
+				entries.add_item(label)
+				entries.set_item_metadata(entries.item_count - 1, "tree:%d" % i)
+		for n in entries.item_count:
+			if entries.get_item_metadata(n) == _edit_entry:
+				entries.select(n)
+				entries.ensure_current_is_visible.call_deferred()
+	var show_entry := func() -> void:
+		var shown: Variant = _design_entry(SpellDesigns.design_of(_edit_class), _edit_entry)
+		text.text = "" if shown == null else JSON.stringify(SpellDesigns.whole(shown), "\t", false)
+	fill.call()
+	show_entry.call()
+	search.text_changed.connect(func(value: String) -> void:
+		_edit_filter = value
+		fill.call()
+	)
+	entries.item_selected.connect(func(index: int) -> void:
+		_edit_entry = str(entries.get_item_metadata(index))
+		show_entry.call()
+	)
+	# Apply: the text over the shown entry, the design read over the spells.
+	var apply := func() -> bool:
+		if _edit_entry.is_empty():
+			_show_result("!Pick a spell or a talent tree first.")
+			return false
+		var json := JSON.new()
+		if json.parse(text.text) != OK:
+			_show_result("!Line %d: %s" % [json.get_error_line() + 1, json.get_error_message()])
+			return false
+		if not json.data is Dictionary:
+			_show_result("!The entry must be a { ... } object.")
+			return false
+		var design: Dictionary = SpellDesigns.design_of(_edit_class).duplicate(true)
+		var parts := _edit_entry.split(":")
+		var list: Array = design.get("spells" if parts[0] == "spell" else "talents", [])
+		list[int(parts[1])] = json.data
+		SpellDesigns.edited[_edit_class] = design
+		var warnings := SpellDB.reload_designs()
+		GameState.spells_changed.emit()
+		fill.call()
+		if warnings.is_empty():
+			# The first rank's tooltip as it now reads.
+			var ranks: Array = (json.data as Dictionary).get("ranks", [])
+			var tip := ""
+			if not ranks.is_empty() and ranks[0] is Dictionary:
+				tip = SpellText.describe(SpellDB.get_spell(int(ranks[0].get("id", 0))), GameState.level)
+			_show_result("Applied (not saved yet)." + ("" if tip.is_empty() else " Tooltip: " + tip))
+		else:
+			_show_result("!" + "; ".join(warnings))
+		return true
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	for entry: Array in [["Apply Live", "apply"], ["Save", "save"], ["Revert", "revert"], ["New Spell", "new"],
+			["Fill Text", "text"]]:
+		var what: String = entry[1]
+		var button := _button(entry[0], func() -> void:
+			match what:
+				"apply":
+					apply.call()
+				"save":
+					if not text.text.strip_edges().is_empty() and not apply.call():
+						return
+					var error := SpellDesigns.save(_edit_class)
+					if error.is_empty():
+						SpellDesigns.edited.erase(_edit_class)
+						_show_result("Saved to data/designs/%s.json." % _edit_class)
+					else:
+						_show_result("!" + error)
+				"revert":
+					SpellDesigns.edited.erase(_edit_class)
+					var warnings := SpellDB.reload_designs()
+					GameState.spells_changed.emit()
+					fill.call()
+					show_entry.call()
+					_show_result("Back to the saved file." if warnings.is_empty() else "!" + "; ".join(warnings))
+				"new":
+					var design: Dictionary = SpellDesigns.design_of(_edit_class).duplicate(true)
+					var spells: Array = design.get("spells", [])
+					spells.append(_new_spell_group(SpellDesigns.free_spell_id(), _edit_class))
+					design.spells = spells
+					SpellDesigns.edited[_edit_class] = design
+					_edit_entry = "spell:%d" % (spells.size() - 1)
+					_edit_filter = ""
+					search.text = ""
+					fill.call()
+					show_entry.call()
+					_show_result("New spell added; change it, then Apply.")
+				"text":
+					_fill_tooltip_text(text)
+		)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		buttons.add_child(button)
+	content.add_child(buttons)
+
+
+## Fill Text: gives each rank in the editor's text without a `text` of its
+## own the tooltip it shows now (at the player's level), to change from there.
+## Nothing is applied until Apply Live.
+func _fill_tooltip_text(text: TextEdit) -> void:
+	var json := JSON.new()
+	if json.parse(text.text) != OK or not json.data is Dictionary or not (json.data as Dictionary).has("ranks"):
+		_show_result("!Pick a spell (with valid text) first.")
+		return
+	var group: Dictionary = json.data
+	var filled := 0
+	for rank: Variant in group.ranks:
+		if not rank is Dictionary or (rank as Dictionary).has("text"):
+			continue
+		var tip := SpellText.describe(SpellDB.get_spell(int(rank.get("id", 0))), GameState.level)
+		if not tip.is_empty():
+			rank.text = tip
+			filled += 1
+	text.text = JSON.stringify(SpellDesigns.whole(group), "\t", false)
+	if filled == 0:
+		_show_result("Every rank already has its own text.")
+	else:
+		_show_result("Filled %d rank%s' text. Put {amount1}, {duration}... for numbers that follow the spell (docs/spells/FIELDS.md), then Apply Live." % [filled, "" if filled == 1 else "s"])
+
+
+## The spell group ("spell:<n>") or talent tree ("tree:<n>") of a design, or
+## null.
+func _design_entry(design: Dictionary, entry: String) -> Variant:
+	var parts := entry.split(":")
+	if parts.size() != 2:
+		return null
+	var list: Array = design.get("spells" if parts[0] == "spell" else "talents", [])
+	var n := int(parts[1])
+	return list[n] if n >= 0 and n < list.size() else null
+
+
+## A new spell to fill in: one rank of a fire bolt, taught at level 1 for
+## nothing, in the General tab of the spellbook.
+func _new_spell_group(id: int, file: String) -> Dictionary:
+	var rank := { "id": id, "name": "New Spell", "rank": 1, "level": 1, "school": "fire", "damage_class": "magic",
+		"cost": 10, "cast": 1.5, "range": 30, "gcd": 1.5, "speed": 20,
+		"text": "Hurls a bolt of fire at the enemy for 10 to 14 fire damage.",
+		"effects": [{ "type": "school_damage", "value": [10, 14], "target": "enemy" }],
+		"trainer": { "level": 1, "price": 0 }, "book_tab": 0 }
+	if file == "man_at_arms":
+		rank.power = "rage"
+	return { "name": "New Spell", "ranks": [rank] }
+
+
 func _build_item_list(content: VBoxContainer) -> void:
 	if _item_tooltip == null:
 		_item_tooltip = ItemTooltip.new()

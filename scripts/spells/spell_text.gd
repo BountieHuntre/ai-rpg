@@ -12,11 +12,31 @@ const RESISTANCE_SCHOOLS := { 4: "Fire", 16: "Frost", 32: "Shadow", 8: "Nature",
 
 ## The description for a spell, or "" for none. `caster` (a SpellCaster) gives
 ## numbers that depend on the caster's gear, such as Oath of Valor's damage.
+## Whose tooltip is being written (describe's caster), so the numbers count
+## their talents (SpellMods): cast time, duration, range, radius, cost and
+## effect amounts. Null for a spell seen apart from anyone.
+static var _who: Combatant
+
+
 static func describe(spell: Dictionary, level: int, caster: Node = null) -> String:
+	var before := _who
+	if caster is SpellCaster:
+		_who = (caster as SpellCaster)._unit.combatant
+	elif caster is Combatant:
+		_who = caster
+	else:
+		_who = null
+	var text := _describe(spell, level, caster)
+	_who = before
+	return text
+
+
+static func _describe(spell: Dictionary, level: int, caster: Node) -> String:
 	var name := str(spell.get("SpellName", ""))
-	# The game's own classes' spells carry their text (ClassicData.CLASS_FILES).
+	# Text of its own: the game's own classes' spells (ClassicData.CLASS_FILES)
+	# and any spell given `text` in its design, its {placeholders} filled in.
 	if spell.has("Description"):
-		return str(spell.Description)
+		return fill(str(spell.Description), spell, level)
 	var talent := TalentText.describe(spell, level)
 	if not talent.is_empty():
 		return talent
@@ -129,6 +149,85 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 			var where := "%s in %s" % [home.hub_name, home.zone_name] if home else "where you began"
 			return "After a %d sec cast, returns you to %s. Moving cancels it. Can be used once every %d min." % [roundi(SpellDB.cast_time(spell)), where, wait]
 	return _generic(spell, t)
+
+
+## What each placeholder a spell's own text may hold stands for (n is the
+## effect, 1 to 3), for the docs and the spell editor.
+const PLACEHOLDERS := {
+	"amount<n>": "the effect's value at your level: \"40 to 48\", or \"40\" when it doesn't vary",
+	"min<n>": "the effect's least value", "max<n>": "the effect's most value",
+	"total<n>": "a periodic effect's total over the duration (\"90\")",
+	"ticks<n>": "how many times a periodic effect ticks over the duration",
+	"period<n>": "seconds between a periodic effect's ticks", "radius<n>": "the effect's area in yards",
+	"duration": "how long it lasts (\"30 sec\", \"2 min\", \"1 hr\")", "seconds": "how long it lasts, in seconds",
+	"cast": "cast time in seconds", "cooldown": "cooldown (\"6 sec\", \"2 min\")",
+	"range": "range in yards", "min_range": "least range in yards",
+	"cost": "its cost (\"15 rage\", \"8% of base mana\")", "chance": "its proc chance in %",
+	"stacks": "how many times it stacks", "charges": "how many charges it has", "level": "your level",
+	"cost_share<n>": "an energize effect's share (%) of a mana cost given back (`cost_share`)",
+	"trigger<n>:<placeholder>": "a placeholder read from the spell effect n triggers: {trigger1:cost_share1}",
+}
+
+
+## A spell's own text with its {placeholders} (PLACEHOLDERS) filled in from
+## its data at the caster's level. Anything else in braces is left as it is.
+static func fill(text: String, spell: Dictionary, level: int) -> String:
+	if not "{" in text:
+		return text
+	# {trigger1:amount1}: a placeholder of the spell the effect triggers.
+	for n in 3:
+		var prefix := "{trigger%d:" % (n + 1)
+		var trigger := SpellDB.get_spell(int(spell.get("EffectTriggerSpell%d" % (n + 1), 0)))
+		var start := text.find(prefix)
+		while start >= 0:
+			var end := text.find("}", start)
+			if end < 0:
+				break
+			var inner := "{" + text.substr(start + prefix.length(), end - start - prefix.length()) + "}"
+			var filled := fill(inner, trigger, level) if not trigger.is_empty() else inner
+			# Left as written when there's no such trigger or placeholder.
+			var shown := text.substr(start, end - start + 1) if filled == inner else filled
+			text = text.substr(0, start) + shown + text.substr(end + 1)
+			start = text.find(prefix, start + shown.length())
+	var t := _Values.new(spell, level)
+	var values := {
+		"duration": t.duration(), "seconds": _number(t.seconds()), "cast": _number(SpellDB.cast_time(spell, _who)),
+		"cooldown": _Values.time_text(SpellDB.cooldown(spell, _who)), "range": _number(SpellDB.spell_range(spell, _who)),
+		"min_range": _number(SpellDB.min_range(spell)), "chance": str(mini(int(spell.get("ProcChance", 0)), 100)),
+		"stacks": str(int(spell.get("StackAmount", 0))), "charges": str(int(spell.get("ProcCharges", 0))),
+		"level": str(level), "cost": _cost(spell),
+	}
+	for n in 3:
+		var span := SpellDB.effect_span(spell, n, level, _who)
+		values["amount%d" % (n + 1)] = t.amount(n)
+		values["min%d" % (n + 1)] = str(roundi(absf(span.x)))
+		values["max%d" % (n + 1)] = str(roundi(absf(span.y)))
+		values["total%d" % (n + 1)] = t.over_time(n)
+		values["ticks%d" % (n + 1)] = str(floori(t.seconds() / t.period(n) + 0.001))
+		values["period%d" % (n + 1)] = _number(t.period(n))
+		values["radius%d" % (n + 1)] = _number(SpellDB.effect_radius(spell, n, _who))
+		values["cost_share%d" % (n + 1)] = _number(float(spell.get("EffectCostShare%d" % (n + 1), 0)))
+	for key: String in values:
+		text = text.replace("{%s}" % key, str(values[key]))
+	return text
+
+
+## "15 rage", "8% of base mana", "35 mana", or "nothing".
+static func _cost(spell: Dictionary) -> String:
+	var percent := int(spell.get("ManaCostPercentage", 0))
+	if percent > 0:
+		return "%d%% of base mana" % percent
+	var cost := int(spell.get("ManaCost", 0))
+	if _who and cost > 0:
+		cost = roundi(maxf(SpellMods.apply(_who, spell, SpellMods.COST, cost), 0.0))
+	match int(spell.get("PowerType", 0)):
+		1:
+			return "%s rage" % _number(cost / 10.0)
+		2:
+			return "%d focus" % cost
+		3:
+			return "%d energy" % cost
+	return "%d mana" % cost if cost > 0 else "nothing"
 
 
 static func _boon(name: String, t: _Values) -> String:
@@ -525,18 +624,18 @@ class _Values:
 
 	## "40 to 48", or "40" when it doesn't vary.
 	func amount(effect: int) -> String:
-		var span := SpellDB.effect_range(spell, effect, level)
+		var span := SpellDB.effect_span(spell, effect, level, SpellText._who)
 		var low := roundi(absf(span.x))
 		var high := roundi(absf(span.y))
 		return str(low) if high <= low else "%d to %d" % [low, high]
 
 	func low(effect: int) -> float:
-		return absf(SpellDB.effect_range(spell, effect, level).x)
+		return absf(SpellDB.effect_span(spell, effect, level, SpellText._who).x)
 
 	## The total of a periodic effect over its duration: "90", or "84 to 90".
 	func over_time(effect: int) -> String:
 		var ticks := floori(seconds() / period(effect) + 0.001)
-		var span := SpellDB.effect_range(spell, effect, level) * ticks
+		var span := SpellDB.effect_span(spell, effect, level, SpellText._who) * ticks
 		var low_total := roundi(absf(span.x))
 		var high_total := roundi(absf(span.y))
 		return str(low_total) if high_total <= low_total else "%d to %d" % [low_total, high_total]
@@ -549,7 +648,7 @@ class _Values:
 		return str(int(spell.get("EffectMiscValue%d" % (effect + 1), 0)))
 
 	func seconds() -> float:
-		return SpellDB.duration(spell)
+		return SpellDB.duration(spell, SpellText._who)
 
 	## Tick time of a periodic effect, in seconds.
 	func period(effect: int) -> float:
@@ -559,11 +658,15 @@ class _Values:
 		var time := seconds()
 		if time < 0.0:
 			return "as long as it lasts"
+		return time_text(time)
+
+	## "30 sec", "2 min", "1 hr".
+	static func time_text(time: float) -> String:
 		if time >= 3600.0:
 			return "%s hr" % _number(time / 3600.0)
 		if time >= 60.0:
 			return "%s min" % _number(time / 60.0)
 		return "%s sec" % _number(time)
 
-	func _number(value: float) -> String:
+	static func _number(value: float) -> String:
 		return str(int(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value

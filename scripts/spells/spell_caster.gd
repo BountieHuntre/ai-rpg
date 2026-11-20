@@ -581,7 +581,7 @@ func _templar_spell(spell: Dictionary, target: Combatant) -> bool:
 			_procs.hallow_ground(spell, _unit.global_position)
 			Sfx.play_at("buff", _unit.global_position)
 		"Verdict":
-			_judgement(target)
+			_judgement(target, spell)
 		"Stunning Gavel":
 			_hammer_of_justice(spell, target)
 		"Last Rite":
@@ -799,7 +799,7 @@ func _judgeable_seal() -> Dictionary:
 ## Unleashes the active seal's judgement on the target. Unlike classic, the
 ## seal stays up afterwards, and Verdict can't be cast without one.
 ## Judgements ignore the hit roll (TRIGGERED_IGNORE_HIT_CALCULATION).
-func _judgement(target: Combatant) -> void:
+func _judgement(target: Combatant, verdict: Dictionary) -> void:
 	var me := _unit.combatant
 	var seal := _judgeable_seal()
 	if seal.is_empty():
@@ -822,6 +822,9 @@ func _judgement(target: Combatant) -> void:
 	else:
 		# Judgement of the Crusader and other judgement debuffs: one per Paladin.
 		_replace_own(judgement, target, func(spell: Dictionary) -> bool: return str(spell.SpellName).begins_with("Verdict of"))
+	# Verdict landing is a harmful spell done, for talents that proc on it
+	# (CMaNGOS: the Judgement spell's hit).
+	me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, Combatant.PROC_EX_NORMAL, target, verdict, 0)
 
 
 ## A magic stun: resisted on a failed spell hit roll.

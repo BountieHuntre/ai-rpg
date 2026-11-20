@@ -38,6 +38,9 @@ signal cast_interrupted
 ## unit's side) and procEx (how it went: PROC_EX_*). `other` is the other
 ## unit, `spell` the ability or spell ({} for a plain swing).
 signal proc_event(flags: int, ex: int, other: Combatant, spell: Dictionary, amount: int)
+## Mana or rage given by a spell or talent (power: 0 mana, 1 rage; amount in
+## whole points), with the spell's name, for the HUD's "+12 Mana".
+signal energized(amount: int, power: int, source: String)
 ## A shield soaked some damage (Runic Retaliation strikes back with it).
 signal absorbed(amount: int, source: Combatant)
 
@@ -482,6 +485,10 @@ func saved_auras() -> Array:
 	for aura in auras:
 		if int(aura.spell.get("AuraInterruptFlags", 0)) & SpellDB.AURA_INTERRUPT_NOT_SEATED != 0:
 			continue
+		# Passive talents (and pets' passives) are put back from the talents
+		# themselves; saved, they'd come back as plain buffs that never proc.
+		if aura.get("talent", false):
+			continue
 		var caster: Combatant = aura.caster if is_instance_valid(aura.caster) else null
 		var caster_name: String = aura.get("caster_name", "")
 		if caster_name == "" and caster != self:
@@ -503,11 +510,33 @@ func restore_saved_auras(saved: Array) -> void:
 		var spell := SpellDB.get_spell(int(entry.id))
 		if spell.is_empty():
 			continue
+		# Older saves kept passive talents: Talents.sync_passives puts them back.
+		if SpellDB.is_passive(spell) and TalentText.is_talent_rank(int(entry.id)):
+			continue
 		var caster_name := str(entry.get("caster", ""))
 		var caster := _player_unit_named(caster_name) if caster_name != "" else self
 		restore_aura(spell, caster if caster else self, float(entry.remaining), float(entry.duration), entry.amounts)
 		if caster == null:
 			auras[-1].caster_name = caster_name
+
+
+## After the spell data is read again (the spell editor's Apply Live): every
+## unit's auras take their spell's new data, passive talents their new
+## amounts, so a changed talent works at once.
+static func refresh_aura_spells(tree: SceneTree) -> void:
+	for node in tree.get_nodes_in_group("combatants"):
+		var unit := node as Combatant
+		for aura in unit.auras:
+			var spell := SpellDB.get_spell(int(aura.spell.get("Id", 0)))
+			if spell.is_empty():
+				continue
+			aura.spell = spell
+			# A character's talents (a pet's passives scale with its owner's
+			# talents, so they keep theirs).
+			if aura.get("talent", false) and unit.body is PlayerUnit:
+				for i in 3:
+					aura.amounts[i] = SpellDB.effect_value(spell, i, unit.level)
+		unit.auras_changed.emit()
 
 
 ## Once every unit is in the world: auras restored before their caster was

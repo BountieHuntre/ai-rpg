@@ -1,0 +1,7445 @@
+{
+	"class": 10,
+	"trainer": "spellsword",
+	"spells": [
+		{
+			"name": "Parry",
+			"ranks": [
+				{
+					"id": 3127,
+					"name": "Parry",
+					"rank_text": "Passive",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"icon_id": 558,
+					"prevention": 1,
+					"attributes": [
+						"ability",
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"axe",
+						"axe_2h",
+						"mace",
+						"mace_2h",
+						"polearm",
+						"sword",
+						"sword_2h",
+						"staff",
+						"fist",
+						"dagger",
+						"spear"
+					],
+					"effects": [
+						{
+							"type": "parry",
+							"value": [
+								0,
+								6
+							],
+							"dice": 0,
+							"multiple_value": 1,
+							"misc": 90
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Arcane Strike",
+			"ranks": [
+				{
+					"id": 900001,
+					"name": "Arcane Strike",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 6 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 6,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 1,
+						"price": 10
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900002,
+					"name": "Arcane Strike",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 8,
+					"base_level": 8,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 14 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 14,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 8,
+						"price": 100
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900003,
+					"name": "Arcane Strike",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 16,
+					"base_level": 16,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 26 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 26,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 16,
+						"price": 3000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900004,
+					"name": "Arcane Strike",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 24,
+					"base_level": 24,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 40 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 40,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 24,
+						"price": 5000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900005,
+					"name": "Arcane Strike",
+					"rank": 5,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 32,
+					"base_level": 32,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 57 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 57,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 32,
+						"price": 12000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900006,
+					"name": "Arcane Strike",
+					"rank": 6,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 77 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 77,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 40,
+						"price": 20000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900007,
+					"name": "Arcane Strike",
+					"rank": 7,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 48,
+					"base_level": 48,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 99 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 99,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 48,
+						"price": 26000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900008,
+					"name": "Arcane Strike",
+					"rank": 8,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 56,
+					"base_level": 56,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A cut charged with arcane force: weapon damage plus 124 arcane damage, and 1 Resonance.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 124,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 56,
+						"price": 42000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Flame Edge",
+			"ranks": [
+				{
+					"id": 900009,
+					"name": "Flame Edge",
+					"rank": 1,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 3 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 1,
+						"price": 10
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900010,
+					"name": "Flame Edge",
+					"rank": 2,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 12,
+					"base_level": 12,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 7 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 7,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 12,
+						"price": 1000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900011,
+					"name": "Flame Edge",
+					"rank": 3,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 22,
+					"base_level": 22,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 12 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 22,
+						"price": 4000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900012,
+					"name": "Flame Edge",
+					"rank": 4,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 32,
+					"base_level": 32,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 18 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 18,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 32,
+						"price": 12000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900013,
+					"name": "Flame Edge",
+					"rank": 5,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 42,
+					"base_level": 42,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 25 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 25,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 42,
+						"price": 21000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900014,
+					"name": "Flame Edge",
+					"rank": 6,
+					"school": "fire",
+					"damage_class": "magic",
+					"level": 52,
+					"base_level": 52,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe flame on your blade for 60 minutes: your melee hits deal 33 extra fire damage. Release: Flame Burst.",
+					"icon": "flame_orange",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 33,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 52,
+						"price": 46000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Spark",
+			"ranks": [
+				{
+					"id": 900015,
+					"name": "Spark",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 4,
+					"base_level": 4,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 14 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 14,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 4,
+						"price": 100
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900016,
+					"name": "Spark",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 14,
+					"base_level": 14,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 32 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 32,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 14,
+						"price": 2000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900017,
+					"name": "Spark",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 24,
+					"base_level": 24,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 55 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 55,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 24,
+						"price": 5000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900018,
+					"name": "Spark",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 34,
+					"base_level": 34,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 84 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 84,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 34,
+						"price": 13000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900019,
+					"name": "Spark",
+					"rank": 5,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 44,
+					"base_level": 44,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 118 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 118,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 44,
+						"price": 22000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900020,
+					"name": "Spark",
+					"rank": 6,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 54,
+					"base_level": 54,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4,
+					"prevention": 1,
+					"cast": 1.5,
+					"range": 20,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A snapping bolt of arcane force for 158 damage. Usable to pull, or on an enemy that won't come to you.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 158,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 54,
+						"price": 40000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Release",
+			"ranks": [
+				{
+					"id": 900021,
+					"name": "Release",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 6,
+					"base_level": 6,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 20,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 8 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 11 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 9 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 20 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 8,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 11,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 9,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 6,
+						"price": 100
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900022,
+					"name": "Release",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 16,
+					"base_level": 16,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 42,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 17 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 23 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 19 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 42 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 17,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 23,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 19,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 16,
+						"price": 3000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900023,
+					"name": "Release",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 26,
+					"base_level": 26,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 70,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 28 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 38 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 31 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 70 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 28,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 38,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 31,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 26,
+						"price": 6000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900024,
+					"name": "Release",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 36,
+					"base_level": 36,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 102,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 41 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 56 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 46 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 102 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 41,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 56,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 46,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 36,
+						"price": 14000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900025,
+					"name": "Release",
+					"rank": 5,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 46,
+					"base_level": 46,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 140,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 56 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 76 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 63 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 140 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 56,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 76,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 63,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 46,
+						"price": 24000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900026,
+					"name": "Release",
+					"rank": 6,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 56,
+					"base_level": 56,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8,
+					"extra_value": 182,
+					"prevention": 1,
+					"range": 20,
+					"gcd": 1.5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Let the blade's power out. With Flame Edge, 73 fire damage per Resonance to every enemy within 8 yards; with Frost Edge, 99 frost damage per Resonance to an enemy up to 20 yards away and a 1 second root per Resonance; with Storm Edge, 82 nature damage per Resonance to the target and up to 3 enemies near it, interrupting spells; with Warding Edge, a shield absorbing 182 damage per Resonance and high threat on enemies within 10 yards.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 73,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 99,
+							"target": "self"
+						},
+						{
+							"type": "dummy",
+							"value": 82,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 56,
+						"price": 42000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Bladesong Form",
+			"ranks": [
+				{
+					"id": 900027,
+					"name": "Bladesong Form",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 8,
+					"base_level": 8,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 16,
+					"prevention": 1,
+					"duration": "until_cancelled",
+					"cooldown": 1.5,
+					"attributes": [
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A form for fighting: you deal 10% more damage, and critical strikes give an extra Resonance.",
+					"icon": "stance_fury",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "shapeshift",
+							"value": 0,
+							"form": "bladesong",
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 8,
+						"price": 100
+					},
+					"book_tab": 0,
+					"link": 900076
+				}
+			]
+		},
+		{
+			"name": "Wardweave Form",
+			"ranks": [
+				{
+					"id": 900028,
+					"name": "Wardweave Form",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 32,
+					"prevention": 1,
+					"duration": "until_cancelled",
+					"cooldown": 1.5,
+					"attributes": [
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A form for holding the line: each point of Intellect gives 2 armor, you cause 45% more threat, take 10% less damage, deal 10% less, and your absorb shields are 20% stronger. Learned from a class quest at level 10.",
+					"icon": "stance_bastion",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "shapeshift",
+							"value": 0,
+							"form": "wardweave",
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 10,
+						"price": 0,
+						"quest": true
+					},
+					"book_tab": 1,
+					"link": 900077
+				}
+			]
+		},
+		{
+			"name": "Frost Edge",
+			"ranks": [
+				{
+					"id": 900029,
+					"name": "Frost Edge",
+					"rank": 1,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 5 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 10,
+						"price": 300
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900030,
+					"name": "Frost Edge",
+					"rank": 2,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 10 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 4000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900031,
+					"name": "Frost Edge",
+					"rank": 3,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 16 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 16,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 30,
+						"price": 11000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900032,
+					"name": "Frost Edge",
+					"rank": 4,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 23 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 23,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 40,
+						"price": 20000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900033,
+					"name": "Frost Edge",
+					"rank": 5,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 50,
+					"base_level": 50,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 31 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 31,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 50,
+						"price": 28000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900034,
+					"name": "Frost Edge",
+					"rank": 6,
+					"school": "frost",
+					"damage_class": "magic",
+					"level": 60,
+					"base_level": 60,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 64,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe frost on your blade for 60 minutes: your melee hits deal 40 extra frost damage and slow the target's movement by 30% for 4 seconds. Release: Rime Lance.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 40,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 60,
+						"price": 46000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Runic Ward",
+			"ranks": [
+				{
+					"id": 900035,
+					"name": "Runic Ward",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 12,
+					"base_level": 12,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 128,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A shield of runes absorbs the next 90 damage, for up to 30 seconds.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 90,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 12,
+						"price": 1000
+					},
+					"book_tab": 1
+				},
+				{
+					"id": 900036,
+					"name": "Runic Ward",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 22,
+					"base_level": 22,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 128,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A shield of runes absorbs the next 180 damage, for up to 30 seconds.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 180,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 22,
+						"price": 4000
+					},
+					"book_tab": 1
+				},
+				{
+					"id": 900037,
+					"name": "Runic Ward",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 32,
+					"base_level": 32,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 128,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A shield of runes absorbs the next 290 damage, for up to 30 seconds.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 290,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 32,
+						"price": 12000
+					},
+					"book_tab": 1
+				},
+				{
+					"id": 900038,
+					"name": "Runic Ward",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 42,
+					"base_level": 42,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 128,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A shield of runes absorbs the next 420 damage, for up to 30 seconds.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 420,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 42,
+						"price": 21000
+					},
+					"book_tab": 1
+				},
+				{
+					"id": 900039,
+					"name": "Runic Ward",
+					"rank": 5,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 52,
+					"base_level": 52,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 128,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A shield of runes absorbs the next 570 damage, for up to 30 seconds.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 570,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 52,
+						"price": 46000
+					},
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Phase Step",
+			"ranks": [
+				{
+					"id": 900040,
+					"name": "Phase Step",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 14,
+					"base_level": 14,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 256,
+					"prevention": 1,
+					"duration": 5,
+					"range": 20,
+					"min_range": 8,
+					"cooldown": 20,
+					"gcd": 1.5,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Step through the space between, appearing beside your target. Your next melee attack within 5 seconds gives 1 more Resonance.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 0,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 14,
+						"price": 2000
+					},
+					"book_tab": -1
+				}
+			]
+		},
+		{
+			"name": "Severing Sigil",
+			"ranks": [
+				{
+					"id": 900041,
+					"name": "Severing Sigil",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 16,
+					"base_level": 16,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 512,
+					"prevention": 1,
+					"duration": 4,
+					"range": 5,
+					"cooldown": 12,
+					"gcd": 1.5,
+					"cost_percent": 6,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Cut the threads of a spell: interrupts spellcasting and locks out that school for 4 seconds.",
+					"icon": "hex",
+					"effects": [
+						{
+							"type": "interrupt_cast",
+							"value": 0,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 16,
+						"price": 3000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Storm Edge",
+			"ranks": [
+				{
+					"id": 900042,
+					"name": "Storm Edge",
+					"rank": 1,
+					"school": "nature",
+					"damage_class": "magic",
+					"level": 18,
+					"base_level": 18,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1024,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe storm on your blade for 60 minutes: your melee hits deal 7 extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 7,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 18,
+						"price": 3500
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900043,
+					"name": "Storm Edge",
+					"rank": 2,
+					"school": "nature",
+					"damage_class": "magic",
+					"level": 28,
+					"base_level": 28,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1024,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe storm on your blade for 60 minutes: your melee hits deal 13 extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 13,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 28,
+						"price": 9000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900044,
+					"name": "Storm Edge",
+					"rank": 3,
+					"school": "nature",
+					"damage_class": "magic",
+					"level": 38,
+					"base_level": 38,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1024,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe storm on your blade for 60 minutes: your melee hits deal 20 extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 38,
+						"price": 16000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900045,
+					"name": "Storm Edge",
+					"rank": 4,
+					"school": "nature",
+					"damage_class": "magic",
+					"level": 48,
+					"base_level": 48,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1024,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe storm on your blade for 60 minutes: your melee hits deal 28 extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 28,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 48,
+						"price": 26000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900046,
+					"name": "Storm Edge",
+					"rank": 5,
+					"school": "nature",
+					"damage_class": "magic",
+					"level": 58,
+					"base_level": 58,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1024,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe storm on your blade for 60 minutes: your melee hits deal 37 extra nature damage and have a 20% chance to arc to a second enemy. Release: Thunderclap.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 37,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 58,
+						"price": 44000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Mark of Challenge",
+			"ranks": [
+				{
+					"id": 900047,
+					"name": "Mark of Challenge",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2048,
+					"prevention": 1,
+					"duration": 3,
+					"range": 20,
+					"cooldown": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Brand an enemy with a sigil that demands your attention: it attacks you for 3 seconds and you become its highest threat.",
+					"icon": "taunt",
+					"effects": [
+						{
+							"type": "attack_me",
+							"value": 0,
+							"target": "enemy"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "taunt",
+							"value": 0,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 4000
+					},
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Mirror Guard",
+			"ranks": [
+				{
+					"id": 900048,
+					"name": "Mirror Guard",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 22,
+					"base_level": 22,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4096,
+					"prevention": 1,
+					"duration": 5,
+					"cooldown": 30,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "For 5 seconds your chance to parry is increased by 50%, and the next harmful spell cast on you is turned back on its caster.",
+					"icon": "presence_focused",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 50,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 0,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 22,
+						"price": 4000
+					},
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Arc Cleave",
+			"ranks": [
+				{
+					"id": 900049,
+					"name": "Arc Cleave",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 24,
+					"base_level": 24,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8192,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 8,
+					"gcd": 1.5,
+					"cost_percent": 12,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A wide arc that strikes up to 3 enemies in front of you for weapon damage plus 18 of your Edge's school, giving 1 Resonance for each enemy hit.",
+					"icon": "cyclone",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 18,
+							"target": "enemy",
+							"radius": 8
+						}
+					],
+					"trainer": {
+						"level": 24,
+						"price": 5000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900050,
+					"name": "Arc Cleave",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 36,
+					"base_level": 36,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8192,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 8,
+					"gcd": 1.5,
+					"cost_percent": 12,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A wide arc that strikes up to 3 enemies in front of you for weapon damage plus 38 of your Edge's school, giving 1 Resonance for each enemy hit.",
+					"icon": "cyclone",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 38,
+							"target": "enemy",
+							"radius": 8
+						}
+					],
+					"trainer": {
+						"level": 36,
+						"price": 14000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900051,
+					"name": "Arc Cleave",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 48,
+					"base_level": 48,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8192,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 8,
+					"gcd": 1.5,
+					"cost_percent": 12,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A wide arc that strikes up to 3 enemies in front of you for weapon damage plus 62 of your Edge's school, giving 1 Resonance for each enemy hit.",
+					"icon": "cyclone",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 62,
+							"target": "enemy",
+							"radius": 8
+						}
+					],
+					"trainer": {
+						"level": 48,
+						"price": 26000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900052,
+					"name": "Arc Cleave",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 60,
+					"base_level": 60,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8192,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 8,
+					"gcd": 1.5,
+					"cost_percent": 12,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "A wide arc that strikes up to 3 enemies in front of you for weapon damage plus 90 of your Edge's school, giving 1 Resonance for each enemy hit.",
+					"icon": "cyclone",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 90,
+							"target": "enemy",
+							"radius": 8
+						}
+					],
+					"trainer": {
+						"level": 60,
+						"price": 46000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Sap Edge",
+			"ranks": [
+				{
+					"id": 900053,
+					"name": "Sap Edge",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 26,
+					"base_level": 26,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 16384,
+					"prevention": 1,
+					"duration": 15,
+					"cooldown": 120,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "For 15 seconds your melee hits restore mana equal to 20% of the damage they deal.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 26,
+						"price": 6000
+					},
+					"book_tab": -1
+				}
+			]
+		},
+		{
+			"name": "Warding Edge",
+			"ranks": [
+				{
+					"id": 900054,
+					"name": "Warding Edge",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 28,
+					"base_level": 28,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 32768,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe a ward on your blade for 60 minutes: your melee hits give you a shield absorbing 12 damage, stacking up to 5 times, and cause 20% more threat. Release: Bulwark of Runes.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 28,
+						"price": 9000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900055,
+					"name": "Warding Edge",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 38,
+					"base_level": 38,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 32768,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe a ward on your blade for 60 minutes: your melee hits give you a shield absorbing 20 damage, stacking up to 5 times, and cause 20% more threat. Release: Bulwark of Runes.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 38,
+						"price": 16000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900056,
+					"name": "Warding Edge",
+					"rank": 3,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 48,
+					"base_level": 48,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 32768,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe a ward on your blade for 60 minutes: your melee hits give you a shield absorbing 30 damage, stacking up to 5 times, and cause 20% more threat. Release: Bulwark of Runes.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 48,
+						"price": 26000
+					},
+					"book_tab": 0
+				},
+				{
+					"id": 900057,
+					"name": "Warding Edge",
+					"rank": 4,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 58,
+					"base_level": 58,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 32768,
+					"prevention": 1,
+					"duration": 3600,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Inscribe a ward on your blade for 60 minutes: your melee hits give you a shield absorbing 42 damage, stacking up to 5 times, and cause 20% more threat. Release: Bulwark of Runes.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 42,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 58,
+						"price": 44000
+					},
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Binding Glyph",
+			"ranks": [
+				{
+					"id": 900058,
+					"name": "Binding Glyph",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 65536,
+					"prevention": 1,
+					"cast": 1,
+					"duration": 20,
+					"range": 30,
+					"cooldown": 30,
+					"gcd": 1.5,
+					"cost_percent": 12,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Draw a glyph on the ground for 20 seconds. The first 3 enemies to cross it are rooted for 4 seconds.",
+					"icon": "ground",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 3,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 30,
+						"price": 11000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Hurl Blade",
+			"ranks": [
+				{
+					"id": 900059,
+					"name": "Hurl Blade",
+					"damage_class": "magic",
+					"level": 32,
+					"base_level": 32,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 131072,
+					"prevention": 1,
+					"range": 25,
+					"cooldown": 10,
+					"gcd": 1.5,
+					"cost_percent": 8,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Throw a spectral copy of your sword for weapon damage, carrying your Edge's effect. It causes extra threat, for pulling from range.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "weapon_damage_noschool",
+							"value": 0,
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 32,
+						"price": 12000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Challenging Glyph",
+			"ranks": [
+				{
+					"id": 900060,
+					"name": "Challenging Glyph",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 36,
+					"base_level": 36,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 262144,
+					"prevention": 1,
+					"duration": 6,
+					"cooldown": 600,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Every enemy within 10 yards attacks you for 6 seconds.",
+					"icon": "shout_dark",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "taunt",
+							"value": 0,
+							"target": "self",
+							"radius": 10
+						}
+					],
+					"trainer": {
+						"level": 36,
+						"price": 14000
+					},
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Arcane Surge",
+			"ranks": [
+				{
+					"id": 900061,
+					"name": "Arcane Surge",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 38,
+					"base_level": 38,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 524288,
+					"prevention": 1,
+					"duration": 15,
+					"cooldown": 180,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "For 15 seconds your melee and spell damage are increased by 20%, and your Edges cost no mana.",
+					"icon": "flame_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 20,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 38,
+						"price": 16000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Spell Shatter",
+			"ranks": [
+				{
+					"id": 900062,
+					"name": "Spell Shatter",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1048576,
+					"prevention": 1,
+					"range": 5,
+					"gcd": 1.5,
+					"cost_percent": 10,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Strike away an enemy's magic: removes one magic effect from it.",
+					"icon": "cleanse",
+					"effects": [
+						{
+							"type": "dispel",
+							"value": 1,
+							"dispel": "magic",
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 40,
+						"price": 20000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Last Sigil",
+			"ranks": [
+				{
+					"id": 900063,
+					"name": "Last Sigil",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 44,
+					"base_level": 44,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 2097152,
+					"prevention": 1,
+					"duration": 8,
+					"cooldown": 300,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Carve a final sigil on yourself: damage you take is reduced by 50% for 8 seconds.",
+					"icon": "ward_dread",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_taken",
+							"value": -50,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 44,
+						"price": 22000
+					},
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Glyph Storm",
+			"ranks": [
+				{
+					"id": 900064,
+					"name": "Glyph Storm",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 52,
+					"base_level": 52,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4194304,
+					"prevention": 1,
+					"duration": 6,
+					"cooldown": 60,
+					"gcd": 1.5,
+					"cost_percent": 25,
+					"attributes_ex": [
+						"0x4"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Sigils whirl around you, dealing 52 arcane damage to every enemy within 10 yards each second. In Wardweave Form it causes three times the threat.",
+					"icon": "stars",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 52,
+							"target": "self",
+							"radius": 10
+						}
+					],
+					"trainer": {
+						"level": 52,
+						"price": 46000
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 900065,
+					"name": "Glyph Storm",
+					"rank": 2,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 60,
+					"base_level": 60,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 4194304,
+					"prevention": 1,
+					"duration": 6,
+					"cooldown": 60,
+					"gcd": 1.5,
+					"cost_percent": 25,
+					"attributes_ex": [
+						"0x4"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Sigils whirl around you, dealing 64 arcane damage to every enemy within 10 yards each second. In Wardweave Form it causes three times the threat.",
+					"icon": "stars",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 64,
+							"target": "self",
+							"radius": 10
+						}
+					],
+					"trainer": {
+						"level": 60,
+						"price": 46000
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Bladesong",
+			"ranks": [
+				{
+					"id": 900076,
+					"name": "Bladesong",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"duration": "until_cancelled",
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Bladesong Form: 10% more damage.",
+					"icon": "stance_fury",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 10,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Wardweave",
+			"ranks": [
+				{
+					"id": 900077,
+					"name": "Wardweave",
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"duration": "until_cancelled",
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form: more threat, less damage taken and dealt.",
+					"icon": "stance_bastion",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "threat",
+							"value": 45,
+							"misc": 127,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_taken",
+							"value": -10,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": -10,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Mail",
+			"ranks": [
+				{
+					"id": 900078,
+					"name": "Mail",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "armor",
+					"item_types": [
+						"mail"
+					],
+					"text": "Lets you wear mail armor.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "proficiency",
+							"value": 0,
+							"dice": 0
+						}
+					],
+					"trainer": {
+						"level": 40,
+						"price": 2000
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Keen Edges",
+			"ranks": [
+				{
+					"id": 900079,
+					"name": "Keen Edges",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike in melee is increased by 1%.",
+					"icon": "sword_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_percent",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900080,
+					"name": "Keen Edges",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike in melee is increased by 2%.",
+					"icon": "sword_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_percent",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900081,
+					"name": "Keen Edges",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike in melee is increased by 3%.",
+					"icon": "sword_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_percent",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900082,
+					"name": "Keen Edges",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike in melee is increased by 4%.",
+					"icon": "sword_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_percent",
+							"value": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900083,
+					"name": "Keen Edges",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike in melee is increased by 5%.",
+					"icon": "sword_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_percent",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Honed Sigils",
+			"ranks": [
+				{
+					"id": 900084,
+					"name": "Honed Sigils",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Edges deal 4% more damage.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900085,
+					"name": "Honed Sigils",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Edges deal 8% more damage.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900086,
+					"name": "Honed Sigils",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Edges deal 12% more damage.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900087,
+					"name": "Honed Sigils",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Edges deal 16% more damage.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 16,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900088,
+					"name": "Honed Sigils",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Edges deal 20% more damage.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Quick Draw",
+			"ranks": [
+				{
+					"id": 900089,
+					"name": "Quick Draw",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Arcane Strike's cooldown is 0.5 seconds shorter.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -500,
+							"modifies": "cooldown",
+							"affects": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900090,
+					"name": "Quick Draw",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Arcane Strike's cooldown is 1 seconds shorter.",
+					"icon": "strike",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -1000,
+							"modifies": "cooldown",
+							"affects": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Resonant Steel",
+			"ranks": [
+				{
+					"id": 900091,
+					"name": "Resonant Steel",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your melee hits have a 10% chance to give an extra Resonance.",
+					"icon": "orb",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900092,
+					"name": "Resonant Steel",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your melee hits have a 20% chance to give an extra Resonance.",
+					"icon": "orb",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900093,
+					"name": "Resonant Steel",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your melee hits have a 30% chance to give an extra Resonance.",
+					"icon": "orb",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Bladesong Cadence",
+			"ranks": [
+				{
+					"id": 900094,
+					"name": "Bladesong Cadence",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"bladesong"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Bladesong Form you attack 3% faster.",
+					"icon": "stance_fury",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900095,
+					"name": "Bladesong Cadence",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"bladesong"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Bladesong Form you attack 6% faster.",
+					"icon": "stance_fury",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 6,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Searing Edge",
+			"ranks": [
+				{
+					"id": 900096,
+					"name": "Searing Edge",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Flame Edge also burns the target for 10% of its damage over 4 seconds.",
+					"icon": "burn",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900097,
+					"name": "Searing Edge",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Flame Edge also burns the target for 20% of its damage over 4 seconds.",
+					"icon": "burn",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900098,
+					"name": "Searing Edge",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Flame Edge also burns the target for 30% of its damage over 4 seconds.",
+					"icon": "burn",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Sigil Flurry",
+			"ranks": [
+				{
+					"id": 900099,
+					"name": "Sigil Flurry",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 8388608,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 20,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Strike (15% of base mana, 20 sec): three quick cuts at 60% weapon damage, each carrying your Edge and giving Resonance.",
+					"icon": "dual",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 60,
+							"target": "enemy"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Biting Frost",
+			"ranks": [
+				{
+					"id": 900100,
+					"name": "Biting Frost",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Frost Edge slows by 10% more.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900101,
+					"name": "Biting Frost",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Frost Edge slows by 20% more.",
+					"icon": "frost",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Blade Mastery",
+			"ranks": [
+				{
+					"id": 900102,
+					"name": "Blade Mastery",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"sword",
+						"sword_2h"
+					],
+					"text": "You deal 2% more damage with swords.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 2,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900103,
+					"name": "Blade Mastery",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"sword",
+						"sword_2h"
+					],
+					"text": "You deal 4% more damage with swords.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 4,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900104,
+					"name": "Blade Mastery",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"sword",
+						"sword_2h"
+					],
+					"text": "You deal 6% more damage with swords.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 6,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900105,
+					"name": "Blade Mastery",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"sword",
+						"sword_2h"
+					],
+					"text": "You deal 8% more damage with swords.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 8,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900106,
+					"name": "Blade Mastery",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "weapon",
+					"item_types": [
+						"sword",
+						"sword_2h"
+					],
+					"text": "You deal 10% more damage with swords.",
+					"icon": "sword_uncommon",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 10,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Overflow",
+			"ranks": [
+				{
+					"id": 900107,
+					"name": "Overflow",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Resonance you gain beyond 5 restores 1% of your mana instead.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900108,
+					"name": "Overflow",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Resonance you gain beyond 5 restores 2% of your mana instead.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900109,
+					"name": "Overflow",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Resonance you gain beyond 5 restores 3% of your mana instead.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Twin Edge",
+			"ranks": [
+				{
+					"id": 900110,
+					"name": "Twin Edge",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You can keep two different Edges on your blade. Each deals 60% of its damage; Release uses the one inscribed last.",
+					"icon": "flame_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Stormcaller",
+			"ranks": [
+				{
+					"id": 900111,
+					"name": "Stormcaller",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Storm Edge arcs 10% more often.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900112,
+					"name": "Stormcaller",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Storm Edge arcs 20% more often.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900113,
+					"name": "Stormcaller",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Storm Edge arcs 30% more often.",
+					"icon": "bolt_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Duelist's Footing",
+			"ranks": [
+				{
+					"id": 900114,
+					"name": "Duelist's Footing",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Phase Step's cooldown is 5 seconds shorter.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -5000,
+							"modifies": "cooldown",
+							"affects": 256,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900115,
+					"name": "Duelist's Footing",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Phase Step's cooldown is 10 seconds shorter.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -10000,
+							"modifies": "cooldown",
+							"affects": 256,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Spellsteel Fury",
+			"ranks": [
+				{
+					"id": 900116,
+					"name": "Spellsteel Fury",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Critical strikes with your Edges and Releases deal 6% more damage.",
+					"icon": "strike_red",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 6,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900117,
+					"name": "Spellsteel Fury",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Critical strikes with your Edges and Releases deal 12% more damage.",
+					"icon": "strike_red",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900118,
+					"name": "Spellsteel Fury",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Critical strikes with your Edges and Releases deal 18% more damage.",
+					"icon": "strike_red",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 18,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900119,
+					"name": "Spellsteel Fury",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Critical strikes with your Edges and Releases deal 24% more damage.",
+					"icon": "strike_red",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 24,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900120,
+					"name": "Spellsteel Fury",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Critical strikes with your Edges and Releases deal 30% more damage.",
+					"icon": "strike_red",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Momentum",
+			"ranks": [
+				{
+					"id": 900121,
+					"name": "Momentum",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Killing an enemy gives 1 Resonance.",
+					"icon": "charge",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				},
+				{
+					"id": 900122,
+					"name": "Momentum",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Killing an enemy gives 2 Resonance.",
+					"icon": "charge",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Thousand Cuts",
+			"ranks": [
+				{
+					"id": 900123,
+					"name": "Thousand Cuts",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 268435456,
+					"prevention": 1,
+					"duration": 6,
+					"cooldown": 60,
+					"gcd": 1.5,
+					"cost_percent": 25,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Strike (25% of base mana, 1 min): for 6 seconds you whirl, striking every enemy within 8 yards each second for weapon damage and your Edge, moving at half speed.",
+					"icon": "cyclone",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 100,
+							"target": "self",
+							"radius": 8
+						}
+					],
+					"book_tab": 0
+				}
+			]
+		},
+		{
+			"name": "Woven Mail",
+			"ranks": [
+				{
+					"id": 900124,
+					"name": "Woven Mail",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your armor is increased by 2%.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 2,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900125,
+					"name": "Woven Mail",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your armor is increased by 4%.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 4,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900126,
+					"name": "Woven Mail",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your armor is increased by 6%.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 6,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900127,
+					"name": "Woven Mail",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your armor is increased by 8%.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 8,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900128,
+					"name": "Woven Mail",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your armor is increased by 10%.",
+					"icon": "chest_mail_common",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 10,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Steady Mind",
+			"ranks": [
+				{
+					"id": 900129,
+					"name": "Steady Mind",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form gives 10% more armor from Intellect.",
+					"icon": "mind_calm",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900130,
+					"name": "Steady Mind",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form gives 20% more armor from Intellect.",
+					"icon": "mind_calm",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900131,
+					"name": "Steady Mind",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form gives 30% more armor from Intellect.",
+					"icon": "mind_calm",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900132,
+					"name": "Steady Mind",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form gives 40% more armor from Intellect.",
+					"icon": "mind_calm",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 40,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900133,
+					"name": "Steady Mind",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Wardweave Form gives 50% more armor from Intellect.",
+					"icon": "mind_calm",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 50,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Parrying Sigils",
+			"ranks": [
+				{
+					"id": 900134,
+					"name": "Parrying Sigils",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to parry is increased by 1%.",
+					"icon": "parry",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900135,
+					"name": "Parrying Sigils",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to parry is increased by 2%.",
+					"icon": "parry",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900136,
+					"name": "Parrying Sigils",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to parry is increased by 3%.",
+					"icon": "parry",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900137,
+					"name": "Parrying Sigils",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to parry is increased by 4%.",
+					"icon": "parry",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900138,
+					"name": "Parrying Sigils",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to parry is increased by 5%.",
+					"icon": "parry",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "parry_percent",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Thick Wards",
+			"ranks": [
+				{
+					"id": 900139,
+					"name": "Thick Wards",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Runic Ward absorbs 10% more damage.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 10,
+							"modifies": "all_effects",
+							"affects": 128,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900140,
+					"name": "Thick Wards",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Runic Ward absorbs 20% more damage.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 20,
+							"modifies": "all_effects",
+							"affects": 128,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900141,
+					"name": "Thick Wards",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Runic Ward absorbs 30% more damage.",
+					"icon": "ward",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 30,
+							"modifies": "all_effects",
+							"affects": 128,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Commanding Glyphs",
+			"ranks": [
+				{
+					"id": 900142,
+					"name": "Commanding Glyphs",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Mark of Challenge's cooldown is 2 seconds shorter.",
+					"icon": "taunt",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -2000,
+							"modifies": "cooldown",
+							"affects": 2048,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900143,
+					"name": "Commanding Glyphs",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Mark of Challenge's cooldown is 4 seconds shorter.",
+					"icon": "taunt",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -4000,
+							"modifies": "cooldown",
+							"affects": 2048,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Hardened Spirit",
+			"ranks": [
+				{
+					"id": 900144,
+					"name": "Hardened Spirit",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Stamina is increased by 2%.",
+					"icon": "heart",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 2,
+							"stat": "stamina",
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900145,
+					"name": "Hardened Spirit",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Stamina is increased by 4%.",
+					"icon": "heart",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 4,
+							"stat": "stamina",
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900146,
+					"name": "Hardened Spirit",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Stamina is increased by 6%.",
+					"icon": "heart",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 6,
+							"stat": "stamina",
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Reprisal",
+			"ranks": [
+				{
+					"id": 900147,
+					"name": "Reprisal",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 16777216,
+					"prevention": 1,
+					"range": 5,
+					"cooldown": 6,
+					"gcd": 1.5,
+					"cost_percent": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Strike (5% of base mana, 6 sec): usable after you parry or block; weapon damage plus your Edge, with high threat and 2 Resonance.",
+					"icon": "parry_red",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 2,
+							"target": "enemy"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Spell Turning",
+			"ranks": [
+				{
+					"id": 900148,
+					"name": "Spell Turning",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Mirror Guard's cooldown is 5 seconds shorter.",
+					"icon": "presence_focused",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -5000,
+							"modifies": "cooldown",
+							"affects": 4096,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900149,
+					"name": "Spell Turning",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Mirror Guard's cooldown is 10 seconds shorter.",
+					"icon": "presence_focused",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -10000,
+							"modifies": "cooldown",
+							"affects": 4096,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Bulwark Weave",
+			"ranks": [
+				{
+					"id": 900150,
+					"name": "Bulwark Weave",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Warding Edge's shields absorb 5% more and stack 0 more times.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 5,
+							"modifies": "all_effects",
+							"affects": 32768,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 0,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900151,
+					"name": "Bulwark Weave",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Warding Edge's shields absorb 10% more and stack 1 more times.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 10,
+							"modifies": "all_effects",
+							"affects": 32768,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900152,
+					"name": "Bulwark Weave",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Warding Edge's shields absorb 15% more and stack 1 more times.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 15,
+							"modifies": "all_effects",
+							"affects": 32768,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900153,
+					"name": "Bulwark Weave",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Warding Edge's shields absorb 20% more and stack 2 more times.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 20,
+							"modifies": "all_effects",
+							"affects": 32768,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900154,
+					"name": "Bulwark Weave",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Warding Edge's shields absorb 25% more and stack 2 more times.",
+					"icon": "aegis",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 25,
+							"modifies": "all_effects",
+							"affects": 32768,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Unyielding",
+			"ranks": [
+				{
+					"id": 900155,
+					"name": "Unyielding",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Damage you take from area attacks is reduced by 5%.",
+					"icon": "stance_bastion",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900156,
+					"name": "Unyielding",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Damage you take from area attacks is reduced by 10%.",
+					"icon": "stance_bastion",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900157,
+					"name": "Unyielding",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Damage you take from area attacks is reduced by 15%.",
+					"icon": "stance_bastion",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 15,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Aegis of Runes",
+			"ranks": [
+				{
+					"id": 900158,
+					"name": "Aegis of Runes",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 33554432,
+					"prevention": 1,
+					"duration": 10,
+					"cooldown": 60,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Defence (1 min): a shield absorbing 30% of your maximum health for 10 seconds; while it holds you can't be knocked back.",
+					"icon": "ward_umbral",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 0,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Steadfast Glyphs",
+			"ranks": [
+				{
+					"id": 900159,
+					"name": "Steadfast Glyphs",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Stuns and fears on you last 10% shorter.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "control_duration_percent",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900160,
+					"name": "Steadfast Glyphs",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Stuns and fears on you last 20% shorter.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "control_duration_percent",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900161,
+					"name": "Steadfast Glyphs",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Stuns and fears on you last 30% shorter.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "control_duration_percent",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Glyph Echo",
+			"ranks": [
+				{
+					"id": 900162,
+					"name": "Glyph Echo",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Challenging Glyph's cooldown is 2 minutes shorter.",
+					"icon": "shout_dark",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -120000,
+							"modifies": "cooldown",
+							"affects": 262144,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900163,
+					"name": "Glyph Echo",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Challenging Glyph's cooldown is 4 minutes shorter.",
+					"icon": "shout_dark",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -240000,
+							"modifies": "cooldown",
+							"affects": 262144,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Runic Retaliation",
+			"ranks": [
+				{
+					"id": 900164,
+					"name": "Runic Retaliation",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "When your shields absorb damage, 4% of it is dealt back to the attacker as arcane damage.",
+					"icon": "zeal",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900165,
+					"name": "Runic Retaliation",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "When your shields absorb damage, 8% of it is dealt back to the attacker as arcane damage.",
+					"icon": "zeal",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900166,
+					"name": "Runic Retaliation",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "When your shields absorb damage, 12% of it is dealt back to the attacker as arcane damage.",
+					"icon": "zeal",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900167,
+					"name": "Runic Retaliation",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "When your shields absorb damage, 16% of it is dealt back to the attacker as arcane damage.",
+					"icon": "zeal",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 16,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900168,
+					"name": "Runic Retaliation",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "When your shields absorb damage, 20% of it is dealt back to the attacker as arcane damage.",
+					"icon": "zeal",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Rooted Stance",
+			"ranks": [
+				{
+					"id": 900169,
+					"name": "Rooted Stance",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"wardweave"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Wardweave Form you take 15% less damage from critical strikes.",
+					"icon": "ground",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_damage_taken_percent",
+							"value": 15,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				},
+				{
+					"id": 900170,
+					"name": "Rooted Stance",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"wardweave"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Wardweave Form you take 30% less damage from critical strikes.",
+					"icon": "ground",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "crit_damage_taken_percent",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Bastion of Glyphs",
+			"ranks": [
+				{
+					"id": 900171,
+					"name": "Bastion of Glyphs",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 536870912,
+					"prevention": 1,
+					"duration": 12,
+					"cooldown": 120,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Defence (2 min): a shield absorbing 50% of your maximum health for 12 seconds; while it holds, 30% of the damage taken by party members within 10 yards goes to it instead.",
+					"icon": "presence_hallowed",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_absorb",
+							"value": 0,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 1
+				}
+			]
+		},
+		{
+			"name": "Arcane Insight",
+			"ranks": [
+				{
+					"id": 900172,
+					"name": "Arcane Insight",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike with spells is increased by 1%.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance_school",
+							"value": 1,
+							"schools": [
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900173,
+					"name": "Arcane Insight",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike with spells is increased by 2%.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance_school",
+							"value": 2,
+							"schools": [
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900174,
+					"name": "Arcane Insight",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike with spells is increased by 3%.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance_school",
+							"value": 3,
+							"schools": [
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900175,
+					"name": "Arcane Insight",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike with spells is increased by 4%.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance_school",
+							"value": 4,
+							"schools": [
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900176,
+					"name": "Arcane Insight",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your chance to land a critical strike with spells is increased by 5%.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance_school",
+							"value": 5,
+							"schools": [
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Focused Study",
+			"ranks": [
+				{
+					"id": 900177,
+					"name": "Focused Study",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Intellect is increased by 2%.",
+					"icon": "book",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 2,
+							"stat": "intellect",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900178,
+					"name": "Focused Study",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Intellect is increased by 4%.",
+					"icon": "book",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 4,
+							"stat": "intellect",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900179,
+					"name": "Focused Study",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Intellect is increased by 6%.",
+					"icon": "book",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 6,
+							"stat": "intellect",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900180,
+					"name": "Focused Study",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Intellect is increased by 8%.",
+					"icon": "book",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 8,
+							"stat": "intellect",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900181,
+					"name": "Focused Study",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your Intellect is increased by 10%.",
+					"icon": "book",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 10,
+							"stat": "intellect",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Quickened Spark",
+			"ranks": [
+				{
+					"id": 900182,
+					"name": "Quickened Spark",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spark's cast time is 0.2 seconds shorter.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -200,
+							"modifies": "cast_time",
+							"affects": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900183,
+					"name": "Quickened Spark",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spark's cast time is 0.4 seconds shorter.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -400,
+							"modifies": "cast_time",
+							"affects": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900184,
+					"name": "Quickened Spark",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spark's cast time is 0.5 seconds shorter.",
+					"icon": "bolt_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -500,
+							"modifies": "cast_time",
+							"affects": 4,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Mana Edge",
+			"ranks": [
+				{
+					"id": 900185,
+					"name": "Mana Edge",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Sap Edge's cooldown is 30 seconds shorter.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -30000,
+							"modifies": "cooldown",
+							"affects": 16384,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900186,
+					"name": "Mana Edge",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Sap Edge's cooldown is 60 seconds shorter.",
+					"icon": "potion_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -60000,
+							"modifies": "cooldown",
+							"affects": 16384,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Far Reach",
+			"ranks": [
+				{
+					"id": 900187,
+					"name": "Far Reach",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spark, Hurl Blade and Rime Lance reach 5 yards further.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": 5,
+							"modifies": "range",
+							"affects": 131084,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900188,
+					"name": "Far Reach",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 15,
+					"base_level": 15,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spark, Hurl Blade and Rime Lance reach 10 yards further.",
+					"icon": "eye",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": 10,
+							"modifies": "range",
+							"affects": 131084,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Clear Mind",
+			"ranks": [
+				{
+					"id": 900189,
+					"name": "Clear Mind",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your spells and Edges cost 3% less mana.",
+					"icon": "mind",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -3,
+							"modifies": "cost",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900190,
+					"name": "Clear Mind",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your spells and Edges cost 6% less mana.",
+					"icon": "mind",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -6,
+							"modifies": "cost",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900191,
+					"name": "Clear Mind",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Your spells and Edges cost 10% less mana.",
+					"icon": "mind",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -10,
+							"modifies": "cost",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Arcane Lance",
+			"ranks": [
+				{
+					"id": 900192,
+					"name": "Arcane Lance",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 67108864,
+					"prevention": 1,
+					"cast": 2,
+					"range": 30,
+					"gcd": 1.5,
+					"cost_percent": 15,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spell (15% of base mana, 2 sec cast, 30 yd): a lance of force for high arcane damage, 20% more for each Resonance, which it spends.",
+					"icon": "bolt_white",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 0,
+							"target": "enemy",
+							"multiplier": 3
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Silencing Sigil",
+			"ranks": [
+				{
+					"id": 900193,
+					"name": "Silencing Sigil",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Severing Sigil also silences the target for 1 seconds.",
+					"icon": "hex",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900194,
+					"name": "Silencing Sigil",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Severing Sigil also silences the target for 2 seconds.",
+					"icon": "hex",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Empowered Release",
+			"ranks": [
+				{
+					"id": 900195,
+					"name": "Empowered Release",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Release deals 4% more damage and its shields absorb 4% more.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 4,
+							"modifies": "damage",
+							"affects": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900196,
+					"name": "Empowered Release",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Release deals 8% more damage and its shields absorb 8% more.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 8,
+							"modifies": "damage",
+							"affects": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900197,
+					"name": "Empowered Release",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Release deals 12% more damage and its shields absorb 12% more.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 12,
+							"modifies": "damage",
+							"affects": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900198,
+					"name": "Empowered Release",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Release deals 16% more damage and its shields absorb 16% more.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 16,
+							"modifies": "damage",
+							"affects": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900199,
+					"name": "Empowered Release",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Release deals 20% more damage and its shields absorb 20% more.",
+					"icon": "flame_gold",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 20,
+							"modifies": "damage",
+							"affects": 8,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Warding Mana",
+			"ranks": [
+				{
+					"id": 900200,
+					"name": "Warding Mana",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"bladesong"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Bladesong Form, 10% of damage you take is drained from your mana instead.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900201,
+					"name": "Warding Mana",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"bladesong"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Bladesong Form, 20% of damage you take is drained from your mana instead.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 20,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900202,
+					"name": "Warding Mana",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 25,
+					"base_level": 25,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"stances": [
+						"bladesong"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "In Bladesong Form, 30% of damage you take is drained from your mana instead.",
+					"icon": "ward_shadow",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Overload",
+			"ranks": [
+				{
+					"id": 900203,
+					"name": "Overload",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 134217728,
+					"prevention": 1,
+					"duration": 30,
+					"cooldown": 60,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spell (no mana, 1 min): your next Release or Arcane Lance acts as if you had 5 Resonance.",
+					"icon": "flame_blue",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Arcane Momentum",
+			"ranks": [
+				{
+					"id": 900204,
+					"name": "Arcane Momentum",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "After a spell, your next melee attack within 6 seconds deals 5% more damage.",
+					"icon": "stars",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900205,
+					"name": "Arcane Momentum",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "After a spell, your next melee attack within 6 seconds deals 10% more damage.",
+					"icon": "stars",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 10,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900206,
+					"name": "Arcane Momentum",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "After a spell, your next melee attack within 6 seconds deals 15% more damage.",
+					"icon": "stars",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 15,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Glyph Mastery",
+			"ranks": [
+				{
+					"id": 900207,
+					"name": "Glyph Mastery",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Binding Glyph roots 1 more enemies and Glyph Storm's cooldown is 10 seconds shorter.",
+					"icon": "ground",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -10000,
+							"modifies": "cooldown",
+							"affects": 4194304,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900208,
+					"name": "Glyph Mastery",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Binding Glyph roots 2 more enemies and Glyph Storm's cooldown is 20 seconds shorter.",
+					"icon": "ground",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "flat_modifier",
+							"value": -20000,
+							"modifies": "cooldown",
+							"affects": 4194304,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Spellweaver's Haste",
+			"ranks": [
+				{
+					"id": 900209,
+					"name": "Spellweaver's Haste",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You cast and attack 1% faster.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 1,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -1,
+							"modifies": "cast_time",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900210,
+					"name": "Spellweaver's Haste",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You cast and attack 2% faster.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 2,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -2,
+							"modifies": "cast_time",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900211,
+					"name": "Spellweaver's Haste",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You cast and attack 3% faster.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 3,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -3,
+							"modifies": "cast_time",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900212,
+					"name": "Spellweaver's Haste",
+					"rank": 4,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You cast and attack 4% faster.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 4,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -4,
+							"modifies": "cast_time",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900213,
+					"name": "Spellweaver's Haste",
+					"rank": 5,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "You cast and attack 5% faster.",
+					"icon": "feather",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "melee_haste",
+							"value": 5,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": -5,
+							"modifies": "cast_time",
+							"affects": 2147483647,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Resonant Surge",
+			"ranks": [
+				{
+					"id": 900214,
+					"name": "Resonant Surge",
+					"rank": 1,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Arcane Surge also gives 2 Resonance and lasts 3 seconds longer.",
+					"icon": "orb",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 2,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 3,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				},
+				{
+					"id": 900215,
+					"name": "Resonant Surge",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 35,
+					"base_level": 35,
+					"proc_chance": 101,
+					"family": 12,
+					"prevention": 1,
+					"attributes": [
+						"passive"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Arcane Surge also gives 5 Resonance and lasts 5 seconds longer.",
+					"icon": "orb",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 5,
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Arc of Ruin",
+			"ranks": [
+				{
+					"id": 900216,
+					"name": "Arc of Ruin",
+					"rank": 1,
+					"school": "arcane",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"family": 12,
+					"family_flags": 1073741824,
+					"prevention": 1,
+					"cast": 2.5,
+					"range": 20,
+					"cooldown": 60,
+					"gcd": 1.5,
+					"cost_percent": 25,
+					"requires_item": "none",
+					"item_types": "all",
+					"text": "Spell (25% of base mana, 2.5 sec cast, 1 min): hurl a crescent of force in a 20-yard cone for very high arcane damage, 10% more for each Resonance, which it spends.",
+					"icon": "verdict",
+					"effects": [
+						{
+							"type": "school_damage",
+							"value": 0,
+							"target": "enemy",
+							"radius": 20,
+							"multiplier": 4
+						}
+					],
+					"book_tab": 2
+				}
+			]
+		}
+	],
+	"talents": [
+		{
+			"name": "Bladesong",
+			"id": 9100,
+			"order": 0,
+			"talents": [
+				{
+					"name": "Keen Edges",
+					"id": 9001,
+					"tier": 0,
+					"column": 1,
+					"ranks": [
+						900079,
+						900080,
+						900081,
+						900082,
+						900083
+					]
+				},
+				{
+					"name": "Honed Sigils",
+					"id": 9002,
+					"tier": 0,
+					"column": 2,
+					"ranks": [
+						900084,
+						900085,
+						900086,
+						900087,
+						900088
+					]
+				},
+				{
+					"name": "Quick Draw",
+					"id": 9003,
+					"tier": 1,
+					"column": 0,
+					"ranks": [
+						900089,
+						900090
+					]
+				},
+				{
+					"name": "Resonant Steel",
+					"id": 9004,
+					"tier": 1,
+					"column": 1,
+					"ranks": [
+						900091,
+						900092,
+						900093
+					]
+				},
+				{
+					"name": "Bladesong Cadence",
+					"id": 9005,
+					"tier": 1,
+					"column": 2,
+					"ranks": [
+						900094,
+						900095
+					]
+				},
+				{
+					"name": "Searing Edge",
+					"id": 9006,
+					"tier": 2,
+					"column": 0,
+					"ranks": [
+						900096,
+						900097,
+						900098
+					]
+				},
+				{
+					"name": "Sigil Flurry",
+					"id": 9007,
+					"tier": 2,
+					"column": 1,
+					"ranks": [
+						900099
+					]
+				},
+				{
+					"name": "Biting Frost",
+					"id": 9008,
+					"tier": 2,
+					"column": 2,
+					"ranks": [
+						900100,
+						900101
+					]
+				},
+				{
+					"name": "Blade Mastery",
+					"id": 9009,
+					"tier": 3,
+					"column": 0,
+					"ranks": [
+						900102,
+						900103,
+						900104,
+						900105,
+						900106
+					]
+				},
+				{
+					"name": "Overflow",
+					"id": 9010,
+					"tier": 3,
+					"column": 2,
+					"ranks": [
+						900107,
+						900108,
+						900109
+					]
+				},
+				{
+					"name": "Twin Edge",
+					"id": 9011,
+					"tier": 4,
+					"column": 1,
+					"ranks": [
+						900110
+					],
+					"prereq": [
+						[
+							9007,
+							1
+						]
+					]
+				},
+				{
+					"name": "Stormcaller",
+					"id": 9012,
+					"tier": 4,
+					"column": 2,
+					"ranks": [
+						900111,
+						900112,
+						900113
+					]
+				},
+				{
+					"name": "Duelist's Footing",
+					"id": 9013,
+					"tier": 4,
+					"column": 0,
+					"ranks": [
+						900114,
+						900115
+					]
+				},
+				{
+					"name": "Spellsteel Fury",
+					"id": 9014,
+					"tier": 5,
+					"column": 1,
+					"ranks": [
+						900116,
+						900117,
+						900118,
+						900119,
+						900120
+					]
+				},
+				{
+					"name": "Momentum",
+					"id": 9015,
+					"tier": 5,
+					"column": 2,
+					"ranks": [
+						900121,
+						900122
+					]
+				},
+				{
+					"name": "Thousand Cuts",
+					"id": 9016,
+					"tier": 6,
+					"column": 1,
+					"ranks": [
+						900123
+					]
+				}
+			]
+		},
+		{
+			"name": "Wardweave",
+			"id": 9101,
+			"order": 1,
+			"talents": [
+				{
+					"name": "Woven Mail",
+					"id": 9017,
+					"tier": 0,
+					"column": 1,
+					"ranks": [
+						900124,
+						900125,
+						900126,
+						900127,
+						900128
+					]
+				},
+				{
+					"name": "Steady Mind",
+					"id": 9018,
+					"tier": 0,
+					"column": 2,
+					"ranks": [
+						900129,
+						900130,
+						900131,
+						900132,
+						900133
+					]
+				},
+				{
+					"name": "Parrying Sigils",
+					"id": 9019,
+					"tier": 1,
+					"column": 0,
+					"ranks": [
+						900134,
+						900135,
+						900136,
+						900137,
+						900138
+					]
+				},
+				{
+					"name": "Thick Wards",
+					"id": 9020,
+					"tier": 1,
+					"column": 1,
+					"ranks": [
+						900139,
+						900140,
+						900141
+					]
+				},
+				{
+					"name": "Commanding Glyphs",
+					"id": 9021,
+					"tier": 1,
+					"column": 2,
+					"ranks": [
+						900142,
+						900143
+					]
+				},
+				{
+					"name": "Hardened Spirit",
+					"id": 9022,
+					"tier": 2,
+					"column": 0,
+					"ranks": [
+						900144,
+						900145,
+						900146
+					]
+				},
+				{
+					"name": "Reprisal",
+					"id": 9023,
+					"tier": 2,
+					"column": 1,
+					"ranks": [
+						900147
+					]
+				},
+				{
+					"name": "Spell Turning",
+					"id": 9024,
+					"tier": 2,
+					"column": 2,
+					"ranks": [
+						900148,
+						900149
+					]
+				},
+				{
+					"name": "Bulwark Weave",
+					"id": 9025,
+					"tier": 3,
+					"column": 0,
+					"ranks": [
+						900150,
+						900151,
+						900152,
+						900153,
+						900154
+					]
+				},
+				{
+					"name": "Unyielding",
+					"id": 9026,
+					"tier": 3,
+					"column": 2,
+					"ranks": [
+						900155,
+						900156,
+						900157
+					]
+				},
+				{
+					"name": "Aegis of Runes",
+					"id": 9027,
+					"tier": 4,
+					"column": 1,
+					"ranks": [
+						900158
+					],
+					"prereq": [
+						[
+							9023,
+							1
+						]
+					]
+				},
+				{
+					"name": "Steadfast Glyphs",
+					"id": 9028,
+					"tier": 4,
+					"column": 2,
+					"ranks": [
+						900159,
+						900160,
+						900161
+					]
+				},
+				{
+					"name": "Glyph Echo",
+					"id": 9029,
+					"tier": 4,
+					"column": 0,
+					"ranks": [
+						900162,
+						900163
+					]
+				},
+				{
+					"name": "Runic Retaliation",
+					"id": 9030,
+					"tier": 5,
+					"column": 1,
+					"ranks": [
+						900164,
+						900165,
+						900166,
+						900167,
+						900168
+					]
+				},
+				{
+					"name": "Rooted Stance",
+					"id": 9031,
+					"tier": 5,
+					"column": 2,
+					"ranks": [
+						900169,
+						900170
+					]
+				},
+				{
+					"name": "Bastion of Glyphs",
+					"id": 9032,
+					"tier": 6,
+					"column": 1,
+					"ranks": [
+						900171
+					]
+				}
+			]
+		},
+		{
+			"name": "Arcana",
+			"id": 9102,
+			"order": 2,
+			"talents": [
+				{
+					"name": "Arcane Insight",
+					"id": 9033,
+					"tier": 0,
+					"column": 1,
+					"ranks": [
+						900172,
+						900173,
+						900174,
+						900175,
+						900176
+					]
+				},
+				{
+					"name": "Focused Study",
+					"id": 9034,
+					"tier": 0,
+					"column": 2,
+					"ranks": [
+						900177,
+						900178,
+						900179,
+						900180,
+						900181
+					]
+				},
+				{
+					"name": "Quickened Spark",
+					"id": 9035,
+					"tier": 1,
+					"column": 0,
+					"ranks": [
+						900182,
+						900183,
+						900184
+					]
+				},
+				{
+					"name": "Mana Edge",
+					"id": 9036,
+					"tier": 1,
+					"column": 1,
+					"ranks": [
+						900185,
+						900186
+					]
+				},
+				{
+					"name": "Far Reach",
+					"id": 9037,
+					"tier": 1,
+					"column": 2,
+					"ranks": [
+						900187,
+						900188
+					]
+				},
+				{
+					"name": "Clear Mind",
+					"id": 9038,
+					"tier": 2,
+					"column": 0,
+					"ranks": [
+						900189,
+						900190,
+						900191
+					]
+				},
+				{
+					"name": "Arcane Lance",
+					"id": 9039,
+					"tier": 2,
+					"column": 1,
+					"ranks": [
+						900192
+					]
+				},
+				{
+					"name": "Silencing Sigil",
+					"id": 9040,
+					"tier": 2,
+					"column": 2,
+					"ranks": [
+						900193,
+						900194
+					]
+				},
+				{
+					"name": "Empowered Release",
+					"id": 9041,
+					"tier": 3,
+					"column": 0,
+					"ranks": [
+						900195,
+						900196,
+						900197,
+						900198,
+						900199
+					]
+				},
+				{
+					"name": "Warding Mana",
+					"id": 9042,
+					"tier": 3,
+					"column": 2,
+					"ranks": [
+						900200,
+						900201,
+						900202
+					]
+				},
+				{
+					"name": "Overload",
+					"id": 9043,
+					"tier": 4,
+					"column": 1,
+					"ranks": [
+						900203
+					],
+					"prereq": [
+						[
+							9039,
+							1
+						]
+					]
+				},
+				{
+					"name": "Arcane Momentum",
+					"id": 9044,
+					"tier": 4,
+					"column": 2,
+					"ranks": [
+						900204,
+						900205,
+						900206
+					]
+				},
+				{
+					"name": "Glyph Mastery",
+					"id": 9045,
+					"tier": 4,
+					"column": 0,
+					"ranks": [
+						900207,
+						900208
+					]
+				},
+				{
+					"name": "Spellweaver's Haste",
+					"id": 9046,
+					"tier": 5,
+					"column": 1,
+					"ranks": [
+						900209,
+						900210,
+						900211,
+						900212,
+						900213
+					]
+				},
+				{
+					"name": "Resonant Surge",
+					"id": 9047,
+					"tier": 5,
+					"column": 2,
+					"ranks": [
+						900214,
+						900215
+					]
+				},
+				{
+					"name": "Arc of Ruin",
+					"id": 9048,
+					"tier": 6,
+					"column": 1,
+					"ranks": [
+						900216
+					]
+				}
+			]
+		}
+	],
+	"start_spells": {
+		"1-10": [
+			900001,
+			900009,
+			3127
+		],
+		"4-10": [
+			900001,
+			900009,
+			3127
+		],
+		"5-10": [
+			900001,
+			900009,
+			3127
+		],
+		"7-10": [
+			900001,
+			900009,
+			3127
+		],
+		"8-10": [
+			900001,
+			900009,
+			3127
+		]
+	}
+}
