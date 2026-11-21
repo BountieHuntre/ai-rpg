@@ -1,5 +1,15 @@
 [
 	{
+		"version": "0.21.0",
+		"date": "11-20-2026",
+		"notes": [
+			"New Templar talent in the Zeal tree, Replenishing Verdict (in place of Improved Oath of the Vanguard): your Verdict has a chance to return part of the mana cost of your active Oath.",
+			"Mana and rage that your talents give back now show over your character (\"+12 Mana\") and in the chat.",
+			"Spell tooltips count your talents: a talent that shortens a cooldown or strengthens a Boon changes the numbers in the description too.",
+			"Fixed talents that fire from combat stopping working after logging out and back in."
+		]
+	},
+	{
 		"version": "0.20.0",
 		"date": "11-20-2026",
 		"notes": [
