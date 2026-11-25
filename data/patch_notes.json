@@ -1,5 +1,13 @@
 [
 	{
+		"version": "0.22.1",
+		"date": "11-24-2026",
+		"notes": [
+			"Enchanted gear keeps its enchant when you give it to a playerbot, equip it on one, take it back or trade it either way.",
+			"Trade window tooltips show enchants, and picking an enchanted item from a playerbot's goods trades you that exact item."
+		]
+	},
+	{
 		"version": "0.22.0",
 		"date": "11-24-2026",
 		"notes": [
