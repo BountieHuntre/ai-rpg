@@ -1,5 +1,18 @@
 [
 	{
+		"version": "0.24.0",
+		"date": "11-25-2026",
+		"notes": [
+			"Caves in every zone: the old cave mouths and mines (the vale's mine, the Old Delve, Copperhollow, the Ember Cult Cave, the Troll Caves, the Webbed Vault and more) are real caves you walk into, with winding tunnels and uneven chambers.",
+			"Wild dens are dug into the hills and mountains of every zone, each home to a few of the creatures nearby.",
+			"Creatures that lived at the caves now live inside them, ore veins grow at the foot of cave walls, and a Weathered Strongbox sometimes waits at the back.",
+			"Lit caves have torches on their walls and a campfire, and caves are dark inside.",
+			"Ore now lies where it should: at the foot of steep mountain and hill slopes and against cave walls.",
+			"You, playerbots and creatures step up small lips and humps without jumping, and playerbots find their way in and out of caves.",
+			"Torches in buildings are fixed to the walls."
+		]
+	},
+	{
 		"version": "0.23.0",
 		"date": "11-24-2026",
 		"notes": [
