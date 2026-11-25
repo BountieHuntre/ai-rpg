@@ -52,6 +52,7 @@ const EFFECT_ADD_FARSIGHT := 72
 const EFFECT_SUMMON_OBJECT := 104
 const AURA_MOD_FEIGN_DEATH := 66
 const AURA_TRACK_CREATURES := 44
+const AURA_TRACK_RESOURCES := 45
 const AURA_MOD_RANGED_ATTACK_POWER_ATTACKER_BONUS := 127
 ## Damage classes (SpellDmgClass): ranged attacks.
 const DMG_CLASS_MELEE := 2
@@ -134,8 +135,10 @@ static func is_trap(spell: Dictionary) -> bool:
 	return SpellDB.has_effect(spell, EFFECT_SUMMON_OBJECT)
 
 
+## Tracking of any kind: the Ranger's Track Beasts... and the professions'
+## Find Herbs and Find Minerals (SPELL_AURA_TRACK_RESOURCES); one at a time.
 static func is_tracking(spell: Dictionary) -> bool:
-	return str(spell.SpellName).begins_with("Track ")
+	return str(spell.SpellName).begins_with("Track ") or int(spell.get("EffectApplyAuraName1", 0)) == AURA_TRACK_RESOURCES
 
 
 ## The creature type the tracking aura shows (its misc value), or 0.
@@ -145,6 +148,16 @@ func tracked_type() -> int:
 			if int(aura.spell.get("EffectApplyAuraName%d" % (i + 1), 0)) == AURA_TRACK_CREATURES:
 				return int(aura.spell.get("EffectMiscValue%d" % (i + 1), 0))
 	return 0
+
+
+## The resources Find Herbs and Find Minerals auras show (their misc values,
+## the Lock type: 2 herbs, 3 minerals); both when one is always on.
+func tracked_resources() -> Array[int]:
+	var kinds: Array[int] = []
+	for aura in _combatant.auras:
+		if int(aura.spell.get("EffectApplyAuraName1", 0)) == AURA_TRACK_RESOURCES:
+			kinds.append(int(aura.spell.get("EffectMiscValue1", 0)))
+	return kinds
 
 
 ## Why a Ranger ability can't be used right now, or "".
@@ -215,7 +228,8 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 		caster._replace_own(spell, me, SpellDB.is_aspect)
 		return true
 	if is_tracking(spell):
-		caster._replace_own(spell, me, is_tracking)
+		# One tracking at a time, an always-on (passive) one aside.
+		caster._replace_own(spell, me, func(other: Dictionary) -> bool: return is_tracking(other) and not SpellDB.is_passive(other))
 		return true
 	if is_trap(spell):
 		_set_trap(spell)

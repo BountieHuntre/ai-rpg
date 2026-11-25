@@ -10,6 +10,43 @@ classic names in unnoticed.
 """
 
 ITEMS = {
+    # The professions: classic's coined herbs and ores, and names of its
+    # people and places, under the game's own (plain words like Copper Bar,
+    # Light Leather and Strange Dust stay).
+    'Stranglekelp': 'Tanglekelp',
+    'Wild Steelbloom': 'Wild Ironbloom',
+    'Grave Moss': 'Tomb Moss',
+    'Kingsblood': 'Crownblood',
+    'Liferoot': 'Heartroot',
+    'Fadeleaf': 'Dimleaf',
+    'Goldthorn': 'Gildthorn',
+    "Khadgar's Whisker": "Sage's Whisker",
+    'Wintersbite': 'Frostnip',
+    'Firebloom': 'Emberbloom',
+    'Purple Lotus': 'Violet Lotus',
+    "Arthas' Tears": 'Weeping Bell',
+    'Sungrass': 'Dawngrass',
+    'Ghost Mushroom': 'Wraithcap',
+    'Golden Sansam': 'Golden Sorrel',
+    'Dreamfoil': 'Slumberleaf',
+    'Mountain Silversage': 'Mountain Greysage',
+    'Plaguebloom': 'Blightbloom',
+    'Icecap': 'Rimecap',
+    'Black Lotus': 'Night Lotus',
+    'Mithril Ore': 'Moonsteel Ore',
+    'Mithril Bar': 'Moonsteel Bar',
+    'Truesilver Ore': 'Brightsilver Ore',
+    'Truesilver Bar': 'Brightsilver Bar',
+    'Truesilver Rod': 'Brightsilver Rod',
+    'Runed Truesilver Rod': 'Runed Brightsilver Rod',
+    'Thorium Ore': 'Starmetal Ore',
+    'Thorium Bar': 'Starmetal Bar',
+    'Enchanted Thorium Bar': 'Enchanted Starmetal Bar',
+    'Arcanite Rod': 'Spellsteel Rod',
+    'Runed Arcanite Rod': 'Runed Spellsteel Rod',
+    'Azerothian Diamond': 'Worldheart Diamond',
+    'Stranglethorn Seed': 'Jungle Seed',
+    'Blackmouth Oil': 'Blackgill Oil',
     # Quests with items and objects to use.
     "Thazz'ril's Pick": "Thazgar's Pick",
     'Barrel of Barleybrew Scalder': 'Barrel of Barleyhall Scalder',
@@ -699,6 +736,10 @@ OBJECTS = {
 }
 
 VENDORS = {
+    # The professions' supply vendors (each town's own trade and enchanting
+    # suppliers are NPCs with these lists).
+    '1286': ('Wendel Corrick', 'Trade Supplies'),
+    '15419': ('Ilse Varrow', 'Enchanting Supplies'),
     # Aldmark's mountains: Frosthollow's, then Kettlefold's in Highpeak. Kareth's
     # north-west: Mossglen's, then Fernwatch's on Eldergrove Isle.
     '829': ('Adla Kettlebrew', 'Provisioner'),
@@ -753,6 +794,11 @@ VENDORS = {
 # The game code recognises spell kinds by these name patterns: "Oath of" seals,
 # "Verdict" judgements, "Boon of" blessings and "... Presence" auras.
 SPELLS = {
+    # The professions' smelting of the renamed ores.
+    'Smelt Mithril': 'Smelt Moonsteel',
+    'Smelt Thorium': 'Smelt Starmetal',
+    'Smelt Truesilver': 'Smelt Brightsilver',
+    'Enchanted Thorium': 'Enchanted Starmetal',
     # The Ranger's (classic's Hunter's).
     'Tame Adult Plainstrider': 'Tame Adult Tallbird',
     'Tame Webwood Lurker': 'Tame Silkwood Lurker',
@@ -932,6 +978,7 @@ SPELLS = {
     "Holy Light": "Mending Radiance",
     "Flash of Light": "Quick Radiance",
     "Holy Shock": "Radiant Jolt",
+    "Holy Strike": "Radiant Strike",
     "Holy Wrath": "Radiant Fury",
     "Holy Shield": "Radiant Bulwark",
     "Hammer of Justice": "Stunning Gavel",
@@ -1042,12 +1089,123 @@ TALENT_TREES = {
 }
 
 
+# Herb and ore nodes: a herb is named for its herb (ITEMS), an ore vein by its
+# ore's new name; plain veins (Copper Vein) stay.
+NODES = {
+    'Mithril Deposit': 'Moonsteel Deposit',
+    'Truesilver Deposit': 'Brightsilver Deposit',
+    'Small Thorium Vein': 'Small Starmetal Vein',
+    'Rich Thorium Vein': 'Rich Starmetal Vein',
+}
+PLAIN_NODES = {'Copper Vein', 'Tin Vein', 'Silver Vein', 'Iron Deposit', 'Gold Vein'}
+
+
+def node_name(name):
+    """A herb or ore node's name in the game."""
+    if name in NODES:
+        return NODES[name]
+    if name in PLAIN_NODES:
+        return name
+    missing = []
+    renamed = _rename(name, ITEMS, "Node", missing)
+    if missing:
+        raise KeyError("No original name yet for a node, add it to NODES in tools/classic_db/renames.py: " + name)
+    return renamed
+
+
 def talent_tree(class_id, name):
     return TALENT_TREES[class_id][name]
 
 
 # Plain names that are kept as they are.
 KEEP = {
+    # The professions' plain spell names: gathering, ranks, recipes and the
+    # enchantments' effects.
+    'Advanced Herbalism', 'Advanced Mining', 'Agility +15', 'Agility +25', 'Apprentice Enchanting',
+    'Apprentice Herbalist', 'Apprentice Miner', 'Apprentice Skinning', 'Artisan Enchanting', 'Artisan Herbalist',
+    'Artisan Miner', 'Artisan Skinning', 'Beastslayer', 'Decrease Threat', 'Disenchant', 'Dodge',
+    'Enchant  Weapon - Healing Power', 'Enchant  Weapon - Spell Power', 'Enchant 2H Weapon - Greater Impact',
+    'Enchant 2H Weapon - Impact', 'Enchant 2H Weapon - Intellect', 'Enchant 2H Weapon - Lesser Impact',
+    'Enchant 2H Weapon - Minor Impact', 'Enchant Boots - Agility', 'Enchant Boots - Lesser Agility',
+    'Enchant Boots - Lesser Stamina', 'Enchant Boots - Minor Speed', 'Enchant Boots - Stamina',
+    'Enchant Bracer - Greater Strength', 'Enchant Bracer - Healing Power', 'Enchant Bracer - Intellect',
+    'Enchant Bracer - Lesser Intellect', 'Enchant Bracer - Lesser Stamina', 'Enchant Bracer - Minor Agility',
+    'Enchant Bracer - Minor Deflect', 'Enchant Bracer - Minor Deflection', 'Enchant Bracer - Minor Health',
+    'Enchant Bracer - Minor Stamina', 'Enchant Bracer - Spirit', 'Enchant Bracer - Stamina',
+    'Enchant Bracer - Strength', 'Enchant Chest - Greater Health', 'Enchant Chest - Greater Mana',
+    'Enchant Chest - Health', 'Enchant Chest - Lesser Absorption', 'Enchant Chest - Lesser Health',
+    'Enchant Chest - Lesser Stats', 'Enchant Chest - Mana', 'Enchant Chest - Minor Absorption',
+    'Enchant Chest - Minor Health', 'Enchant Chest - Minor Stats', 'Enchant Chest - Stats',
+    'Enchant Chest - Superior Health', 'Enchant Chest - Superior Mana', 'Enchant Cloak - Defense',
+    'Enchant Cloak - Fire Resistance', 'Enchant Cloak - Greater Defense', 'Enchant Cloak - Lesser Fire Resistance',
+    'Enchant Cloak - Lesser Protection', 'Enchant Cloak - Minor Protection', 'Enchant Cloak - Minor Resistance',
+    'Enchant Cloak - Resistance', 'Enchant Gloves - Agility', 'Enchant Gloves - Minor Haste',
+    'Enchant Gloves - Minor Riding', 'Enchant Gloves - Strength', 'Enchant Shield - Greater Spirit',
+    'Enchant Shield - Lesser Blocking', 'Enchant Shield - Lesser Spirit', 'Enchant Shield - Lesser Stamina',
+    'Enchant Shield - Minor Stamina', 'Enchant Shield - Spirit', 'Enchant Weapon - Greater Striking',
+    'Enchant Weapon - Lesser Striking', 'Enchant Weapon - Lifestealer', 'Enchant Weapon - Minor Striking',
+    'Enchant Weapon - Striking', 'Enchant Weapon - Superior Impact', 'Enchant Weapon - Unholy Weapon', 'Enchanting',
+    'Expert Enchanting', 'Expert Herbalist', 'Expert Miner', 'Expert Skinning', 'Fiery Weapon', 'Find Herbs',
+    'Find Minerals', 'Fishing', 'Greater Agility', 'Greater Health', 'Greater Intellect', 'Greater Mana',
+    'Greater Resistance', 'Greater Spirit', 'Greater Stamina', 'Greater Stats', 'Greater Strength', 'Health',
+    'Herb Gathering', 'Herbalism', 'Holy Strength', 'Increase Fire Dam 20', 'Increase Healing 24',
+    'Increase Healing 30', 'Increase Healing 55', 'Increase Ice Dam 20', 'Increase Shadow Dam 20',
+    'Increase Spell Dam 30', 'Increase Threat', 'Increased Mana Regen', 'Journeyman Enchanting',
+    'Journeyman Herbalist', 'Journeyman Miner', 'Journeyman Skinning', 'Lesser Absorption', 'Lesser Agility',
+    'Lesser Beast Slayer', 'Lesser Blocking', 'Lesser Deflection', 'Lesser Elemental Slayer', 'Lesser Health',
+    'Lesser Intellect', 'Lesser Mana', 'Lesser Resistance - Fire', 'Lesser Resistance - Shadow', 'Lesser Spirit',
+    'Lesser Stamina', 'Lesser Stats', 'Lesser Stealth', 'Lesser Strength', 'Life Steal', 'Major Health', 'Major Mana',
+    'Mana', 'Mining', 'Minor Absorption', 'Minor Agility', 'Minor Deflection', 'Minor Haste', 'Minor Health',
+    'Minor Mana', 'Minor Mount Speed', 'Minor Resistance', 'Minor Speed', 'Minor Spirit', 'Minor Stamina',
+    'Minor Stats', 'Minor Strength', 'Resistance', 'Resistance - Fire', 'Resistance - Greater Fire Resistance',
+    'Resistance - Greater Nature Resistance', 'Shadow Protection ', 'Skinning', 'Smelt Bronze', 'Smelt Copper',
+    'Smelt Gold', 'Smelt Iron', 'Smelt Silver', 'Smelt Steel', 'Smelt Tin', 'Smelting', 'Smite Demon', 'Stats',
+    'Superior Health', 'Superior Intellect', 'Superior Mana', 'Superior Spirit', 'Superior Stamina',
+    'Superior Strength', 'Unholy Curse', "Winter's Might",
+    # The professions' plain names: bars, ores, stones, leathers, gems,
+    # vials, dusts, essences, shards, rods, wands, oils, elementals and the
+    # enchanting recipes.
+    'Needed by Enchanters.',
+    'Aquamarine', 'Arcane Crystal', 'Black Diamond', 'Black Pearl', 'Black Vitriol', 'Blood Shard', 'Blood of the Mountain',
+    'Blue Sapphire', 'Breath of Wind', 'Brilliant Mana Oil', 'Brilliant Wizard Oil', 'Bronze Bar', 'Citrine', 'Copper Bar',
+    'Core of Earth', 'Crystal Vial', 'Dense Stone', 'Dream Dust', 'Elemental Earth', 'Elemental Fire', 'Elixir of Demonslaying',
+    'Enchanted Leather', 'Essence of Air', 'Essence of Earth', 'Essence of Fire', 'Essence of Undeath', 'Essence of Water',
+    'Fire Oil', 'Frost Oil', 'Globe of Water', 'Gold Bar', 'Gold Ore', 'Golden Pearl', 'Golden Rod', 'Greater Astral Essence',
+    'Greater Eternal Essence', 'Greater Magic Essence', 'Greater Magic Wand', 'Greater Mystic Essence', 'Greater Mystic Wand',
+    'Greater Nether Essence', 'Green Whelp Scale', 'Guardian Stone', 'Heart of Fire', 'Heavy Stone', 'Huge Emerald',
+    'Ichor of Undeath', 'Illusion Dust', 'Imbued Vial', 'Iron Bar', 'Jade', 'Large Brilliant Shard', 'Large Fang',
+    'Large Glimmering Shard', 'Large Glowing Shard', 'Large Opal', 'Large Radiant Shard', 'Larval Acid', 'Leaded Vial',
+    'Lesser Astral Essence', 'Lesser Eternal Essence', 'Lesser Magic Essence', 'Lesser Magic Wand', 'Lesser Mana Oil',
+    'Lesser Moonstone', 'Lesser Mystic Essence', 'Lesser Mystic Wand', 'Lesser Nether Essence', 'Lesser Wizard Oil',
+    'Light Hide', 'Light Leather', 'Living Essence', 'Maple Seed', 'Medium Hide', 'Medium Leather', 'Minor Mana Oil',
+    'Minor Wizard Oil', 'Nexus Crystal', 'Righteous Orb', 'Root Sample', 'Rugged Leather', 'Ruined Leather Scraps',
+    'Runed Copper Rod', 'Runed Golden Rod', 'Runed Silver Rod', 'Shadow Protection Potion', 'Silver Bar', 'Silver Ore',
+    'Silver Rod', 'Small Brilliant Shard', 'Small Glimmering Shard', 'Small Glowing Shard', 'Small Radiant Shard',
+    'Smoking Heart of the Mountain', 'Solid Stone', 'Soul Dust', 'Star Ruby', 'Star Wood', 'Steel Bar', 'Strange Dust',
+    'Tainted Vitriol', 'Tin Bar', 'Vision Dust', 'Wildvine', 'Wizard Oil',
+    'Enchant 2H Weapon - Agility', 'Enchant 2H Weapon - Lesser Intellect', 'Enchant 2H Weapon - Major Intellect',
+    'Enchant 2H Weapon - Major Spirit', 'Enchant 2H Weapon - Superior Impact', 'Enchant Boots - Greater Agility',
+    'Enchant Boots - Greater Stamina', 'Enchant Boots - Lesser Spirit', 'Enchant Boots - Minor Agility',
+    'Enchant Boots - Minor Stamina', 'Enchant Boots - Spirit', 'Enchant Bracer - Deflection', 'Enchant Bracer - Greater Intellect',
+    'Enchant Bracer - Greater Spirit', 'Enchant Bracer - Greater Stamina', 'Enchant Bracer - Healing',
+    'Enchant Bracer - Lesser Deflection', 'Enchant Bracer - Lesser Strength', 'Enchant Bracer - Mana Regeneration',
+    'Enchant Bracer - Superior Spirit', 'Enchant Bracer - Superior Stamina', 'Enchant Bracer - Superior Strength',
+    'Enchant Chest - Greater Stats', 'Enchant Chest - Lesser Mana', 'Enchant Chest - Major Health', 'Enchant Chest - Major Mana',
+    'Enchant Cloak - Dodge', 'Enchant Cloak - Greater Fire Resistance', 'Enchant Cloak - Greater Nature Resistance',
+    'Enchant Cloak - Greater Resistance', 'Enchant Cloak - Lesser Agility', 'Enchant Cloak - Lesser Shadow Resistance',
+    'Enchant Cloak - Stealth', 'Enchant Cloak - Subtlety', 'Enchant Cloak - Superior Defense',
+    'Enchant Gloves - Advanced Herbalism', 'Enchant Gloves - Advanced Mining', 'Enchant Gloves - Fire Power',
+    'Enchant Gloves - Fishing', 'Enchant Gloves - Frost Power', 'Enchant Gloves - Greater Agility',
+    'Enchant Gloves - Greater Strength', 'Enchant Gloves - Healing Power', 'Enchant Gloves - Herbalism',
+    'Enchant Gloves - Mining', 'Enchant Gloves - Riding Skill', 'Enchant Gloves - Shadow Power', 'Enchant Gloves - Skinning',
+    'Enchant Gloves - Superior Agility', 'Enchant Gloves - Threat', 'Enchant Shield - Frost Resistance',
+    'Enchant Shield - Greater Stamina', 'Enchant Shield - Lesser Block', 'Enchant Shield - Lesser Protection',
+    'Enchant Shield - Stamina', 'Enchant Shield - Superior Spirit', 'Enchant Weapon - Agility', 'Enchant Weapon - Crusader',
+    'Enchant Weapon - Demonslaying', 'Enchant Weapon - Fiery Weapon', 'Enchant Weapon - Healing Power',
+    'Enchant Weapon - Icy Chill', 'Enchant Weapon - Lesser Beastslayer', 'Enchant Weapon - Lesser Elemental Slayer',
+    'Enchant Weapon - Lifestealing', 'Enchant Weapon - Mighty Intellect', 'Enchant Weapon - Mighty Spirit',
+    'Enchant Weapon - Spell Power', 'Enchant Weapon - Strength', 'Enchant Weapon - Superior Striking', 'Enchant Weapon - Unholy',
+    "Enchant Weapon - Winter's Might", 'Imbue Cloak - Protection',
     # The Ranger's companions' plain ability names.
     'Arcane Resistance', 'Bite', 'Claw', 'Cower', 'Dash', 'Dive', 'Fire Resistance', 'Frost Resistance', 'Great Stamina', 'Growl', 'Natural Armor', 'Nature Resistance', 'Prowl', 'Screech', 'Shadow Resistance', 'Charm (Possess)',
     # The Ranger's plain names.

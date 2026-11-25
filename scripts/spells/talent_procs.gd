@@ -95,8 +95,8 @@ func _matches(talent: Dictionary, flags: int, ex: int, spell: Dictionary) -> boo
 	return true
 
 
-## The proc's chance: per minute for weapon procs (scaled by swing time), else
-## the row's chance or the talent's ProcChance. A cooldown keeps it from
+## The proc's chance per hit: the row's chance, else the talent's ProcChance
+## (no rates per minute, unlike classic). A cooldown keeps it from
 ## firing again too soon.
 func _roll(talent: Dictionary) -> bool:
 	var now := Time.get_ticks_msec() / 1000.0
@@ -105,9 +105,7 @@ func _roll(talent: Dictionary) -> bool:
 		return false
 	var info := _proc_info(talent)
 	var chance := float(talent.get("ProcChance", 100))
-	if float(info.get("ppm", 0.0)) > 0.0:
-		chance = float(info.ppm) * _combatant.swing_interval / 60.0 * 100.0
-	elif float(info.get("chance", 0.0)) > 0.0:
+	if float(info.get("chance", 0.0)) > 0.0:
 		chance = float(info.chance)
 	if randf() * 100.0 >= chance:
 		return false

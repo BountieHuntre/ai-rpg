@@ -1431,12 +1431,20 @@ WEAPON_BUILDERS = {
 WEAPON_SCALE = 1.1
 
 
+## Shapes besides the axes built turned over, so the side that strikes leads
+## a downward blow.
+FLIPPED_KINDS = ("mace_hammer",)
+
+
 def weapon(name, grip, bone, kind):
 	"""A prop along +Y from the grip point: one of WEAPON_KINDS' shapes."""
 	b = Builder(name)
 	family = next(f for f, kinds in WEAPON_KINDS.items() if kind in kinds)
-	# Axes' heads face down when held out, as their edge leads a chop.
-	WEAPON_BUILDERS[family](Prop(b, grip, bone, flip=family in ("axe", "axe2h")), kind)
+	# Axes' heads face down when held out, as their edge leads a chop; so does
+	# a hammer's striking face, its spike behind (the maces that are the same
+	# all round need no turning).
+	flip = family in ("axe", "axe2h") or kind in FLIPPED_KINDS
+	WEAPON_BUILDERS[family](Prop(b, grip, bone, flip=flip), kind)
 	# A little larger than they were drawn, from the grip.
 	if family != "orb":
 		g = Vector(grip)

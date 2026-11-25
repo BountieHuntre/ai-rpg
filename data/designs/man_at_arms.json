@@ -3213,7 +3213,6 @@
 					},
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -6131,8 +6130,7 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0.33252,
-						"chance": 0,
+						"chance": 1.66,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -6176,8 +6174,7 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0.66504,
-						"chance": 0,
+						"chance": 3.33,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -6221,8 +6218,7 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0.99756,
-						"chance": 0,
+						"chance": 4.99,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -6266,8 +6262,7 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 1.33008,
-						"chance": 0,
+						"chance": 6.65,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -6311,8 +6306,7 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 1.6626,
-						"chance": 0,
+						"chance": 8.31,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -6619,7 +6613,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -7446,7 +7439,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -8479,7 +8471,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 4,
@@ -8726,7 +8717,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9071,7 +9061,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9655,8 +9644,7 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 2,
-						"chance": 0,
+						"chance": 10,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -9730,8 +9718,7 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 4,
-						"chance": 0,
+						"chance": 20,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -9782,8 +9769,7 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 6,
-						"chance": 0,
+						"chance": 30,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -9834,8 +9820,7 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 8,
-						"chance": 0,
+						"chance": 40,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -9886,8 +9871,7 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 10,
-						"chance": 0,
+						"chance": 50,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -10593,7 +10577,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -10829,7 +10812,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -10970,7 +10952,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -11297,7 +11278,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -11798,7 +11778,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 4,
@@ -12611,6 +12590,689 @@
 						"teach": 23928
 					},
 					"book_tab": 2
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Rush Stun",
+			"ranks": [
+				{
+					"id": 7922,
+					"name": "Rush Stun",
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"family": 4,
+					"family_flags": 16777216,
+					"icon_id": 15,
+					"prevention": 2,
+					"duration": 1,
+					"range": 25,
+					"min_range": 8,
+					"power": "rage",
+					"attributes": [
+						"ability",
+						"not_shapeshifted",
+						"keeps_sheath"
+					],
+					"attributes_ex": [
+						"0x200"
+					],
+					"attributes_ex2": [
+						"0x400000",
+						"0x40000000"
+					],
+					"stances": [
+						"vanguard"
+					],
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Lingering Wounds (triggered)",
+			"ranks": [
+				{
+					"id": 12162,
+					"name": "Lingering Wounds",
+					"rank": 1,
+					"level": 1,
+					"proc_chance": 101,
+					"icon_id": 243,
+					"range": 50000,
+					"attributes": [
+						"ability",
+						"hidden",
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x4"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"mechanic": "bleed",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					],
+					"link": 12721
+				},
+				{
+					"id": 12850,
+					"name": "Lingering Wounds",
+					"rank": 2,
+					"level": 1,
+					"proc_chance": 101,
+					"icon_id": 243,
+					"range": 50000,
+					"attributes": [
+						"ability",
+						"hidden",
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x4"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"mechanic": "bleed",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				},
+				{
+					"id": 12868,
+					"name": "Lingering Wounds",
+					"rank": 3,
+					"level": 1,
+					"proc_chance": 101,
+					"icon_id": 243,
+					"range": 50000,
+					"attributes": [
+						"ability",
+						"hidden",
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x4"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"mechanic": "bleed",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Rising Wrath (triggered)",
+			"ranks": [
+				{
+					"id": 12880,
+					"name": "Rising Wrath",
+					"rank": 1,
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 100,
+					"charges": 12,
+					"category": 21,
+					"icon_id": 95,
+					"duration": 12,
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 5,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 65536
+					}
+				},
+				{
+					"id": 14201,
+					"name": "Rising Wrath",
+					"rank": 2,
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 100,
+					"charges": 12,
+					"category": 21,
+					"icon_id": 95,
+					"duration": 12,
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 10,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 14202,
+					"name": "Rising Wrath",
+					"rank": 3,
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 100,
+					"charges": 12,
+					"category": 21,
+					"icon_id": 95,
+					"duration": 12,
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 15,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 14203,
+					"name": "Rising Wrath",
+					"rank": 4,
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 100,
+					"charges": 12,
+					"category": 21,
+					"icon_id": 95,
+					"duration": 12,
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 20,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 14204,
+					"name": "Rising Wrath",
+					"rank": 5,
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 100,
+					"charges": 12,
+					"category": 21,
+					"icon_id": 95,
+					"duration": 12,
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 25,
+							"schools": [
+								"physical"
+							],
+							"target": "self"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Swordsman's Craft (triggered)",
+			"ranks": [
+				{
+					"id": 16459,
+					"name": "Swordsman's Craft",
+					"proc_chance": 101,
+					"icon_id": 1462,
+					"effects": [
+						{
+							"type": "add_extra_attacks",
+							"value": 1,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Bloodied Resolve (triggered)",
+			"ranks": [
+				{
+					"id": 16488,
+					"name": "Bloodied Resolve",
+					"proc_chance": 101,
+					"icon_id": 215,
+					"duration": 6,
+					"attributes": [
+						"ability"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "health_percent_regen",
+							"value": 1,
+							"target": "self",
+							"period": 6
+						}
+					]
+				},
+				{
+					"id": 16490,
+					"name": "Bloodied Resolve",
+					"proc_chance": 101,
+					"icon_id": 215,
+					"duration": 6,
+					"attributes": [
+						"ability"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "health_percent_regen",
+							"value": 1,
+							"target": "self",
+							"period": 3
+						}
+					]
+				},
+				{
+					"id": 16491,
+					"name": "Bloodied Resolve",
+					"proc_chance": 101,
+					"icon_id": 215,
+					"duration": 6,
+					"attributes": [
+						"ability"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "health_percent_regen",
+							"value": 1,
+							"target": "self",
+							"period": 2
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Shield Smash - Silenced",
+			"ranks": [
+				{
+					"id": 18498,
+					"name": "Shield Smash - Silenced",
+					"proc_chance": 101,
+					"family": 8,
+					"icon_id": 280,
+					"prevention": 1,
+					"duration": 3,
+					"range": 50000,
+					"power": "energy",
+					"stances": [
+						"stealth"
+					],
+					"mechanic": "silence",
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "silence",
+							"value": 1,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Cowing Roar (triggered)",
+			"ranks": [
+				{
+					"id": 20511,
+					"name": "Cowing Roar",
+					"level": 20,
+					"base_level": 20,
+					"family": 4,
+					"family_flags": 262144,
+					"icon_id": 148,
+					"aura_interrupt_flags": 2,
+					"duration": 8,
+					"range": 10,
+					"power": "rage",
+					"requires_item": "none",
+					"item_types": "all",
+					"mechanic": "fear",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Cut Off Stun",
+			"ranks": [
+				{
+					"id": 20614,
+					"name": "Cut Off Stun",
+					"rank": 2,
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"icon_id": 15,
+					"prevention": 2,
+					"duration": 3,
+					"range": 25,
+					"min_range": 8,
+					"power": "rage",
+					"attributes": [
+						"ability",
+						"not_shapeshifted",
+						"keeps_sheath"
+					],
+					"attributes_ex": [
+						"0x200"
+					],
+					"attributes_ex2": [
+						"0x400000",
+						"0x40000000"
+					],
+					"stances": [
+						"vanguard"
+					],
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": 45,
+							"target": "enemy"
+						}
+					]
+				},
+				{
+					"id": 20615,
+					"name": "Cut Off Stun",
+					"rank": 3,
+					"damage_class": "magic",
+					"level": 1,
+					"base_level": 1,
+					"proc_chance": 101,
+					"icon_id": 15,
+					"prevention": 2,
+					"duration": 3,
+					"range": 25,
+					"min_range": 8,
+					"power": "rage",
+					"attributes": [
+						"ability",
+						"not_shapeshifted",
+						"keeps_sheath"
+					],
+					"attributes_ex": [
+						"0x200"
+					],
+					"attributes_ex2": [
+						"0x400000",
+						"0x40000000"
+					],
+					"stances": [
+						"vanguard"
+					],
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": 65,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Shield Craft (triggered)",
+			"ranks": [
+				{
+					"id": 23602,
+					"name": "Shield Craft",
+					"rank": 1,
+					"level": 1,
+					"proc_chance": 100,
+					"icon_id": 689,
+					"attributes": [
+						"ability",
+						"keeps_sheath"
+					],
+					"proc_on": [
+						"melee_hit_done",
+						"melee_ability_done"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "energize",
+							"value": 10,
+							"power": "rage",
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Unbridled Rage Effect",
+			"ranks": [
+				{
+					"id": 23690,
+					"name": "Unbridled Rage Effect",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"effects": [
+						{
+							"type": "energize",
+							"value": 50,
+							"power": "rage",
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 23691,
+					"name": "Unbridled Rage Effect",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"effects": [
+						{
+							"type": "energize",
+							"value": 100,
+							"power": "rage",
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Improved Hobble (triggered)",
+			"ranks": [
+				{
+					"id": 23694,
+					"name": "Improved Hobble",
+					"proc_chance": 101,
+					"icon_id": 23,
+					"prevention": 2,
+					"duration": 5,
+					"range": 50000,
+					"mechanic": "root",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "root",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Finishing Blow (triggered)",
+			"ranks": [
+				{
+					"id": 26651,
+					"name": "Finishing Blow",
+					"proc_chance": 101,
+					"family": 4,
+					"icon_id": 1833,
+					"duration": 1,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"stances": [
+						"cat"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "dummy",
+							"value": 1,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Blood Fury (triggered)",
+			"ranks": [
+				{
+					"id": 29131,
+					"name": "Blood Fury",
+					"level": 10,
+					"base_level": 10,
+					"proc_chance": 101,
+					"family": 4,
+					"icon_id": 86,
+					"duration": 10,
+					"power": 4294967294,
+					"attributes": [
+						"not_shapeshifted",
+						"keeps_sheath"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "periodic_energize",
+							"value": 10,
+							"power": "rage",
+							"target": "self",
+							"period": 1
+						},
+						{
+							"type": "apply_aura",
+							"aura": "interrupt_regen",
+							"value": 0,
+							"dice": 0,
+							"target": "self"
+						}
+					]
 				}
 			],
 			"chain": false

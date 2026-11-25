@@ -41,6 +41,16 @@ const COMMANDS := {
 	"disband": ["", "Remove every playerbot from your party."],
 	"summon": ["", "Bring your party's bots to you."],
 	"randomizebots": ["", "Delete every playerbot but your party and friends, and make new random ones."],
+	"givebags": ["", "Put a 48-slot bag in every bag slot (what the old bags held stays)."],
+	"profession": ["<name> [1-4]", "Learn a profession (herbalism, mining, skinning, enchanting), or up to a rank of it, for free (your targeted playerbot's when one is targeted)."],
+	"unlearnprofession": ["<name>", "Forget a profession, its skill and recipes."],
+	"skill": ["<profession> <1-300>", "Set a profession's skill (its cap rises to fit)."],
+	"maxprofessions": ["", "Every known profession at its rank's cap."],
+	"learnrecipes": ["[profession]", "Learn every recipe of your professions, or of one."],
+	"proftools": ["", "Put every profession's tools in your bags (Mining Pick, Skinning Knife, the rods)."],
+	"profmats": ["<recipe>", "Put a recipe's reagents and tools in your bags."],
+	"nodes": ["[herb | ore | name]", "Put a herb or ore node of this zone's kinds (or the one named) just ahead of you."],
+	"respawnnodes": ["", "Bring back every emptied herb and ore node now."],
 }
 
 var _player: Player
@@ -381,6 +391,169 @@ func _cmd_resettalents(_args: PackedStringArray) -> String:
 	Talents.reset(GameState)
 	GameState.inventory_changed.emit()
 	return "Took back %d talent point%s." % [spent, "" if spent == 1 else "s"]
+
+
+## Every bag slot gets the biggest bag (48 slots), for testing the bag window;
+## what a bag held before stays in it, as the new one is bigger.
+func _cmd_givebags(_args: PackedStringArray) -> String:
+	var biggest := WorldDrops.bag(48)
+	for i in GameState.BAG_SLOTS:
+		GameState.bags[i] = { "id": biggest, "count": 1 }
+		Inventory._resize_container(i + 1, int(ItemDB.get_item(biggest).ContainerSlots))
+	GameState.inventory_changed.emit()
+	return "Four 48-slot bags in your bag slots."
+
+
+# Professions.
+
+## Whose professions a command changes: the targeted playerbot's, else yours.
+func _prof_profile() -> CharacterProfile:
+	var bot := _player.targeting.target as Bot
+	return bot.profile if bot else GameState
+
+
+func _prof_who(profile: CharacterProfile) -> String:
+	return "You" if profile == GameState else profile.char_name
+
+
+func _cmd_profession(args: PackedStringArray) -> String:
+	if args.is_empty():
+		return "!Usage: profession <herbalism | mining | skinning | enchanting> [1-4]"
+	var name := Professions.find(args[0])
+	if name.is_empty():
+		return "!No profession called %s." % args[0]
+	var profile := _prof_profile()
+	var rank := clampi(int(args[1]), 1, 4) if args.size() > 1 and args[1].is_valid_int() else maxi(Professions.rank_of(profile, name) + 1, 1)
+	if Professions.rank_of(profile, name) >= rank:
+		return "!%s already know %s %s." % [_prof_who(profile), Professions.rank_name(name, rank), Professions.title(name)]
+	if not Professions.knows(profile, name) and Professions.known(profile).size() >= Professions.MAX_PRIMARY:
+		return "!%s already know two professions." % _prof_who(profile)
+	for r in range(Professions.rank_of(profile, name) + 1, rank + 1):
+		Professions.learn_rank(profile, name, r)
+	GameState.inventory_changed.emit()
+	return "%s learned %s %s (%d/%d)." % [_prof_who(profile), Professions.rank_name(name, rank), Professions.title(name),
+		Professions.value(profile, name), Professions.max_value(profile, name)]
+
+
+func _cmd_unlearnprofession(args: PackedStringArray) -> String:
+	var name := Professions.find(args[0]) if not args.is_empty() else ""
+	var profile := _prof_profile()
+	if name.is_empty() or not Professions.knows(profile, name):
+		return "!Usage: unlearnprofession <a profession you know>"
+	Professions.unlearn(profile, name)
+	GameState.inventory_changed.emit()
+	return "%s forgot %s." % [_prof_who(profile), Professions.title(name)]
+
+
+func _cmd_skill(args: PackedStringArray) -> String:
+	if args.size() < 2 or not args[1].is_valid_int():
+		return "!Usage: skill <profession> <1-300>"
+	var name := Professions.find(args[0])
+	var profile := _prof_profile()
+	if name.is_empty() or not Professions.knows(profile, name):
+		return "!%s don't know %s." % [_prof_who(profile), args[0]]
+	Professions.set_value(profile, name, int(args[1]))
+	return "%s: %d/%d." % [Professions.title(name), Professions.value(profile, name), Professions.max_value(profile, name)]
+
+
+func _cmd_maxprofessions(_args: PackedStringArray) -> String:
+	var profile := _prof_profile()
+	if Professions.known(profile).is_empty():
+		return "!%s know no professions." % _prof_who(profile)
+	Professions.max_all(profile)
+	return ", ".join(Professions.known(profile).map(func(n: String) -> String:
+		return "%s %d/%d" % [Professions.title(n), Professions.value(profile, n), Professions.max_value(profile, n)]))
+
+
+func _cmd_learnrecipes(args: PackedStringArray) -> String:
+	var profile := _prof_profile()
+	var only := Professions.find(args[0]) if not args.is_empty() else ""
+	if not args.is_empty() and only.is_empty():
+		return "!No profession called %s." % args[0]
+	var learned := Professions.learn_all_recipes(profile, only)
+	return "%s learned %d recipe%s." % [_prof_who(profile), learned.size(), "" if learned.size() == 1 else "s"]
+
+
+## Every profession's tools: the gathering tools and the Enchanting rods its
+## recipes need.
+func _cmd_proftools(_args: PackedStringArray) -> String:
+	var tools := {}
+	for name: String in ProfessionDB.NAMES:
+		for id: Variant in ProfessionDB.profession(name).get("tools", []):
+			tools[int(id)] = true
+		for recipe_id in ProfessionDB.recipes_of(name):
+			for id: Variant in ProfessionDB.recipe(recipe_id).get("tools", []):
+				tools[int(id)] = true
+	var given: Array[String] = []
+	for id: int in tools:
+		if Inventory.count_item(id) == 0 and GameState.add_item(id, 1) == 0:
+			given.append(str(ItemDB.get_item(id).get("name", id)))
+	GameState.inventory_changed.emit()
+	return "Gave %s." % ", ".join(given) if not given.is_empty() else "!You have every tool already (or no room)."
+
+
+func _cmd_profmats(args: PackedStringArray) -> String:
+	if args.is_empty():
+		return "!Usage: profmats <recipe name or spell id>"
+	var query := " ".join(args)
+	var id := int(query) if query.is_valid_int() else 0
+	if id == 0:
+		var recipes := {}
+		for name: String in ProfessionDB.NAMES:
+			for recipe_id in ProfessionDB.recipes_of(name):
+				recipes[str(recipe_id)] = SpellDB.get_spell(recipe_id)
+		id = _best_match(recipes, query, "SpellName")
+	var recipe := ProfessionDB.recipe(id)
+	if recipe.is_empty():
+		return "!No recipe called %s." % query
+	var given: Array[String] = []
+	for pair: Array in recipe.get("reagents", []):
+		GameState.add_item(int(pair[0]), int(pair[1]))
+		given.append("%dx %s" % [int(pair[1]), ItemDB.get_item(int(pair[0])).get("name", pair[0])])
+	for tool: Variant in recipe.get("tools", []):
+		if Inventory.count_item(int(tool)) == 0:
+			GameState.add_item(int(tool), 1)
+			given.append(str(ItemDB.get_item(int(tool)).get("name", tool)))
+	GameState.inventory_changed.emit()
+	return "%s: %s." % [SpellDB.full_name(SpellDB.get_spell(id)), ", ".join(given)]
+
+
+## A herb or ore node ahead, of this zone's kinds or the one named.
+func _cmd_nodes(args: PackedStringArray) -> String:
+	var zone := _world.zone_at(_player.global_position)
+	if zone == null or zone.gather_field == null:
+		return "!No herbs or ore here."
+	var query := " ".join(args).to_lower()
+	var kind := "ore" if query == "ore" else "herb"
+	var entry := 0
+	if query != "" and query != "herb" and query != "ore":
+		for id: String in ProfessionDB.data().nodes:
+			var node: Dictionary = ProfessionDB.data().nodes[id]
+			if str(node.name).to_lower().contains(query):
+				entry = int(id)
+				kind = str(node.kind)
+				break
+		if entry == 0:
+			return "!No herb or ore called %s." % query
+	else:
+		entry = zone.gather_field._pick(kind)
+	var thing := GatherNode.new()
+	thing.kind = kind
+	thing.entry = entry
+	thing.field = zone.gather_field
+	var forward := Vector3(-sin(_player.facing), 0, -cos(_player.facing))
+	var at := _player.global_position + forward * 3.0
+	thing.position = Vector3(at.x, zone.ground_height(at.x, at.z), at.z) - zone.gather_field.global_position
+	zone.gather_field.add_child(thing)
+	return "%s ahead (needs %s %d)." % [thing.node_name(), Professions.title(thing.profession()), thing.skill_needed()]
+
+
+func _cmd_respawnnodes(_args: PackedStringArray) -> String:
+	var count := 0
+	for zone in _world.zones:
+		if zone.gather_field:
+			count += zone.gather_field.respawn_all()
+	return "Brought back %d herb and ore node%s." % [count, "" if count == 1 else "s"]
 
 
 ## Starts the character over, as Shift+F12 does. Asks for "confirm" first.

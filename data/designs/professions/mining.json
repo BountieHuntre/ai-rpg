@@ -1,0 +1,1799 @@
+{
+	"class": 0,
+	"trainer": "mining",
+	"spells": [
+		{
+			"name": "Mining",
+			"ranks": [
+				{
+					"id": 2575,
+					"name": "Mining",
+					"rank_text": "Apprentice",
+					"proc_chance": 101,
+					"cast": 1.5,
+					"icon_id": 336,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"range": 5,
+					"attributes": [
+						"ability",
+						"hidden",
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 3,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 1,
+							"misc": 186
+						}
+					],
+					"trainer": {
+						"level": 5,
+						"price": 10,
+						"teach": 2581,
+						"skill": 0
+					}
+				},
+				{
+					"id": 2576,
+					"name": "Mining",
+					"rank_text": "Journeyman",
+					"proc_chance": 101,
+					"cast": 1.5,
+					"icon_id": 336,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"range": 5,
+					"attributes": [
+						"ability",
+						"hidden",
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 3,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 2,
+							"misc": 186
+						}
+					],
+					"trainer": {
+						"level": 10,
+						"price": 500,
+						"teach": 2582,
+						"skill": 50
+					}
+				},
+				{
+					"id": 3564,
+					"name": "Mining",
+					"rank_text": "Expert",
+					"proc_chance": 101,
+					"cast": 1.5,
+					"icon_id": 336,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"range": 5,
+					"attributes": [
+						"ability",
+						"hidden",
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 3,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 3,
+							"misc": 186
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 4500,
+						"teach": 3568,
+						"skill": 125
+					}
+				},
+				{
+					"id": 10248,
+					"name": "Mining",
+					"rank_text": "Artisan",
+					"proc_chance": 101,
+					"cast": 1.5,
+					"icon_id": 336,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"range": 5,
+					"attributes": [
+						"ability",
+						"hidden",
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 3,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 4,
+							"misc": 186
+						}
+					],
+					"trainer": {
+						"level": 35,
+						"price": 50000,
+						"teach": 10249,
+						"skill": 200
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Find Minerals",
+			"ranks": [
+				{
+					"id": 2580,
+					"name": "Find Minerals",
+					"level": 1,
+					"proc_chance": 101,
+					"gcd_category": 133,
+					"icon_id": 66,
+					"duration": "until_cancelled",
+					"gcd": 1.5,
+					"attributes": [
+						"passive",
+						"hide_in_combat_log"
+					],
+					"attributes_ex": [
+						"0x20"
+					],
+					"attributes_ex2": [
+						"0x10000000"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "track_resources",
+							"value": 0,
+							"dice": 0,
+							"misc": 3,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Apprentice Miner",
+			"ranks": [
+				{
+					"id": 2581,
+					"name": "Apprentice Miner",
+					"proc_chance": 101,
+					"icon_id": 336,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 2575
+						},
+						{
+							"type": "skill_step",
+							"value": 1,
+							"misc": 186
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Journeyman Miner",
+			"ranks": [
+				{
+					"id": 2582,
+					"name": "Journeyman Miner",
+					"proc_chance": 101,
+					"icon_id": 336,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 2576
+						},
+						{
+							"type": "skill_step",
+							"value": 2,
+							"misc": 186
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelting",
+			"ranks": [
+				{
+					"id": 2656,
+					"name": "Smelting",
+					"proc_chance": 101,
+					"icon_id": 34,
+					"attributes": [
+						"ability",
+						"not_shapeshifted"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "trade_skill",
+							"value": 0,
+							"dice": 0
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Copper",
+			"ranks": [
+				{
+					"id": 2657,
+					"name": "Smelt Copper",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 2840,
+							"target": "self"
+						}
+					],
+					"recipe": {
+						"skill": 1,
+						"levels": [
+							1,
+							25,
+							47,
+							70
+						],
+						"reagents": [
+							{
+								"item": 2770,
+								"name": "Copper Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 2840,
+							"name": "Copper Bar",
+							"count": 1
+						}
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Silver",
+			"ranks": [
+				{
+					"id": 2658,
+					"name": "Smelt Silver",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 2842,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 180,
+						"teach": 3317,
+						"skill": 75
+					},
+					"recipe": {
+						"skill": 75,
+						"levels": [
+							75,
+							100,
+							112,
+							125
+						],
+						"reagents": [
+							{
+								"item": 2775,
+								"name": "Silver Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 2842,
+							"name": "Silver Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 3317,
+					"name": "Smelt Silver",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 2658
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Bronze",
+			"ranks": [
+				{
+					"id": 2659,
+					"name": "Smelt Bronze",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 2,
+							"item": 2841,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 200,
+						"teach": 3314,
+						"skill": 65
+					},
+					"recipe": {
+						"skill": 65,
+						"levels": [
+							65,
+							65,
+							90,
+							115
+						],
+						"reagents": [
+							{
+								"item": 2840,
+								"name": "Copper Bar",
+								"count": 1
+							},
+							{
+								"item": 3576,
+								"name": "Tin Bar",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 2841,
+							"name": "Bronze Bar",
+							"count": 2
+						}
+					}
+				},
+				{
+					"id": 3314,
+					"name": "Smelt Bronze",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 2659
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Tin",
+			"ranks": [
+				{
+					"id": 3304,
+					"name": "Smelt Tin",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 3576,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 50,
+						"teach": 3313,
+						"skill": 65
+					},
+					"recipe": {
+						"skill": 65,
+						"levels": [
+							65,
+							65,
+							70,
+							75
+						],
+						"reagents": [
+							{
+								"item": 2771,
+								"name": "Tin Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 3576,
+							"name": "Tin Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 3313,
+					"name": "Smelt Tin",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 3304
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Iron",
+			"ranks": [
+				{
+					"id": 3307,
+					"name": "Smelt Iron",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 3575,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 450,
+						"teach": 3316,
+						"skill": 125
+					},
+					"recipe": {
+						"skill": 125,
+						"levels": [
+							125,
+							130,
+							135,
+							140
+						],
+						"reagents": [
+							{
+								"item": 2772,
+								"name": "Iron Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 3575,
+							"name": "Iron Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 3316,
+					"name": "Smelt Iron",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 3307
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Gold",
+			"ranks": [
+				{
+					"id": 3308,
+					"name": "Smelt Gold",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 3577,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 2250,
+						"teach": 3315,
+						"skill": 155
+					},
+					"recipe": {
+						"skill": 155,
+						"levels": [
+							155,
+							170,
+							177,
+							185
+						],
+						"reagents": [
+							{
+								"item": 2776,
+								"name": "Gold Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 3577,
+							"name": "Gold Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 3315,
+					"name": "Smelt Gold",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 3308
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Expert Miner",
+			"ranks": [
+				{
+					"id": 3568,
+					"name": "Expert Miner",
+					"proc_chance": 101,
+					"icon_id": 336,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 3564
+						},
+						{
+							"type": "skill_step",
+							"value": 3,
+							"misc": 186
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Steel",
+			"ranks": [
+				{
+					"id": 3569,
+					"name": "Smelt Steel",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 3859,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 2250,
+						"teach": 3596,
+						"skill": 165
+					},
+					"recipe": {
+						"skill": 165,
+						"levels": [
+							165,
+							165,
+							165,
+							165
+						],
+						"reagents": [
+							{
+								"item": 3575,
+								"name": "Iron Bar",
+								"count": 1
+							},
+							{
+								"item": 3857,
+								"name": "Coal",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 3859,
+							"name": "Steel Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 3596,
+					"name": "Smelt Steel",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 3569
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Moonsteel",
+			"ranks": [
+				{
+					"id": 10097,
+					"name": "Smelt Moonsteel",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 3860,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 4500,
+						"teach": 10099,
+						"skill": 175
+					},
+					"recipe": {
+						"skill": 175,
+						"levels": [
+							175,
+							175,
+							175,
+							175
+						],
+						"reagents": [
+							{
+								"item": 3858,
+								"name": "Moonsteel Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 3860,
+							"name": "Moonsteel Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 10099,
+					"name": "Smelt Moonsteel",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 10097
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Brightsilver",
+			"ranks": [
+				{
+					"id": 10098,
+					"name": "Smelt Brightsilver",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 6037,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 9000,
+						"teach": 10100,
+						"skill": 230
+					},
+					"recipe": {
+						"skill": 230,
+						"levels": [
+							230,
+							230,
+							230,
+							230
+						],
+						"reagents": [
+							{
+								"item": 7911,
+								"name": "Brightsilver Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 6037,
+							"name": "Brightsilver Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 10100,
+					"name": "Smelt Brightsilver",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 10098
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Artisan Miner",
+			"ranks": [
+				{
+					"id": 10249,
+					"name": "Artisan Miner",
+					"proc_chance": 101,
+					"icon_id": 336,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 10248
+						},
+						{
+							"type": "skill_step",
+							"value": 4,
+							"misc": 186
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Smelt Starmetal",
+			"ranks": [
+				{
+					"id": 16153,
+					"name": "Smelt Starmetal",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"interrupt_flags": 15,
+					"spell_focus": 3,
+					"cast": 3,
+					"attributes": [
+						"ability",
+						"trade_spell",
+						"not_shapeshifted"
+					],
+					"effects": [
+						{
+							"type": "create_item",
+							"value": 1,
+							"item": 12359,
+							"target": "self"
+						}
+					],
+					"trainer": {
+						"level": 0,
+						"price": 18000,
+						"teach": 16154,
+						"skill": 250
+					},
+					"recipe": {
+						"skill": 250,
+						"levels": [
+							250,
+							250,
+							250,
+							250
+						],
+						"reagents": [
+							{
+								"item": 10620,
+								"name": "Starmetal Ore",
+								"count": 1
+							}
+						],
+						"focus": "forge",
+						"makes": {
+							"item": 12359,
+							"name": "Starmetal Bar",
+							"count": 1
+						}
+					}
+				},
+				{
+					"id": 16154,
+					"name": "Smelt Starmetal",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"target_flags": 256,
+					"interrupt_flags": 15,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"dice": 0,
+							"trigger": 16153
+						}
+					]
+				}
+			],
+			"chain": false
+		}
+	],
+	"profession": {
+		"name": "Mining",
+		"skill": 186,
+		"ranks": [
+			{
+				"spell": 2575,
+				"rank": "Apprentice",
+				"max": 75,
+				"level": 5,
+				"skill": 0,
+				"price": 10
+			},
+			{
+				"spell": 2576,
+				"rank": "Journeyman",
+				"max": 150,
+				"level": 10,
+				"skill": 50,
+				"price": 500
+			},
+			{
+				"spell": 3564,
+				"rank": "Expert",
+				"max": 225,
+				"level": 20,
+				"skill": 125,
+				"price": 4500
+			},
+			{
+				"spell": 10248,
+				"rank": "Artisan",
+				"max": 300,
+				"level": 35,
+				"skill": 200,
+				"price": 50000
+			}
+		],
+		"start": [
+			2580,
+			2656,
+			2657
+		],
+		"tools": [
+			{
+				"item": 2901,
+				"name": "Mining Pick"
+			}
+		]
+	},
+	"nodes": [
+		{
+			"id": 1731,
+			"name": "Copper Vein",
+			"skill": 1,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1502,
+			"loot": [
+				{
+					"item": 774,
+					"name": "Malachite",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 818,
+					"name": "Tigerseye",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 1210,
+					"name": "Shadowgem",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 2770,
+					"name": "Copper Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 2835,
+					"name": "Rough Stone",
+					"count": [
+						1,
+						2
+					],
+					"chance": 44
+				},
+				{
+					"item": 5075,
+					"name": "Blood Shard",
+					"count": [
+						1,
+						3
+					],
+					"chance": 2,
+					"condition": 673
+				}
+			]
+		},
+		{
+			"id": 1732,
+			"name": "Tin Vein",
+			"skill": 65,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1503,
+			"loot": [
+				{
+					"item": 1206,
+					"name": "Moss Agate",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 1210,
+					"name": "Shadowgem",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 1529,
+					"name": "Jade",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 1705,
+					"name": "Lesser Moonstone",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1,
+					"group": 1
+				},
+				{
+					"item": 2771,
+					"name": "Tin Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 2836,
+					"name": "Coarse Stone",
+					"count": [
+						1,
+						2
+					],
+					"chance": 44
+				},
+				{
+					"item": 5075,
+					"name": "Blood Shard",
+					"count": [
+						1,
+						3
+					],
+					"chance": 2,
+					"condition": 673
+				}
+			]
+		},
+		{
+			"id": 1733,
+			"name": "Silver Vein",
+			"skill": 75,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1504,
+			"loot": [
+				{
+					"item": 1206,
+					"name": "Moss Agate",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1.5
+				},
+				{
+					"item": 1210,
+					"name": "Shadowgem",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 1705,
+					"name": "Lesser Moonstone",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 2775,
+					"name": "Silver Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1735,
+			"name": "Iron Deposit",
+			"skill": 125,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1505,
+			"loot": [
+				{
+					"item": 1529,
+					"name": "Jade",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1.3
+				},
+				{
+					"item": 1705,
+					"name": "Lesser Moonstone",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 2772,
+					"name": "Iron Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 2838,
+					"name": "Heavy Stone",
+					"count": [
+						1,
+						3
+					],
+					"chance": 40
+				},
+				{
+					"item": 3864,
+					"name": "Citrine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 7909,
+					"name": "Aquamarine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.2
+				}
+			]
+		},
+		{
+			"id": 1734,
+			"name": "Gold Vein",
+			"skill": 155,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1506,
+			"loot": [
+				{
+					"item": 1529,
+					"name": "Jade",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 1705,
+					"name": "Lesser Moonstone",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.9
+				},
+				{
+					"item": 2776,
+					"name": "Gold Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 3864,
+					"name": "Citrine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 11513,
+					"name": "Tainted Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 50,
+					"condition": 987
+				}
+			]
+		},
+		{
+			"id": 2040,
+			"name": "Moonsteel Deposit",
+			"skill": 175,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1742,
+			"loot": [
+				{
+					"item": 3858,
+					"name": "Moonsteel Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 3864,
+					"name": "Citrine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 7909,
+					"name": "Aquamarine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 7910,
+					"name": "Star Ruby",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 7912,
+					"name": "Solid Stone",
+					"count": [
+						1,
+						4
+					],
+					"chance": 40
+				},
+				{
+					"item": 9262,
+					"name": "Black Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 11513,
+					"name": "Tainted Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 50,
+					"condition": 987
+				}
+			]
+		},
+		{
+			"id": 2047,
+			"name": "Brightsilver Deposit",
+			"skill": 230,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 5045,
+			"loot": [
+				{
+					"item": 3864,
+					"name": "Citrine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 7909,
+					"name": "Aquamarine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1.5
+				},
+				{
+					"item": 7910,
+					"name": "Star Ruby",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.9
+				},
+				{
+					"item": 7911,
+					"name": "Brightsilver Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 11513,
+					"name": "Tainted Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 50,
+					"condition": 987
+				}
+			]
+		},
+		{
+			"id": 324,
+			"name": "Small Starmetal Vein",
+			"skill": 245,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 9597,
+			"loot": [
+				{
+					"item": 7910,
+					"name": "Star Ruby",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 9262,
+					"name": "Black Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 1
+				},
+				{
+					"item": 10620,
+					"name": "Starmetal Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 11513,
+					"name": "Tainted Vitriol",
+					"count": [
+						1,
+						1
+					],
+					"chance": 50,
+					"condition": 987
+				},
+				{
+					"item": 12361,
+					"name": "Blue Sapphire",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 12363,
+					"name": "Arcane Crystal",
+					"count": [
+						1,
+						1
+					],
+					"chance": 2.6
+				},
+				{
+					"item": 12364,
+					"name": "Huge Emerald",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 12365,
+					"name": "Dense Stone",
+					"count": [
+						1,
+						3
+					],
+					"chance": 40
+				},
+				{
+					"item": 12799,
+					"name": "Large Opal",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				},
+				{
+					"item": 12800,
+					"name": "Worldheart Diamond",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				}
+			]
+		},
+		{
+			"id": 175404,
+			"name": "Rich Starmetal Vein",
+			"skill": 275,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 12883,
+			"loot": [
+				{
+					"item": 7910,
+					"name": "Star Ruby",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 10620,
+					"name": "Starmetal Ore",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				},
+				{
+					"item": 12361,
+					"name": "Blue Sapphire",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 12363,
+					"name": "Arcane Crystal",
+					"count": [
+						1,
+						1
+					],
+					"chance": 2.9
+				},
+				{
+					"item": 12364,
+					"name": "Huge Emerald",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 12365,
+					"name": "Dense Stone",
+					"count": [
+						1,
+						3
+					],
+					"chance": 40
+				},
+				{
+					"item": 12799,
+					"name": "Large Opal",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.8
+				},
+				{
+					"item": 12800,
+					"name": "Worldheart Diamond",
+					"count": [
+						1,
+						1
+					],
+					"chance": 0.7
+				}
+			]
+		}
+	]
+}

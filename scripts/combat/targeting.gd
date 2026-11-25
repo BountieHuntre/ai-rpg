@@ -9,6 +9,12 @@ extends Node
 signal loot_requested(corpse: Node3D, take_all: bool)
 ## Right-click on a friendly NPC.
 signal npc_clicked(npc: Node3D)
+## Right-clicked a herb or ore node (GatherNode).
+signal gather_requested(node: Node3D)
+## Right-clicked a skinnable corpse (Skinning).
+signal skin_requested(corpse: Node3D)
+## A right-click on a corpse that can't be skinned, with why.
+signal skin_refused(why: String)
 
 const UNIT_LAYER := 2
 ## Render layer bit for units' meshes (the player, bots, creatures, NPCs),
@@ -26,6 +32,13 @@ const FAR_START := 8.0
 const FAR_SPAN := 32.0
 const FAR_GROWTH := 3.0
 const RING_REACH := 3.0
+## How far above and below the ground under the target the ring paints on
+## flat ground (it reaches further on slopes, as far as the slope rises across
+## it), so counters, crates and roofs over the ground stay clean.
+const RING_GROUND_SLACK := 0.25
+## Physics layer of the world (terrain, buildings, props), for finding the
+## ground under the target.
+const WORLD_LAYER := 1
 ## Pixels across the ring's texture.
 const RING_TEXTURE_SIZE := 96
 const HOSTILE_COLOR := Color(0.8, 0.2, 0.2)
@@ -95,7 +108,8 @@ func set_target(node: Node3D) -> void:
 		_set_ring_color(reaction_color(target))
 	# Auto-attack follows target changes but never starts from selecting alone.
 	if _player.combatant.attack_target:
-		_player.combatant.attack_target = target_combatant()
+		var fighting := target_combatant()
+		_player.combatant.attack_target = fighting if fighting and fighting.is_alive() else null
 
 
 ## Moves to the next enemy on screen, nearest first, as Tab does in WoW.
@@ -116,28 +130,16 @@ func cycle() -> void:
 	set_target(candidates[next % candidates.size()])
 
 
-## How many looted corpses a click can pass through.
-const CLICK_THROUGH := 8
-
-
 ## The creature, corpse or NPC under a point of the game view, or null.
-## Corpses already looted are clicked through, to whatever lies under them
-## (another corpse to loot, a creature).
+## Every corpse catches it, looted or not, so each can be hovered for its
+## tooltip and clicked to target it.
 func unit_at(screen_position: Vector2) -> Node3D:
 	var camera := _player.get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_position)
 	var to := from + camera.project_ray_normal(screen_position) * camera.far
 	var query := PhysicsRayQueryParameters3D.create(from, to, UNIT_LAYER | Enemy.CORPSE_LAYER)
-	var skipped: Array[RID] = [_player.get_rid()]
-	var space := _player.get_world_3d().direct_space_state
-	for attempt in CLICK_THROUGH:
-		query.exclude = skipped
-		var collider := space.intersect_ray(query).get("collider") as Node3D
-		var corpse := collider as Enemy
-		if corpse == null or corpse.combatant.is_alive() or corpse.has_loot():
-			return collider
-		skipped.append(corpse.get_rid())
-	return null
+	query.exclude = [_player.get_rid()]
+	return _player.get_world_3d().direct_space_state.intersect_ray(query).get("collider") as Node3D
 
 
 ## As in classic: left click selects the creature or NPC under the cursor.
@@ -149,6 +151,15 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 		set_target(collider)
 		if button == MOUSE_BUTTON_RIGHT:
 			npc_clicked.emit(collider)
+		return
+	# A herb or ore: right-click gathers it, or loots what's left in it.
+	if collider is GatherNode:
+		var node := collider as GatherNode
+		if button == MOUSE_BUTTON_RIGHT:
+			if node.has_loot():
+				loot_requested.emit(node, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot"))
+			else:
+				gather_requested.emit(node)
 		return
 	# Right-clicking a game object (a Bundle of Wood) opens it, when it holds
 	# something a quest needs.
@@ -166,10 +177,20 @@ func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
 	if not enemy:
 		return
 	if not enemy.combatant.is_alive():
+		# Clicking a corpse targets it, as in classic.
+		set_target(enemy)
+		_picked_corpse = enemy
 		# Right-clicking a corpse loots it. Shift loots everything at once.
 		if button == MOUSE_BUTTON_RIGHT and enemy.has_loot():
 			# Shift does the opposite of the Auto Loot option, as in classic.
 			loot_requested.emit(enemy, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot"))
+		# Looted, it may be skinned.
+		elif button == MOUSE_BUTTON_RIGHT and enemy.skinnable():
+			skin_requested.emit(enemy)
+		# A skinner told when there's nothing to skin, rather than nothing
+		# happening (creatures without skinning loot, as classic's).
+		elif button == MOUSE_BUTTON_RIGHT and not enemy.skinned and Professions.knows(GameState, "skinning"):
+			skin_refused.emit("That can't be skinned.")
 		return
 	set_target(enemy)
 	if button == MOUSE_BUTTON_RIGHT:
@@ -187,6 +208,8 @@ func _ready() -> void:
 	_ring.cull_mask = ~UNIT_RENDER_LAYER & 0xFFFFF
 	_ring.upper_fade = 0.0
 	_ring.lower_fade = 0.0
+	# Steep faces (walls, the sides of crates and stalls) aren't painted.
+	_ring.normal_fade = 0.5
 	_ring.top_level = true
 	# Placed every drawn frame where the target is drawn, so not interpolated
 	# itself.
@@ -232,15 +255,23 @@ func in_combat_with_target() -> bool:
 	return _player.combatant.attack_target == enemy.combatant or (enemy.state == Enemy.State.CHASE and enemy.threat.has(_player.combatant))
 
 
+## The corpse the player clicked on (targeted while dead).
+var _picked_corpse: Enemy
+
+
 func _process(delta: float) -> void:
 	# A target removed from the world (a deleted bot, a spawned creature gone).
 	if target != null and not is_instance_valid(target):
 		target = null
-	if target is Enemy and not (target as Enemy).combatant.is_alive():
+	# A creature dying while targeted drops the target; a corpse clicked on
+	# stays targeted until it's gone (skinned and emptied, or respawned).
+	if target is Enemy and not (target as Enemy).combatant.is_alive() and (target != _picked_corpse or not target.visible):
 		set_target(null)
+	if _picked_corpse and (not is_instance_valid(_picked_corpse) or target != _picked_corpse):
+		_picked_corpse = null
 	_ring.visible = target != null
 	if target:
-		_ring.global_position = target.get_global_transform_interpolated().origin
+		var feet := target.get_global_transform_interpolated().origin
 		# As big as the target is drawn (big creatures, elites and bosses).
 		var visual := target.get_node_or_null("Visual") as Node3D
 		var size := clampf(visual.scale.x, 0.8, 2.0) if visual else 1.0
@@ -248,7 +279,7 @@ func _process(delta: float) -> void:
 		if camera:
 			var far := clampf((camera.global_position.distance_to(target.global_position) - FAR_START) / FAR_SPAN, 0.0, 1.0)
 			size *= lerpf(1.0, FAR_GROWTH, far)
-		_ring.size = Vector3(RING_OUTER * 2.0 * size, RING_REACH * 2.0, RING_OUTER * 2.0 * size)
+		_place_ring(feet, RING_OUTER * size)
 		if in_combat_with_target():
 			# Flashes between bright and dark red.
 			_flash_time += delta
@@ -257,3 +288,23 @@ func _process(delta: float) -> void:
 		else:
 			_flash_time = 0.0
 			_set_ring_color(reaction_color(target))
+
+
+## Puts the ring on the ground under the target: a thin box about the ground
+## the target stands on (found straight down from its feet), only as deep as
+## the ground's slope needs across the ring, so nothing above the ground (a
+## counter it stands behind, a roof over it) is painted.
+func _place_ring(feet: Vector3, radius: float) -> void:
+	var ground := feet
+	var rise := 0.0
+	var space := _player.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.5, feet + Vector3.DOWN * RING_REACH, WORLD_LAYER)
+	var hit := space.intersect_ray(query)
+	if not hit.is_empty():
+		ground = hit.position
+		# How much the ground rises or falls from the middle to the ring's edge.
+		var normal: Vector3 = hit.normal
+		rise = radius * tan(acos(clampf(normal.y, 0.05, 1.0)))
+	var reach := RING_GROUND_SLACK + minf(rise, RING_REACH)
+	_ring.global_position = ground
+	_ring.size = Vector3(radius * 2.0, reach * 2.0, radius * 2.0)

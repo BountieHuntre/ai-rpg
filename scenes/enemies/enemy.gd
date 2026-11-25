@@ -356,6 +356,9 @@ var temporary := false
 ## What's left on the corpse: { "id", "count" } entries, and copper.
 var loot: Array[Dictionary] = []
 var loot_money := 0
+## Skinned already (Skinning): its loot is its skinning loot, and once that's
+## taken the corpse is gone.
+var skinned := false
 ## Unix time (seconds) when a dead enemy comes back. Real time, so it keeps
 ## counting while the game is closed, like a classic server's respawn timer.
 var respawn_at := 0.0
@@ -1232,6 +1235,40 @@ func has_loot() -> bool:
 	return state == State.DEAD and (loot_money > 0 or not loot.is_empty())
 
 
+## Its classic skinning loot table (SkinningLootId), or 0.
+func skinning_loot_id() -> int:
+	return int(_data.get("SkinningLootId", 0))
+
+
+## A corpse with skinning loot not yet skinned, loot left on it or not (its
+## tooltip says Skinnable).
+func has_skinning() -> bool:
+	return state == State.DEAD and visible and not skinned and skinning_loot_id() != 0 \
+		and not ProfessionDB.skinning_loot(skinning_loot_id()).is_empty()
+
+
+## A corpse that can be skinned: it has skinning loot, nothing else left on
+## it, and hasn't been skinned (classic's UNIT_FLAG_SKINNABLE once looted).
+func skinnable() -> bool:
+	return state == State.DEAD and visible and not skinned and not has_loot() and skinning_loot_id() != 0 \
+		and not ProfessionDB.skinning_loot(skinning_loot_id()).is_empty()
+
+
+## Skinned: its skinning loot is rolled onto it, to take like any loot.
+func skin() -> void:
+	skinned = true
+	loot = LootTable.roll_entries(ProfessionDB.skinning_loot(skinning_loot_id()))
+	loot_money = 0
+	_sparkle.visible = false
+
+
+## A skinned corpse emptied: gone until it respawns.
+func _check_skinned_empty() -> void:
+	if skinned and state == State.DEAD and visible and not has_loot():
+		visible = false
+		collision_layer = 0
+
+
 ## Level is rolled between the template's min and max, with health scaled
 ## linearly between the min-level and max-level values.
 func _roll_level() -> void:
@@ -1281,6 +1318,8 @@ func _on_died() -> void:
 	# player's group: bots don't loot.
 	if Party.reward_kill(self, tapped_by if tapped_by and is_instance_valid(tapped_by) else null):
 		loot = LootTable.roll_creature(int(_data.LootId))
+		# The game's own world drops: bags (WorldDrops).
+		loot.append_array(WorldDrops.roll(level, rank_override if rank_override >= 0 else int(_data.Rank)))
 		loot_money = LootTable.roll_money(int(_data.MinLootGold), int(_data.MaxLootGold))
 	threat.clear()
 	_victim = null
@@ -1299,7 +1338,7 @@ func corpse_state() -> Dictionary:
 	var p := global_position
 	return {
 		"respawn_at": respawn_at, "level": level, "position": [p.x, p.y, p.z],
-		"facing": _visual.rotation.y, "loot": loot, "money": loot_money,
+		"facing": _visual.rotation.y, "loot": loot, "money": loot_money, "skinned": skinned,
 	}
 
 
@@ -1317,7 +1356,12 @@ func restore_corpse(saved: Dictionary) -> void:
 	_visual.rotation.y = float(saved.facing)
 	loot.assign(saved.loot.map(func(drop: Dictionary) -> Dictionary: return { "id": int(drop.id), "count": int(drop.count) }))
 	loot_money = int(saved.money)
+	skinned = bool(saved.get("skinned", false))
 	respawn_at = float(saved.respawn_at)
+	if skinned and not has_loot():
+		visible = false
+		collision_layer = 0
+		return
 	_feedback.show_dead()
 	_fit_corpse_shape()
 
@@ -1352,7 +1396,8 @@ func _process(delta: float) -> void:
 			queue_free()
 			return
 		_respawn()
-	_sparkle.visible = has_loot()
+	_check_skinned_empty()
+	_sparkle.visible = has_loot() and not skinned
 	if _sparkle.visible:
 		_sparkle.rotate_y(SPARKLE_SPIN * delta)
 
@@ -1369,6 +1414,7 @@ func _respawn() -> void:
 	_collision.transform = _standing_transform
 	loot.clear()
 	loot_money = 0
+	skinned = false
 	threat.clear()
 	tapped_by = null
 	_roll_level()

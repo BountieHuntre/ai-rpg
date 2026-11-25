@@ -102,6 +102,13 @@ var chests: Array = []
 ## Spell focus objects (gameobjects.json "focus"): [object entry, point (x, z)],
 ## invisible, beside what they stand for (a moonwell, a well).
 var spell_focuses: Array = []
+## Forges (Smelting's spell focus 3) by their points (x, z): add_forge.
+var forges: Array[Vector2] = []
+## The zone's herbs and ore (GatherNodes), once its creatures are spawned.
+var gather_field: GatherNodes
+## The ground's layers function (build_ground's `weights`), for telling
+## grass from rock and roads.
+var _weights := Callable()
 ## Walled places bots go in and out of by the gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 var enclosures: Array = []
@@ -441,6 +448,48 @@ func build_ground(step: float, color: Callable, weights := Callable(), textures 
 		make_edges()
 	ground.build(size, step, height_at, color, material, center, weights, _ground_across)
 	_ground = ground
+	_weights = weights
+
+
+func ground_weights() -> Callable:
+	return _weights
+
+
+## The herbs and ore that grow here, by kind ("herb", "ore"): node entry ->
+## weight. Starting zones have the first herbs (Pale Sageleaf, Meadow
+## Blossom, Earthroot) and copper; the zones past them add Mageblossom,
+## Briarthorn, tin and a little silver, as classic's second zones do. A zone
+## may override it.
+func gather_kinds() -> Dictionary:
+	if zone_name in World.START_ZONES.values():
+		return { "herb": { 1617: 40, 1618: 40, 1619: 20 }, "ore": { 1731: 100 } }
+	return { "herb": { 1617: 22, 1618: 22, 1619: 20, 1620: 20, 1621: 16 }, "ore": { 1731: 62, 1732: 32, 1733: 6 } }
+
+
+## A forge here (at its middle): Smelting works within FORGE_RADIUS of it.
+func add_forge(point: Vector3) -> void:
+	forges.append(Vector2(point.x, point.z))
+
+
+## Reach of a forge (classic spell focus radius).
+const FORGE_RADIUS := 10.0
+
+
+## A small stone forge with its hood, glowing coals and an anvil beside it,
+## for towns without a smithy, facing `facing`; it counts as a forge.
+func build_forge(parent: Node3D, point: Vector3, facing: float, stone: Color, wood: Color) -> void:
+	var kit := BuildingKit.new(parent, "Forge")
+	var basis := Basis(Vector3.UP, facing)
+	var at := func(x: float, z: float, up := 0.0) -> Vector3: return point + basis * Vector3(x, up, z)
+	kit.block(at.call(0, 0), Vector3(2.4, 1.4, 2.0), stone, facing, true)
+	kit.block(at.call(0, 0, 1.4), Vector3(1.8, 0.12, 1.5), Color(0.55, 0.2, 0.08), facing)
+	kit.cylinder(at.call(0, 0, 2.4), 1.1, 1.4, stone, 4, 0.3)
+	kit.block(at.call(0, 0, 3.6), Vector3(0.6, 1.8, 0.6), stone, facing)
+	kit.block(at.call(0, 2.2), Vector3(0.6, 0.6, 0.45), wood, facing, true)
+	kit.block(at.call(0, 2.2, 0.6), Vector3(1.1, 0.3, 0.5), Color(0.25, 0.25, 0.28), facing)
+	kit.finish()
+	clear_ground(Rect2(Vector2(point.x, point.z) - Vector2(2.5, 2.5), Vector2(5, 5)))
+	add_forge(point)
 
 
 ## The ground's height function inside the zone, and the neighbouring zone's
@@ -878,6 +927,7 @@ func spawn_objects(rng_seed: int, water_level: float) -> void:
 ## Creatures, placed the same way each time so saved corpses match by name:
 ## `prefix` keeps names apart between zones.
 func spawn_creatures(rng_seed: int, prefix: String, passive_entries: Array, water_level: float) -> void:
+	gather_field = GatherNodes.populate(self, rng_seed + 77, water_level)
 	var creatures := Node3D.new()
 	creatures.name = "Creatures"
 	add_child(creatures)

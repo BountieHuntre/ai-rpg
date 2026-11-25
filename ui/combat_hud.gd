@@ -55,6 +55,9 @@ const PARTY_XP := Color(0.55, 0.3, 0.85)
 ## Unit menu entries.
 enum MenuItem { WHISPER, INVITE, REMOVE, FOLLOW, STAY, TRADE, CANCEL }
 
+## Floating numbers for your spell damage (Holy, Fire, Shadow...), as classic.
+const MAGIC_HIT_COLOR := Color(1, 0.9, 0.2)
+
 var _player: Player
 var _camera: Camera3D
 var _game_view: SubViewportContainer
@@ -116,6 +119,7 @@ var _inventory: InventoryUI
 var _spells: SpellUI
 var _talents: TalentWindow
 var _trainer: TrainerWindow
+var _trade_skill: TradeSkillWindow
 ## The Ranger's Beast Training and a stable master's stable.
 var _beast_training: BeastTrainingWindow
 var _stable: StableWindow
@@ -201,45 +205,61 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	_watch_combatants()
 
 
-## Floating combat text for every combatant, the playerbots that come and go
-## included.
+## Floating combat text for every combatant: those in the world now, and any
+## that enter it later (creatures spawned or respawned as new nodes, the
+## playerbots that come and go).
 func _watch_combatants() -> void:
+	if not get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.connect(_on_node_added)
 	for node in get_tree().get_nodes_in_group("combatants"):
-		var combatant := node as Combatant
-		if _watched.has(combatant):
-			continue
-		_watched[combatant] = true
-		var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
-		# As in classic, only your own fight shows: hits you deal and take,
-		# misses either way, heals on you, and stuns on you or your target.
-		combatant.took_damage.connect(func(amount: int, source: Combatant, crit: bool) -> void:
-			if _involves_player(combatant, source):
-				_add_float(combatant, "%d!" % amount if crit else str(amount), hit_color, crit)
-		)
-		combatant.avoided.connect(func(text: String, source: Combatant) -> void:
-			if _involves_player(combatant, source):
-				_add_float(combatant, text, Color(0.8, 0.8, 0.8))
-		)
-		combatant.healed.connect(func(amount: int, crit: bool) -> void:
-			if combatant == _player.combatant:
-				_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
-		)
-		# Mana and rage from your talents, as classic shows them: "+12 Mana"
-		# in blue (red for rage), and a line in the chat.
-		combatant.energized.connect(func(amount: int, power: int, source: String) -> void:
-			if combatant == _player.combatant:
-				var what := "Rage" if power == SpellDB.POWER_RAGE else "Mana"
-				_add_float(combatant, "+%d %s" % [amount, what], Color(1, 0.35, 0.3) if power == SpellDB.POWER_RAGE else Color(0.4, 0.6, 1))
-				Chat.system("You gain %d %s from %s." % [amount, what, source])
-		)
-		combatant.cast_interrupted.connect(func() -> void:
-			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
-				_add_float(combatant, "Interrupted", Color(1, 0.9, 0.3))
-		)
-		combatant.stunned.connect(func() -> void:
-			if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
-				_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
-		)
+		_watch(node as Combatant)
+
+
+func _on_node_added(node: Node) -> void:
+	# Deferred: it joins the "combatants" group and finds its body when ready.
+	if node is Combatant:
+		_watch.call_deferred(node)
+
+
+func _watch(combatant: Combatant) -> void:
+	if combatant == null or not is_instance_valid(combatant) or _watched.has(combatant) or _player == null:
+		return
+	_watched[combatant] = true
+	var hit_color := Color(1, 0.3, 0.3) if combatant == _player.combatant else Color.WHITE
+	# As in classic, only your own fight shows: hits you deal and take,
+	# misses either way, heals on you, and stuns on you or your target.
+	combatant.took_damage.connect(func(amount: int, source: Combatant, crit: bool) -> void:
+		if _involves_player(combatant, source):
+			# Yours: weapon hits white, spell damage (any magic school) yellow.
+			var color := hit_color
+			if combatant != _player.combatant and combatant.last_damage_school != SpellDB.School.PHYSICAL:
+				color = MAGIC_HIT_COLOR
+			_add_float(combatant, "%d!" % amount if crit else str(amount), color, crit)
+	)
+	combatant.avoided.connect(func(text: String, source: Combatant) -> void:
+		if _involves_player(combatant, source):
+			_add_float(combatant, text, Color(0.8, 0.8, 0.8))
+	)
+	combatant.healed.connect(func(amount: int, crit: bool) -> void:
+		if combatant == _player.combatant:
+			_add_float(combatant, "+%d%s" % [amount, "!" if crit else ""], Color(0.4, 1, 0.4), crit)
+	)
+	# Mana and rage from your talents, as classic shows them: "+12 Mana"
+	# in blue (red for rage), and a line in the chat.
+	combatant.energized.connect(func(amount: int, power: int, source: String) -> void:
+		if combatant == _player.combatant:
+			var what := "Rage" if power == SpellDB.POWER_RAGE else "Mana"
+			_add_float(combatant, "+%d %s" % [amount, what], Color(1, 0.35, 0.3) if power == SpellDB.POWER_RAGE else Color(0.4, 0.6, 1))
+			Chat.system("You gain %d %s from %s." % [amount, what, source])
+	)
+	combatant.cast_interrupted.connect(func() -> void:
+		if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
+			_add_float(combatant, "Interrupted", Color(1, 0.9, 0.3))
+	)
+	combatant.stunned.connect(func() -> void:
+		if combatant == _player.combatant or combatant == _player.targeting.target_combatant():
+			_add_float(combatant, "Stunned", Color(1, 0.9, 0.3))
+	)
 
 
 ## Whether a hit is the player's: struck or dealt by them.
@@ -388,6 +408,8 @@ func _build() -> void:
 	if _bot_bag:
 		_bot_bag.close()
 	var map_open := _world_map.visible if _world_map else false
+	# The trade skill window (Smelting, Enchanting) stays open across rebuilds.
+	var trade_open := _trade_skill.profession if _trade_skill and is_instance_valid(_trade_skill) and _trade_skill.visible else ""
 	for child in get_children():
 		child.free()
 	_floats.clear()
@@ -488,6 +510,21 @@ func _build() -> void:
 	_trainer.hovered.connect(func(id: int) -> void: _tooltip.show_lines(_spells.spell_tooltip(id)))
 	if _trainer_npc and is_instance_valid(_trainer_npc):
 		_trainer.open(_trainer_npc, _player, _ui_scale)
+	_trade_skill = TradeSkillWindow.new()
+	_trade_skill.position = Vector2(4, 50) * _ui_scale
+	_trade_skill.visible = false
+	add_child(_trade_skill)
+	_trade_skill.message.connect(_on_loot_message)
+	_trade_skill.hovered.connect(_tooltip.show_item)
+	_trade_skill.spell_hovered.connect(func(id: int) -> void: _tooltip.show_lines(_spells.spell_tooltip(id)))
+	if not _player.spells.trade_skill_requested.is_connected(_open_trade_skill):
+		_player.spells.trade_skill_requested.connect(_open_trade_skill)
+	if not _player.spells.item_pick_requested.is_connected(_pick_to_disenchant):
+		_player.spells.item_pick_requested.connect(_pick_to_disenchant)
+	_trade_skill.pick_requested.connect(func(recipe_id: int, _times: int) -> void:
+		_inventory.begin_pick("Enchant which item? (right-click to stop)", func(ref: Dictionary) -> void: _enchant(recipe_id, ref, {})))
+	if trade_open != "":
+		_trade_skill.open(trade_open, _player, _ui_scale)
 	_beast_training = BeastTrainingWindow.new()
 	_beast_training.position = Vector2(130, 50) * _ui_scale
 	_beast_training.visible = false
@@ -777,7 +814,7 @@ func _update_target_auras(c: Combatant) -> void:
 			if aura.get("talent", false) or SpellDB.is_passive(aura.spell):
 				continue
 			shown.append(aura)
-	var key := str(c.get_instance_id() if c else 0) + ":" + ",".join(shown.map(func(aura: Dictionary) -> String: return str(int(aura.spell.Id))))
+	var key := str(c.get_instance_id() if c else 0) + ":" + ",".join(shown.map(func(aura: Dictionary) -> String: return "%d x%d" % [int(aura.spell.Id), int(aura.get("stacks", 1))]))
 	if key != _target_auras_key:
 		_target_auras_key = key
 		_build_target_auras(c, shown)
@@ -789,9 +826,17 @@ func _update_target_auras(c: Combatant) -> void:
 			(icon.get_meta("time") as Label).text = "" if remaining < 0.0 else ("%dm" % ceili(remaining / 60.0) if remaining >= 60.0 else "%d" % ceili(remaining))
 
 
+## The target aura under the mouse (its spell id, 0 for none), so a redraw
+## (a new stack) shows its tooltip again rather than dropping it.
+var _hovered_target_aura := 0
+var _redrawing_target_auras := false
+
+
 func _build_target_auras(c: Combatant, shown: Array) -> void:
+	_redrawing_target_auras = true
 	for child in _target_auras.get_children():
 		child.free()
+	_redrawing_target_auras = false
 	_target_auras_height = 0.0
 	if shown.is_empty():
 		return
@@ -815,6 +860,8 @@ func _build_target_auras(c: Combatant, shown: Array) -> void:
 			box.mouse_filter = Control.MOUSE_FILTER_STOP
 			_target_auras.add_child(box)
 			_spells._draw_icon(box, int(aura.spell.Id))
+			if int(aura.get("stacks", 1)) > 1:
+				UiStyle.count_label(box, int(aura.stacks), _ui_scale, 5)
 			if aura.caster == _player.combatant and list == debuffs:
 				var mine := ReferenceRect.new()
 				mine.border_color = Color(1, 0.82, 0.25)
@@ -829,15 +876,31 @@ func _build_target_auras(c: Combatant, shown: Array) -> void:
 			box.set_meta("time", time)
 			var spell: Dictionary = aura.spell
 			var level := c.level
-			box.mouse_entered.connect(func() -> void:
+			var show_tip := func() -> void:
+				_hovered_target_aura = int(spell.Id)
 				var lines: Array = [[str(spell.SpellName), "", Color.WHITE]]
-				var text := SpellText.describe(spell, level)
+				var text := SpellText.describe(spell, level, null, int(aura.get("stacks", 1)))
 				if not text.is_empty():
 					lines.append([text, "", SpellUI.DESCRIPTION])
 				if aura.remaining >= 0.0:
 					lines.append(["%d sec remaining" % ceili(aura.remaining), "", SpellUI.DESCRIPTION])
-				_tooltip.show_lines(lines))
-			box.mouse_exited.connect(func() -> void: _tooltip.show_lines([]))
+				_tooltip.show_lines(lines)
+			box.mouse_entered.connect(show_tip)
+			box.mouse_exited.connect(func() -> void:
+				if _redrawing_target_auras:
+					return
+				_hovered_target_aura = 0
+				_tooltip.show_lines([]))
+			# Redrawn under the mouse: its tooltip again, with the new stacks
+			# (once placed, and only if the mouse is still on it).
+			if int(spell.Id) == _hovered_target_aura:
+				(func() -> void:
+					if is_instance_valid(box) and box.get_global_rect().has_point(box.get_global_mouse_position()):
+						show_tip.call()
+					elif _hovered_target_aura == int(spell.Id):
+						_hovered_target_aura = 0
+						_tooltip.show_lines([])
+				).call_deferred()
 		row += ceili(list.size() / float(TARGET_AURAS_PER_ROW))
 	_target_auras_height = row * (TARGET_AURA + 6)
 
@@ -1266,6 +1329,11 @@ func _right_label(parent: Node, label_position: Vector2, width: float) -> Label:
 	return label
 
 
+## Classic's trade skill colours: what a skill-up is likely from (Professions).
+const DIFFICULTY_COLORS := { "red": Color(1, 0.13, 0.13), "orange": Color(1, 0.5, 0.25), "yellow": Color(1, 1, 0),
+	"green": Color(0.25, 0.75, 0.25), "grey": Color(0.5, 0.5, 0.5) }
+
+
 ## WoW-style difficulty colors for a level difference (enemy minus player).
 ## Gray enemies give no XP.
 func open_loot(corpse: Node3D, take_all: bool) -> void:
@@ -1279,6 +1347,57 @@ func open_loot(corpse: Node3D, take_all: bool) -> void:
 		return
 	_loot_corpse = corpse
 	_loot_window.open(corpse, _player, _ui_scale)
+
+
+## Right-clicked a herb or ore node: gathers it (Gathering), opening its loot
+## once the cast is done (or taking it all, as the Auto Loot option says).
+func gather(node: Node3D) -> void:
+	var gather_node := node as GatherNode
+	var problem := Gathering.start(_player, gather_node, func(opened: GatherNode) -> void:
+		open_loot(opened, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot")))
+	if not problem.is_empty():
+		_show_message(problem)
+		Sfx.play("error")
+
+
+## Developer runs: Ctrl+Alt+click anything showing an item's tooltip (bags,
+## vendors, loot, chat links, reagents, quest rewards) puts one in your bags;
+## a right click (or Shift with the left) a full stack of 20, or as many as
+## stack. Taken before the click does anything else.
+func _input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if click == null or not click.pressed or not (click.ctrl_pressed and click.alt_pressed):
+		return
+	if click.button_index != MOUSE_BUTTON_LEFT and click.button_index != MOUSE_BUTTON_RIGHT:
+		return
+	if not Settings.developer_tools() or ItemTooltip.hovered_item <= 0:
+		return
+	var item := ItemDB.get_item(ItemTooltip.hovered_item)
+	var stack := click.button_index == MOUSE_BUTTON_RIGHT or click.shift_pressed
+	var count := maxi(int(item.get("stackable", 1)), 1) if stack else 1
+	var left := GameState.add_item(ItemTooltip.hovered_item, count)
+	if left >= count:
+		_on_loot_message("Inventory is full.", true)
+	else:
+		_on_loot_message("Added %s%s." % [item.get("name", "?"), " x%d" % (count - left) if count - left > 1 else ""], false)
+		GameState.inventory_changed.emit()
+	get_viewport().set_input_as_handled()
+
+
+## An error in red at the top of the screen, with the error sound.
+func show_error(text: String) -> void:
+	_show_message(text)
+	Sfx.play("error")
+
+
+## Right-clicked a skinnable corpse: skins it (Skinning), opening its
+## skinning loot once the cast is done.
+func skin(corpse: Node3D) -> void:
+	var problem := Skinning.start(_player, corpse as Enemy, func(opened: Enemy) -> void:
+		open_loot(opened, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot")))
+	if not problem.is_empty():
+		_show_message(problem)
+		Sfx.play("error")
 
 
 ## Right-clicked a friendly NPC: opens its vendor or trainer window. Opening a
@@ -1345,6 +1464,13 @@ func unit_tooltip(unit: Node3D) -> Array:
 		return [[(unit as QuestObject).npc_name, "", Color.WHITE]]
 	if unit is GameObject:
 		return [[(unit as GameObject).object_name(), "", Color.WHITE]]
+	# A herb or ore: its name, and the profession it needs in the colour of
+	# how hard it is for you (red when you can't, then orange to grey).
+	if unit is GatherNode:
+		var node := unit as GatherNode
+		var name := node.profession()
+		var color: String = Professions.gather_color(Professions.value(GameState, name), node.skill_needed()) if Professions.knows(GameState, name) else "red"
+		return [[node.node_name(), "", Color.WHITE], ["Requires %s %d" % [Professions.title(name), node.skill_needed()], "", DIFFICULTY_COLORS[color]]]
 	if unit is Npc:
 		var npc := unit as Npc
 		return [[npc.npc_name, "", Targeting.FRIENDLY_COLOR], ["<%s>" % npc.subname, "", Color.WHITE]]
@@ -1376,6 +1502,15 @@ func unit_tooltip(unit: Node3D) -> Array:
 	lines.append([level.strip_edges(), "", CombatRules.level_color(_player.combatant.level, enemy.level) if alive else GREY])
 	if not alive:
 		lines.append(["Corpse", "", GREY])
+		# Skinnable, in the colour of how hard it is for you (classic's); loot
+		# still on it has to be taken first.
+		if enemy.has_skinning():
+			var skill := Professions.value(GameState, "skinning")
+			var known := Professions.knows(GameState, "skinning")
+			var color: String = Professions.gather_color(skill, Skinning.needed(enemy.level, skill)) if known else "red"
+			if known and color != "red":
+				color = Professions.gather_color(skill, Skinning.skill_up_level(enemy.level))
+			lines.append(["Skinnable", "", DIFFICULTY_COLORS[color]])
 	for quest: Array in QuestLog.objectives_for_creature(enemy.creature_entry, int(data.get("LootId", 0))):
 		lines.append([quest[0], "", Color.WHITE])
 		for objective: Array in quest[1]:
@@ -1449,8 +1584,53 @@ func close_vendor() -> bool:
 	return true
 
 
+## Disenchant: pick an item in the bags, then (a second click confirming a
+## soulbound one, as classic asks) cast; what it breaks into opens as loot.
+func _pick_to_disenchant(spell_id: int, confirmed := {}) -> void:
+	_inventory.begin_pick("Disenchant which item? (right-click to stop)", func(ref: Dictionary) -> void:
+		var why := Enchanting.disenchant_problem(GameState, ref)
+		if not why.is_empty():
+			show_error(why)
+			return
+		var stack := Inventory.stack_at(ref)
+		if stack.get("bound", false) and confirmed != ref:
+			_show_message("%s is soulbound. Click it again to disenchant it." % ItemDB.get_item(int(stack.id)).get("name", "It"))
+			_pick_to_disenchant(spell_id, ref)
+			return
+		var item_id := int(stack.id)
+		var problem := _player.spells.cast_action(SpellDB.get_spell(spell_id), func() -> void:
+			var stack_now := Inventory.stack_at(ref)
+			if stack_now.is_empty() or int(stack_now.id) != item_id or not Enchanting.disenchant_problem(GameState, ref).is_empty():
+				return
+			var bundle := LootBundle.new()
+			bundle.loot = Enchanting.disenchant(ref)
+			_player.add_child(bundle)
+			open_loot(bundle, Input.is_key_pressed(KEY_SHIFT) != Settings.get_value("auto_loot")))
+		if not problem.is_empty():
+			show_error(problem))
+
+
+## An enchant recipe on a picked item: an enchant already on it is replaced
+## only when it's clicked a second time.
+func _enchant(recipe_id: int, ref: Dictionary, confirmed: Dictionary) -> void:
+	var stack := Inventory.stack_at(ref)
+	if stack.has("enchant") and confirmed != ref and Enchanting.enchant_problem(recipe_id, ref).is_empty():
+		_show_message("Replace %s? Click it again." % Enchanting.line(int(stack.enchant)))
+		_inventory.begin_pick("Replace its enchant? (right-click to stop)", func(again: Dictionary) -> void: _enchant(recipe_id, again, ref))
+		return
+	var problem := Crafting.start(_player, recipe_id, func() -> void: pass, ref)
+	if not problem.is_empty():
+		show_error(problem)
+
+
+func _open_trade_skill(profession: String) -> void:
+	_trade_skill.open(profession, _player, _ui_scale)
+	move_child(_tooltip, -1)
+
+
 func close_trainer() -> bool:
-	var closed := _beast_training.visible or _stable.visible
+	var closed := _beast_training.visible or _stable.visible or _trade_skill.visible
+	_trade_skill.close()
 	_beast_training.close()
 	_stable.close()
 	if not _trainer.visible:

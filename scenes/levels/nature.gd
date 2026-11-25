@@ -104,7 +104,13 @@ const SINGLE_KINDS := ["great_tree", "bower_violet", "bower_teal", "long_bower",
 
 ## How many variants a kind has.
 static func variants_of(kind: String) -> int:
-	return 1 if kind in SINGLE_KINDS else TREE_VARIANTS
+	return 1 if kind in SINGLE_KINDS or is_node_kind(kind) else TREE_VARIANTS
+
+
+## The seed a kind's variants are built from: TREE_SEEDS', or for herbs and
+## ore one from its name.
+static func seed_of(kind: String) -> int:
+	return int(TREE_SEEDS.get(kind, absi(hash(kind)) % 100000))
 const TREE_SEEDS := { "pine": 8101, "pine_snowy": 8101, "oak": 8201, "dead_tree": 8301, "palm": 8401,
 	"elf_tree": 8501, "great_tree": 8601, "bower_violet": 8701, "bower_teal": 8711, "long_bower": 8721,
 	"log_hut": 8801, "moonwell_ring": 8901, "silver_gate": 9001,
@@ -148,7 +154,231 @@ static func build_tree(kind: String, rng_seed: int) -> ArrayMesh:
 			return _longhouse(rng_seed)
 		"totem":
 			return _totem(rng_seed)
+	if kind.begins_with("herb_"):
+		return _herb(kind, rng_seed)
+	if kind.begins_with("ore_"):
+		return _ore(kind, rng_seed)
 	return ArrayMesh.new()
+
+
+# Herbs and ore (gathering nodes, GatherNode), one solid each, baked like the
+# trees: kind "herb_<name>" or "ore_<name>" from the node's name (node_kind).
+
+## Each herb's look: [style, leaf colour, flower or berry colour, height in
+## yards]. Styles: flower (leaves at the foot, stems with petalled heads),
+## leafy (a tuft of long leaves), root (a bulb half out of the ground under
+## leaves), thorny (a bramble of canes with berries), moss (a low mound with
+## pale caps), lotus (broad pads round one big bloom).
+const HERB_LOOKS := {
+	"Pale Sageleaf": ["flower", Color(0.62, 0.82, 0.5), Color(1.0, 1.0, 0.92), 0.45],
+	"Meadow Blossom": ["leafy", Color(0.78, 0.86, 0.8), Color(0.9, 0.95, 1.0), 0.4],
+	"Earthroot": ["root", Color(0.5, 0.7, 0.38), Color(0.6, 0.42, 0.26), 0.35],
+	"Mageblossom": ["flower", Color(0.55, 0.75, 0.45), Color(0.95, 0.8, 0.3), 0.55],
+	"Briarthorn": ["thorny", Color(0.42, 0.55, 0.32), Color(0.85, 0.15, 0.2), 0.6],
+	"Bruisewort": ["leafy", Color(0.55, 0.5, 0.72), Color(0.6, 0.45, 0.8), 0.5],
+	"Wild Ironbloom": ["flower", Color(0.5, 0.65, 0.4), Color(0.95, 0.6, 0.2), 0.6],
+	"Crownblood": ["flower", Color(0.45, 0.62, 0.38), Color(0.8, 0.12, 0.18), 0.55],
+	"Tomb Moss": ["moss", Color(0.45, 0.62, 0.35), Color(0.75, 0.8, 0.6), 0.25],
+	"Heartroot": ["root", Color(0.45, 0.6, 0.35), Color(0.75, 0.2, 0.25), 0.4],
+	"Dimleaf": ["leafy", Color(0.35, 0.45, 0.38), Color(0.4, 0.5, 0.45), 0.5],
+	"Sage's Whisker": ["leafy", Color(0.85, 0.88, 0.7), Color(0.95, 0.95, 0.85), 0.55],
+	"Frostnip": ["flower", Color(0.6, 0.78, 0.75), Color(0.7, 0.88, 1.0), 0.4],
+	"Tanglekelp": ["thorny", Color(0.35, 0.6, 0.45), Color(0.3, 0.55, 0.5), 0.5],
+	"Gildthorn": ["thorny", Color(0.5, 0.6, 0.35), Color(1.0, 0.82, 0.3), 0.6],
+	"Emberbloom": ["flower", Color(0.5, 0.55, 0.35), Color(1.0, 0.42, 0.12), 0.55],
+	"Violet Lotus": ["lotus", Color(0.45, 0.65, 0.42), Color(0.65, 0.35, 0.85), 0.4],
+	"Weeping Bell": ["flower", Color(0.4, 0.6, 0.45), Color(0.55, 0.6, 0.95), 0.65],
+	"Dawngrass": ["leafy", Color(0.85, 0.8, 0.45), Color(1.0, 0.9, 0.55), 0.6],
+	"Blindweed": ["leafy", Color(0.5, 0.58, 0.32), Color(0.65, 0.7, 0.35), 0.55],
+	"Wraithcap": ["moss", Color(0.4, 0.45, 0.42), Color(0.6, 0.75, 0.85), 0.35],
+	"Gorebloom": ["flower", Color(0.4, 0.5, 0.3), Color(0.7, 0.05, 0.1), 0.6],
+	"Golden Sorrel": ["leafy", Color(0.75, 0.75, 0.35), Color(1.0, 0.85, 0.3), 0.5],
+	"Slumberleaf": ["leafy", Color(0.45, 0.6, 0.65), Color(0.75, 0.85, 0.95), 0.45],
+	"Mountain Greysage": ["leafy", Color(0.68, 0.72, 0.68), Color(0.82, 0.85, 0.82), 0.5],
+	"Blightbloom": ["flower", Color(0.42, 0.52, 0.3), Color(0.55, 0.8, 0.2), 0.55],
+	"Rimecap": ["moss", Color(0.6, 0.72, 0.78), Color(0.85, 0.95, 1.0), 0.35],
+	"Night Lotus": ["lotus", Color(0.35, 0.5, 0.38), Color(0.12, 0.1, 0.15), 0.45],
+}
+## Each ore's vein colour, by a word of its name.
+const ORE_COLORS := {
+	"copper": Color(0.95, 0.5, 0.25), "tin": Color(0.72, 0.78, 0.74), "silver": Color(0.95, 0.96, 1.0),
+	"iron": Color(0.62, 0.42, 0.36), "gold": Color(1.0, 0.8, 0.22), "moonsteel": Color(0.6, 0.78, 1.0),
+	"brightsilver": Color(0.8, 1.0, 0.95), "starmetal": Color(0.55, 0.75, 0.5),
+}
+const ORE_NAMES := ["Copper Vein", "Tin Vein", "Silver Vein", "Iron Deposit", "Gold Vein", "Moonsteel Deposit",
+	"Brightsilver Deposit", "Small Starmetal Vein", "Rich Starmetal Vein"]
+
+
+## The baked kind of a gathering node, by its name: "herb_pale_sageleaf",
+## "ore_copper_vein".
+static func node_kind(node_name: String, kind: String) -> String:
+	return "%s_%s" % [kind, node_name.replace("'", "").to_lower().replace(" ", "_")]
+
+
+static func is_node_kind(kind: String) -> bool:
+	return kind.begins_with("herb_") or kind.begins_with("ore_")
+
+
+## Every herb and ore kind there's a look for (bake_trees.gd bakes them with
+## the trees).
+static func node_kinds() -> Array:
+	var kinds := []
+	for name: String in HERB_LOOKS:
+		kinds.append(node_kind(name, "herb"))
+	for name: String in ORE_NAMES:
+		kinds.append(node_kind(name, "ore"))
+	return kinds
+
+
+## A herb or ore node's mesh by its name and kind ("herb" or "ore").
+static func node_mesh(node_name: String, kind: String) -> ArrayMesh:
+	return tree(node_kind(node_name, kind), 0)
+
+
+## The look of a herb kind (HERB_LOOKS by its name), or one from its name.
+static func _herb_look(kind: String) -> Array:
+	for name: String in HERB_LOOKS:
+		if node_kind(name, "herb") == kind:
+			return HERB_LOOKS[name]
+	var h := absi(hash(kind))
+	return ["flower", Color(0.5, 0.68, 0.4), Color.from_hsv((h % 360) / 360.0, 0.7, 0.95), 0.5]
+
+
+static func _herb_shade(color: Color) -> Callable:
+	return func(middle: Vector3, normal: Vector3) -> Color:
+		var v := clampf(0.72 + normal.y * 0.22 + middle.y * 0.25, 0.45, 1.15)
+		return Color(color.r * v, color.g * v, color.b * v)
+
+
+## A flat leaf from its base `at` along `out` (tipped up by `tilt`), `length`
+## long and `width` wide.
+static func _leaf(plant: Builder, noise: FastNoiseLite, at: Vector3, out: Vector3, tilt: float, length: float, width: float, color: Color) -> void:
+	var dir := (out * cos(tilt) + Vector3.UP * sin(tilt)).normalized()
+	var up := Vector3.UP if absf(dir.y) < 0.95 else Vector3.FORWARD
+	var form := Transform3D(Basis.looking_at(dir, up).scaled(Vector3(width, 0.025, length * 0.5)), at + dir * length * 0.5)
+	_blob(plant, 1, form, noise, 0.1, _herb_shade(color))
+
+
+## A herb about half a yard tall (HERB_LOOKS): leaves, stems and heads, all
+## one material coloured by vertex.
+static func _herb(kind: String, rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var noise := _noise(rng_seed, 2.0)
+	var look := _herb_look(kind)
+	var style: String = look[0]
+	var leaf: Color = look[1]
+	var bloom: Color = look[2]
+	var tall: float = look[3]
+	var plant := Builder.new()
+	# Leaves round the foot, long and flat, tipped up.
+	var leaves := { "leafy": 9, "lotus": 4, "moss": 0 }.get(style, 5) as int
+	for i in leaves:
+		var angle := TAU * i / leaves + rng.randf_range(-0.3, 0.3)
+		var out := Vector3(cos(angle), 0, sin(angle))
+		match style:
+			"leafy":
+				_leaf(plant, noise, Vector3(0, 0.02, 0), out, rng.randf_range(0.9, 1.25), tall * rng.randf_range(0.75, 1.05), 0.05, leaf)
+			"lotus":
+				_leaf(plant, noise, Vector3(0, 0.03, 0), out, 0.05, 0.32, 0.17, leaf)
+			_:
+				_leaf(plant, noise, Vector3(0, 0.02, 0), out, rng.randf_range(0.2, 0.5), rng.randf_range(0.2, 0.28), 0.07, leaf)
+	match style:
+		"flower", "lotus":
+			var stems := rng.randi_range(2, 3) if style == "flower" else 1
+			for i in stems:
+				var angle := rng.randf() * TAU
+				var top := Vector3(cos(angle) * 0.08 * i, tall * rng.randf_range(0.85, 1.0), sin(angle) * 0.08 * i)
+				if style == "lotus":
+					top = Vector3(0, tall * 0.4, 0)
+				_post(plant, Vector3(0, -0.05, 0), top, 0.025, 0.018, 4, leaf.darkened(0.15))
+				# The head: petals round a small heart.
+				var size := 0.07 if style == "flower" else 0.12
+				for k in 5:
+					var a := TAU * k / 5.0 + angle
+					var dir := Vector3(cos(a), 0.45, sin(a)).normalized()
+					var form := Transform3D(Basis.looking_at(dir, Vector3.UP).scaled(Vector3(size * 0.6, 0.02, size)), top + dir * size * 0.8)
+					_blob(plant, 1, form, noise, 0.05, _herb_shade(bloom))
+				var heart := Transform3D(Basis().scaled(Vector3.ONE * 0.035), top + Vector3(0, 0.02, 0))
+				_blob(plant, 1, heart, noise, 0.05, _herb_shade(Color(1.0, 0.85, 0.3) if bloom.v > 0.3 else Color(0.8, 0.7, 0.9)))
+		"leafy":
+			# A few small buds over the tuft.
+			for i in 3:
+				var angle := rng.randf() * TAU
+				var at := Vector3(cos(angle) * 0.07, tall * rng.randf_range(0.85, 1.05), sin(angle) * 0.07)
+				_post(plant, Vector3(0, 0.0, 0), at, 0.018, 0.012, 4, leaf.darkened(0.1))
+				_blob(plant, 1, Transform3D(Basis().scaled(Vector3.ONE * 0.04), at), noise, 0.1, _herb_shade(bloom))
+		"root":
+			# A knobbly bulb half out of the ground, its leaves above.
+			_blob(plant, 1, Transform3D(Basis().scaled(Vector3(0.16, 0.13, 0.14)), Vector3(0, 0.04, 0)), noise, 0.3, _herb_shade(bloom))
+			for i in 3:
+				var angle := TAU * i / 3.0
+				var out := Vector3(cos(angle), 0, sin(angle))
+				var at := out * 0.1 + Vector3(0, tall, 0)
+				_post(plant, Vector3(0, 0.1, 0), at, 0.025, 0.015, 4, leaf)
+				_leaf(plant, noise, at, out, 0.4, 0.14, 0.06, leaf)
+		"thorny":
+			# Arching canes with berries along them.
+			for i in 5:
+				var angle := TAU * i / 5.0 + rng.randf_range(-0.3, 0.3)
+				var out := Vector3(cos(angle), 0, sin(angle))
+				var top := out * rng.randf_range(0.2, 0.35) + Vector3(0, tall * rng.randf_range(0.7, 1.0), 0)
+				_post(plant, Vector3(0, -0.05, 0), top, 0.03, 0.012, 4, leaf.darkened(0.3))
+				for k in 2:
+					var at := top.lerp(Vector3.ZERO, 0.25 + k * 0.3) + out * 0.04
+					_blob(plant, 1, Transform3D(Basis().scaled(Vector3.ONE * 0.035), at), noise, 0.05, _herb_shade(bloom))
+		"moss":
+			_blob(plant, 1, Transform3D(Basis().scaled(Vector3(0.35, 0.12, 0.3)), Vector3(0, 0.02, 0)), noise, 0.35, _herb_shade(leaf))
+			for i in 4:
+				var angle := rng.randf() * TAU
+				var at := Vector3(cos(angle) * 0.18, 0.1 + rng.randf() * tall * 0.4, sin(angle) * 0.15)
+				_post(plant, at - Vector3(0, 0.12, 0), at, 0.02, 0.02, 4, bloom.darkened(0.2))
+				_blob(plant, 1, Transform3D(Basis().scaled(Vector3(0.06, 0.03, 0.06)), at), noise, 0.05, _herb_shade(bloom))
+	var mesh := ArrayMesh.new()
+	plant.add_to(mesh, material("plaster", 0.6, 0.12, 0.0))
+	return mesh
+
+
+## An ore node: a boulder about a yard across (a deposit bigger, a small
+## vein smaller, a rich one with more) with veins of its metal's colour
+## breaking out of it (ORE_COLORS).
+static func _ore(kind: String, rng_seed: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var noise := _noise(rng_seed, 0.9)
+	var metal := Color(0.8, 0.8, 0.8)
+	for word: String in ORE_COLORS:
+		if word in kind.split("_"):
+			metal = ORE_COLORS[word]
+	var size := 1.0
+	if kind.ends_with("deposit"):
+		size = 1.25
+	if kind.begins_with("ore_small"):
+		size = 0.8
+	var veins := 8 if kind.begins_with("ore_rich") else 6
+	var stone := Builder.new()
+	var ore := Builder.new()
+	var squash := Vector3(1.0, 0.7, 0.85) * 0.75 * size
+	var form := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(squash), Vector3(0, 0.25 * size, 0))
+	_blob(stone, 1, form, noise, 0.3, func(middle: Vector3, normal: Vector3) -> Color:
+		var v := clampf(0.55 + normal.y * 0.2 + noise.get_noise_3dv(middle * 3.0) * 0.12, 0.3, 1.0)
+		return Color(v, v, v))
+	# Veins: sharp lumps set into the boulder's upper half, facing out.
+	for i in veins:
+		var angle := TAU * i / veins + rng.randf_range(-0.4, 0.4)
+		var rise := rng.randf_range(0.1, 0.9)
+		var dir := Vector3(cos(angle) * cos(rise), sin(rise), sin(angle) * cos(rise)).normalized()
+		var at := form * (dir * 0.85)
+		var out := (at - form.origin).normalized()
+		var big := rng.randf_range(0.11, 0.18) * size
+		var vein := Transform3D(Basis.looking_at(out, Vector3.UP if absf(out.y) < 0.95 else Vector3.FORWARD).scaled(Vector3(big, big * 0.8, big * 1.3)), at)
+		_blob(ore, 0, vein, noise, 0.15, func(_middle: Vector3, normal: Vector3) -> Color:
+			var v := clampf(0.85 + normal.y * 0.25, 0.6, 1.25)
+			return Color(metal.r * v, metal.g * v, metal.b * v))
+	var mesh := ArrayMesh.new()
+	stone.add_to(mesh, material("rock", 2.2))
+	ore.add_to(mesh, material("plaster", 0.6))
+	return mesh
 
 
 ## A tree of a kind (any seed picks one of its variants): baked if it is,
@@ -157,7 +387,7 @@ static func tree(kind: String, rng_seed: int) -> ArrayMesh:
 	var variant := posmod(rng_seed, variants_of(kind))
 	var path := TREE_PATH % [kind, variant]
 	if not ResourceLoader.exists(path):
-		return build_tree(kind, TREE_SEEDS[kind] + variant)
+		return build_tree(kind, seed_of(kind) + variant)
 	var mesh := (load(path) as ArrayMesh).duplicate() as ArrayMesh
 	for i in mesh.get_surface_count():
 		var made := material_named(mesh.surface_get_name(i))

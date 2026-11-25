@@ -36,6 +36,11 @@ var _ui_scale := 1.0
 var _rows: Array[Dictionary] = []
 var _selected := -1
 var _money: Label
+## Kept to update in place after training rather than rebuilding: the
+## profession skill line, Train All, Unlearn Talents.
+var _skill_text: Label
+var _all_button: Button
+var _unlearn: Button
 var _details: Label
 var _list: VBoxContainer
 
@@ -78,6 +83,8 @@ static func entry_state(entry: Dictionary) -> Array:
 		return ["available", ""]
 	if main_id in GameState.known_spells:
 		return ["used", ""]
+	if is_profession_entry(entry):
+		return _profession_state(entry)
 	# Weapon skills you started with are known through the proficiency.
 	var proficiencies := SpellDB.proficiencies_of(spell)
 	if not proficiencies.is_empty() and proficiencies.all(func(p: String) -> bool: return p in GameState.proficiencies):
@@ -92,6 +99,59 @@ static func entry_state(entry: Dictionary) -> Array:
 	if previous != 0 and not previous in GameState.known_spells and not _replaced_rank_known(previous):
 		return ["unavailable", "Requires %s" % SpellDB.full_name(SpellDB.get_spell(previous))]
 	return ["available", ""]
+
+
+## A profession trainer's entry: a rank (Apprentice Herbalism...) or a recipe.
+static func is_profession_entry(entry: Dictionary) -> bool:
+	return entry.has("skill")
+
+
+## A profession entry's state: a rank needs the one before, the level and
+## the skill (and a free profession for Apprentice); a recipe needs the
+## profession at its skill.
+static func _profession_state(entry: Dictionary) -> Array:
+	var main_id: int = entry.spells[0]
+	var name := Professions.profession_of_spell(main_id)
+	var rank: int = Professions.rank_spell(main_id)[1]
+	if rank > 0:
+		if Professions.rank_of(GameState, name) >= rank:
+			return ["used", ""]
+		var problem := Professions.rank_problem(GameState, name, rank)
+		return ["available", ""] if problem.is_empty() else ["unavailable", problem]
+	if not Professions.knows(GameState, name):
+		return ["unavailable", "Requires %s" % Professions.title(name)]
+	if Professions.value(GameState, name) < int(entry.skill):
+		return ["unavailable", "Requires %s (%d)" % [Professions.title(name), int(entry.skill)]]
+	if int(entry.level) > GameState.level:
+		return ["unavailable", "Requires Level %d" % entry.level]
+	return ["available", ""]
+
+
+## What an entry is called in the list: a profession's rank by its rank
+## ("Journeyman Mining"), anything else by its spell.
+static func entry_name(entry: Dictionary) -> String:
+	var main_id: int = entry.spells[0]
+	var as_rank := Professions.rank_spell(main_id)
+	if int(as_rank[1]) > 0:
+		return "%s %s" % [Professions.rank_name(as_rank[0], as_rank[1]), Professions.title(as_rank[0])]
+	return SpellDB.full_name(SpellDB.get_spell(main_id))
+
+
+## Learns a bought entry: a profession's rank through Professions, anything
+## else as spells.
+func _learn(entry: Dictionary) -> int:
+	var main_id: int = entry.spells[0]
+	var as_rank := Professions.rank_spell(main_id)
+	var names: Array[String] = []
+	if int(as_rank[1]) > 0:
+		names = Professions.learn_rank(GameState, as_rank[0], as_rank[1])
+		message.emit("You have learned %s." % names[0], false)
+		names.remove_at(0)
+	else:
+		names = SpellCaster.learn(entry.spells)
+	for name in names:
+		message.emit("You have learned a new spell: %s." % name, false)
+	return maxi(names.size(), 1)
 
 
 ## A previous rank can be "known" through the rank that replaced it.
@@ -115,11 +175,10 @@ func train(index: int) -> void:
 	if entry.get("pet", false):
 		_learn_pet_ability(entry)
 	else:
-		for name in SpellCaster.learn(entry.spells):
-			message.emit("You have learned a new spell: %s." % name, false)
+		_learn(entry)
 	Sfx.play("level_up")
 	GameState.inventory_changed.emit()
-	_build.call_deferred()
+	_refresh()
 
 
 ## A pet trainer's ability: the Ranger can teach it now (Beast Training).
@@ -144,6 +203,9 @@ func train_all() -> void:
 			var entry: Dictionary = row.entry
 			if entry_state(entry)[0] != "available":
 				continue
+			# Taking up a profession is a choice (two at most), never Train All's.
+			if int(Professions.rank_spell(int(entry.spells[0]))[1]) == 1:
+				continue
 			if GameState.money < int(entry.cost):
 				short = true
 				continue
@@ -153,9 +215,7 @@ func train_all() -> void:
 				_learn_pet_ability(entry)
 				learned += 1
 			else:
-				for name in SpellCaster.learn(entry.spells):
-					message.emit("You have learned a new spell: %s." % name, false)
-					learned += 1
+				learned += _learn(entry)
 			changed = true
 	if learned == 0:
 		message.emit("Not enough money" if short else "There's nothing new to train.", true)
@@ -164,13 +224,16 @@ func train_all() -> void:
 		message.emit("Not enough money for the rest.", true)
 	Sfx.play("level_up")
 	GameState.inventory_changed.emit()
-	_build.call_deferred()
+	_refresh()
 
 
 func _build() -> void:
 	for child in get_children():
 		child.queue_free()
 	_rows.clear()
+	_skill_text = null
+	_all_button = null
+	_unlearn = null
 	var list := SpellDB.trainer_list(npc.trainer, GameState.race, GameState.char_class)
 	# Classic trainers only teach their own class; the Weapon Master teaches
 	# every class what it may learn.
@@ -185,7 +248,7 @@ func _build() -> void:
 	# The pet trainer teaches Rangers what their pets can learn.
 	if npc.trainer == SpellDB.PET_TRAINER:
 		trainer_class = ClassicData.CharClass.HUNTER
-	if trainer_class != GameState.char_class:
+	if trainer_class != GameState.char_class and not Professions.is_trainer(npc.trainer):
 		var refusal := _text(self, Vector2(6, 20), "I can only train %s. Seek out a trainer of your own calling." % ClassicData.class_plural(trainer_class), Color.WHITE, FONT_SIZE)
 		refusal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		refusal.custom_minimum_size.x = (WIDTH - 12) * _ui_scale
@@ -208,12 +271,21 @@ func _build() -> void:
 	sorted.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var state_a: int = order[entry_state(a)[0]]
 		var state_b: int = order[entry_state(b)[0]]
-		return state_a < state_b if state_a != state_b else int(a.level) < int(b.level)
+		if state_a != state_b:
+			return state_a < state_b
+		# Profession entries by the skill they need, then by level.
+		if int(a.get("skill", 0)) != int(b.get("skill", 0)):
+			return int(a.get("skill", 0)) < int(b.get("skill", 0))
+		return int(a.level) < int(b.level)
 	)
 	for entry: Dictionary in sorted:
 		_add_row(entry)
 
 	_details = _text(self, Vector2(4, 16 + LIST_HEIGHT), "", Color.WHITE, FONT_SIZE)
+	# A profession trainer shows your skill in it.
+	if Professions.is_trainer(npc.trainer):
+		var name: String = npc.trainer
+		_skill_text = _text(self, Vector2(4, 32 + LIST_HEIGHT), "", Color(0.75, 0.85, 1), FONT_SIZE)
 	_money = _text(self, Vector2(4, 24 + LIST_HEIGHT), "Money: %s" % ItemDB.money_text(GameState.money), Color(1, 0.85, 0.4), FONT_SIZE)
 	var train_button := Button.new()
 	train_button.text = "Train"
@@ -230,11 +302,11 @@ func _build() -> void:
 	all_button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
 	all_button.position = Vector2(WIDTH - 82, 18 + LIST_HEIGHT) * _ui_scale
 	all_button.size = Vector2(40, 12) * _ui_scale
-	all_button.disabled = not _rows.any(func(row: Dictionary) -> bool: return entry_state(row.entry)[0] == "available")
 	all_button.pressed.connect(train_all)
 	add_child(all_button)
+	_all_button = all_button
 	# Unlearning talents, at the class's own trainer: a second click confirms.
-	if Talents.spent(GameState) > 0:
+	if Talents.spent(GameState) > 0 and not Professions.is_trainer(npc.trainer):
 		var cost := Talents.reset_cost(GameState.talent_reset_cost)
 		var unlearn := Button.new()
 		unlearn.text = "Unlearn Talents"
@@ -256,27 +328,31 @@ func _build() -> void:
 			message.emit("Your talents have been unlearned.", false)
 			Sfx.play("level_up")
 			GameState.inventory_changed.emit()
-			_build.call_deferred()
+			_refresh()
 		)
 		add_child(unlearn)
-	_select(_selected if _selected < _rows.size() else -1)
+		_unlearn = unlearn
+	_refresh()
 
 
 func _add_row(entry: Dictionary) -> void:
 	var state := entry_state(entry)
-	var spell := SpellDB.get_spell(entry.spells[0])
 	var color: Color = { "available": AVAILABLE, "unavailable": UNAVAILABLE, "used": USED, "not_in_game": NOT_IN_GAME }[state[0]]
 	var row := ColorRect.new()
 	row.color = Color.TRANSPARENT
 	row.custom_minimum_size = Vector2(WIDTH - 12, ROW) * _ui_scale
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
 	_list.add_child(row)
-	_text(row, Vector2(2, 1), SpellDB.full_name(spell), color, FONT_SIZE)
-	var level_text := _text(row, Vector2(WIDTH - 40, 1), "Lv %d" % entry.level, color, FONT_SIZE)
+	var name_text := _text(row, Vector2(2, 1), entry_name(entry), color, FONT_SIZE)
+	# Recipes show the skill they need, as classic's profession trainers do.
+	var need := "Lv %d" % entry.level
+	if is_profession_entry(entry) and int(Professions.rank_spell(int(entry.spells[0]))[1]) == 0:
+		need = "(%d)" % int(entry.skill)
+	var level_text := _text(row, Vector2(WIDTH - 40, 1), need, color, FONT_SIZE)
 	level_text.size.x = 26 * _ui_scale
 	level_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var index := _rows.size()
-	_rows.append({ "entry": entry, "row": row, "state": state })
+	_rows.append({ "entry": entry, "row": row, "state": state, "labels": [name_text, level_text] })
 	row.mouse_entered.connect(func() -> void: hovered.emit(int(entry.spells[0])))
 	row.mouse_exited.connect(func() -> void: hovered.emit(0))
 	row.gui_input.connect(func(event: InputEvent) -> void:
@@ -286,6 +362,27 @@ func _add_row(entry: Dictionary) -> void:
 			if button.double_click:
 				train(index)
 	)
+
+
+## After training: each row's state and colour, the money, the skill line
+## and the buttons, in place (rows keep their order until the window is
+## opened again).
+func _refresh() -> void:
+	for row: Dictionary in _rows:
+		row.state = entry_state(row.entry)
+		var color: Color = { "available": AVAILABLE, "unavailable": UNAVAILABLE, "used": USED, "not_in_game": NOT_IN_GAME }[row.state[0]]
+		for label: Label in row.labels:
+			label.add_theme_color_override("font_color", color)
+	if _money:
+		_money.text = "Money: %s" % ItemDB.money_text(GameState.money)
+	if _skill_text and npc and Professions.is_trainer(npc.trainer):
+		var name: String = npc.trainer
+		_skill_text.text = "%s: %d/%d" % [Professions.title(name), Professions.value(GameState, name), Professions.max_value(GameState, name)] 			if Professions.knows(GameState, name) else "You haven't learned %s." % Professions.title(name)
+	if _all_button:
+		_all_button.disabled = not _rows.any(func(row: Dictionary) -> bool: return entry_state(row.entry)[0] == "available")
+	if _unlearn:
+		_unlearn.visible = Talents.spent(GameState) > 0
+	_select(_selected if _selected < _rows.size() else -1)
 
 
 func _select(index: int) -> void:

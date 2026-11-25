@@ -45,6 +45,10 @@ var _tooltip: ItemTooltip
 var _bags_window: Control
 var _character_window: Control
 var _stats_text: Label
+## The character window's pages: its gear and stats, and Skills.
+var _character_page: Control
+var _skills_page: Control
+var _skills_shown := false
 var _money_text: Label
 ## One entry per slot box: { "box": ColorRect, "ref": inventory ref }.
 var _views: Array[Dictionary] = []
@@ -64,6 +68,27 @@ var _rebuild_queued := false
 ## the HUD. Releasing a dragged item anywhere else offers to destroy it.
 var is_over_ui := func(_point: Vector2) -> bool: return false
 var _destroy_prompt: Control
+## While set, clicking an item calls it with the item's ref (begin_pick).
+var picking := Callable()
+var _pick_hint: Label
+
+
+## Waits for the player to pick an item in the bags or character window for
+## a spell (Disenchant, an enchant), as classic's cursor does: `picked` is
+## called with its ref. The bags open, and a hint follows the cursor.
+func begin_pick(hint: String, picked: Callable) -> void:
+	end_pick()
+	picking = picked
+	open_bags()
+	_pick_hint = _text(self, Vector2.ZERO, hint, Color(1, 0.82, 0.3), FONT_SIZE)
+	_pick_hint.z_index = 3
+
+
+func end_pick() -> void:
+	picking = Callable()
+	if _pick_hint and is_instance_valid(_pick_hint):
+		_pick_hint.queue_free()
+	_pick_hint = null
 
 
 func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemTooltip, open: Dictionary) -> void:
@@ -71,10 +96,17 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 	_ui_scale = ui_scale
 	_screen = screen
 	_tooltip = tooltip
+	z_index = 1
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.inventory_changed.connect(_on_inventory_changed)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "bags_display":
+			_rebuild())
 	GameState.money_changed.connect(func() -> void: _money_text.text = ItemDB.money_text(GameState.money))
+	GameState.professions_changed.connect(func() -> void:
+		if _skills_page and is_instance_valid(_skills_page):
+			_update_skills())
 	_rebuild()
 	_bags_window.visible = open.get("bags", false)
 	_character_window.visible = open.get("character", false)
@@ -82,11 +114,23 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 
 func open_bags() -> void:
 	_bags_window.visible = true
+	for bag: int in _bag_frames:
+		(_bag_frames[bag] as Control).visible = _bag_shown.get(bag, true)
 
 
 ## Where the bags window is on screen, or an empty rect when it's closed.
 func bags_rect() -> Rect2:
-	return _bags_window.get_global_rect() if _bags_window and _bags_window.visible else Rect2()
+	if not _bags_window or not _bags_window.visible:
+		return Rect2()
+	# The Separate layout: every open frame together.
+	if not _bag_frames.is_empty():
+		var rect := Rect2()
+		for bag: int in _bag_frames:
+			var frame := _bag_frames[bag] as Control
+			if frame.visible:
+				rect = frame.get_global_rect() if rect.size == Vector2.ZERO else rect.merge(frame.get_global_rect())
+		return rect
+	return _bags_window.get_global_rect()
 
 
 func open_state() -> Dictionary:
@@ -112,6 +156,10 @@ func close_one() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if Settings.pressed(event, "bags"):
 		_bags_window.visible = not _bags_window.visible
+		# All of them, in the Separate layout.
+		for bag: int in _bag_frames:
+			_bag_shown[bag] = true
+			(_bag_frames[bag] as Control).visible = true
 		get_viewport().set_input_as_handled()
 	elif Settings.pressed(event, "character_window"):
 		_character_window.visible = not _character_window.visible
@@ -119,10 +167,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
-	if _character_window.visible:
+	if _character_window.visible and _character_page.visible:
 		_stats_text.text = _character_sheet()
 	if _held_icon:
 		_held_icon.position = get_viewport().get_mouse_position() + Vector2(4, 4) * _ui_scale
+	if _pick_hint and is_instance_valid(_pick_hint):
+		_pick_hint.position = get_viewport().get_mouse_position() + Vector2(8, 10) * _ui_scale
 
 
 func _on_inventory_changed() -> void:
@@ -174,50 +224,249 @@ func _build_character_window() -> void:
 	var height := 14.0 + rows * (SLOT + GAP) + SLOT + GAP * 3
 	_character_window = _panel(Vector2(4, 50), Vector2(width, height))
 	UiStyle.title(_character_window, Vector2(5, 1.5), "Character (C)", _ui_scale)
+	_character_page = Control.new()
+	_character_page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_character_window.add_child(_character_page)
 	for i in rows:
 		var y := 14.0 + i * (SLOT + GAP)
-		_slot(_character_window, Vector2(GAP, y), Inventory.equip_ref(LEFT_SLOTS[i]))
-		_slot(_character_window, Vector2(width - SLOT - GAP, y), Inventory.equip_ref(RIGHT_SLOTS[i]))
+		_slot(_character_page, Vector2(GAP, y), Inventory.equip_ref(LEFT_SLOTS[i]))
+		_slot(_character_page, Vector2(width - SLOT - GAP, y), Inventory.equip_ref(RIGHT_SLOTS[i]))
 	var weapons_y := 14.0 + rows * (SLOT + GAP)
 	var weapons_x := (width - 3 * SLOT - 2 * GAP) / 2.0
 	for i in WEAPON_SLOTS.size():
-		_slot(_character_window, Vector2(weapons_x + i * (SLOT + GAP), weapons_y), Inventory.equip_ref(WEAPON_SLOTS[i]))
-	_stats_text = _text(_character_window, Vector2(SLOT + GAP * 3, 13), "", Color.WHITE, FONT_SIZE)
+		_slot(_character_page, Vector2(weapons_x + i * (SLOT + GAP), weapons_y), Inventory.equip_ref(WEAPON_SLOTS[i]))
+	_stats_text = _text(_character_page, Vector2(SLOT + GAP * 3, 13), "", Color.WHITE, FONT_SIZE)
+	_skills_page = Control.new()
+	_skills_page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skills_page.size = Vector2(width, height) * _ui_scale
+	_character_window.add_child(_skills_page)
+	_fill_skills()
+	_build_character_tabs(width, height)
+	_show_character_page(_skills_shown)
 	_character_window.visible = false
 
 
+## Classic's tabs under the character frame: Character and Skills.
+func _build_character_tabs(width: float, height: float) -> void:
+	var names := ["Character", "Skills"]
+	for i in names.size():
+		var index := i
+		UiStyle.tab(_character_window, Vector2(6 + i * 44, height - 1), Vector2(42, 11), names[i], (i == 1) == _skills_shown, _ui_scale, func() -> void:
+			_skills_shown = index == 1
+			_rebuild())
+
+
+func _show_character_page(skills: bool) -> void:
+	_character_page.visible = not skills
+	_skills_page.visible = skills
+
+
+## The Skills page: each profession's skill as classic's skill bars (value
+## over its rank's cap), its rank, and Unlearn (a second click confirms).
+## A skill-up only moves its bar and numbers (_update_skills); the page is
+## filled again only when a profession is learned or forgotten.
+func _update_skills() -> void:
+	if Professions.known(GameState) != _skills_shown_for:
+		_fill_skills()
+		return
+	var width := _skills_page.size.x / _ui_scale
+	for name: String in _skill_views:
+		var view: Dictionary = _skill_views[name]
+		var value := Professions.value(GameState, name)
+		var most := Professions.max_value(GameState, name)
+		var bonus := Professions.racial_bonus(GameState, name)
+		(view.fill as ColorRect).size = Vector2((width - 52) * clampf(value / float(maxi(most, 1)), 0.0, 1.0), 7) * _ui_scale
+		(view.numbers as Label).text = "%d/%d%s" % [value, most, " (+%d)" % bonus if bonus > 0 else ""]
+		(view.rank as Label).text = Professions.rank_name(name, Professions.rank_of(GameState, name))
+
+var _skill_views: Dictionary = {}
+var _skills_shown_for: Array[String] = []
+
+
+func _fill_skills() -> void:
+	for child in _skills_page.get_children():
+		child.queue_free()
+	_skill_views.clear()
+	_skills_shown_for = Professions.known(GameState)
+	var width := _skills_page.size.x / _ui_scale
+	_text(_skills_page, Vector2(6, 14), "Professions", Color(1, 0.82, 0.3), FONT_SIZE)
+	var known := Professions.known(GameState)
+	if known.is_empty():
+		var none := _text(_skills_page, Vector2(6, 24), "You know no professions. Their trainers are in the towns past the starting lands.", Color(0.7, 0.7, 0.7), FONT_SIZE)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		none.size.x = (width - 12) * _ui_scale
+		return
+	var y := 24.0
+	for name in known:
+		var value := Professions.value(GameState, name)
+		var most := Professions.max_value(GameState, name)
+		var rank := Professions.rank_name(name, Professions.rank_of(GameState, name))
+		_text(_skills_page, Vector2(6, y), Professions.title(name), Color.WHITE, FONT_SIZE)
+		var rank_label := _text(_skills_page, Vector2(60, y), rank, Color(0.7, 0.7, 0.7), FONT_SIZE - 1)
+		# The bar: a dark trough and a blue fill, the numbers over it.
+		var trough := ColorRect.new()
+		trough.color = Color(0.05, 0.05, 0.08)
+		trough.position = Vector2(6, y + 9) * _ui_scale
+		trough.size = Vector2(width - 52, 7) * _ui_scale
+		trough.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_skills_page.add_child(trough)
+		var fill := ColorRect.new()
+		fill.color = Color(0.2, 0.35, 0.8)
+		fill.size = Vector2((width - 52) * clampf(value / float(maxi(most, 1)), 0.0, 1.0), 7) * _ui_scale
+		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		trough.add_child(fill)
+		var bonus := Professions.racial_bonus(GameState, name)
+		var numbers := _text(trough, Vector2(0, -0.5), "%d/%d%s" % [value, most, " (+%d)" % bonus if bonus > 0 else ""], Color.WHITE, FONT_SIZE - 1)
+		numbers.size.x = (width - 52) * _ui_scale
+		numbers.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_skill_views[name] = { "fill": fill, "numbers": numbers, "rank": rank_label }
+		var unlearn := Button.new()
+		unlearn.text = "Unlearn"
+		unlearn.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+		unlearn.position = Vector2(width - 42, y + 7) * _ui_scale
+		unlearn.size = Vector2(36, 10) * _ui_scale
+		var profession := name
+		unlearn.pressed.connect(func() -> void:
+			if not unlearn.has_meta("confirm"):
+				unlearn.set_meta("confirm", true)
+				unlearn.text = "Sure?"
+				return
+			Professions.unlearn(GameState, profession)
+			GameState.inventory_changed.emit())
+		_skills_page.add_child(unlearn)
+		y += 22.0
+
+
 func _build_bags_window() -> void:
-	var width := BAG_COLUMNS * (SLOT + GAP) + GAP
-	var rows := 0
-	for container: Array in GameState.containers:
-		rows += ceili(container.size() / float(BAG_COLUMNS))
-	var bag_gaps := 0
-	for i in range(1, GameState.containers.size()):
-		if not GameState.containers[i].is_empty():
-			bag_gaps += 1
-	var height := 14.0 + (SLOT + GAP) + 4.0 + rows * (SLOT + GAP) + bag_gaps * 4.0 + 12.0
-	# Left of the right action bars, when they're shown.
-	var at := Vector2(_screen.x - width - 4 - SpellUI.right_bars_layout(_screen).width, _screen.y - height - 40)
+	_bag_frames.clear()
+	if str(Settings.get_value("bags_display")) == "Separate":
+		_build_bag_frames()
+	else:
+		_build_combined_bags()
+
+
+## How many columns a bag's slots are laid out in: 4, or 8 for a big bag.
+static func _bag_columns(size: int) -> int:
+	return BAG_COLUMNS if size <= 16 else BAG_COLUMNS * 2
+
+
+## A bag's height of slots, in units.
+static func _bag_rows_height(size: int) -> float:
+	return ceili(size / float(_bag_columns(size))) * (SLOT + GAP)
+
+
+## The tallest a column of bags may be: the screen above the action bars.
+func _bags_max_height() -> float:
+	return _screen.y - 40.0 - 24.0
+
+
+## The right edge for bag windows: left of the right action bars, when shown.
+func _bags_right() -> float:
+	return _screen.x - 4.0 - SpellUI.right_bars_layout(_screen).width
+
+
+## Lays out the bag slots of `container` (bag index `bag`) from `at`.
+func _bag_slots(parent: Control, bag: int, at: Vector2) -> void:
+	var container: Array = GameState.containers[bag]
+	var columns := _bag_columns(container.size())
+	for i in container.size():
+		_slot(parent, at + Vector2((i % columns) * (SLOT + GAP), floori(i / float(columns)) * (SLOT + GAP)), Inventory.bag_ref(bag, i))
+
+
+## Combined: the backpack and every bag in one window, as one grid: each bag's
+## slots carry on where the last bag's end, wrapping, the grid as square as it
+## can be (at least the bag bar's width), and wider only if it would be
+## taller than the screen.
+func _build_combined_bags() -> void:
+	var header := 13.0 + SLOT + GAP + 4.0
+	var footer := 12.0
+	var refs: Array[Dictionary] = []
+	for bag in GameState.containers.size():
+		for i in GameState.containers[bag].size():
+			refs.append(Inventory.bag_ref(bag, i))
+	var columns := maxi(GameState.BAG_SLOTS, ceili(sqrt(float(refs.size()))))
+	var limit := _bags_max_height()
+	while header + footer + ceili(refs.size() / float(columns)) * (SLOT + GAP) > limit and columns < refs.size():
+		columns += 1
+	var rows := ceili(refs.size() / float(columns))
+	var width := columns * (SLOT + GAP) + GAP
+	var height := header + rows * (SLOT + GAP) + footer
+	var at := Vector2(_bags_right() - width, _screen.y - height - 40)
 	_bags_window = _panel(at, Vector2(width, height))
 	UiStyle.title(_bags_window, Vector2(5, 1.5), "Bags (B)", _ui_scale)
-	# Bag slots along the top, as on the classic bag bar.
-	for i in GameState.BAG_SLOTS:
-		_slot(_bags_window, Vector2(GAP + i * (SLOT + GAP), 13), Inventory.bag_slot_ref(i))
-	var y := 13.0 + SLOT + GAP + 4.0
-	for bag in GameState.containers.size():
-		var container: Array = GameState.containers[bag]
-		if container.is_empty():
-			continue
-		if bag > 0:
-			y += 4.0
-		for i in container.size():
-			var column := i % BAG_COLUMNS
-			if i > 0 and column == 0:
-				y += SLOT + GAP
-			_slot(_bags_window, Vector2(GAP + column * (SLOT + GAP), y), Inventory.bag_ref(bag, i))
-		y += SLOT + GAP
-	_money_text = _text(_bags_window, Vector2(4, y), ItemDB.money_text(GameState.money), Color(1, 0.85, 0.4), FONT_SIZE)
+	for slot in GameState.BAG_SLOTS:
+		_slot(_bags_window, Vector2(GAP + slot * (SLOT + GAP), 13), Inventory.bag_slot_ref(slot))
+	for i in refs.size():
+		_slot(_bags_window, Vector2(GAP + (i % columns) * (SLOT + GAP), header + floori(i / float(columns)) * (SLOT + GAP)), refs[i])
+	_money_text = _text(_bags_window, Vector2(4, header + rows * (SLOT + GAP)), ItemDB.money_text(GameState.money), Color(1, 0.85, 0.4), FONT_SIZE)
 	_bags_window.visible = false
+
+
+## Which bags' frames are open in the Separate layout, by bag index (all of
+## them unless closed one by one).
+var _bag_shown := {}
+var _bag_frames := {}
+
+
+## Separate: each bag its own frame, as classic's, titled with the bag's
+## name; the backpack's holds the bag bar and the money. Frames stack up from
+## the bottom right and wrap into further columns leftward.
+func _build_bag_frames() -> void:
+	_bag_frames.clear()
+	_bags_window = Control.new()
+	_bags_window.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bags_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bags_window)
+	var right := _bags_right()
+	var bottom := _screen.y - 40.0
+	var column_width := 0.0
+	for bag in GameState.containers.size():
+		var size: int = GameState.containers[bag].size()
+		if size == 0:
+			continue
+		var width := _bag_columns(size) * (SLOT + GAP) + GAP
+		if bag == 0:
+			width = maxf(width, BAG_COLUMNS * (SLOT + GAP) + GAP)
+		var height := 14.0 + _bag_rows_height(size) + 2.0
+		if bag == 0:
+			height += SLOT + GAP + 4.0 + 12.0
+		if bottom - height < 24.0 and column_width > 0.0:
+			right -= column_width + 4.0
+			bottom = _screen.y - 40.0
+			column_width = 0.0
+		var frame := UiStyle.panel(_bags_window, Vector2(width, height), _ui_scale, true)
+		frame.position = Vector2(right - width, bottom - height) * _ui_scale
+		var title := "Backpack" if bag == 0 else str(ItemDB.get_item(int(GameState.bags[bag - 1].get("id", 0))).get("name", "Bag"))
+		UiStyle.title(frame, Vector2(5, 1.5), title, _ui_scale)
+		var y := 14.0
+		if bag == 0:
+			for slot in GameState.BAG_SLOTS:
+				_slot(frame, Vector2(GAP + slot * (SLOT + GAP), 13), Inventory.bag_slot_ref(slot))
+			y = 13.0 + SLOT + GAP + 4.0
+		_bag_slots(frame, bag, Vector2(GAP, y))
+		if bag == 0:
+			_money_text = _text(frame, Vector2(4, y + _bag_rows_height(size)), ItemDB.money_text(GameState.money), Color(1, 0.85, 0.4), FONT_SIZE)
+		frame.visible = _bag_shown.get(bag, true)
+		_bag_frames[bag] = frame
+		bottom -= height + 4.0
+		column_width = maxf(column_width, width)
+	_bags_window.visible = false
+
+
+## Right-clicking a bag slot in the Separate layout: that bag's frame opens or
+## closes (opening the bags if they were closed).
+func _toggle_bag_frame(slot: int) -> void:
+	var bag := slot + 1
+	if not _bag_frames.has(bag):
+		return
+	if not _bags_window.visible:
+		_bags_window.visible = true
+		for other: int in _bag_frames:
+			_bag_shown[other] = other == bag or other == 0
+	else:
+		_bag_shown[bag] = not _bag_shown.get(bag, true)
+	for other: int in _bag_frames:
+		(_bag_frames[other] as Control).visible = _bag_shown.get(other, true)
 
 
 func _character_sheet() -> String:
@@ -254,7 +503,11 @@ func _slot(parent: Control, at: Vector2, ref: Dictionary) -> void:
 	_draw_view(view)
 	box.mouse_entered.connect(func() -> void:
 		var current := Inventory.stack_at(ref)
-		_tooltip.show_item({} if current.is_empty() else ItemDB.get_item(current.id), current.get("bound", false), int(current.get("durability", -1)), ref.kind == "bag", int(current.get("count", 1)))
+		var shown := {} if current.is_empty() else ItemDB.get_item(current.id)
+		# Its enchant shows on the tooltip (Enchanting).
+		if current.has("enchant"):
+			shown = shown.merged({ "_enchant": int(current.enchant) })
+		_tooltip.show_item(shown, current.get("bound", false), int(current.get("durability", -1)), ref.kind == "bag", int(current.get("count", 1)))
 	)
 	box.mouse_exited.connect(func() -> void: _tooltip.show_item({}))
 	box.gui_input.connect(func(event: InputEvent) -> void: _on_slot_input(event, ref))
@@ -286,6 +539,17 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 	if button == null or _destroy_prompt:
 		return
 	var error := ""
+	# Picking an item for a spell (Disenchant, an enchant): a left click picks
+	# it, a right click gives up.
+	if picking.is_valid() and button.pressed:
+		if button.button_index == MOUSE_BUTTON_LEFT and not Inventory.stack_at(ref).is_empty():
+			var pick := picking
+			end_pick()
+			pick.call(ref)
+		elif button.button_index == MOUSE_BUTTON_RIGHT:
+			end_pick()
+		get_viewport().set_input_as_handled()
+		return
 	if button.button_index == MOUSE_BUTTON_LEFT and button.pressed and button.shift_pressed and _held.is_empty():
 		var stack := Inventory.stack_at(ref)
 		if not stack.is_empty():
@@ -321,6 +585,10 @@ func _on_slot_input(event: InputEvent, ref: Dictionary) -> void:
 		match ref.kind:
 			"bag":
 				error = _right_click_bag_item(ref)
+			"bag_slot":
+				if str(Settings.get_value("bags_display")) == "Separate":
+					_toggle_bag_frame(int(ref.index))
+				return
 			"equip":
 				error = Inventory.unequip(ref.slot)
 	else:
@@ -351,6 +619,9 @@ func _right_click_bag_item(ref: Dictionary) -> String:
 		if error.is_empty():
 			quest_item_used.emit(int(stack.id))
 		return error
+	# A Formula teaches its recipe (Enchanting).
+	if not stack.is_empty() and Enchanting.formula_recipe(int(stack.id)) != 0:
+		return Enchanting.use_formula(ref)
 	if not stack.is_empty() and int(ItemDB.get_item(stack.id).get("spellid_1", 0)) > 0:
 		return _player.spells.use_item(ref)
 	return Inventory.use_from_bag(ref)

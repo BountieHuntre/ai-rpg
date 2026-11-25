@@ -30,8 +30,10 @@ var _confirming := false
 func setup(ui_scale: float) -> void:
 	_ui_scale = ui_scale
 	visible = false
-	GameState.quests_changed.connect(_queue_rebuild)
-	GameState.inventory_changed.connect(_queue_rebuild)
+	# Quests and bags changing (a kill, a quest item looted) only update what
+	# shows them; the rows are made again only when quests come or go.
+	GameState.quests_changed.connect(_queue_refresh)
+	GameState.inventory_changed.connect(_queue_refresh)
 
 
 func toggle() -> void:
@@ -56,10 +58,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _queue_rebuild() -> void:
+func _queue_refresh() -> void:
 	if visible and not _rebuild_queued:
 		_rebuild_queued = true
-		_build.call_deferred()
+		_refresh.call_deferred()
 
 
 func _ids() -> Array:
@@ -68,56 +70,147 @@ func _ids() -> Array:
 	return ids
 
 
+## What's drawn, kept to update in place: the quest count, the rows
+## ({ id, row, label }), the picked quest's details (their own box, made
+## again only when another is picked) with its objective lines, and Abandon.
+var _count_label: Label
+var _list: VBoxContainer
+var _row_views: Array[Dictionary] = []
+var _shown_ids: Array = []
+var _detail_holder: Control
+var _objective_labels: Array[Label] = []
+var _abandon: Button
+
+
+## The frame, once on opening.
 func _build() -> void:
 	_rebuild_queued = false
 	for child in get_children():
 		child.queue_free()
-	var ids := _ids()
-	_selected = clampi(_selected, 0, maxi(ids.size() - 1, 0))
+	_row_views.clear()
 	size = Vector2(WIDTH, 14 + LIST_HEIGHT + 4 + DETAIL_HEIGHT + 18) * _ui_scale
 	UiStyle.panel(self, size / _ui_scale, _ui_scale)
 	UiStyle.title(self, Vector2(5, 1.5), "Quest Log", _ui_scale)
-	_text(self, Vector2(WIDTH - 42, 2), "%d/%d" % [ids.size(), QuestLog.MAX_QUESTS], GREY, FONT_SIZE)
+	_count_label = _text(self, Vector2(WIDTH - 42, 2), "", GREY, FONT_SIZE)
 	UiStyle.close_button(self, Vector2(WIDTH - 10, 2), _ui_scale, toggle)
+	_list = VBoxContainer.new()
+	_list.add_theme_constant_override("separation", 0)
+	add_child(_scroll(Vector2(4, 14), Vector2(WIDTH - 8, LIST_HEIGHT), _list))
+	_detail_holder = Control.new()
+	_detail_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_detail_holder)
+	_abandon = Button.new()
+	_abandon.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	_abandon.position = Vector2(4, 22 + LIST_HEIGHT + DETAIL_HEIGHT) * _ui_scale
+	_abandon.size = Vector2(WIDTH - 8, 12) * _ui_scale
+	_abandon.pressed.connect(func() -> void:
+		if _shown_ids.is_empty():
+			return
+		var id: int = _shown_ids[_selected]
+		if _confirming:
+			_confirming = false
+			QuestLog.abandon(id)
+		else:
+			_confirming = true
+			_update_abandon())
+	add_child(_abandon)
+	_fill_list()
 
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 0)
-	var list_scroll := _scroll(Vector2(4, 14), Vector2(WIDTH - 8, LIST_HEIGHT), list)
-	add_child(list_scroll)
+
+## The rows, made again when quests come or go.
+func _fill_list() -> void:
+	for child in _list.get_children():
+		child.queue_free()
+	_row_views.clear()
+	var ids := _ids()
+	_shown_ids = ids
+	_count_label.text = "%d/%d" % [ids.size(), QuestLog.MAX_QUESTS]
 	if ids.is_empty():
-		_line(list, "No quests yet. Look for townsfolk with a ! over their heads.", GREY)
+		_line(_list, "No quests yet. Look for townsfolk with a ! over their heads.", GREY)
 	for i in ids.size():
 		var id: int = ids[i]
-		var quest := QuestDB.get_quest(id)
 		var row := ColorRect.new()
-		row.color = SELECTED if i == _selected else Color.TRANSPARENT
+		row.color = Color.TRANSPARENT
 		row.custom_minimum_size = Vector2(WIDTH - 12, ROW) * _ui_scale
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		list.add_child(row)
-		var complete := QuestLog.is_complete(id)
-		var color := CombatRules.level_color(GameState.level, int(quest.level))
-		_text(row, Vector2(2, 1), "[%d] %s%s" % [quest.level, quest.title, " (Complete)" if complete else ""], color, FONT_SIZE)
+		_list.add_child(row)
+		var label := _text(row, Vector2(2, 1), "", Color.WHITE, FONT_SIZE)
+		_row_views.append({ "id": id, "row": row, "label": label })
+		var index := i
 		row.gui_input.connect(func(event: InputEvent) -> void:
 			var button := event as InputEventMouseButton
 			if button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT and button.shift_pressed:
 				link_requested.emit(id)
 			elif button and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
-				_selected = i
 				_confirming = false
-				_build.call_deferred()
+				_select(index)
 		)
+	_update_rows()
+	_select(clampi(_selected, 0, maxi(ids.size() - 1, 0)))
 
-	if ids.is_empty():
+
+## Quests or bags changed: rows and objectives in place, unless quests came
+## or went.
+func _refresh() -> void:
+	_rebuild_queued = false
+	if not visible or _list == null or not is_instance_valid(_list):
 		return
-	var id: int = ids[_selected]
+	if _ids() != _shown_ids:
+		_fill_list()
+		return
+	_update_rows()
+	if not _shown_ids.is_empty():
+		var lines := QuestLog.objective_lines(int(_shown_ids[_selected]))
+		for i in mini(lines.size(), _objective_labels.size()):
+			_objective_labels[i].text = "  - " + str(lines[i][0])
+			_objective_labels[i].add_theme_color_override("font_color", DONE if lines[i][1] else TEXT)
+
+
+func _update_rows() -> void:
+	for view: Dictionary in _row_views:
+		var quest := QuestDB.get_quest(int(view.id))
+		var label: Label = view.label
+		label.text = "[%d] %s%s" % [quest.level, quest.title, " (Complete)" if QuestLog.is_complete(int(view.id)) else ""]
+		label.add_theme_color_override("font_color", CombatRules.level_color(GameState.level, int(quest.level)))
+
+
+func _select(index: int) -> void:
+	_selected = index
+	for i in _row_views.size():
+		(_row_views[i].row as ColorRect).color = SELECTED if i == index else Color.TRANSPARENT
+	_show_detail()
+	_update_abandon()
+
+
+func _update_abandon() -> void:
+	_abandon.visible = not _shown_ids.is_empty()
+	if _shown_ids.is_empty():
+		return
+	var quest := QuestDB.get_quest(int(_shown_ids[_selected]))
+	_abandon.text = "Abandon \"%s\"?" % quest.title if _confirming else "Abandon Quest"
+	if _confirming:
+		_abandon.add_theme_color_override("font_color", Color(1, 0.4, 0.35))
+	else:
+		_abandon.remove_theme_color_override("font_color")
+
+
+## The picked quest's text, objectives and rewards: made again only when
+## another quest is picked.
+func _show_detail() -> void:
+	for child in _detail_holder.get_children():
+		child.queue_free()
+	_objective_labels.clear()
+	if _shown_ids.is_empty():
+		return
+	var id: int = _shown_ids[_selected]
 	var quest := QuestDB.get_quest(id)
 	var detail := VBoxContainer.new()
 	detail.add_theme_constant_override("separation", roundi(2 * _ui_scale))
-	add_child(_scroll(Vector2(4, 18 + LIST_HEIGHT), Vector2(WIDTH - 8, DETAIL_HEIGHT), detail))
+	_detail_holder.add_child(_scroll(Vector2(4, 18 + LIST_HEIGHT), Vector2(WIDTH - 8, DETAIL_HEIGHT), detail))
 	_line(detail, quest.title, GOLD, 7)
 	_line(detail, quest.objectives, TEXT)
 	for objective: Array in QuestLog.objective_lines(id):
-		_line(detail, "  - " + objective[0], DONE if objective[1] else TEXT)
+		_objective_labels.append(_line(detail, "  - " + objective[0], DONE if objective[1] else TEXT))
 	_line(detail, "Description", HEADING, 7)
 	_line(detail, str(quest.details).replace("$N", GameState.char_name), TEXT)
 	var rewards: Array = quest.reward_choices + quest.reward_items
@@ -133,23 +226,6 @@ func _build() -> void:
 			label.mouse_exited.connect(func() -> void: hovered.emit({}))
 		if int(quest.money) > 0:
 			_line(detail, "Money: %s" % ItemDB.money_text(int(quest.money)), HEADING)
-
-	var abandon := Button.new()
-	abandon.text = "Abandon \"%s\"?" % quest.title if _confirming else "Abandon Quest"
-	abandon.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
-	abandon.position = Vector2(4, 22 + LIST_HEIGHT + DETAIL_HEIGHT) * _ui_scale
-	abandon.size = Vector2(WIDTH - 8, 12) * _ui_scale
-	if _confirming:
-		abandon.add_theme_color_override("font_color", Color(1, 0.4, 0.35))
-	abandon.pressed.connect(func() -> void:
-		if _confirming:
-			_confirming = false
-			QuestLog.abandon(id)
-		else:
-			_confirming = true
-			_build.call_deferred()
-	)
-	add_child(abandon)
 
 
 func _scroll(at: Vector2, scroll_size: Vector2, content: Control) -> ScrollContainer:

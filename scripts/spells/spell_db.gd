@@ -40,6 +40,8 @@ const EFFECT_HEAL := 10
 const EFFECT_PERSISTENT_AREA_AURA := 27
 const EFFECT_ENERGIZE := 30
 const EFFECT_WEAPON_PERCENT_DAMAGE := 31
+## Weapon strikes: weapon damage plus an amount (Mortal Strike-like).
+const EFFECT_WEAPON_DAMAGE := 58
 const EFFECT_APPLY_AREA_AURA := 35
 const EFFECT_PROFICIENCY := 60
 const EFFECT_SCRIPT := 77
@@ -217,6 +219,34 @@ static func effect_value(spell: Dictionary, effect: int, caster_level: int, cast
 	return value
 
 
+## A melee weapon strike's damage from a spell's effects, as CMaNGOS sums
+## them (Spell::EffectWeaponDmg): a weapon hit (normalised to `normal_speed`
+## for normalized_weapon_damage) plus weapon_damage, weapon_damage_noschool
+## and normalized_weapon_damage values, times weapon_percent_damage's % (25
+## for a quarter of a weapon hit). -1 when the spell has none of them.
+static func weapon_strike_damage(spell: Dictionary, striker: Combatant, level: int, normal_speed := 2.4) -> float:
+	var kinds := [EFFECT_WEAPON_DAMAGE_NOSCHOOL, EFFECT_WEAPON_PERCENT_DAMAGE, EFFECT_WEAPON_DAMAGE, EFFECT_NORMALIZED_WEAPON_DMG]
+	var flat := 0.0
+	var share := 1.0
+	var normalized := false
+	var found := false
+	for i in 3:
+		var kind := int(spell.get("Effect%d" % (i + 1), 0))
+		if not kind in kinds:
+			continue
+		found = true
+		var value := effect_value(spell, i, level, striker)
+		if kind == EFFECT_WEAPON_PERCENT_DAMAGE:
+			share *= value / 100.0
+		else:
+			flat += value
+			normalized = normalized or kind == EFFECT_NORMALIZED_WEAPON_DMG
+	if not found:
+		return -1.0
+	var weapon := striker.roll_normalized_damage(normal_speed) if normalized else striker.roll_weapon_damage()
+	return maxf((weapon + flat) * share, 0.0)
+
+
 ## effect_range with a caster's talents (the modifiers effect_value applies),
 ## for tooltips: the least and most the caster's spell does.
 static func effect_span(spell: Dictionary, effect: int, caster_level: int, caster: Combatant = null) -> Vector2:
@@ -224,9 +254,26 @@ static func effect_span(spell: Dictionary, effect: int, caster_level: int, caste
 	if caster == null:
 		return span
 	var aura := int(spell.get("EffectApplyAuraName%d" % (effect + 1), 0))
-	for op: int in [SpellMods.ALL_EFFECTS] + ([SpellMods.SPEED] if aura == AURA_MOD_INCREASE_SPEED else []) 			+ ([SpellMods.ATTACK_POWER] if aura == AURA_MOD_ATTACK_POWER else []):
+	var kind := int(spell.get("Effect%d" % (effect + 1), 0))
+	var ops: Array[int] = [SpellMods.ALL_EFFECTS]
+	if aura == AURA_MOD_INCREASE_SPEED:
+		ops.append(SpellMods.SPEED)
+	if aura == AURA_MOD_ATTACK_POWER:
+		ops.append(SpellMods.ATTACK_POWER)
+	# Damage talents, as the damage is dealt: direct and weapon damage
+	# (SpellCaster._spell_damage, _weapon_strike), damage over time (Combatant).
+	if kind in DAMAGE_EFFECTS:
+		ops.append(SpellMods.DAMAGE)
+	if aura in [AURA_PERIODIC_DAMAGE, AURA_PERIODIC_LEECH]:
+		ops.append(SpellMods.DOT)
+	for op: int in ops:
 		span = Vector2(SpellMods.apply(caster, spell, op, span.x), SpellMods.apply(caster, spell, op, span.y))
 	return span
+
+
+## Effects whose amount is damage dealt, which damage talents raise.
+const DAMAGE_EFFECTS := [EFFECT_SCHOOL_DAMAGE, EFFECT_WEAPON_DAMAGE_NOSCHOOL, EFFECT_WEAPON_PERCENT_DAMAGE,
+	EFFECT_WEAPON_DAMAGE, EFFECT_NORMALIZED_WEAPON_DMG]
 
 
 ## The lowest and highest value an effect can roll at a level.
@@ -355,11 +402,20 @@ static func is_blessing(spell: Dictionary) -> bool:
 
 
 ## A proc's rate from spell_proc_event, for a spell or its first rank:
-## { "ppm": procs per minute, "chance": percent, "cooldown": seconds }, or {}.
+## { "chance": percent per hit, "cooldown": seconds, ... }, or {}.
 static func proc_info(spell: Dictionary) -> Dictionary:
 	var procs: Dictionary = _get_data().get("procs", {})
 	var id := int(spell.get("Id", 0))
 	return procs.get(str(id), procs.get(str(first_rank(id)), {}))
+
+
+## A proc's chance per hit in %, as SpellProcs and TalentProcs roll it: its
+## proc row's chance, else the spell's ProcChance (at most 100).
+static func proc_chance(spell: Dictionary) -> float:
+	var info := proc_info(spell)
+	if float(info.get("chance", 0.0)) > 0.0:
+		return float(info.chance)
+	return minf(float(spell.get("ProcChance", 100)), 100.0)
 
 
 ## The heal or mana spell a Judgement of Light or Wisdom rank procs, or 0.
@@ -395,6 +451,15 @@ static func has_effect(spell: Dictionary, kind: int, aura := false) -> bool:
 
 static func is_passive(spell: Dictionary) -> bool:
 	return int(spell.get("Attributes", 0)) & ATTR_PASSIVE != 0
+
+
+## SPELL_ATTR_HIDDEN_CLIENTSIDE: spells the client never shows (Herb
+## Gathering, the Mining ranks).
+const ATTR_HIDDEN := 0x80
+
+
+static func is_hidden(spell: Dictionary) -> bool:
+	return int(spell.get("Attributes", 0)) & ATTR_HIDDEN != 0
 
 
 ## The previous rank of a spell, or 0.
@@ -557,6 +622,7 @@ static func reload_designs() -> Array[String]:
 	TalentText._player_spells.clear()
 	TalentText._talent_ranks.clear()
 	SpellswordAbilities._ids.clear()
+	ProfessionDB.reload()
 	_get_data()
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree:

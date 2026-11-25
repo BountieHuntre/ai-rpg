@@ -242,6 +242,20 @@ func _draw_overlay() -> void:
 			_overlay.draw_circle(at, 2.0 * _ui_scale, Color.BLACK)
 			_overlay.draw_circle(at, 1.5 * _ui_scale, TRACKED_COLOR)
 			_hotspots.append([at, 3.0 * _ui_scale, [[enemy.combatant.display_name, "", TRACKED_COLOR], ["Level %d" % enemy.level, "", Color.WHITE]]])
+	# Find Herbs and Find Minerals: the herbs (2) or ore (3) near you, as
+	# yellow dots; hover for which.
+	var resources: Array[int] = _player.spells.tracked_resources() if _player.spells else []
+	if not resources.is_empty():
+		for node: GatherNode in get_tree().get_nodes_in_group("gather_nodes"):
+			if not (2 if node.kind == "herb" else 3) in resources or node.is_queued_for_deletion():
+				continue
+			var offset := Vector2(node.global_position.x, node.global_position.z) - here
+			if offset.length() > view:
+				continue
+			var at := center + offset * scale
+			_overlay.draw_circle(at, 2.0 * _ui_scale, Color.BLACK)
+			_overlay.draw_circle(at, 1.5 * _ui_scale, TRACKED_COLOR)
+			_hotspots.append([at, 3.0 * _ui_scale, [[node.node_name(), "", TRACKED_COLOR]]])
 	# Party members: blue dots, on the rim when off the map.
 	for bot in Party.members:
 		if not is_instance_valid(bot):

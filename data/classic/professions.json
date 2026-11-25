@@ -1,0 +1,8816 @@
+{
+	"professions": {
+		"herbalism": {
+			"skill": 182,
+			"ranks": [
+				{
+					"spell": 2366,
+					"rank": "Apprentice",
+					"max": 75,
+					"level": 5,
+					"skill": 0,
+					"cost": 10
+				},
+				{
+					"spell": 2368,
+					"rank": "Journeyman",
+					"max": 150,
+					"level": 10,
+					"skill": 50,
+					"cost": 500
+				},
+				{
+					"spell": 3570,
+					"rank": "Expert",
+					"max": 225,
+					"level": 20,
+					"skill": 125,
+					"cost": 5000
+				},
+				{
+					"spell": 11993,
+					"rank": "Artisan",
+					"max": 300,
+					"level": 35,
+					"skill": 200,
+					"cost": 50000
+				}
+			],
+			"start": [
+				2383
+			],
+			"tools": []
+		},
+		"mining": {
+			"skill": 186,
+			"ranks": [
+				{
+					"spell": 2575,
+					"rank": "Apprentice",
+					"max": 75,
+					"level": 5,
+					"skill": 0,
+					"cost": 10
+				},
+				{
+					"spell": 2576,
+					"rank": "Journeyman",
+					"max": 150,
+					"level": 10,
+					"skill": 50,
+					"cost": 500
+				},
+				{
+					"spell": 3564,
+					"rank": "Expert",
+					"max": 225,
+					"level": 20,
+					"skill": 125,
+					"cost": 4500
+				},
+				{
+					"spell": 10248,
+					"rank": "Artisan",
+					"max": 300,
+					"level": 35,
+					"skill": 200,
+					"cost": 50000
+				}
+			],
+			"start": [
+				2580,
+				2656,
+				2657
+			],
+			"tools": [
+				2901
+			]
+		},
+		"skinning": {
+			"skill": 393,
+			"ranks": [
+				{
+					"spell": 8613,
+					"rank": "Apprentice",
+					"max": 75,
+					"level": 5,
+					"skill": 0,
+					"cost": 10
+				},
+				{
+					"spell": 8617,
+					"rank": "Journeyman",
+					"max": 150,
+					"level": 10,
+					"skill": 50,
+					"cost": 500
+				},
+				{
+					"spell": 8618,
+					"rank": "Expert",
+					"max": 225,
+					"level": 20,
+					"skill": 125,
+					"cost": 5000
+				},
+				{
+					"spell": 10768,
+					"rank": "Artisan",
+					"max": 300,
+					"level": 35,
+					"skill": 200,
+					"cost": 50000
+				}
+			],
+			"start": [],
+			"tools": [
+				7005
+			]
+		},
+		"enchanting": {
+			"skill": 333,
+			"ranks": [
+				{
+					"spell": 7411,
+					"rank": "Apprentice",
+					"max": 75,
+					"level": 5,
+					"skill": 0,
+					"cost": 10
+				},
+				{
+					"spell": 7412,
+					"rank": "Journeyman",
+					"max": 150,
+					"level": 10,
+					"skill": 50,
+					"cost": 500
+				},
+				{
+					"spell": 7413,
+					"rank": "Expert",
+					"max": 225,
+					"level": 20,
+					"skill": 125,
+					"cost": 5000
+				},
+				{
+					"spell": 13920,
+					"rank": "Artisan",
+					"max": 300,
+					"level": 35,
+					"skill": 200,
+					"cost": 50000
+				}
+			],
+			"start": [
+				7418,
+				7421,
+				7428,
+				13262
+			],
+			"tools": []
+		}
+	},
+	"recipes": {
+		"2658": {
+			"profession": "mining",
+			"skill": 75,
+			"levels": [
+				75,
+				100,
+				112,
+				125
+			],
+			"reagents": [
+				[
+					2775,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				2842,
+				1
+			]
+		},
+		"2659": {
+			"profession": "mining",
+			"skill": 65,
+			"levels": [
+				65,
+				65,
+				90,
+				115
+			],
+			"reagents": [
+				[
+					2840,
+					1
+				],
+				[
+					3576,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				2841,
+				2
+			]
+		},
+		"3308": {
+			"profession": "mining",
+			"skill": 155,
+			"levels": [
+				155,
+				170,
+				177,
+				185
+			],
+			"reagents": [
+				[
+					2776,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				3577,
+				1
+			]
+		},
+		"3307": {
+			"profession": "mining",
+			"skill": 125,
+			"levels": [
+				125,
+				130,
+				135,
+				140
+			],
+			"reagents": [
+				[
+					2772,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				3575,
+				1
+			]
+		},
+		"3304": {
+			"profession": "mining",
+			"skill": 65,
+			"levels": [
+				65,
+				65,
+				70,
+				75
+			],
+			"reagents": [
+				[
+					2771,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				3576,
+				1
+			]
+		},
+		"3569": {
+			"profession": "mining",
+			"skill": 165,
+			"levels": [
+				165,
+				165,
+				165,
+				165
+			],
+			"reagents": [
+				[
+					3575,
+					1
+				],
+				[
+					3857,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				3859,
+				1
+			]
+		},
+		"2657": {
+			"profession": "mining",
+			"skill": 1,
+			"levels": [
+				1,
+				25,
+				47,
+				70
+			],
+			"reagents": [
+				[
+					2770,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				2840,
+				1
+			]
+		},
+		"10098": {
+			"profession": "mining",
+			"skill": 230,
+			"levels": [
+				230,
+				230,
+				230,
+				230
+			],
+			"reagents": [
+				[
+					7911,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				6037,
+				1
+			]
+		},
+		"10097": {
+			"profession": "mining",
+			"skill": 175,
+			"levels": [
+				175,
+				175,
+				175,
+				175
+			],
+			"reagents": [
+				[
+					3858,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				3860,
+				1
+			]
+		},
+		"16153": {
+			"profession": "mining",
+			"skill": 250,
+			"levels": [
+				250,
+				250,
+				250,
+				250
+			],
+			"reagents": [
+				[
+					10620,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 3,
+			"makes": [
+				12359,
+				1
+			]
+		},
+		"7418": {
+			"profession": "enchanting",
+			"skill": 1,
+			"levels": [
+				1,
+				70,
+				90,
+				110
+			],
+			"reagents": [
+				[
+					10940,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 41,
+			"temporary": false
+		},
+		"7420": {
+			"profession": "enchanting",
+			"skill": 15,
+			"levels": [
+				15,
+				70,
+				90,
+				110
+			],
+			"reagents": [
+				[
+					10940,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 41,
+			"temporary": false
+		},
+		"7421": {
+			"profession": "enchanting",
+			"skill": 1,
+			"levels": [
+				1,
+				5,
+				7,
+				10
+			],
+			"reagents": [
+				[
+					6217,
+					1
+				],
+				[
+					10940,
+					1
+				],
+				[
+					10938,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 0,
+			"makes": [
+				6218,
+				1
+			]
+		},
+		"7426": {
+			"profession": "enchanting",
+			"skill": 40,
+			"levels": [
+				40,
+				90,
+				110,
+				130
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					10938,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 44,
+			"temporary": false
+		},
+		"7428": {
+			"profession": "enchanting",
+			"skill": 20,
+			"levels": [
+				20,
+				80,
+				100,
+				120
+			],
+			"reagents": [
+				[
+					10938,
+					1
+				],
+				[
+					10940,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 924,
+			"temporary": false
+		},
+		"7443": {
+			"profession": "enchanting",
+			"skill": 20,
+			"levels": [
+				20,
+				80,
+				100,
+				120
+			],
+			"reagents": [
+				[
+					10938,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 24,
+			"temporary": false,
+			"formula": 6342
+		},
+		"7454": {
+			"profession": "enchanting",
+			"skill": 45,
+			"levels": [
+				45,
+				95,
+				115,
+				135
+			],
+			"reagents": [
+				[
+					10940,
+					1
+				],
+				[
+					10938,
+					2
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 65,
+			"temporary": false
+		},
+		"7457": {
+			"profession": "enchanting",
+			"skill": 50,
+			"levels": [
+				50,
+				100,
+				120,
+				140
+			],
+			"reagents": [
+				[
+					10940,
+					3
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 66,
+			"temporary": false
+		},
+		"7748": {
+			"profession": "enchanting",
+			"skill": 60,
+			"levels": [
+				60,
+				105,
+				125,
+				145
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					10938,
+					2
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 242,
+			"temporary": false
+		},
+		"7766": {
+			"profession": "enchanting",
+			"skill": 60,
+			"levels": [
+				60,
+				105,
+				125,
+				145
+			],
+			"reagents": [
+				[
+					10938,
+					2
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 243,
+			"temporary": false,
+			"formula": 6344
+		},
+		"7771": {
+			"profession": "enchanting",
+			"skill": 70,
+			"levels": [
+				70,
+				110,
+				130,
+				150
+			],
+			"reagents": [
+				[
+					10940,
+					3
+				],
+				[
+					10939,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 783,
+			"temporary": false,
+			"formula": 6345
+		},
+		"7776": {
+			"profession": "enchanting",
+			"skill": 80,
+			"levels": [
+				80,
+				115,
+				135,
+				155
+			],
+			"reagents": [
+				[
+					10939,
+					1
+				],
+				[
+					10938,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 246,
+			"temporary": false,
+			"formula": 6346
+		},
+		"7779": {
+			"profession": "enchanting",
+			"skill": 80,
+			"levels": [
+				80,
+				115,
+				135,
+				155
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					10939,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 247,
+			"temporary": false
+		},
+		"7782": {
+			"profession": "enchanting",
+			"skill": 80,
+			"levels": [
+				80,
+				115,
+				135,
+				155
+			],
+			"reagents": [
+				[
+					10940,
+					5
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 248,
+			"temporary": false,
+			"formula": 6347
+		},
+		"7786": {
+			"profession": "enchanting",
+			"skill": 90,
+			"levels": [
+				90,
+				120,
+				140,
+				160
+			],
+			"reagents": [
+				[
+					10940,
+					4
+				],
+				[
+					10939,
+					2
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 249,
+			"temporary": false,
+			"formula": 6348
+		},
+		"7788": {
+			"profession": "enchanting",
+			"skill": 90,
+			"levels": [
+				90,
+				120,
+				140,
+				160
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					10939,
+					1
+				],
+				[
+					10978,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 250,
+			"temporary": false
+		},
+		"7745": {
+			"profession": "enchanting",
+			"skill": 100,
+			"levels": [
+				100,
+				130,
+				150,
+				170
+			],
+			"reagents": [
+				[
+					10940,
+					4
+				],
+				[
+					10978,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 241,
+			"temporary": false
+		},
+		"7793": {
+			"profession": "enchanting",
+			"skill": 100,
+			"levels": [
+				100,
+				130,
+				150,
+				170
+			],
+			"reagents": [
+				[
+					10939,
+					3
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 723,
+			"temporary": false,
+			"formula": 6349
+		},
+		"7795": {
+			"profession": "enchanting",
+			"skill": 100,
+			"levels": [
+				100,
+				130,
+				150,
+				170
+			],
+			"reagents": [
+				[
+					6338,
+					1
+				],
+				[
+					10940,
+					6
+				],
+				[
+					10939,
+					3
+				],
+				[
+					1210,
+					1
+				]
+			],
+			"tools": [],
+			"focus": 0,
+			"makes": [
+				6339,
+				1
+			]
+		},
+		"7857": {
+			"profession": "enchanting",
+			"skill": 120,
+			"levels": [
+				120,
+				145,
+				165,
+				185
+			],
+			"reagents": [
+				[
+					10940,
+					4
+				],
+				[
+					10998,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 254,
+			"temporary": false
+		},
+		"7859": {
+			"profession": "enchanting",
+			"skill": 120,
+			"levels": [
+				120,
+				145,
+				165,
+				185
+			],
+			"reagents": [
+				[
+					10998,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 255,
+			"temporary": false,
+			"formula": 6375
+		},
+		"7861": {
+			"profession": "enchanting",
+			"skill": 125,
+			"levels": [
+				125,
+				150,
+				170,
+				190
+			],
+			"reagents": [
+				[
+					6371,
+					1
+				],
+				[
+					10998,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 256,
+			"temporary": false
+		},
+		"7863": {
+			"profession": "enchanting",
+			"skill": 125,
+			"levels": [
+				125,
+				150,
+				170,
+				190
+			],
+			"reagents": [
+				[
+					10940,
+					8
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 66,
+			"temporary": false,
+			"formula": 6376
+		},
+		"7867": {
+			"profession": "enchanting",
+			"skill": 125,
+			"levels": [
+				125,
+				150,
+				170,
+				190
+			],
+			"reagents": [
+				[
+					10940,
+					6
+				],
+				[
+					10998,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 247,
+			"temporary": false,
+			"formula": 6377
+		},
+		"13378": {
+			"profession": "enchanting",
+			"skill": 105,
+			"levels": [
+				105,
+				130,
+				150,
+				170
+			],
+			"reagents": [
+				[
+					10998,
+					1
+				],
+				[
+					10940,
+					2
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 66,
+			"temporary": false
+		},
+		"13380": {
+			"profession": "enchanting",
+			"skill": 110,
+			"levels": [
+				110,
+				135,
+				155,
+				175
+			],
+			"reagents": [
+				[
+					10998,
+					1
+				],
+				[
+					10940,
+					6
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 255,
+			"temporary": false,
+			"formula": 11038
+		},
+		"13419": {
+			"profession": "enchanting",
+			"skill": 110,
+			"levels": [
+				110,
+				135,
+				155,
+				175
+			],
+			"reagents": [
+				[
+					10998,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 247,
+			"temporary": false,
+			"formula": 11039
+		},
+		"13421": {
+			"profession": "enchanting",
+			"skill": 115,
+			"levels": [
+				115,
+				140,
+				160,
+				180
+			],
+			"reagents": [
+				[
+					10940,
+					6
+				],
+				[
+					10978,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"enchant": 744,
+			"temporary": false
+		},
+		"13464": {
+			"profession": "enchanting",
+			"skill": 115,
+			"levels": [
+				115,
+				140,
+				160,
+				180
+			],
+			"reagents": [
+				[
+					10998,
+					1
+				],
+				[
+					10940,
+					1
+				],
+				[
+					10978,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 848,
+			"temporary": false,
+			"formula": 11081
+		},
+		"13485": {
+			"profession": "enchanting",
+			"skill": 130,
+			"levels": [
+				130,
+				155,
+				175,
+				195
+			],
+			"reagents": [
+				[
+					10998,
+					2
+				],
+				[
+					10940,
+					4
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 255,
+			"temporary": false
+		},
+		"13501": {
+			"profession": "enchanting",
+			"skill": 130,
+			"levels": [
+				130,
+				155,
+				175,
+				195
+			],
+			"reagents": [
+				[
+					11083,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 724,
+			"temporary": false
+		},
+		"13503": {
+			"profession": "enchanting",
+			"skill": 140,
+			"levels": [
+				140,
+				165,
+				185,
+				205
+			],
+			"reagents": [
+				[
+					11083,
+					2
+				],
+				[
+					11084,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 241,
+			"temporary": false
+		},
+		"13522": {
+			"profession": "enchanting",
+			"skill": 135,
+			"levels": [
+				135,
+				160,
+				180,
+				200
+			],
+			"reagents": [
+				[
+					11082,
+					1
+				],
+				[
+					6048,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 804,
+			"temporary": false,
+			"formula": 11098
+		},
+		"13529": {
+			"profession": "enchanting",
+			"skill": 145,
+			"levels": [
+				145,
+				170,
+				190,
+				210
+			],
+			"reagents": [
+				[
+					11083,
+					3
+				],
+				[
+					11084,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 943,
+			"temporary": false
+		},
+		"13536": {
+			"profession": "enchanting",
+			"skill": 140,
+			"levels": [
+				140,
+				165,
+				185,
+				205
+			],
+			"reagents": [
+				[
+					11083,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 823,
+			"temporary": false,
+			"formula": 11101
+		},
+		"13538": {
+			"profession": "enchanting",
+			"skill": 140,
+			"levels": [
+				140,
+				165,
+				185,
+				205
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					11082,
+					1
+				],
+				[
+					11084,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 63,
+			"temporary": false
+		},
+		"13607": {
+			"profession": "enchanting",
+			"skill": 145,
+			"levels": [
+				145,
+				170,
+				190,
+				210
+			],
+			"reagents": [
+				[
+					11082,
+					1
+				],
+				[
+					10998,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 843,
+			"temporary": false
+		},
+		"13612": {
+			"profession": "enchanting",
+			"skill": 145,
+			"levels": [
+				145,
+				170,
+				190,
+				210
+			],
+			"reagents": [
+				[
+					11083,
+					1
+				],
+				[
+					2772,
+					3
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 844,
+			"temporary": false,
+			"formula": 11150
+		},
+		"13617": {
+			"profession": "enchanting",
+			"skill": 145,
+			"levels": [
+				145,
+				170,
+				190,
+				210
+			],
+			"reagents": [
+				[
+					11083,
+					1
+				],
+				[
+					3356,
+					3
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 845,
+			"temporary": false,
+			"formula": 11151
+		},
+		"13620": {
+			"profession": "enchanting",
+			"skill": 145,
+			"levels": [
+				145,
+				170,
+				190,
+				210
+			],
+			"reagents": [
+				[
+					11083,
+					1
+				],
+				[
+					6370,
+					3
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 846,
+			"temporary": false,
+			"formula": 11152
+		},
+		"13622": {
+			"profession": "enchanting",
+			"skill": 150,
+			"levels": [
+				150,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11082,
+					2
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 723,
+			"temporary": false
+		},
+		"13626": {
+			"profession": "enchanting",
+			"skill": 150,
+			"levels": [
+				150,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11082,
+					1
+				],
+				[
+					11083,
+					1
+				],
+				[
+					11084,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"enchant": 847,
+			"temporary": false
+		},
+		"13628": {
+			"profession": "enchanting",
+			"skill": 150,
+			"levels": [
+				150,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11128,
+					1
+				],
+				[
+					5500,
+					1
+				],
+				[
+					11082,
+					2
+				],
+				[
+					11083,
+					2
+				]
+			],
+			"tools": [],
+			"focus": 0,
+			"makes": [
+				11130,
+				1
+			]
+		},
+		"13631": {
+			"profession": "enchanting",
+			"skill": 155,
+			"levels": [
+				155,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				],
+				[
+					11083,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 724,
+			"temporary": false
+		},
+		"13635": {
+			"profession": "enchanting",
+			"skill": 155,
+			"levels": [
+				155,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11138,
+					1
+				],
+				[
+					11083,
+					3
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 848,
+			"temporary": false
+		},
+		"13637": {
+			"profession": "enchanting",
+			"skill": 160,
+			"levels": [
+				160,
+				180,
+				200,
+				220
+			],
+			"reagents": [
+				[
+					11083,
+					1
+				],
+				[
+					11134,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 849,
+			"temporary": false
+		},
+		"13640": {
+			"profession": "enchanting",
+			"skill": 160,
+			"levels": [
+				160,
+				180,
+				200,
+				220
+			],
+			"reagents": [
+				[
+					11083,
+					3
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 850,
+			"temporary": false
+		},
+		"13642": {
+			"profession": "enchanting",
+			"skill": 165,
+			"levels": [
+				165,
+				185,
+				205,
+				225
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 851,
+			"temporary": false
+		},
+		"13644": {
+			"profession": "enchanting",
+			"skill": 170,
+			"levels": [
+				170,
+				190,
+				210,
+				230
+			],
+			"reagents": [
+				[
+					11083,
+					4
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 724,
+			"temporary": false
+		},
+		"13646": {
+			"profession": "enchanting",
+			"skill": 170,
+			"levels": [
+				170,
+				190,
+				210,
+				230
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				],
+				[
+					11083,
+					2
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 925,
+			"temporary": false,
+			"formula": 11163
+		},
+		"13648": {
+			"profession": "enchanting",
+			"skill": 170,
+			"levels": [
+				170,
+				190,
+				210,
+				230
+			],
+			"reagents": [
+				[
+					11083,
+					6
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 852,
+			"temporary": false
+		},
+		"13653": {
+			"profession": "enchanting",
+			"skill": 175,
+			"levels": [
+				175,
+				195,
+				215,
+				235
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				],
+				[
+					5637,
+					2
+				],
+				[
+					11138,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 853,
+			"temporary": false,
+			"formula": 11164
+		},
+		"13655": {
+			"profession": "enchanting",
+			"skill": 175,
+			"levels": [
+				175,
+				195,
+				215,
+				235
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				],
+				[
+					7067,
+					1
+				],
+				[
+					11138,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 854,
+			"temporary": false,
+			"formula": 11165
+		},
+		"13657": {
+			"profession": "enchanting",
+			"skill": 175,
+			"levels": [
+				175,
+				195,
+				215,
+				235
+			],
+			"reagents": [
+				[
+					11134,
+					1
+				],
+				[
+					7068,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 2463,
+			"temporary": false
+		},
+		"13659": {
+			"profession": "enchanting",
+			"skill": 180,
+			"levels": [
+				180,
+				200,
+				220,
+				240
+			],
+			"reagents": [
+				[
+					11135,
+					1
+				],
+				[
+					11137,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 851,
+			"temporary": false
+		},
+		"13661": {
+			"profession": "enchanting",
+			"skill": 180,
+			"levels": [
+				180,
+				200,
+				220,
+				240
+			],
+			"reagents": [
+				[
+					11137,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 856,
+			"temporary": false
+		},
+		"13663": {
+			"profession": "enchanting",
+			"skill": 185,
+			"levels": [
+				185,
+				205,
+				225,
+				245
+			],
+			"reagents": [
+				[
+					11135,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 857,
+			"temporary": false
+		},
+		"13687": {
+			"profession": "enchanting",
+			"skill": 190,
+			"levels": [
+				190,
+				210,
+				230,
+				250
+			],
+			"reagents": [
+				[
+					11135,
+					1
+				],
+				[
+					11134,
+					2
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 255,
+			"temporary": false,
+			"formula": 11167
+		},
+		"13689": {
+			"profession": "enchanting",
+			"skill": 195,
+			"levels": [
+				195,
+				215,
+				235,
+				255
+			],
+			"reagents": [
+				[
+					11135,
+					2
+				],
+				[
+					11137,
+					2
+				],
+				[
+					11139,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 863,
+			"temporary": false,
+			"formula": 11168
+		},
+		"13693": {
+			"profession": "enchanting",
+			"skill": 195,
+			"levels": [
+				195,
+				215,
+				235,
+				255
+			],
+			"reagents": [
+				[
+					11135,
+					2
+				],
+				[
+					11139,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 943,
+			"temporary": false
+		},
+		"13695": {
+			"profession": "enchanting",
+			"skill": 200,
+			"levels": [
+				200,
+				220,
+				240,
+				260
+			],
+			"reagents": [
+				[
+					11137,
+					4
+				],
+				[
+					11139,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 1897,
+			"temporary": false
+		},
+		"13698": {
+			"profession": "enchanting",
+			"skill": 200,
+			"levels": [
+				200,
+				220,
+				240,
+				260
+			],
+			"reagents": [
+				[
+					11137,
+					1
+				],
+				[
+					7392,
+					3
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 865,
+			"temporary": false,
+			"formula": 11166
+		},
+		"13700": {
+			"profession": "enchanting",
+			"skill": 200,
+			"levels": [
+				200,
+				220,
+				240,
+				260
+			],
+			"reagents": [
+				[
+					11135,
+					2
+				],
+				[
+					11137,
+					2
+				],
+				[
+					11139,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 866,
+			"temporary": false
+		},
+		"13702": {
+			"profession": "enchanting",
+			"skill": 200,
+			"levels": [
+				200,
+				220,
+				240,
+				260
+			],
+			"reagents": [
+				[
+					11144,
+					1
+				],
+				[
+					7971,
+					1
+				],
+				[
+					11135,
+					2
+				],
+				[
+					11137,
+					2
+				]
+			],
+			"tools": [],
+			"focus": 0,
+			"makes": [
+				11145,
+				1
+			]
+		},
+		"13746": {
+			"profession": "enchanting",
+			"skill": 205,
+			"levels": [
+				205,
+				225,
+				245,
+				265
+			],
+			"reagents": [
+				[
+					11137,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 884,
+			"temporary": false
+		},
+		"13794": {
+			"profession": "enchanting",
+			"skill": 205,
+			"levels": [
+				205,
+				225,
+				245,
+				265
+			],
+			"reagents": [
+				[
+					11174,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 903,
+			"temporary": false
+		},
+		"13815": {
+			"profession": "enchanting",
+			"skill": 210,
+			"levels": [
+				210,
+				230,
+				250,
+				270
+			],
+			"reagents": [
+				[
+					11174,
+					1
+				],
+				[
+					11137,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 904,
+			"temporary": false
+		},
+		"13817": {
+			"profession": "enchanting",
+			"skill": 210,
+			"levels": [
+				210,
+				230,
+				250,
+				270
+			],
+			"reagents": [
+				[
+					11137,
+					5
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 852,
+			"temporary": false,
+			"formula": 11202
+		},
+		"13822": {
+			"profession": "enchanting",
+			"skill": 210,
+			"levels": [
+				210,
+				230,
+				250,
+				270
+			],
+			"reagents": [
+				[
+					11174,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 905,
+			"temporary": false
+		},
+		"13836": {
+			"profession": "enchanting",
+			"skill": 215,
+			"levels": [
+				215,
+				235,
+				255,
+				275
+			],
+			"reagents": [
+				[
+					11137,
+					5
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 852,
+			"temporary": false
+		},
+		"13841": {
+			"profession": "enchanting",
+			"skill": 215,
+			"levels": [
+				215,
+				235,
+				255,
+				275
+			],
+			"reagents": [
+				[
+					11137,
+					3
+				],
+				[
+					6037,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 906,
+			"temporary": false,
+			"formula": 11203
+		},
+		"13846": {
+			"profession": "enchanting",
+			"skill": 220,
+			"levels": [
+				220,
+				240,
+				260,
+				280
+			],
+			"reagents": [
+				[
+					11174,
+					3
+				],
+				[
+					11137,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 907,
+			"temporary": false,
+			"formula": 11204
+		},
+		"13858": {
+			"profession": "enchanting",
+			"skill": 220,
+			"levels": [
+				220,
+				240,
+				260,
+				280
+			],
+			"reagents": [
+				[
+					11137,
+					6
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 908,
+			"temporary": false
+		},
+		"13868": {
+			"profession": "enchanting",
+			"skill": 225,
+			"levels": [
+				225,
+				245,
+				265,
+				285
+			],
+			"reagents": [
+				[
+					11137,
+					3
+				],
+				[
+					8838,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 909,
+			"temporary": false,
+			"formula": 11205
+		},
+		"13882": {
+			"profession": "enchanting",
+			"skill": 225,
+			"levels": [
+				225,
+				245,
+				265,
+				285
+			],
+			"reagents": [
+				[
+					11174,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 849,
+			"temporary": false,
+			"formula": 11206
+		},
+		"13887": {
+			"profession": "enchanting",
+			"skill": 225,
+			"levels": [
+				225,
+				245,
+				265,
+				285
+			],
+			"reagents": [
+				[
+					11174,
+					2
+				],
+				[
+					11137,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 856,
+			"temporary": false
+		},
+		"13890": {
+			"profession": "enchanting",
+			"skill": 225,
+			"levels": [
+				225,
+				245,
+				265,
+				285
+			],
+			"reagents": [
+				[
+					11177,
+					1
+				],
+				[
+					7909,
+					1
+				],
+				[
+					11174,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 911,
+			"temporary": false
+		},
+		"13898": {
+			"profession": "enchanting",
+			"skill": 265,
+			"levels": [
+				265,
+				285,
+				305,
+				325
+			],
+			"reagents": [
+				[
+					11177,
+					4
+				],
+				[
+					7078,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 803,
+			"temporary": false,
+			"formula": 11207
+		},
+		"13905": {
+			"profession": "enchanting",
+			"skill": 230,
+			"levels": [
+				230,
+				250,
+				270,
+				290
+			],
+			"reagents": [
+				[
+					11175,
+					1
+				],
+				[
+					11176,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 907,
+			"temporary": false
+		},
+		"13915": {
+			"profession": "enchanting",
+			"skill": 230,
+			"levels": [
+				230,
+				250,
+				270,
+				290
+			],
+			"reagents": [
+				[
+					11177,
+					1
+				],
+				[
+					11176,
+					2
+				],
+				[
+					9224,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 912,
+			"temporary": false,
+			"formula": 11208
+		},
+		"13917": {
+			"profession": "enchanting",
+			"skill": 230,
+			"levels": [
+				230,
+				250,
+				270,
+				290
+			],
+			"reagents": [
+				[
+					11175,
+					1
+				],
+				[
+					11174,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 913,
+			"temporary": false
+		},
+		"13931": {
+			"profession": "enchanting",
+			"skill": 235,
+			"levels": [
+				235,
+				255,
+				275,
+				295
+			],
+			"reagents": [
+				[
+					11175,
+					1
+				],
+				[
+					11176,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 923,
+			"temporary": false,
+			"formula": 11223
+		},
+		"13933": {
+			"profession": "enchanting",
+			"skill": 235,
+			"levels": [
+				235,
+				255,
+				275,
+				295
+			],
+			"reagents": [
+				[
+					11178,
+					1
+				],
+				[
+					3829,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 926,
+			"temporary": false,
+			"formula": 11224
+		},
+		"13935": {
+			"profession": "enchanting",
+			"skill": 235,
+			"levels": [
+				235,
+				255,
+				275,
+				295
+			],
+			"reagents": [
+				[
+					11175,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 904,
+			"temporary": false
+		},
+		"13937": {
+			"profession": "enchanting",
+			"skill": 240,
+			"levels": [
+				240,
+				260,
+				280,
+				300
+			],
+			"reagents": [
+				[
+					11178,
+					2
+				],
+				[
+					11176,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 963,
+			"temporary": false
+		},
+		"13939": {
+			"profession": "enchanting",
+			"skill": 240,
+			"levels": [
+				240,
+				260,
+				280,
+				300
+			],
+			"reagents": [
+				[
+					11176,
+					2
+				],
+				[
+					11175,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 927,
+			"temporary": false
+		},
+		"13941": {
+			"profession": "enchanting",
+			"skill": 245,
+			"levels": [
+				245,
+				265,
+				285,
+				305
+			],
+			"reagents": [
+				[
+					11178,
+					1
+				],
+				[
+					11176,
+					3
+				],
+				[
+					11175,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 928,
+			"temporary": false
+		},
+		"13943": {
+			"profession": "enchanting",
+			"skill": 245,
+			"levels": [
+				245,
+				265,
+				285,
+				305
+			],
+			"reagents": [
+				[
+					11178,
+					2
+				],
+				[
+					11175,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 805,
+			"temporary": false
+		},
+		"13945": {
+			"profession": "enchanting",
+			"skill": 245,
+			"levels": [
+				245,
+				265,
+				285,
+				305
+			],
+			"reagents": [
+				[
+					11176,
+					5
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 929,
+			"temporary": false,
+			"formula": 11225
+		},
+		"13947": {
+			"profession": "enchanting",
+			"skill": 250,
+			"levels": [
+				250,
+				270,
+				290,
+				310
+			],
+			"reagents": [
+				[
+					11178,
+					2
+				],
+				[
+					11176,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 930,
+			"temporary": false,
+			"formula": 11226
+		},
+		"13948": {
+			"profession": "enchanting",
+			"skill": 250,
+			"levels": [
+				250,
+				270,
+				290,
+				310
+			],
+			"reagents": [
+				[
+					11178,
+					2
+				],
+				[
+					8153,
+					2
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 931,
+			"temporary": false
+		},
+		"14293": {
+			"profession": "enchanting",
+			"skill": 10,
+			"levels": [
+				10,
+				75,
+				95,
+				115
+			],
+			"reagents": [
+				[
+					4470,
+					1
+				],
+				[
+					10938,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"makes": [
+				11287,
+				1
+			]
+		},
+		"14807": {
+			"profession": "enchanting",
+			"skill": 70,
+			"levels": [
+				70,
+				110,
+				130,
+				150
+			],
+			"reagents": [
+				[
+					4470,
+					1
+				],
+				[
+					10939,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"makes": [
+				11288,
+				1
+			]
+		},
+		"14809": {
+			"profession": "enchanting",
+			"skill": 155,
+			"levels": [
+				155,
+				175,
+				195,
+				215
+			],
+			"reagents": [
+				[
+					11291,
+					1
+				],
+				[
+					11134,
+					1
+				],
+				[
+					11083,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"makes": [
+				11289,
+				1
+			]
+		},
+		"14810": {
+			"profession": "enchanting",
+			"skill": 175,
+			"levels": [
+				175,
+				195,
+				215,
+				235
+			],
+			"reagents": [
+				[
+					11291,
+					1
+				],
+				[
+					11135,
+					1
+				],
+				[
+					11137,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"makes": [
+				11290,
+				1
+			]
+		},
+		"15596": {
+			"profession": "enchanting",
+			"skill": 265,
+			"levels": [
+				265,
+				285,
+				305,
+				325
+			],
+			"reagents": [
+				[
+					11382,
+					1
+				],
+				[
+					7078,
+					1
+				],
+				[
+					14343,
+					3
+				]
+			],
+			"tools": [],
+			"focus": 543,
+			"makes": [
+				11811,
+				1
+			],
+			"formula": 11813
+		},
+		"17181": {
+			"profession": "enchanting",
+			"skill": 250,
+			"levels": [
+				250,
+				250,
+				255,
+				260
+			],
+			"reagents": [
+				[
+					8170,
+					1
+				],
+				[
+					16202,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"makes": [
+				12810,
+				1
+			]
+		},
+		"17180": {
+			"profession": "enchanting",
+			"skill": 250,
+			"levels": [
+				250,
+				250,
+				255,
+				260
+			],
+			"reagents": [
+				[
+					12359,
+					1
+				],
+				[
+					11176,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"makes": [
+				12655,
+				1
+			]
+		},
+		"20008": {
+			"profession": "enchanting",
+			"skill": 255,
+			"levels": [
+				255,
+				275,
+				295,
+				315
+			],
+			"reagents": [
+				[
+					16202,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1883,
+			"temporary": false,
+			"formula": 16214
+		},
+		"20020": {
+			"profession": "enchanting",
+			"skill": 260,
+			"levels": [
+				260,
+				280,
+				300,
+				320
+			],
+			"reagents": [
+				[
+					11176,
+					10
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 929,
+			"temporary": false,
+			"formula": 16215
+		},
+		"20014": {
+			"profession": "enchanting",
+			"skill": 265,
+			"levels": [
+				265,
+				285,
+				305,
+				325
+			],
+			"reagents": [
+				[
+					16202,
+					2
+				],
+				[
+					7077,
+					1
+				],
+				[
+					7075,
+					1
+				],
+				[
+					7079,
+					1
+				],
+				[
+					7081,
+					1
+				],
+				[
+					7972,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1888,
+			"temporary": false,
+			"formula": 16216
+		},
+		"20017": {
+			"profession": "enchanting",
+			"skill": 265,
+			"levels": [
+				265,
+				285,
+				305,
+				325
+			],
+			"reagents": [
+				[
+					11176,
+					10
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 929,
+			"temporary": false,
+			"formula": 16217
+		},
+		"20009": {
+			"profession": "enchanting",
+			"skill": 270,
+			"levels": [
+				270,
+				290,
+				310,
+				330
+			],
+			"reagents": [
+				[
+					16202,
+					3
+				],
+				[
+					11176,
+					10
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1884,
+			"temporary": false,
+			"formula": 16218
+		},
+		"20012": {
+			"profession": "enchanting",
+			"skill": 270,
+			"levels": [
+				270,
+				290,
+				310,
+				330
+			],
+			"reagents": [
+				[
+					16202,
+					3
+				],
+				[
+					16204,
+					3
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1887,
+			"temporary": false,
+			"formula": 16219
+		},
+		"20024": {
+			"profession": "enchanting",
+			"skill": 275,
+			"levels": [
+				275,
+				295,
+				315,
+				335
+			],
+			"reagents": [
+				[
+					16203,
+					2
+				],
+				[
+					16202,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 851,
+			"temporary": false,
+			"formula": 16220
+		},
+		"20026": {
+			"profession": "enchanting",
+			"skill": 275,
+			"levels": [
+				275,
+				295,
+				315,
+				335
+			],
+			"reagents": [
+				[
+					16204,
+					6
+				],
+				[
+					14343,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1892,
+			"temporary": false,
+			"formula": 16221
+		},
+		"20016": {
+			"profession": "enchanting",
+			"skill": 280,
+			"levels": [
+				280,
+				300,
+				320,
+				340
+			],
+			"reagents": [
+				[
+					16203,
+					2
+				],
+				[
+					16204,
+					4
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1890,
+			"temporary": false,
+			"formula": 16222
+		},
+		"20029": {
+			"profession": "enchanting",
+			"skill": 285,
+			"levels": [
+				285,
+				305,
+				325,
+				345
+			],
+			"reagents": [
+				[
+					14343,
+					4
+				],
+				[
+					7080,
+					1
+				],
+				[
+					7082,
+					1
+				],
+				[
+					13467,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1894,
+			"temporary": false,
+			"formula": 16223
+		},
+		"20015": {
+			"profession": "enchanting",
+			"skill": 285,
+			"levels": [
+				285,
+				305,
+				325,
+				345
+			],
+			"reagents": [
+				[
+					16204,
+					8
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1889,
+			"temporary": false,
+			"formula": 16224
+		},
+		"20028": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					16203,
+					3
+				],
+				[
+					14343,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1893,
+			"temporary": false,
+			"formula": 16242
+		},
+		"20051": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					16206,
+					1
+				],
+				[
+					13926,
+					1
+				],
+				[
+					16204,
+					10
+				],
+				[
+					16203,
+					4
+				],
+				[
+					14343,
+					4
+				],
+				[
+					14344,
+					2
+				]
+			],
+			"tools": [],
+			"focus": 0,
+			"makes": [
+				16207,
+				1
+			],
+			"formula": 16243
+		},
+		"20013": {
+			"profession": "enchanting",
+			"skill": 295,
+			"levels": [
+				295,
+				315,
+				335,
+				355
+			],
+			"reagents": [
+				[
+					16203,
+					4
+				],
+				[
+					16204,
+					4
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 927,
+			"temporary": false,
+			"formula": 16244
+		},
+		"20023": {
+			"profession": "enchanting",
+			"skill": 295,
+			"levels": [
+				295,
+				315,
+				335,
+				355
+			],
+			"reagents": [
+				[
+					16203,
+					8
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1887,
+			"temporary": false,
+			"formula": 16245
+		},
+		"20010": {
+			"profession": "enchanting",
+			"skill": 295,
+			"levels": [
+				295,
+				315,
+				335,
+				355
+			],
+			"reagents": [
+				[
+					16204,
+					6
+				],
+				[
+					16203,
+					6
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1885,
+			"temporary": false,
+			"formula": 16246
+		},
+		"20030": {
+			"profession": "enchanting",
+			"skill": 295,
+			"levels": [
+				295,
+				315,
+				335,
+				355
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					16204,
+					10
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1896,
+			"temporary": false,
+			"formula": 16247
+		},
+		"20033": {
+			"profession": "enchanting",
+			"skill": 295,
+			"levels": [
+				295,
+				315,
+				335,
+				355
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					12808,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1899,
+			"temporary": false,
+			"formula": 16248
+		},
+		"20036": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					16203,
+					12
+				],
+				[
+					14344,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1904,
+			"temporary": false,
+			"formula": 16249
+		},
+		"20031": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					2
+				],
+				[
+					16203,
+					10
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1897,
+			"temporary": false,
+			"formula": 16250
+		},
+		"20011": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					16204,
+					15
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"enchant": 1886,
+			"temporary": false,
+			"formula": 16251
+		},
+		"20034": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					12811,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1900,
+			"temporary": false,
+			"formula": 16252
+		},
+		"20025": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					16204,
+					15
+				],
+				[
+					16203,
+					10
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1891,
+			"temporary": false,
+			"formula": 16253
+		},
+		"20032": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					6
+				],
+				[
+					12808,
+					6
+				],
+				[
+					12803,
+					6
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1898,
+			"temporary": false,
+			"formula": 16254
+		},
+		"20035": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					16203,
+					12
+				],
+				[
+					14344,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 1903,
+			"temporary": false,
+			"formula": 16255
+		},
+		"21931": {
+			"profession": "enchanting",
+			"skill": 190,
+			"levels": [
+				190,
+				210,
+				230,
+				250
+			],
+			"reagents": [
+				[
+					11135,
+					3
+				],
+				[
+					11137,
+					3
+				],
+				[
+					11139,
+					1
+				],
+				[
+					3819,
+					2
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"enchant": 2443,
+			"temporary": false,
+			"formula": 17725
+		},
+		"22749": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					16203,
+					12
+				],
+				[
+					7078,
+					4
+				],
+				[
+					7080,
+					4
+				],
+				[
+					7082,
+					4
+				],
+				[
+					13926,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2504,
+			"temporary": false,
+			"formula": 18259
+		},
+		"22750": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					4
+				],
+				[
+					16203,
+					8
+				],
+				[
+					12803,
+					6
+				],
+				[
+					7080,
+					6
+				],
+				[
+					12811,
+					1
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2505,
+			"temporary": false,
+			"formula": 18260
+		},
+		"23799": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					14344,
+					6
+				],
+				[
+					16203,
+					6
+				],
+				[
+					16204,
+					4
+				],
+				[
+					7076,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2563,
+			"temporary": false,
+			"formula": 19444
+		},
+		"23800": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					14344,
+					6
+				],
+				[
+					16203,
+					6
+				],
+				[
+					16204,
+					4
+				],
+				[
+					7082,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2564,
+			"temporary": false,
+			"formula": 19445
+		},
+		"23801": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					16204,
+					16
+				],
+				[
+					16203,
+					4
+				],
+				[
+					7080,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2565,
+			"temporary": false,
+			"formula": 19446
+		},
+		"23802": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					2
+				],
+				[
+					16204,
+					20
+				],
+				[
+					16203,
+					4
+				],
+				[
+					12803,
+					6
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2566,
+			"temporary": false,
+			"formula": 19447
+		},
+		"23803": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					10
+				],
+				[
+					16203,
+					8
+				],
+				[
+					16204,
+					15
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2567,
+			"temporary": false,
+			"formula": 19448
+		},
+		"23804": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					14344,
+					15
+				],
+				[
+					16203,
+					12
+				],
+				[
+					16204,
+					20
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2568,
+			"temporary": false,
+			"formula": 19449
+		},
+		"25072": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					4
+				],
+				[
+					14344,
+					6
+				],
+				[
+					18512,
+					8
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2613,
+			"temporary": false,
+			"formula": 20726
+		},
+		"25073": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					10
+				],
+				[
+					12808,
+					6
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2614,
+			"temporary": false,
+			"formula": 20727
+		},
+		"25074": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					10
+				],
+				[
+					7080,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2615,
+			"temporary": false,
+			"formula": 20728
+		},
+		"25078": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					2
+				],
+				[
+					14344,
+					10
+				],
+				[
+					7078,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2616,
+			"temporary": false,
+			"formula": 20729
+		},
+		"25079": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					8
+				],
+				[
+					12811,
+					1
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2617,
+			"temporary": false,
+			"formula": 20730
+		},
+		"25080": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					8
+				],
+				[
+					7082,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2564,
+			"temporary": false,
+			"formula": 20731
+		},
+		"25081": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					8
+				],
+				[
+					7078,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2619,
+			"temporary": false,
+			"formula": 20732
+		},
+		"25082": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					2
+				],
+				[
+					14344,
+					8
+				],
+				[
+					12803,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2620,
+			"temporary": false,
+			"formula": 20733
+		},
+		"25083": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					8
+				],
+				[
+					13468,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 910,
+			"temporary": false,
+			"formula": 20734
+		},
+		"25084": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					4
+				],
+				[
+					14344,
+					6
+				],
+				[
+					11754,
+					2
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2621,
+			"temporary": false,
+			"formula": 20735
+		},
+		"25086": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				320,
+				340,
+				360
+			],
+			"reagents": [
+				[
+					20725,
+					3
+				],
+				[
+					14344,
+					8
+				],
+				[
+					12809,
+					8
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2622,
+			"temporary": false,
+			"formula": 20736
+		},
+		"25124": {
+			"profession": "enchanting",
+			"skill": 45,
+			"levels": [
+				45,
+				55,
+				65,
+				75
+			],
+			"reagents": [
+				[
+					10940,
+					2
+				],
+				[
+					17034,
+					1
+				],
+				[
+					3371,
+					1
+				]
+			],
+			"tools": [
+				6218
+			],
+			"focus": 0,
+			"makes": [
+				20744,
+				1
+			],
+			"formula": 20758
+		},
+		"25125": {
+			"profession": "enchanting",
+			"skill": 150,
+			"levels": [
+				150,
+				160,
+				170,
+				180
+			],
+			"reagents": [
+				[
+					11083,
+					3
+				],
+				[
+					17034,
+					2
+				],
+				[
+					3372,
+					1
+				]
+			],
+			"tools": [
+				6339
+			],
+			"focus": 0,
+			"makes": [
+				20745,
+				1
+			],
+			"formula": 20752
+		},
+		"25126": {
+			"profession": "enchanting",
+			"skill": 200,
+			"levels": [
+				200,
+				210,
+				220,
+				230
+			],
+			"reagents": [
+				[
+					11137,
+					3
+				],
+				[
+					17035,
+					2
+				],
+				[
+					3372,
+					1
+				]
+			],
+			"tools": [
+				11130
+			],
+			"focus": 0,
+			"makes": [
+				20746,
+				1
+			],
+			"formula": 20753
+		},
+		"25127": {
+			"profession": "enchanting",
+			"skill": 250,
+			"levels": [
+				250,
+				260,
+				270,
+				280
+			],
+			"reagents": [
+				[
+					11176,
+					3
+				],
+				[
+					8831,
+					2
+				],
+				[
+					8925,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"makes": [
+				20747,
+				1
+			],
+			"formula": 20754
+		},
+		"25128": {
+			"profession": "enchanting",
+			"skill": 275,
+			"levels": [
+				275,
+				285,
+				295,
+				305
+			],
+			"reagents": [
+				[
+					16204,
+					3
+				],
+				[
+					4625,
+					2
+				],
+				[
+					8925,
+					1
+				]
+			],
+			"tools": [
+				11145
+			],
+			"focus": 0,
+			"makes": [
+				20750,
+				1
+			],
+			"formula": 20755
+		},
+		"25129": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				310,
+				320,
+				330
+			],
+			"reagents": [
+				[
+					14344,
+					2
+				],
+				[
+					4625,
+					3
+				],
+				[
+					18256,
+					1
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"makes": [
+				20749,
+				1
+			],
+			"formula": 20756
+		},
+		"25130": {
+			"profession": "enchanting",
+			"skill": 300,
+			"levels": [
+				300,
+				310,
+				320,
+				330
+			],
+			"reagents": [
+				[
+					14344,
+					2
+				],
+				[
+					8831,
+					3
+				],
+				[
+					18256,
+					1
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"makes": [
+				20748,
+				1
+			],
+			"formula": 20757
+		},
+		"27837": {
+			"profession": "enchanting",
+			"skill": 290,
+			"levels": [
+				290,
+				310,
+				330,
+				350
+			],
+			"reagents": [
+				[
+					14344,
+					10
+				],
+				[
+					16203,
+					6
+				],
+				[
+					16204,
+					14
+				],
+				[
+					7082,
+					4
+				]
+			],
+			"tools": [
+				16207
+			],
+			"focus": 0,
+			"enchant": 2646,
+			"temporary": false,
+			"formula": 22392
+		}
+	},
+	"nodes": {
+		"324": {
+			"name": "Small Starmetal Vein",
+			"kind": "ore",
+			"skill": 245,
+			"loot": 9597,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1617": {
+			"name": "Pale Sageleaf",
+			"kind": "herb",
+			"skill": 1,
+			"loot": 1414,
+			"size": 0.6,
+			"respawn": 300
+		},
+		"1618": {
+			"name": "Meadow Blossom",
+			"kind": "herb",
+			"skill": 1,
+			"loot": 1415,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1619": {
+			"name": "Earthroot",
+			"kind": "herb",
+			"skill": 15,
+			"loot": 1416,
+			"size": 0.4,
+			"respawn": 300
+		},
+		"1620": {
+			"name": "Mageblossom",
+			"kind": "herb",
+			"skill": 50,
+			"loot": 1417,
+			"size": 0.3,
+			"respawn": 300
+		},
+		"1621": {
+			"name": "Briarthorn",
+			"kind": "herb",
+			"skill": 70,
+			"loot": 1418,
+			"size": 0.4,
+			"respawn": 300
+		},
+		"1622": {
+			"name": "Bruisewort",
+			"kind": "herb",
+			"skill": 100,
+			"loot": 1419,
+			"size": 0.7,
+			"respawn": 300
+		},
+		"1623": {
+			"name": "Wild Ironbloom",
+			"kind": "herb",
+			"skill": 115,
+			"loot": 1420,
+			"size": 0.4,
+			"respawn": 300
+		},
+		"1624": {
+			"name": "Crownblood",
+			"kind": "herb",
+			"skill": 125,
+			"loot": 1421,
+			"size": 0.4,
+			"respawn": 300
+		},
+		"1628": {
+			"name": "Tomb Moss",
+			"kind": "herb",
+			"skill": 120,
+			"loot": 1424,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"1731": {
+			"name": "Copper Vein",
+			"kind": "ore",
+			"skill": 1,
+			"loot": 1502,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1732": {
+			"name": "Tin Vein",
+			"kind": "ore",
+			"skill": 65,
+			"loot": 1503,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1733": {
+			"name": "Silver Vein",
+			"kind": "ore",
+			"skill": 75,
+			"loot": 1504,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1734": {
+			"name": "Gold Vein",
+			"kind": "ore",
+			"skill": 155,
+			"loot": 1506,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"1735": {
+			"name": "Iron Deposit",
+			"kind": "ore",
+			"skill": 125,
+			"loot": 1505,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"2040": {
+			"name": "Moonsteel Deposit",
+			"kind": "ore",
+			"skill": 175,
+			"loot": 1742,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"2041": {
+			"name": "Heartroot",
+			"kind": "herb",
+			"skill": 150,
+			"loot": 1730,
+			"size": 0.6,
+			"respawn": 300
+		},
+		"2042": {
+			"name": "Dimleaf",
+			"kind": "herb",
+			"skill": 160,
+			"loot": 1731,
+			"size": 0.4,
+			"respawn": 300
+		},
+		"2043": {
+			"name": "Sage's Whisker",
+			"kind": "herb",
+			"skill": 185,
+			"loot": 1423,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"2044": {
+			"name": "Frostnip",
+			"kind": "herb",
+			"skill": 195,
+			"loot": 1732,
+			"size": 0.3,
+			"respawn": 300
+		},
+		"2045": {
+			"name": "Tanglekelp",
+			"kind": "herb",
+			"skill": 85,
+			"loot": 1733,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"2046": {
+			"name": "Gildthorn",
+			"kind": "herb",
+			"skill": 170,
+			"loot": 1734,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"2047": {
+			"name": "Brightsilver Deposit",
+			"kind": "ore",
+			"skill": 230,
+			"loot": 5045,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"2866": {
+			"name": "Emberbloom",
+			"kind": "herb",
+			"skill": 205,
+			"loot": 2292,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"142140": {
+			"name": "Violet Lotus",
+			"kind": "herb",
+			"skill": 210,
+			"loot": 6142,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"142141": {
+			"name": "Weeping Bell",
+			"kind": "herb",
+			"skill": 220,
+			"loot": 6150,
+			"size": 1.3,
+			"respawn": 300
+		},
+		"142142": {
+			"name": "Dawngrass",
+			"kind": "herb",
+			"skill": 230,
+			"loot": 6151,
+			"size": 1.8,
+			"respawn": 300
+		},
+		"142143": {
+			"name": "Blindweed",
+			"kind": "herb",
+			"skill": 235,
+			"loot": 6152,
+			"size": 1.5,
+			"respawn": 300
+		},
+		"142144": {
+			"name": "Wraithcap",
+			"kind": "herb",
+			"skill": 245,
+			"loot": 6312,
+			"size": 0.3,
+			"respawn": 86400
+		},
+		"142145": {
+			"name": "Gorebloom",
+			"kind": "herb",
+			"skill": 250,
+			"loot": 6313,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"175404": {
+			"name": "Rich Starmetal Vein",
+			"kind": "ore",
+			"skill": 275,
+			"loot": 12883,
+			"size": 0.5,
+			"respawn": 300
+		},
+		"176583": {
+			"name": "Golden Sorrel",
+			"kind": "herb",
+			"skill": 260,
+			"loot": 13945,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"176584": {
+			"name": "Slumberleaf",
+			"kind": "herb",
+			"skill": 270,
+			"loot": 13946,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"176586": {
+			"name": "Mountain Greysage",
+			"kind": "herb",
+			"skill": 280,
+			"loot": 13947,
+			"size": 1.8,
+			"respawn": 300
+		},
+		"176587": {
+			"name": "Blightbloom",
+			"kind": "herb",
+			"skill": 285,
+			"loot": 13948,
+			"size": 1.8,
+			"respawn": 300
+		},
+		"176588": {
+			"name": "Rimecap",
+			"kind": "herb",
+			"skill": 290,
+			"loot": 13949,
+			"size": 1.0,
+			"respawn": 300
+		},
+		"176589": {
+			"name": "Night Lotus",
+			"kind": "herb",
+			"skill": 300,
+			"loot": 13950,
+			"size": 1.0,
+			"respawn": 3600
+		}
+	},
+	"node_loot": {
+		"9597": [
+			{
+				"item": 7910,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 9262,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 10620,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 11513,
+				"chance": 50.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 987
+			},
+			{
+				"item": 12361,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12363,
+				"chance": 2.6,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12364,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12365,
+				"chance": 40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 12799,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12800,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1414": [
+			{
+				"item": 765,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 5056,
+				"chance": -40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1415": [
+			{
+				"item": 2447,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1416": [
+			{
+				"item": 2449,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 5056,
+				"chance": -40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1417": [
+			{
+				"item": 785,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 2452,
+				"chance": 20.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 5056,
+				"chance": -40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1418": [
+			{
+				"item": 2450,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 2452,
+				"chance": 40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 5056,
+				"chance": -40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1419": [
+			{
+				"item": 2453,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1420": [
+			{
+				"item": 3355,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1421": [
+			{
+				"item": 3356,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1424": [
+			{
+				"item": 3369,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1502": [
+			{
+				"item": 774,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 818,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1210,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2770,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2835,
+				"chance": 44.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 5075,
+				"chance": 2.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 673
+			}
+		],
+		"1503": [
+			{
+				"item": 1206,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1210,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1529,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1705,
+				"chance": 1.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2771,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2836,
+				"chance": 44.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 5075,
+				"chance": 2.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 673
+			}
+		],
+		"1504": [
+			{
+				"item": 1206,
+				"chance": 1.5,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1210,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1705,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2775,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1506": [
+			{
+				"item": 1529,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1705,
+				"chance": 0.9,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2776,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 3864,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 11513,
+				"chance": 50.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 987
+			}
+		],
+		"1505": [
+			{
+				"item": 1529,
+				"chance": 1.3,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 1705,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2772,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2838,
+				"chance": 40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 3864,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7909,
+				"chance": 0.2,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1742": [
+			{
+				"item": 3858,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 3864,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7909,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7910,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7912,
+				"chance": 40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 4,
+				"condition": 0
+			},
+			{
+				"item": 9262,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 11513,
+				"chance": 50.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 987
+			}
+		],
+		"1730": [
+			{
+				"item": 3357,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1731": [
+			{
+				"item": 3818,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1423": [
+			{
+				"item": 3358,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1732": [
+			{
+				"item": 3819,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1733": [
+			{
+				"item": 3820,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"1734": [
+			{
+				"item": 3821,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"5045": [
+			{
+				"item": 3864,
+				"chance": 1.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7909,
+				"chance": 1.5,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7910,
+				"chance": 0.9,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 7911,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 11513,
+				"chance": 50.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 987
+			}
+		],
+		"2292": [
+			{
+				"item": 4625,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"6142": [
+			{
+				"item": 8153,
+				"chance": 10.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12009,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12009,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"6150": [
+			{
+				"item": 8836,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"6151": [
+			{
+				"item": 12010,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12010,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"6152": [
+			{
+				"item": 12011,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12011,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"6312": [
+			{
+				"item": 8845,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"6313": [
+			{
+				"item": 8846,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"12883": [
+			{
+				"item": 7910,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 10620,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12361,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12363,
+				"chance": 2.9,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12364,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12365,
+				"chance": 40.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 12799,
+				"chance": 0.8,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 12800,
+				"chance": 0.7,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"13945": [
+			{
+				"item": 12012,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12012,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"13946": [
+			{
+				"item": 12013,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12013,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"13947": [
+			{
+				"item": 12014,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": -12014,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"13948": [
+			{
+				"item": 13466,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"13949": [
+			{
+				"item": 13467,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 3,
+				"condition": 0
+			}
+		],
+		"13950": [
+			{
+				"item": 13468,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		]
+	},
+	"skinning_loot": {
+		"113": [
+			{
+				"item": 2318,
+				"chance": 39.2962,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.7038,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"118": [
+			{
+				"item": 2318,
+				"chance": 39.9457,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.0374,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"330": [
+			{
+				"item": 2318,
+				"chance": 40.0685,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.9315,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"390": [
+			{
+				"item": 2318,
+				"chance": 41.0463,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.9537,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"524": [
+			{
+				"item": 2318,
+				"chance": 40.0997,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.9003,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"525": [
+			{
+				"item": 2318,
+				"chance": 39.7361,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.6266,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"100008": [
+			{
+				"item": 2934,
+				"chance": 100.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"822": [
+			{
+				"item": 2318,
+				"chance": 39.0715,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.9285,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1125": [
+			{
+				"item": 2318,
+				"chance": 39.6922,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.3078,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1126": [
+			{
+				"item": 2318,
+				"chance": 39.8664,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.1336,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1127": [
+			{
+				"item": 2318,
+				"chance": 39.6709,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.3291,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1128": [
+			{
+				"item": 2318,
+				"chance": 40.1722,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.8278,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1130": [
+			{
+				"item": 783,
+				"chance": 2.9412,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 61.7647,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 35.2941,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1131": [
+			{
+				"item": 2318,
+				"chance": 39.701,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.299,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1132": [
+			{
+				"item": 2318,
+				"chance": 36.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 64.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1133": [
+			{
+				"item": 2318,
+				"chance": 26.1682,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 73.8318,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1134": [
+			{
+				"item": 2318,
+				"chance": 39.3362,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.6638,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1135": [
+			{
+				"item": 2318,
+				"chance": 38.7931,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 61.2069,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1137": [
+			{
+				"item": 2318,
+				"chance": 32.5,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 67.5,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1138": [
+			{
+				"item": 2318,
+				"chance": 40.189,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.811,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1196": [
+			{
+				"item": 2318,
+				"chance": 40.3221,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.6779,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1199": [
+			{
+				"item": 2318,
+				"chance": 38.9904,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 57.9634,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1201": [
+			{
+				"item": 2318,
+				"chance": 40.7729,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.2271,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1271": [
+			{
+				"item": 783,
+				"chance": 9.6154,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 69.2308,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 21.1538,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1388": [
+			{
+				"item": 783,
+				"chance": 8.1818,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 72.7273,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 19.0909,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"100007": [
+			{
+				"item": 783,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 80.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1547": [
+			{
+				"item": 2318,
+				"chance": 40.7979,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.2021,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1548": [
+			{
+				"item": 2318,
+				"chance": 38.7009,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 61.2991,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1549": [
+			{
+				"item": 2318,
+				"chance": 44.9761,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 55.0239,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1553": [
+			{
+				"item": 2318,
+				"chance": 40.2346,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.7654,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1554": [
+			{
+				"item": 2318,
+				"chance": 40.2453,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.7547,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1689": [
+			{
+				"item": 2318,
+				"chance": 42.3682,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 57.6318,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1922": [
+			{
+				"item": 2318,
+				"chance": 39.8831,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.1169,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"1961": [
+			{
+				"item": 783,
+				"chance": 10.6796,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 71.8447,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 17.4757,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2033": [
+			{
+				"item": 2318,
+				"chance": 42.4021,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 57.5979,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2034": [
+			{
+				"item": 2318,
+				"chance": 41.1978,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.8022,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2042": [
+			{
+				"item": 2318,
+				"chance": 40.4358,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.5642,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2043": [
+			{
+				"item": 2318,
+				"chance": 41.2225,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.7775,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2956": [
+			{
+				"item": 2318,
+				"chance": 38.4919,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 61.5081,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2957": [
+			{
+				"item": 2318,
+				"chance": 38.7258,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 61.2742,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2958": [
+			{
+				"item": 2318,
+				"chance": 40.6289,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.3711,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2959": [
+			{
+				"item": 2318,
+				"chance": 39.7046,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.2954,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"2960": [
+			{
+				"item": 2318,
+				"chance": 40.3959,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.6041,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3035": [
+			{
+				"item": 2318,
+				"chance": 39.6707,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.3293,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3056": [
+			{
+				"item": 783,
+				"chance": 3.9683,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2318,
+				"chance": 65.0794,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 30.9524,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3068": [
+			{
+				"item": 2318,
+				"chance": 37.3418,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 62.6582,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3099": [
+			{
+				"item": 2318,
+				"chance": 39.3146,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.4717,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3100": [
+			{
+				"item": 2318,
+				"chance": 40.3871,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.6129,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3110": [
+			{
+				"item": 2318,
+				"chance": 36.5724,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 63.4276,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3121": [
+			{
+				"item": 2318,
+				"chance": 41.0959,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.9041,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3122": [
+			{
+				"item": 2318,
+				"chance": 39.5443,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.4557,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3123": [
+			{
+				"item": 2318,
+				"chance": 39.5094,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.4906,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3125": [
+			{
+				"item": 2318,
+				"chance": 38.4427,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 61.5573,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3126": [
+			{
+				"item": 2318,
+				"chance": 41.5783,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 58.4217,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3127": [
+			{
+				"item": 2318,
+				"chance": 40.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3130": [
+			{
+				"item": 2318,
+				"chance": 39.2924,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.7076,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3131": [
+			{
+				"item": 2318,
+				"chance": 39.9518,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.0482,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3566": [
+			{
+				"item": 2318,
+				"chance": 39.5852,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 60.4148,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"10356": [
+			{
+				"item": 2318,
+				"chance": 62.069,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 37.931,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"100006": [
+			{
+				"item": 2319,
+				"chance": 80.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 4232,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"14430": [
+			{
+				"item": 2318,
+				"chance": 40.9091,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 2934,
+				"chance": 59.0909,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		]
+	},
+	"disenchant_loot": {
+		"1": [
+			{
+				"item": 10938,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 10940,
+				"chance": 80.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"2": [
+			{
+				"item": 10939,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 10940,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 10978,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"3": [
+			{
+				"item": 10940,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 4,
+				"max": 6,
+				"condition": 0
+			},
+			{
+				"item": 10978,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 10998,
+				"chance": 15.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"4": [
+			{
+				"item": 11082,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11083,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11084,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"5": [
+			{
+				"item": 11083,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 11134,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11138,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"6": [
+			{
+				"item": 11135,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11137,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11139,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"7": [
+			{
+				"item": 11137,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 11174,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11177,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"8": [
+			{
+				"item": 11175,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11176,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11178,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"9": [
+			{
+				"item": 11176,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 14343,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16202,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"10": [
+			{
+				"item": 14344,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16203,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 16204,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"11": [
+			{
+				"item": 14344,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16203,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 16204,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			}
+		],
+		"21": [
+			{
+				"item": 10938,
+				"chance": 80.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 10940,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"22": [
+			{
+				"item": 10939,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 10940,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 3,
+				"condition": 0
+			},
+			{
+				"item": 10978,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"23": [
+			{
+				"item": 10940,
+				"chance": 15.0,
+				"group": 1,
+				"min_or_ref": 4,
+				"max": 6,
+				"condition": 0
+			},
+			{
+				"item": 10978,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 10998,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"24": [
+			{
+				"item": 11082,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11083,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11084,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"25": [
+			{
+				"item": 11083,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 11134,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11138,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"26": [
+			{
+				"item": 11135,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11137,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11139,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"27": [
+			{
+				"item": 11137,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 11174,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11177,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"28": [
+			{
+				"item": 11175,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11176,
+				"chance": 20.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 11178,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"29": [
+			{
+				"item": 11176,
+				"chance": 22.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			},
+			{
+				"item": 14343,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16202,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"30": [
+			{
+				"item": 14344,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16203,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 16204,
+				"chance": 22.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		],
+		"31": [
+			{
+				"item": 14344,
+				"chance": 0.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 16203,
+				"chance": 75.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 2,
+				"condition": 0
+			},
+			{
+				"item": 16204,
+				"chance": 22.0,
+				"group": 1,
+				"min_or_ref": 2,
+				"max": 5,
+				"condition": 0
+			}
+		],
+		"41": [
+			{
+				"item": 10978,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"42": [
+			{
+				"item": 11084,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"43": [
+			{
+				"item": 11138,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"44": [
+			{
+				"item": 11139,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"45": [
+			{
+				"item": 11177,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"46": [
+			{
+				"item": 11178,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"47": [
+			{
+				"item": 14343,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"48": [
+			{
+				"item": 14344,
+				"chance": 100.0,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"49": [
+			{
+				"item": 14344,
+				"chance": 99.5,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			},
+			{
+				"item": 20725,
+				"chance": 0.5,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"50": [
+			{
+				"item": 20725,
+				"chance": 0.5,
+				"group": 1,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"61": [
+			{
+				"item": 11177,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 2,
+				"max": 4,
+				"condition": 0
+			}
+		],
+		"62": [
+			{
+				"item": 11178,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 2,
+				"max": 4,
+				"condition": 0
+			}
+		],
+		"63": [
+			{
+				"item": 14343,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 2,
+				"max": 4,
+				"condition": 0
+			}
+		],
+		"64": [
+			{
+				"item": 20725,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 1,
+				"condition": 0
+			}
+		],
+		"65": [
+			{
+				"item": 20725,
+				"chance": 100.0,
+				"group": 0,
+				"min_or_ref": 1,
+				"max": 2,
+				"condition": 0
+			}
+		]
+	},
+	"enchants": {
+		"41": {
+			"name": "Health +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7419
+				]
+			]
+		},
+		"44": {
+			"name": "Absorption (10)",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7445
+				]
+			]
+		},
+		"924": {
+			"name": "Defense +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7427
+				]
+			]
+		},
+		"24": {
+			"name": "Mana +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7442
+				]
+			]
+		},
+		"65": {
+			"name": "+1 All Resistances",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7452
+				]
+			]
+		},
+		"66": {
+			"name": "Stamina +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7455
+				]
+			]
+		},
+		"242": {
+			"name": "Health +15",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7747
+				]
+			]
+		},
+		"243": {
+			"name": "Spirit +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7456
+				]
+			]
+		},
+		"783": {
+			"name": "Armor +10",
+			"charges": 0,
+			"effects": [
+				[
+					4,
+					10,
+					10,
+					0
+				]
+			]
+		},
+		"246": {
+			"name": "Mana +20",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7773
+				]
+			]
+		},
+		"247": {
+			"name": "Agility +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7778
+				]
+			]
+		},
+		"248": {
+			"name": "Strength +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7780
+				]
+			]
+		},
+		"249": {
+			"name": "Beastslaying +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7784
+				]
+			]
+		},
+		"250": {
+			"name": "Weapon Damage +1 ",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					1,
+					1,
+					0
+				]
+			]
+		},
+		"241": {
+			"name": "Weapon Damage +2",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					2,
+					2,
+					0
+				]
+			]
+		},
+		"723": {
+			"name": "Intellect +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13363
+				]
+			]
+		},
+		"254": {
+			"name": "Health +25",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7850
+				]
+			]
+		},
+		"255": {
+			"name": "Spirit +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7851
+				]
+			]
+		},
+		"256": {
+			"name": "+5 Fire Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7852
+				]
+			]
+		},
+		"744": {
+			"name": "Armor +20",
+			"charges": 0,
+			"effects": [
+				[
+					4,
+					20,
+					20,
+					0
+				]
+			]
+		},
+		"848": {
+			"name": "Armor +30",
+			"charges": 0,
+			"effects": [
+				[
+					4,
+					30,
+					30,
+					0
+				]
+			]
+		},
+		"724": {
+			"name": "Stamina +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13369
+				]
+			]
+		},
+		"804": {
+			"name": "+10 Shadow Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13523
+				]
+			]
+		},
+		"943": {
+			"name": "Weapon Damage +3",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					3,
+					3,
+					0
+				]
+			]
+		},
+		"823": {
+			"name": "Strength +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13371
+				]
+			]
+		},
+		"63": {
+			"name": "Absorption (25)",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					7446
+				]
+			]
+		},
+		"843": {
+			"name": "Mana +30",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13606
+				]
+			]
+		},
+		"844": {
+			"name": "Mining +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13611
+				]
+			]
+		},
+		"845": {
+			"name": "Herbalism +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13614
+				]
+			]
+		},
+		"846": {
+			"name": "Fishing +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13615
+				]
+			]
+		},
+		"847": {
+			"name": "All Stats +1",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13624
+				]
+			]
+		},
+		"849": {
+			"name": "Agility +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13364
+				]
+			]
+		},
+		"850": {
+			"name": "Health +35",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13639
+				]
+			]
+		},
+		"851": {
+			"name": "Spirit +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13368
+				]
+			]
+		},
+		"925": {
+			"name": "Defense +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13930
+				]
+			]
+		},
+		"852": {
+			"name": "Stamina +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13370
+				]
+			]
+		},
+		"853": {
+			"name": "Beastslaying +6",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13650
+				]
+			]
+		},
+		"854": {
+			"name": "Elemental Slayer +6",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13651
+				]
+			]
+		},
+		"2463": {
+			"name": "+7 Fire Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13652
+				]
+			]
+		},
+		"856": {
+			"name": "Strength +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13372
+				]
+			]
+		},
+		"857": {
+			"name": "Mana +50",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13664
+				]
+			]
+		},
+		"863": {
+			"name": "Blocking +2%",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13690
+				]
+			]
+		},
+		"1897": {
+			"name": "Weapon Damage +5",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					5,
+					5,
+					0
+				]
+			]
+		},
+		"865": {
+			"name": "Skinning +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13697
+				]
+			]
+		},
+		"866": {
+			"name": "All Stats +2",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13625
+				]
+			]
+		},
+		"884": {
+			"name": "Armor +50",
+			"charges": 0,
+			"effects": [
+				[
+					4,
+					50,
+					50,
+					0
+				]
+			]
+		},
+		"903": {
+			"name": "+3 All Resistances",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13796
+				]
+			]
+		},
+		"904": {
+			"name": "Agility +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13365
+				]
+			]
+		},
+		"905": {
+			"name": "Intellect +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13366
+				]
+			]
+		},
+		"906": {
+			"name": "Mining +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13838
+				]
+			]
+		},
+		"907": {
+			"name": "Spirit +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13826
+				]
+			]
+		},
+		"908": {
+			"name": "Health +50",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13862
+				]
+			]
+		},
+		"909": {
+			"name": "Herbalism +5",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13839
+				]
+			]
+		},
+		"911": {
+			"name": "Minor Speed Increase",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13889
+				]
+			]
+		},
+		"803": {
+			"name": "Fiery Weapon",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					13897
+				]
+			],
+			"chance": 30.0
+		},
+		"912": {
+			"name": "Demonslaying",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					13907
+				]
+			],
+			"chance": 30.0
+		},
+		"913": {
+			"name": "Mana +65",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13918
+				]
+			]
+		},
+		"923": {
+			"name": "Defense +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13922
+				]
+			]
+		},
+		"926": {
+			"name": "+8 Frost Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13923
+				]
+			]
+		},
+		"963": {
+			"name": "Weapon Damage +7",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					7,
+					7,
+					0
+				]
+			]
+		},
+		"927": {
+			"name": "Strength +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13828
+				]
+			]
+		},
+		"928": {
+			"name": "All Stats +3",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13824
+				]
+			]
+		},
+		"805": {
+			"name": "Weapon Damage +4",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					4,
+					4,
+					0
+				]
+			]
+		},
+		"929": {
+			"name": "Stamina +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13827
+				]
+			]
+		},
+		"930": {
+			"name": "Minor Mount Speed Increase",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13927
+				]
+			]
+		},
+		"931": {
+			"name": "Attack Speed +1%",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13928
+				]
+			]
+		},
+		"1883": {
+			"name": "Intellect +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13825
+				]
+			]
+		},
+		"1888": {
+			"name": "+5 All Resistances",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19992
+				]
+			]
+		},
+		"1884": {
+			"name": "Spirit +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19986
+				]
+			]
+		},
+		"1887": {
+			"name": "Agility +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13823
+				]
+			]
+		},
+		"1892": {
+			"name": "Health +100",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19990
+				]
+			]
+		},
+		"1890": {
+			"name": "Spirit +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19986
+				]
+			]
+		},
+		"1894": {
+			"name": "Icy Weapon",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					20005
+				]
+			],
+			"chance": 8.0
+		},
+		"1889": {
+			"name": "Armor +70",
+			"charges": 0,
+			"effects": [
+				[
+					4,
+					70,
+					70,
+					0
+				]
+			]
+		},
+		"1893": {
+			"name": "Mana +100",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19991
+				]
+			]
+		},
+		"1885": {
+			"name": "Strength +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19984
+				]
+			]
+		},
+		"1896": {
+			"name": "Weapon Damage +9",
+			"charges": 0,
+			"effects": [
+				[
+					2,
+					9,
+					9,
+					0
+				]
+			]
+		},
+		"1899": {
+			"name": "Unholy Weapon",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					20006
+				]
+			],
+			"chance": 5.0
+		},
+		"1904": {
+			"name": "Intellect +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19987
+				]
+			]
+		},
+		"1886": {
+			"name": "Stamina +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19985
+				]
+			]
+		},
+		"1900": {
+			"name": "Crusader",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					20007
+				]
+			],
+			"chance": 5.0
+		},
+		"1891": {
+			"name": "All Stats +4",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19988
+				]
+			]
+		},
+		"1898": {
+			"name": "Lifestealing",
+			"charges": 0,
+			"effects": [
+				[
+					1,
+					0,
+					0,
+					20004
+				]
+			],
+			"chance": 30.0
+		},
+		"1903": {
+			"name": "Spirit +9",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					19986
+				]
+			]
+		},
+		"2443": {
+			"name": "Frost Spell Damage +7",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					21930
+				]
+			]
+		},
+		"2504": {
+			"name": "Spell Damage +30",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					22747
+				]
+			]
+		},
+		"2505": {
+			"name": "Healing Spells +55",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					22748
+				]
+			]
+		},
+		"2563": {
+			"name": "Strength +15",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23793
+				]
+			]
+		},
+		"2564": {
+			"name": "Agility +15",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23794
+				]
+			]
+		},
+		"2565": {
+			"name": "Mana Regen 4 per 5 sec.",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23795
+				]
+			]
+		},
+		"2566": {
+			"name": "Healing Spells +24",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23796
+				]
+			]
+		},
+		"2567": {
+			"name": "Spirit +20",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23797
+				]
+			]
+		},
+		"2568": {
+			"name": "Intellect +22",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					23798
+				]
+			]
+		},
+		"2613": {
+			"name": "Threat +2%",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25063
+				]
+			]
+		},
+		"2614": {
+			"name": "Shadow Damage +20",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25064
+				]
+			]
+		},
+		"2615": {
+			"name": "Frost Damage +20",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25066
+				]
+			]
+		},
+		"2616": {
+			"name": "Fire Damage +20",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25065
+				]
+			]
+		},
+		"2617": {
+			"name": "Healing Spells +30",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25067
+				]
+			]
+		},
+		"2619": {
+			"name": "+15 Fire Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25068
+				]
+			]
+		},
+		"2620": {
+			"name": "+15 Nature Resistance",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25069
+				]
+			]
+		},
+		"910": {
+			"name": "Increased Stealth",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					13840
+				]
+			]
+		},
+		"2621": {
+			"name": "Subtlety",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25070
+				]
+			]
+		},
+		"2622": {
+			"name": "Dodge +1%",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					25071
+				]
+			]
+		},
+		"2646": {
+			"name": "Agility +25",
+			"charges": 0,
+			"effects": [
+				[
+					3,
+					0,
+					0,
+					27836
+				]
+			]
+		}
+	}
+}

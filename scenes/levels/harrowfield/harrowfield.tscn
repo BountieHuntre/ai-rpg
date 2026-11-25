@@ -36,7 +36,8 @@ subname = "Seamstress"
 position = Vector3(11.5, 5, 456)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Alder Quill"
-subname = "Herbalist"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
 
 [node name="GoodwifeCoombe" parent="." instance=ExtResource("2_npc")]
 position = Vector3(-191, 5, 469.5)
@@ -126,3 +127,38 @@ rotation = Vector3(0, 1.5708, 0)
 npc_name = "Hesketh Steele"
 subname = "Weaponsmith"
 vendor = 54
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(15.5, 5.05, 449.3)
+rotation = Vector3(0, 0.9789, 0)
+npc_name = "Gorran Flint"
+subname = "Mining Trainer"
+trainer = "mining"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(8.3, 5.05, 445.9)
+rotation = Vector3(0, 0.6545, 0)
+npc_name = "Aldo Skerritt"
+subname = "Skinning Trainer"
+trainer = "skinning"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(8.3, 5.05, 439.6)
+rotation = Vector3(0, 2.4871, 0)
+npc_name = "Lysette Marlowe"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+
+[node name="TradeSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(3.4, 5.05, 445.9)
+rotation = Vector3(0, -0.6545, 0)
+npc_name = "Wendel Corrick"
+subname = "Trade Supplies"
+vendor = 1286
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(3.4, 5.05, 439.6)
+rotation = Vector3(0, -2.4871, 0)
+npc_name = "Ilse Varrow"
+subname = "Enchanting Supplies"
+vendor = 15419

@@ -16,9 +16,14 @@ const RESISTANCE_SCHOOLS := { 4: "Fire", 16: "Frost", 32: "Shadow", 8: "Nature",
 ## their talents (SpellMods): cast time, duration, range, radius, cost and
 ## effect amounts. Null for a spell seen apart from anyone.
 static var _who: Combatant
+## The stacks of the aura being described (a buff's tooltip): its amounts
+## are that many times the spell's.
+static var _stacks := 1
 
 
-static func describe(spell: Dictionary, level: int, caster: Node = null) -> String:
+static func describe(spell: Dictionary, level: int, caster: Node = null, stacks := 1) -> String:
+	var stacks_before := _stacks
+	_stacks = maxi(stacks, 1)
 	var before := _who
 	if caster is SpellCaster:
 		_who = (caster as SpellCaster)._unit.combatant
@@ -28,6 +33,7 @@ static func describe(spell: Dictionary, level: int, caster: Node = null) -> Stri
 		_who = null
 	var text := _describe(spell, level, caster)
 	_who = before
+	_stacks = stacks_before
 	return text
 
 
@@ -44,6 +50,14 @@ static func _describe(spell: Dictionary, level: int, caster: Node) -> String:
 	for prefix in ["Pattern: ", "Plans: ", "Recipe: ", "Formula: ", "Schematic: "]:
 		if name.begins_with(prefix):
 			return "Teaches you how to make %s." % name.trim_prefix(prefix)
+	# Enchanting's enchants: what they put on, and on what.
+	var recipe := ProfessionDB.recipe(int(spell.get("Id", 0)))
+	if recipe.has("enchant"):
+		var on := name.trim_prefix("Enchant ").get_slice(" - ", 0).to_lower()
+		if on.begins_with("2h "):
+			on = "two-handed weapon"
+		var does := Enchanting.describe(int(recipe.enchant), level)
+		return "Permanently enchants a %s: %s.%s" % [on, Enchanting.line(int(recipe.enchant)), " " + does if not does.is_empty() else ""]
 	if SpellDB.is_weapon_skill(int(spell.get("Id", 0))):
 		return "Lets you use %s." % ("thrown weapons" if name == "Thrown" else name.to_lower())
 	if name.begins_with("Greater Boon of "):
@@ -55,7 +69,12 @@ static func _describe(spell: Dictionary, level: int, caster: Node) -> String:
 	if name.ends_with(" Presence"):
 		return _presence(name, t)
 	if name.begins_with("Oath of "):
-		return _oath(name, spell, t, caster)
+		return _oath(name, spell, t, caster, level)
+	# A Verdict's debuff or strike on its own (the target frame's debuffs).
+	if name.begins_with("Verdict of "):
+		var verdict := _verdict(spell, level)
+		if not verdict.is_empty():
+			return verdict.left(1).to_upper() + verdict.substr(1)
 	var cleric := _cleric(name, spell, t)
 	if not cleric.is_empty():
 		return cleric
@@ -77,7 +96,15 @@ static func _describe(spell: Dictionary, level: int, caster: Node) -> String:
 			# Higher ranks also give the target mana.
 			return text + (" Also restores %s mana to them." % t.amount(1) if t.low(1) > 0.0 else "")
 		"Verdict":
-			return "Unleashes your active Oath on an enemy within 10 yards, with an effect that depends on the Oath. Your Oath stays active."
+			var text := "Unleashes your active Oath on an enemy within 10 yards, with an effect that depends on the Oath. Your Oath stays active."
+			# What it does now, by the Oath you have up.
+			if _who:
+				var oath: Dictionary = _who.find_aura(func(s: Dictionary) -> bool: return SpellDB.seal_judgement(s) != 0)
+				if not oath.is_empty():
+					var now := _verdict(SpellDB.get_spell(SpellDB.seal_judgement(oath.spell)), level)
+					if not now.is_empty():
+						text += " With %s, it %s" % [oath.spell.SpellName, now]
+			return text
 		"Stunning Gavel":
 			return "Stuns an enemy for %s." % t.duration()
 		"Heaven's Favor":
@@ -193,12 +220,12 @@ static func fill(text: String, spell: Dictionary, level: int) -> String:
 	var values := {
 		"duration": t.duration(), "seconds": _number(t.seconds()), "cast": _number(SpellDB.cast_time(spell, _who)),
 		"cooldown": _Values.time_text(SpellDB.cooldown(spell, _who)), "range": _number(SpellDB.spell_range(spell, _who)),
-		"min_range": _number(SpellDB.min_range(spell)), "chance": str(mini(int(spell.get("ProcChance", 0)), 100)),
+		"min_range": _number(SpellDB.min_range(spell)), "chance": _number(SpellDB.proc_chance(spell)),
 		"stacks": str(int(spell.get("StackAmount", 0))), "charges": str(int(spell.get("ProcCharges", 0))),
 		"level": str(level), "cost": _cost(spell),
 	}
 	for n in 3:
-		var span := SpellDB.effect_span(spell, n, level, _who)
+		var span := SpellDB.effect_span(spell, n, level, _who) * _stacks
 		values["amount%d" % (n + 1)] = t.amount(n)
 		values["min%d" % (n + 1)] = str(roundi(absf(span.x)))
 		values["max%d" % (n + 1)] = str(roundi(absf(span.y)))
@@ -276,7 +303,13 @@ static func _presence(name: String, t: _Values) -> String:
 	return text + " You can keep only one Presence at a time."
 
 
-static func _oath(name: String, spell: Dictionary, t: _Values, caster: Node) -> String:
+static func _oath(name: String, spell: Dictionary, t: _Values, caster: Node, level: int) -> String:
+	# The spell each hit may fire, its chance (SpellDB.proc_chance, as rolled)
+	# and how often at most.
+	var proc := _Values.new(SpellDB.get_spell(int(spell.get("EffectTriggerSpell1", 0))), level)
+	var chance := _number(SpellDB.proc_chance(spell))
+	var every := float(SpellDB.proc_info(spell).get("cooldown", 0.0))
+	var limit := " (at most once every %s sec)" % _number(every) if every > 0.0 else ""
 	var text := ""
 	match name:
 		"Oath of Valor":
@@ -287,17 +320,47 @@ static func _oath(name: String, spell: Dictionary, t: _Values, caster: Node) -> 
 		"Oath of the Vanguard":
 			text = "Swear an oath of the vanguard for %s: your attack power rises by %s and your attacks come %s%% faster, though each hit deals less damage." % [t.duration(), t.amount(0), t.amount(1)]
 		"Oath of Binding":
-			text = "Swear an oath of binding for %s. Your melee hits may stop the enemy from running away." % t.duration()
+			text = "Swear an oath of binding for %s. Your melee hits have a %s%% chance to stun the target for %s%s." % [t.duration(), chance, proc.duration(), limit]
 		"Oath of Mending":
-			text = "Swear an oath of mending for %s. Your melee hits may heal you." % t.duration()
+			text = "Swear an oath of mending for %s. Your melee hits have a %s%% chance to heal you for %s%s." % [t.duration(), chance, proc.amount(0), limit]
 		"Oath of Insight":
-			text = "Swear an oath of insight for %s. Your melee hits may restore your mana." % t.duration()
+			text = "Swear an oath of insight for %s. Your melee hits have a %s%% chance to restore %s mana%s." % [t.duration(), chance, proc.amount(0), limit]
 		"Oath of Dominion":
-			text = "Swear an oath of dominion for %s. Your melee hits may strike again for extra Holy damage." % t.duration()
+			text = "Swear an oath of dominion for %s. Your melee hits have a %s%% chance to strike again at once for %s%% of your weapon damage as Holy damage%s." % [t.duration(), chance, proc.amount(0), limit]
 		_:
 			return ""
-	var judged := SpellDB.seal_judgement(spell) != 0
-	return text + (" Verdict unleashes it on your target." if judged else "") + " You can keep only one Oath at a time."
+	var verdict := _verdict(SpellDB.get_spell(SpellDB.seal_judgement(spell)), level)
+	if not verdict.is_empty():
+		text += " Verdict on your target %s" % verdict
+	return text + " You can keep only one Oath at a time."
+
+
+## What a Verdict does to its target, as the end of a sentence ("deals 93
+## to 101 Holy damage, twice that to a stunned target."), or "".
+static func _verdict(spell: Dictionary, level: int) -> String:
+	if spell.is_empty():
+		return ""
+	var v := _Values.new(spell, level)
+	match str(spell.SpellName):
+		"Verdict of Valor":
+			return "deals %s Holy damage." % v.amount(0)
+		"Verdict of the Vanguard":
+			return "makes each Holy attack on it deal up to %s more damage for %s." % [v.amount(0), v.duration()]
+		"Verdict of Binding":
+			return "keeps it from running away for %s." % v.duration()
+		"Verdict of Mending", "Verdict of Insight":
+			var gain := _Values.new(SpellDB.get_spell(SpellDB.judgement_proc_spell(int(spell.Id))), level)
+			var what := "heal you for %s" % gain.amount(0) if str(spell.SpellName) == "Verdict of Mending" else "restore %s mana to you" % gain.amount(0)
+			return "gives your melee hits on it a %s%% chance to %s, for %s." % [_number(minf(float(spell.get("ProcChance", 0)), 100.0)), what, v.duration()]
+		"Verdict of Dominion":
+			# The Verdict's dummy names its damage spell (which has the same name).
+			var strike := spell
+			if int(spell.get("Effect1", 0)) == SpellDB.EFFECT_DUMMY:
+				strike = SpellDB.get_spell(int(spell.get("EffectBasePoints1", -1)) + 1)
+			if strike.is_empty() or int(strike.get("Effect1", 0)) != SpellDB.EFFECT_SCHOOL_DAMAGE:
+				return ""
+			return "deals %s Holy damage, twice that to a stunned target." % _Values.new(strike, level).amount(0)
+	return ""
 
 
 ## Cleric spells, or "" for other names.
@@ -624,18 +687,18 @@ class _Values:
 
 	## "40 to 48", or "40" when it doesn't vary.
 	func amount(effect: int) -> String:
-		var span := SpellDB.effect_span(spell, effect, level, SpellText._who)
+		var span := SpellDB.effect_span(spell, effect, level, SpellText._who) * SpellText._stacks
 		var low := roundi(absf(span.x))
 		var high := roundi(absf(span.y))
 		return str(low) if high <= low else "%d to %d" % [low, high]
 
 	func low(effect: int) -> float:
-		return absf(SpellDB.effect_span(spell, effect, level, SpellText._who).x)
+		return absf(SpellDB.effect_span(spell, effect, level, SpellText._who).x) * SpellText._stacks
 
 	## The total of a periodic effect over its duration: "90", or "84 to 90".
 	func over_time(effect: int) -> String:
 		var ticks := floori(seconds() / period(effect) + 0.001)
-		var span := SpellDB.effect_span(spell, effect, level, SpellText._who) * ticks
+		var span := SpellDB.effect_span(spell, effect, level, SpellText._who) * ticks * SpellText._stacks
 		var low_total := roundi(absf(span.x))
 		var high_total := roundi(absf(span.y))
 		return str(low_total) if high_total <= low_total else "%d to %d" % [low_total, high_total]

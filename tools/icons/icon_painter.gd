@@ -691,6 +691,50 @@ func _d_bag(v: String) -> void:
 	_fill(_pts([100, 70, 156, 70, 170, 40, 86, 40]), [c.lightened(0.2), c.darkened(0.4)], 90)
 
 
+## A bag's trim by quality: the big bags (packs, coffers) show what they are.
+const BAG_TRIM := { "common": Color("c8b080"), "uncommon": Color("4ac04a"), "rare": Color("4a8ae0"), "epic": Color("b060e8") }
+
+
+## A rucksack: a rounded pack with a flap, two straps and buckles in its
+## quality's colour.
+func _d_pack(v: String) -> void:
+	var trim: Color = BAG_TRIM.get(v, BAG_TRIM.common)
+	var c := Color("7a5230")
+	_bg({ "uncommon": "green", "rare": "blue", "epic": "purple" }.get(v, "brown"))
+	var body := PackedVector2Array()
+	for i in 25:
+		var a := PI + PI * i / 24.0
+		body.append(Vector2(128, 96) + Vector2(cos(a) * 70, sin(a) * 46))
+	body.append(Vector2(198, 210))
+	body.append(Vector2(58, 210))
+	_fill(body, [c.lightened(0.3), c, c.darkened(0.6)], 70)
+	_fill(_pts([62, 96, 194, 96, 186, 150, 70, 150]), [c.lightened(0.15), c.darkened(0.35)], 90)
+	for x: float in [100.0, 156.0]:
+		_bar(Vector2(x, 96), Vector2(x, 206), 12, [Color("5a3a1a"), Color("2a180a")])
+		_fill(_pts([x - 10, 140, x + 10, 140, x + 10, 158, x - 10, 158]), [trim.lightened(0.3), trim.darkened(0.4)], 90)
+	_bar(Vector2(88, 52), Vector2(168, 52), 10, [Color("5a3a1a"), Color("2a180a")])
+
+
+## A travelling coffer: a banded chest with its lid, a lock and corners in its
+## quality's colour.
+func _d_coffer(v: String) -> void:
+	var trim: Color = BAG_TRIM.get(v, BAG_TRIM.common)
+	var wood := Color("8a5a2a")
+	_bg({ "uncommon": "green", "rare": "blue", "epic": "purple" }.get(v, "brown"))
+	_fill(_pts([48, 112, 208, 112, 208, 206, 48, 206]), [wood.lightened(0.25), wood, wood.darkened(0.6)], 80)
+	var lid := PackedVector2Array([Vector2(48, 112)])
+	for i in 13:
+		var a := PI + PI * i / 12.0
+		lid.append(Vector2(128, 112) + Vector2(cos(a) * 80, sin(a) * 50))
+	lid.append(Vector2(208, 112))
+	_fill(lid, [wood.lightened(0.35), wood.darkened(0.3)], 70)
+	for x: float in [70.0, 186.0]:
+		_bar(Vector2(x, 66), Vector2(x, 204), 14, [trim.lightened(0.25), trim.darkened(0.5)])
+	_bar(Vector2(48, 114), Vector2(208, 114), 10, [trim.lightened(0.25), trim.darkened(0.5)])
+	_fill(_pts([114, 120, 142, 120, 142, 152, 114, 152]), [Color("e8d080"), Color("8a6a20")], 90)
+	_star(Vector2(128, 136), 6, 3, 4, Color("2a1a0a"))
+
+
 func _d_quiver(v: String) -> void:
 	_bg("brown")
 	_at(C, 0.4)

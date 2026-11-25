@@ -70,9 +70,11 @@ gameobject_involvedrelation, named in the game's quest text like NPCs.
 Vendors with a VendorTemplateId and no npc_vendor rows sell the template's
 list (npc_vendor_template).
 
-`spells.json` also carries `procs`: procs per minute and cooldowns from
-spell_proc_event (Seal of Justice 5, Light and Wisdom 20, Command 7, each with
-a 3 s cooldown), used as Unit::GetPPMProcChance does (ppm x swing time / 60).
+`spells.json` also carries `procs`: chances and cooldowns from
+spell_proc_event (Seal of Justice 5 a minute, Light and Wisdom 20, Command 7,
+each with a 3 s cooldown). Unlike classic, rates per minute
+(Unit::GetPPMProcChance, ppm x swing time / 60) are turned into a flat chance
+per hit at a 3 s weapon, the same for any weapon speed.
 Judgement of Light and Wisdom's per-rank heal and mana spells, and Holy
 Shock's damage and heal spells, are mapped in `extract.py` from the CMaNGOS
 proc and effect handlers, since the data doesn't link them.

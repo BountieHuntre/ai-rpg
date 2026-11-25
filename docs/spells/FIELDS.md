@@ -24,6 +24,11 @@ change from classic's data, run the check:
 `-- --export` rewrites every design file from classic's data, **losing your edits**: use it
 only to start over.
 
+`-- --add-missing` adds to each design file the spells its own spells trigger (a proc's buff,
+a periodic trigger's spell) that it doesn't hold yet, from classic's data, after your spells,
+changing nothing else. Groups whose name one of your groups already has are marked
+"(triggered)".
+
 ## A design file
 
 ```json
@@ -58,6 +63,7 @@ A spell and its ranks, lowest first.
 |---|---|
 | `name` | The spell's name, for reading the file and the spell editor's list. Each rank has its own `name`, which is what the game shows. |
 | `ranks` | Each rank's spell, lowest first. They form a chain: learning a rank replaces the one before it on the action bar, and "Hide old ranks" in the spellbook hides the lower ones. |
+| `tags` | Names for the spell that talents can use, given to every rank (see Tags below). | `"tags": ["radiant_strike"]` |
 | `chain` | `false` when the ranks aren't a chain: each is a spell of its own, none replacing another. Classic's Man-at-Arms spells are like that. [true] |
 
 ## A spell (one rank)
@@ -133,8 +139,9 @@ Only `id` and `name` are needed. Everything else has a default, shown in bracket
 | `charges` | How many times its aura can be used up before it ends (Inner Flame, talent buffs). [0, no limit] | `"charges": 3` |
 | `proc_chance` | The chance, in %, that its proc aura fires when its `proc_on` happens. [101, always] | `"proc_chance": 20` |
 | `proc_on` | The events that fire its proc aura, as a list. | `"proc_on": ["melee_hit_done"]` |
-| `proc` | Proc rules from classic's spell_proc_event. `ppm`: procs per minute, scaled by weapon speed (Oaths). `chance`: in %, replaces `proc_chance`. `cooldown`: seconds between procs. `school`: only spells of these schools. `family`/`family_mask`: only these spells. `flags`/`ex`: classic's proc masks. | `"proc": { "ppm": 3 }` |
+| `proc` | Proc rules from classic's spell_proc_event. `chance`: in % per hit, the same at any weapon speed, replaces `proc_chance` (the game's own: there are no rates per minute; classic's became the chance at a 3 s weapon, Oath of Valor's 7 a minute 35%). `cooldown`: seconds between procs. `school`: only spells of these schools. `family`/`family_mask`: only these spells (`family_mask` a number, or a list of tags and spell names). `flags`/`ex`: classic's proc masks. | `"proc": { "chance": 15 }` |
 | `coefficients` | How much spell power or attack power adds. `direct`: for its hit or heal. `dot`: for each tick. Otherwise worked out from the cast time. | `"coefficients": { "direct": 0.857 }` |
+| `tags` | Tags of this rank only, on top of its group's (see Tags below). | `"tags": ["heavy_strikes"]` |
 | `family` / `family_flags` | Its class family and flag bits. Talents (spell modifiers) and proc rules pick the spells they change by these (`affects`, `family_mask`). Give a new spell the bit of the spells it should be treated as. | `"family": 4, "family_flags": 64` |
 | `link` | Another spell cast along with it, or kept on with it (a stance's passive). | `"link": 23455` |
 | `extra` | Templar side tables, by name: `judgement_procs` (the Verdict an Oath gives), `holy_shock` (its damage and heal spells), `seal_of_righteousness_procs` (the hit an Oath's proc deals). | `"extra": { "judgement_procs": 20187 }` |
@@ -177,7 +184,7 @@ Only `id` and `name` are needed. Everything else has a default, shown in bracket
 | `multiple_value` | For `periodic_leech`: health the caster gains per point drained [1]. For `power_burn`: damage dealt per point of mana burned [0.5]. | `"multiple_value": 0.5` |
 | `stat` | Stat auras (`stat`, `stat_percent`, `total_stat_percent`): which stat changes. | `"stat": "stamina"` |
 | `modifies` | Spell modifiers (`flat_modifier`, `percent_modifier`): what they change in other spells (damage, cost, cast time...). | `"modifies": "cost"` |
-| `affects` | Spell modifiers: which spells they change, as a mask of `family_flags` bits of the class's family. | `"affects": 64` |
+| `affects` | Spell modifiers: which spells they change, as a list of tags and spell names (see Tags below), a mask of `family_flags` bits of the class's family, or `"instant"`: every spell and ability of the class cast at once (no cast time after your other talents; not channelled spells, passives, Attack or Shoot). | `"affects": 64`, `"affects": "instant"` |
 | `form` | Shapeshift auras: the form it puts the caster in. | `"form": "bastion"` |
 | `against` | Mechanic immunity or resistance auras: the mechanic. | `"against": "stun"` |
 | `schools` | School auras (resistance, damage done, absorb...): which schools, as a list. Physical means armour for resistances. | `"schools": ["fire", "frost"]` |
@@ -214,8 +221,8 @@ that text, with these placeholders filled in (`n` is the effect, 1 to 3):
 
 Numbers count your talents, as the tooltip's cost, range, cast and cooldown lines do: with
 Improved Verdict, `{cooldown}` on Verdict says 8 sec, and an Improved Boon's extra shows in `{amount1}`
-(talents that change cast time, duration, range, radius, cost and effect amounts; damage bonuses
-that apply as a hit lands don't show, as in classic). Anything else in braces is left as it is. Write `%` plainly ("raises your crit by
+(talents that change cast time, duration, range, radius, cost, effect amounts, and damage:
+Radiant Arbiter's +20% shows in Radiant Strike's `{amount1}` and `{amount2}`). Anything else in braces is left as it is. Write `%` plainly ("raises your crit by
 {amount1}%").
 
 ```json
@@ -226,6 +233,108 @@ In the spell editor, **Fill Text** copies each rank's current tooltip into its `
 plain words and numbers) to start from. Swap its numbers for placeholders where they
 should follow the spell's values, then press Apply Live; the note under the window shows
 the first rank's tooltip as it now reads.
+
+## Professions
+
+Each profession has a design file too, `data/designs/professions/<name>.json` (`herbalism`,
+`mining`, `skinning`, `enchanting`), in the spell editor after the classes. It's a class
+design without talents: its spell groups (the ranks, Find Herbs, Smelting, every recipe) and
+its trainer's list (each rank's `trainer`), read over classic's data the same way. It adds:
+
+- a `recipe` on each recipe's rank
+- sections of its own: `profession`, `nodes` (Herbalism and Mining), `skinning_loot`
+  (Skinning), and `disenchant_loot` and `enchants` (Enchanting)
+
+Items are written `{ "item": 2770, "name": "Copper Ore" }`. The name is only for reading; the
+game goes by `item`.
+
+### A recipe
+
+On the recipe spell's rank:
+
+```json
+"recipe": { "skill": 1, "levels": [1, 25, 47, 70],
+	"reagents": [ { "item": 2770, "name": "Copper Ore", "count": 1 } ],
+	"focus": "forge",
+	"makes": { "item": 2840, "name": "Copper Bar", "count": 1 } }
+```
+
+| Field | What it does |
+|---|---|
+| `skill` | The skill needed to learn and make it. |
+| `levels` | `[orange, yellow, green, grey]`: from orange it always raises the skill, from yellow usually, from green rarely, from grey never. |
+| `reagents` | What it uses up, with counts. |
+| `tools` | Items it needs in the bags but doesn't use up (a Runed Copper Rod). |
+| `focus` | Somewhere it must be made near: `"forge"` (Smelting). |
+| `makes` | The item it makes, with a count. |
+| `enchant` | Or the enchant it puts on an item (its id in `enchants`). `"temporary": true` for oils and the like that wear off. |
+| `formula` | The Formula item that teaches it, when the trainer doesn't. |
+
+A recipe the trainer teaches has a `trainer` on its rank like any spell, with `skill`: the
+skill needed to learn it there.
+
+### `profession`
+
+```json
+"profession": { "name": "Mining", "skill": 186,
+	"ranks": [ { "spell": 2575, "rank": "Apprentice", "max": 75, "level": 5, "skill": 0, "price": 10 }, ... ],
+	"start": [2580, 2656, 2657],
+	"tools": [ { "item": 2901, "name": "Mining Pick" } ] }
+```
+
+| Field | What it does |
+|---|---|
+| `skill` | Its skill line (182 Herbalism, 186 Mining, 393 Skinning, 333 Enchanting). |
+| `ranks` | Each rank's spell, its skill cap (`max`), the level and skill it needs, and its price in copper. |
+| `start` | Spells learned with the profession itself (Find Minerals, Smelting, Smelt Copper). |
+| `tools` | What gathering needs in the bags (Mining Pick, Skinning Knife). |
+
+### `nodes`
+
+A herb or ore kind and its loot:
+
+```json
+{ "id": 1731, "name": "Copper Vein", "skill": 1, "size": 1, "respawn": 300, "loot_id": 1502,
+	"loot": [ { "item": 2770, "name": "Copper Ore", "count": [1, 2], "chance": 100 }, ... ] }
+```
+
+| Field | What it does |
+|---|---|
+| `skill` | The skill needed to gather it (and its colour for skill-ups). |
+| `size` | How big it's drawn. |
+| `respawn` | Seconds until it grows back somewhere. |
+| `loot` | What gathering it gives (as the skinning and disenchanting tables below). |
+
+### Loot tables
+
+`skinning_loot` (by a creature's skinning loot id) and `disenchant_loot` (by an item's
+disenchant id) are `{ "id", "loot" }`. A loot row:
+
+| Field | What it does |
+|---|---|
+| `item` / `count` | The item and how many, `[least, most]`. |
+| `chance` | Its chance in %. A negative chance is a quest item's: it drops only while a quest needs it. |
+| `group` | Rows of one group roll as one: at most one of them drops. |
+| `reference` | Instead of an item, a shared loot table rolled here (`times` times). |
+
+### `enchants`
+
+What each enchant does to the item it's on:
+
+```json
+{ "id": 803, "name": "Fiery Weapon", "chance": 30, "effects": [ { "type": "proc_spell", "spell": 13897 } ] }
+```
+
+| Effect `type` | What it does |
+|---|---|
+| `stat` | Raises a `stat` (`strength`, `agility`, `stamina`, `intellect`, `spirit`, `health`, `mana`) by `value`. |
+| `resistance` | Raises a `school`'s resistance (`physical` is armour) by `value`. |
+| `weapon_damage` | Adds `value` to the weapon's damage. |
+| `equip_spell` | Keeps `spell` on the wearer while the item is worn (an aura). |
+| `proc_spell` | Casts `spell` on a melee hit (a swing or a weapon ability, the hand's own weapon) with the enchant's `chance` in % (the game's own: classic's rate per minute at a 3 s weapon, the same for any weapon speed). |
+
+`name` is the line the item's tooltip shows ("Enchanted: Fiery Weapon"). `charges` limits
+how many uses it has.
 
 ## Talent trees
 
@@ -297,6 +406,96 @@ Add its ranks as spells (passive auras, ids from 950000) and an entry in a tree:
 ```json
 { "name": "Kindled Edge", "id": 9501, "tier": 1, "column": 3, "ranks": [950010, 950011] }
 ```
+
+## Tags
+
+Talents pick the spells they change (`affects`) or fire on (a proc's `family_mask`) by bits of
+`family_flags`. Rather than numbers, use names:
+
+- **Your own tags.** `"tags"` on a spell group, beside its name and before its ranks, gives
+  every rank the same bit of its own; `"tags"` on a rank adds tags for that rank only. Each tag
+  gets a free bit of the class's family when the game loads (and `family` is set for you).
+- **Spell names.** Any spell of the class with `family_flags` can be named: `"Verdict"`,
+  `"Oath of Valor"` (the bits its ranks carry, every rank).
+
+```json
+{ "name": "Radiant Strike", "tags": ["radiant_strike"], "ranks": [ { "id": 950050, ... }, { "id": 950051, ... } ] }
+```
+
+```json
+{ "type": "apply_aura", "aura": "percent_modifier", "value": -50, "modifies": "cost",
+	"affects": ["radiant_strike", "Verdict"], "target": "self" }
+```
+
+```json
+"proc": { "family_mask": ["radiant_strike"] }
+```
+
+A tag's bit can change when tags are added (they're handed out in name order on every load),
+so refer to tags by name, never by the number. A name that is no tag or spell is warned about.
+A single name works without the list too (`"affects": "Radiant Strike"`). Numbers still work, alone or mixed into a list. Damage talents count on a weapon strike's weapon part as well as its spell part.
+
+## A weapon strike
+
+A melee spell that hits with your weapon uses weapon damage effects. For any class, they add
+up as one strike on the melee table (miss, dodge, parry, block, crit), lowered by armour:
+
+| Effect | Does |
+|---|---|
+| `weapon_percent_damage` | Multiplies the weapon hit by `value`%: 25 is a quarter of a weapon hit, 150 half again. |
+| `weapon_damage` | Adds `value` to a weapon hit. |
+| `weapon_damage_noschool` | Adds `value` to a weapon hit. |
+| `normalized_weapon_damage` | Adds `value` to a weapon hit worked out at a set speed (2.4, 3.3 for two-handers, 1.7 for daggers), so slow and fast weapons hit alike. |
+
+Radiant Strike, a quarter of a weapon hit:
+
+```json
+{ "name": "Radiant Strike", "ranks": [
+	{ "id": 950050, "name": "Radiant Strike", "rank": 1, "level": 1, "damage_class": "melee", "range": 5,
+		"cost": 10, "gcd": 1.5, "family": 10, "book_tab": 0, "trainer": { "level": 1, "price": 0 },
+		"effects": [ { "type": "weapon_percent_damage", "value": 25, "target": "enemy" } ] }
+] }
+```
+
+With school damage as well: a `school_damage` effect beside the weapon effects deals its
+`value` in the spell's `school` when the strike lands (no second hit roll), past armour, with
+spell power (`coefficients`) and its own crit. Radiant Strike as a quarter of a weapon hit plus
+10 to 14 Holy:
+
+```json
+{ "id": 950050, "name": "Radiant Strike", "rank": 1, "level": 1, "school": "holy", "damage_class": "melee",
+	"range": 5, "cost": 10, "gcd": 1.5, "family": 10, "book_tab": 0, "trainer": { "level": 1, "price": 0 },
+	"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+	"effects": [
+		{ "type": "weapon_percent_damage", "value": 25, "target": "enemy" },
+		{ "type": "school_damage", "value": [10, 14], "target": "enemy" }
+	] }
+```
+
+The weapon part stays physical whatever the `school`.
+
+Combine them for "weapon damage plus 20, at 125%": a `weapon_damage` of 20 and a
+`weapon_percent_damage` of 125 make (weapon hit + 20) x 1.25. An `apply_aura` effect beside
+them puts its aura (a stun, a snare) on the target when the strike lands. Ranger shots
+(`damage_class` `ranged`) use the same effects with the ranged weapon.
+
+## A talent for all instant spells
+
+A spell modifier with `"affects": "instant"` changes every instant spell and ability of the
+class. Swift Devotion, 20% off the cost of your instant spells and abilities:
+
+```json
+{ "name": "Swift Devotion", "ranks": [
+	{ "id": 950040, "name": "Swift Devotion", "rank": 1, "family": 10, "duration": "until_cancelled",
+		"attributes": ["passive", "hidden"], "book_tab": 1,
+		"effects": [ { "type": "apply_aura", "aura": "percent_modifier", "value": -20, "modifies": "cost",
+			"affects": "instant", "target": "self" } ] }
+] }
+```
+
+Its `family` must be the class's (10 Templar, 4 Man-at-Arms, 6 Cleric, 9 Ranger, 12
+Spellsword). Its tooltip writes itself ("Reduces the cost of your instant spells and abilities
+by 20%."). Any `modifies` works with it except `cast_time`.
 
 ## Adding a proc talent
 

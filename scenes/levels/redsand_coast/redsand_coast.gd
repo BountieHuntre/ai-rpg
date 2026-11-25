@@ -401,6 +401,7 @@ func _build_town() -> void:
 	# The smithy to the west: a hide roof on posts over a forge and an anvil.
 	Buildings.shed(kit, _near(t, Vector2(-14, -2.5), y), Vector3(8, 3.6, 7), PI / 2, LOG, HIDE)
 	kit.block(_near(t, Vector2(-16.5, -4), y), Vector3(2.4, 1.8, 2.2), DARK_ROCK, 0.0, true)
+	add_forge(_near(t, Vector2(-16.5, -4), y))
 	kit.block(_near(t, Vector2(-16.5, -4), y + 1.8), Vector3(1.8, 0.12, 1.6), Color(0.55, 0.2, 0.08))
 	kit.block(_near(t, Vector2(-12, 0), y), Vector3(0.6, 0.6, 0.45), LOG, 0.0, true)
 	kit.block(_near(t, Vector2(-12, 0), y + 0.6), Vector3(1.1, 0.3, 0.55), IRON)

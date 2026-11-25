@@ -9,20 +9,46 @@ extends SceneTree
 ## Check only (the design files against classic's data; run after editing
 ## a design to see what it changed from classic):
 ##   <console exe> --headless --path C:/ai-rpg -s res://tools/spells/export_designs.gd
+## Add to each design file the spells its spells trigger that it doesn't hold
+## yet (from classic's data, after the file's own spells; nothing else in the
+## file changes):
+##   <console exe> --headless --path C:/ai-rpg -s res://tools/spells/export_designs.gd -- --add-missing
+## The professions (data/designs/professions/<name>.json, ProfessionDesigns):
+## the check covers them too, their own sections against professions.json;
+## `-- --export-professions` writes only them (the classes' files untouched).
 
 const SPELLS_PATH := "res://data/classic/spells.json"
+const PROFESSIONS_PATH := "res://data/classic/professions.json"
+const ITEMS_PATH := "res://data/classic/items.json"
 
 
 func _initialize() -> void:
 	var designs = load("res://scripts/spells/spell_designs.gd")
 	var data := _raw_data()
 	var exporting := "--export" in OS.get_cmdline_user_args()
+	var exporting_professions := exporting or "--export-professions" in OS.get_cmdline_user_args()
+	if "--add-missing" in OS.get_cmdline_user_args():
+		_add_missing(designs, data)
+	var professions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PROFESSIONS_PATH))
+	data.recipes = professions.recipes
+	var profession_designs = load("res://scripts/professions/profession_designs.gd")
+	var items: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ITEMS_PATH))
+	for id: String in items:
+		profession_designs.item_names[id] = items[id].name
 	var differences := 0
-	for spec: Array in designs.CLASSES:
+	for spec: Array in designs.all_files():
+		var profession := int(spec[0]) == 0
 		var owned := _owned(data, int(spec[0]), str(spec[1]))
+		if profession:
+			owned = _profession_owned(data, professions, str(spec[1]))
 		var path: String = designs.DESIGN_DIR + str(spec[2]) + ".json"
-		if exporting:
+		if exporting if not profession else exporting_professions:
 			var design: Dictionary = designs.encode_class(data, int(spec[0]), str(spec[1]), owned)
+			if profession:
+				design.erase("talents")
+				design.erase("start_spells")
+				design.merge(profession_designs.encode_profession(professions, str(spec[1])), true)
+			DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 			var file := FileAccess.open(path, FileAccess.WRITE)
 			file.store_string(JSON.stringify(designs.whole(design), "\t", false) + "\n")
 			file.close()
@@ -32,6 +58,8 @@ func _initialize() -> void:
 		for warning: String in designs.warnings:
 			print("WARNING ", warning)
 		var found := _compare(data, built, int(spec[0]), str(spec[1]), owned)
+		if profession:
+			found += _compare_profession(professions, profession_designs.decode_profession(read, str(spec[1]), built.recipes), str(spec[1]))
 		differences += found
 		print("%s: %d spells, %d differences" % [spec[2], owned.size(), found])
 	print("DONE: %d differences" % differences)
@@ -78,11 +106,121 @@ func _owned(data: Dictionary, class_id: int, trainer: String) -> Array:
 	for id: int in ids.keys():
 		if data.links.has(str(id)):
 			ids[int(data.links[str(id)])] = true
+	_add_triggers(data.spells, ids)
 	var out := []
 	for id: int in ids:
 		if data.spells.has(str(id)):
 			out.append(id)
 	return out
+
+
+## Adds to `ids` the spells its spells trigger (EffectTriggerSpell: a proc's
+## buff, a periodic trigger's spell), and theirs, while classic's data has them.
+func _add_triggers(spells: Dictionary, ids: Dictionary) -> void:
+	var queue := ids.keys()
+	while not queue.is_empty():
+		var id := int(queue.pop_back())
+		var row: Dictionary = spells.get(str(id), {})
+		for n in [1, 2, 3]:
+			var trigger := int(row.get("EffectTriggerSpell%d" % n, 0))
+			if trigger != 0 and not ids.has(trigger) and spells.has(str(trigger)):
+				ids[trigger] = true
+				queue.append(trigger)
+
+
+## --add-missing: each design file gets the spells its own spells trigger
+## that it doesn't hold, encoded from classic's data, after its spells.
+func _add_missing(designs: Variant, data: Dictionary) -> void:
+	for spec: Array in designs.CLASSES:
+		var path: String = designs.DESIGN_DIR + str(spec[2]) + ".json"
+		var design: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		var built: Dictionary = designs.decode_class(design, str(spec[2]))
+		var held := {}
+		for id: String in built.spells:
+			held[int(id)] = true
+		var wanted := held.duplicate()
+		var merged: Dictionary = data.spells.duplicate()
+		merged.merge(built.spells, true)
+		_add_triggers(merged, wanted)
+		var missing := []
+		for id: int in wanted:
+			if not held.has(id) and data.spells.has(str(id)):
+				missing.append(id)
+		missing.sort()
+		if missing.is_empty():
+			print("%s: nothing missing" % spec[2])
+			continue
+		var added: Dictionary = designs.encode_class(data, int(spec[0]), str(spec[1]), missing)
+		var groups: Array = design.get("spells", [])
+		groups.append_array(added.spells)
+		design.spells = groups
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		file.store_string(JSON.stringify(designs.whole(design), "\t", false) + "\n")
+		file.close()
+		print("%s: added %d spells in %d groups: %s" % [spec[2], missing.size(), added.spells.size(),
+			", ".join(added.spells.map(func(g: Dictionary) -> String: return str(g.name)))])
+
+
+## A profession's spells: its trainer list's, the spells learned with it,
+## its ranks, its recipes, its enchants' proc and equip spells, and what
+## those trigger.
+func _profession_owned(data: Dictionary, professions: Dictionary, name: String) -> Array:
+	var ids := {}
+	for id: int in _owned(data, 0, name):
+		ids[id] = true
+	var prof: Dictionary = professions.professions[name]
+	for id: Variant in prof.start:
+		ids[int(id)] = true
+	for rank: Dictionary in prof.ranks:
+		ids[int(rank.spell)] = true
+	for id: String in professions.recipes:
+		var recipe: Dictionary = professions.recipes[id]
+		if recipe.profession != name:
+			continue
+		ids[int(id)] = true
+		var enchant: Dictionary = professions.enchants.get(str(int(recipe.get("enchant", 0))), {})
+		for effect: Array in enchant.get("effects", []):
+			if int(effect[0]) in [1, 3]:
+				ids[int(effect[3])] = true
+	_add_triggers(data.spells, ids)
+	var out := []
+	for id: int in ids:
+		if data.spells.has(str(id)):
+			out.append(id)
+	return out
+
+
+## A profession's own sections read back against professions.json: its
+## ranks and tools, recipes, nodes and their loot, skinning and disenchanting
+## loot, enchants.
+func _compare_profession(classic: Dictionary, built: Dictionary, name: String) -> int:
+	var designs = load("res://scripts/spells/spell_designs.gd")
+	var w := func(value: Variant) -> String: return JSON.stringify(designs.whole(value), "", true)
+	var found := 0
+	if w.call(classic.professions[name]) != w.call(built.professions[name]):
+		found += 1
+		print("  %s's ranks, start spells or tools differ" % name)
+	for table: String in ["recipes", "nodes", "skinning_loot", "disenchant_loot", "enchants"]:
+		var mine := {}
+		for id: String in classic[table]:
+			var row: Variant = classic[table][id]
+			var belongs: bool = (table == "recipes" and row.profession == name) 				or (table == "nodes" and row.kind == { "herbalism": "herb", "mining": "ore" }.get(name, "")) 				or (table == "skinning_loot" and name == "skinning") or (table == "disenchant_loot" and name == "enchanting") 				or (table == "enchants" and name == "enchanting")
+			if belongs:
+				mine[id] = row
+		for id: String in mine:
+			if not built[table].has(id) or w.call(mine[id]) != w.call(built[table][id]):
+				found += 1
+				if found <= 8:
+					print("  %s %s %s differs: %s -> %s" % [name, table, id, w.call(mine[id]).left(160), w.call(built[table].get(id, null)).left(160)])
+		for id: String in built[table]:
+			if not mine.has(id):
+				found += 1
+				print("  %s %s %s added" % [name, table, id])
+	for id: String in built.node_loot:
+		if w.call(classic.node_loot.get(id, [])) != w.call(built.node_loot[id]):
+			found += 1
+			print("  %s node loot %s differs" % [name, id])
+	return found
 
 
 var _whole: Callable
@@ -98,6 +236,10 @@ func _compare(data: Dictionary, built: Dictionary, class_id: int, trainer: Strin
 		# Every field the classic row has must be there, as code reads them
 		# straight (spell["EffectApplyAuraName2"]).
 		var built_row: Dictionary = built.spells.get(str(id), {})
+		if built_row.is_empty():
+			found += 1
+			print("  spell %d %s: removed from the design" % [id, data.spells[str(id)].SpellName])
+			continue
 		for key: String in data.spells[str(id)]:
 			if not built_row.has(key):
 				found += 1

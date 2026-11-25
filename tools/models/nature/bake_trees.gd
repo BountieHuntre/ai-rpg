@@ -6,14 +6,15 @@ extends SceneTree
 ## the nearest point of the parts it was built from; overlays (snow, palm
 ## fronds) laid on as they are. Run it after changing a tree, then re-import:
 ## <console exe> --headless --path C:/ai-rpg -s res://tools/models/nature/bake_trees.gd
-## ("-- --only=pine,oak" bakes just those kinds).
+## ("-- --only=pine,oak" bakes just those kinds; the herbs and ore of
+## gathering nodes are "herb_<name>" and "ore_<name>", Nature.node_kinds).
 
 const NatureScript := preload("res://scenes/levels/nature.gd")
 
 
 func _initialize() -> void:
 	await process_frame
-	var kinds: Array = NatureScript.TREE_SEEDS.keys()
+	var kinds: Array = NatureScript.TREE_SEEDS.keys() + NatureScript.node_kinds()
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--only="):
 			kinds = Array(arg.trim_prefix("--only=").split(","))
@@ -26,7 +27,7 @@ func _initialize() -> void:
 func _bake(kind: String, variant: int) -> void:
 	NatureScript.recording = true
 	NatureScript.recorded.clear()
-	NatureScript.build_tree(kind, NatureScript.TREE_SEEDS[kind] + variant)
+	NatureScript.build_tree(kind, NatureScript.seed_of(kind) + variant)
 	NatureScript.recording = false
 	var parts: Array = NatureScript.recorded.duplicate()
 	var union := CSGCombiner3D.new()

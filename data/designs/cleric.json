@@ -6362,7 +6362,6 @@
 					},
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9528,7 +9527,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -10392,7 +10390,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 6,
@@ -12373,7 +12370,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 6,
@@ -13039,7 +13035,6 @@
 					"book_tab": 2,
 					"link": 15290,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -13728,7 +13723,6 @@
 					"book_tab": 2,
 					"link": 28377,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 3,
 						"family": 0,
@@ -14914,7 +14908,6 @@
 					"book_tab": 1,
 					"link": 27813,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -15492,6 +15485,373 @@
 						}
 					],
 					"book_tab": 2
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Mana Rebuke (triggered)",
+			"ranks": [
+				{
+					"id": 6347,
+					"name": "Mana Rebuke",
+					"rank": 1,
+					"school": "shadow",
+					"damage_class": "magic",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"icon_id": 130,
+					"prevention": 1,
+					"range": 100,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"effects": [
+						{
+							"type": "power_burn",
+							"value": 18,
+							"multiple_value": 1,
+							"target": "enemy"
+						}
+					]
+				},
+				{
+					"id": 19267,
+					"name": "Mana Rebuke",
+					"rank": 2,
+					"school": "shadow",
+					"damage_class": "magic",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"icon_id": 130,
+					"prevention": 1,
+					"range": 100,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"effects": [
+						{
+							"type": "power_burn",
+							"value": 35,
+							"multiple_value": 1,
+							"target": "enemy"
+						}
+					]
+				},
+				{
+					"id": 19268,
+					"name": "Mana Rebuke",
+					"rank": 3,
+					"school": "shadow",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"icon_id": 130,
+					"prevention": 1,
+					"range": 100,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"effects": [
+						{
+							"type": "power_burn",
+							"value": 54,
+							"multiple_value": 1,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Cleanse Sickness Effect",
+			"ranks": [
+				{
+					"id": 10872,
+					"name": "Cleanse Sickness Effect",
+					"school": "nature",
+					"level": 32,
+					"base_level": 32,
+					"proc_chance": 101,
+					"icon_id": 264,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "dispel",
+							"value": 1,
+							"dispel": "disease",
+							"target": "friend"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Hearten (triggered)",
+			"ranks": [
+				{
+					"id": 14893,
+					"name": "Hearten",
+					"rank": 1,
+					"school": "holy",
+					"proc_chance": 101,
+					"icon_id": 1463,
+					"duration": 15,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "resistance_percent",
+							"value": 8,
+							"schools": [
+								"physical"
+							],
+							"target": "friend"
+						}
+					]
+				},
+				{
+					"id": 15357,
+					"name": "Hearten",
+					"rank": 2,
+					"school": "holy",
+					"proc_chance": 101,
+					"icon_id": 1463,
+					"duration": 15,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "resistance_percent",
+							"value": 16,
+							"schools": [
+								"physical"
+							],
+							"target": "friend"
+						}
+					]
+				},
+				{
+					"id": 15359,
+					"name": "Hearten",
+					"rank": 3,
+					"school": "holy",
+					"proc_chance": 101,
+					"icon_id": 1463,
+					"duration": 15,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "resistance_percent",
+							"value": 25,
+							"schools": [
+								"physical"
+							],
+							"target": "friend"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Gloom-Touched",
+			"ranks": [
+				{
+					"id": 15258,
+					"name": "Gloom-Touched",
+					"rank": 1,
+					"school": "shadow",
+					"damage_class": "magic",
+					"stacks": 5,
+					"proc_chance": 101,
+					"family": 6,
+					"family_flags": 67108864,
+					"icon_id": 9,
+					"duration": 15,
+					"range": 100,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_taken",
+							"value": 3,
+							"schools": [
+								"shadow"
+							],
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Shadow Snare (triggered)",
+			"ranks": [
+				{
+					"id": 15269,
+					"name": "Shadow Snare",
+					"rank": 1,
+					"school": "shadow",
+					"damage_class": "magic",
+					"proc_chance": 101,
+					"icon_id": 173,
+					"duration": 3,
+					"range": 100,
+					"attributes_ex": [
+						"0x8",
+						"0x80"
+					],
+					"mechanic": "stun",
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Spirit Harvest (triggered)",
+			"ranks": [
+				{
+					"id": 15271,
+					"name": "Spirit Harvest",
+					"rank": 1,
+					"school": "shadow",
+					"proc_chance": 101,
+					"icon_id": 152,
+					"duration": 15,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "total_stat_percent",
+							"value": 100,
+							"stat": "spirit",
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "mana_regen_interrupt",
+							"value": 50,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Dummy Trigger",
+			"ranks": [
+				{
+					"id": 18350,
+					"name": "Dummy Trigger",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"range": 50000,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"attributes_ex": [
+						"0x400",
+						"0x10000000"
+					],
+					"attributes_ex2": [
+						"0x4"
+					],
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "any_unit"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Umbral Guard (triggered)",
+			"ranks": [
+				{
+					"id": 28376,
+					"name": "Umbral Guard",
+					"school": "shadow",
+					"damage_class": "magic",
+					"speed": 20,
+					"proc_chance": 101,
+					"family": 11,
+					"icon_id": 19,
+					"range": 100,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log",
+						"castable_while_mounted"
+					],
+					"attributes_ex3": [
+						"0x10000",
+						"0x20000"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Withering Touch (triggered)",
+			"ranks": [
+				{
+					"id": 28598,
+					"name": "Withering Touch",
+					"school": "shadow",
+					"proc_chance": 101,
+					"family": 6,
+					"icon_id": 1591,
+					"range": 50000,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
 				}
 			],
 			"chain": false

@@ -353,6 +353,9 @@ static func gear_totals(equipment: Dictionary) -> Dictionary:
 		if slot == Slot.OFF_HAND and int(item.subclass) == ARMOR_SUBCLASS_SHIELD and int(item["class"]) == ItemDB.ITEM_CLASS_ARMOR:
 			totals.has_shield = true
 			totals.block += int(item.block)
+		# Its enchant (Enchanting): stats, armour, weapon damage.
+		var weapon_key := { Slot.MAIN_HAND: "weapon", Slot.OFF_HAND: "off_weapon", Slot.RANGED: "ranged" }.get(slot, "") as String
+		Enchanting.gear_bonus(stack, totals, weapon_key)
 	return totals
 
 

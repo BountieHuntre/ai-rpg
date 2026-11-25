@@ -47,9 +47,9 @@ func open(vendor_npc: Node3D, player: Player, ui_scale: float) -> void:
 	_ui_scale = ui_scale
 	_showing_buyback = false
 	visible = true
-	if not GameState.money_changed.is_connected(_queue_rebuild):
-		GameState.money_changed.connect(_queue_rebuild)
-		GameState.inventory_changed.connect(_queue_rebuild)
+	if not GameState.money_changed.is_connected(_queue_refresh):
+		GameState.money_changed.connect(_queue_refresh)
+		GameState.inventory_changed.connect(_queue_refresh)
 	_build()
 
 
@@ -72,6 +72,44 @@ func _queue_rebuild() -> void:
 		_build.call_deferred()
 
 
+## Money or bags changed (a buy, a sale): only what shows them, in place:
+## the money, the prices' colours (red past your money), Sell Junk and
+## Repair All. The buyback list is made again only when it changed.
+func _queue_refresh() -> void:
+	if visible and not _refresh_queued and not _rebuild_queued:
+		_refresh_queued = true
+		_refresh.call_deferred()
+
+
+func _refresh() -> void:
+	_refresh_queued = false
+	if npc == null or not visible:
+		return
+	if _showing_buyback and _buyback_key() != _shown_buyback:
+		_build()
+		return
+	if _money_label and is_instance_valid(_money_label):
+		_money_label.text = "Money: %s" % ItemDB.money_text(GameState.money)
+	for entry: Array in _price_labels:
+		var label: Label = entry[0]
+		if is_instance_valid(label):
+			label.add_theme_color_override("font_color", PRICE if GameState.money >= int(entry[1]) else TOO_EXPENSIVE)
+	_update_junk_button()
+	_update_repair_button()
+
+
+func _buyback_key() -> String:
+	return str(GameState.buyback.map(func(e: Dictionary) -> Array: return [e.id, e.count]))
+
+
+var _refresh_queued := false
+var _money_label: Label
+var _price_labels: Array = []
+var _junk_button: Button
+var _repair_button: Button
+var _shown_buyback := ""
+
+
 ## Rows are only freed through queue_free, never while handling their own click.
 func _build() -> void:
 	_rebuild_queued = false
@@ -79,6 +117,10 @@ func _build() -> void:
 		return
 	for child in get_children():
 		child.queue_free()
+	_price_labels.clear()
+	_junk_button = null
+	_repair_button = null
+	_shown_buyback = _buyback_key()
 	var vendor := vendor_data(npc.vendor)
 	var rows: Array = GameState.buyback if _showing_buyback else vendor.get("items", [])
 	# Room under the list for the money line and the Sell Junk button.
@@ -100,7 +142,7 @@ func _build() -> void:
 			var item := ItemDB.get_item(int(rows[i]))
 			_add_row(y, int(rows[i]), maxi(int(item.BuyCount), 1), int(item.BuyPrice), i)
 	var bottom := 26 + maxi(rows.size(), 1) * ROW
-	_text(self, Vector2(4, bottom), "Money: %s" % ItemDB.money_text(GameState.money), PRICE, FONT_SIZE)
+	_money_label = _text(self, Vector2(4, bottom), "Money: %s" % ItemDB.money_text(GameState.money), PRICE, FONT_SIZE)
 	if vendor.get("repair", false):
 		_add_repair_button(bottom)
 	_add_sell_junk_button(bottom + 14)
@@ -109,19 +151,14 @@ func _build() -> void:
 ## Sells every poor (grey) item in the bags at once. Each stack goes to
 ## buyback as if sold by hand.
 func _add_sell_junk_button(at_y: float) -> void:
-	var junk := Inventory.junk_refs()
-	var value := 0
-	for ref: Dictionary in junk:
-		var stack := Inventory.stack_at(ref)
-		value += int(ItemDB.get_item(stack.id).SellPrice) * int(stack.count)
 	var button := Button.new()
-	button.text = "Sell Junk (%s)" % ItemDB.money_text(value) if value > 0 else "Sell Junk"
-	button.disabled = junk.is_empty()
-	button.tooltip_text = "" if junk.is_empty() else "Sell all %d grey items in your bags" % junk.size()
+	_junk_button = button
+	_update_junk_button()
 	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
 	button.position = Vector2(4, at_y - 2) * _ui_scale
 	button.size = Vector2(WIDTH - 8, 12) * _ui_scale
 	button.pressed.connect(func() -> void:
+		var value := _junk_value()
 		var sold := 0
 		for ref: Dictionary in Inventory.junk_refs():
 			if Inventory.sell(ref).is_empty():
@@ -129,17 +166,42 @@ func _add_sell_junk_button(at_y: float) -> void:
 		if sold > 0:
 			Sfx.play("sell")
 			message.emit("Sold %d junk item%s for %s." % [sold, "" if sold == 1 else "s", ItemDB.money_text(value)], false)
-		_queue_rebuild()
+		_queue_refresh()
 	)
 	add_child(button)
 
 
+func _junk_value() -> int:
+	var value := 0
+	for ref: Dictionary in Inventory.junk_refs():
+		var stack := Inventory.stack_at(ref)
+		value += int(ItemDB.get_item(stack.id).SellPrice) * int(stack.count)
+	return value
+
+
+func _update_junk_button() -> void:
+	if _junk_button == null or not is_instance_valid(_junk_button):
+		return
+	var junk := Inventory.junk_refs()
+	var value := _junk_value()
+	_junk_button.text = "Sell Junk (%s)" % ItemDB.money_text(value) if value > 0 else "Sell Junk"
+	_junk_button.disabled = junk.is_empty()
+	_junk_button.tooltip_text = "" if junk.is_empty() else "Sell all %d grey items in your bags" % junk.size()
+
+
+func _update_repair_button() -> void:
+	if _repair_button == null or not is_instance_valid(_repair_button):
+		return
+	var cost := Inventory.repair_all_cost()
+	_repair_button.text = "Repair All (%s)" % ItemDB.money_text(cost) if cost > 0 else "Repair All"
+	_repair_button.disabled = cost <= 0
+
+
 ## Armorers repair everything at once, for the classic cost.
 func _add_repair_button(bottom: float) -> void:
-	var cost := Inventory.repair_all_cost()
 	var button := Button.new()
-	button.text = "Repair All (%s)" % ItemDB.money_text(cost) if cost > 0 else "Repair All"
-	button.disabled = cost <= 0
+	_repair_button = button
+	_update_repair_button()
 	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
 	button.position = Vector2(WIDTH - 66, bottom - 2) * _ui_scale
 	button.size = Vector2(62, 12) * _ui_scale
@@ -149,7 +211,7 @@ func _add_repair_button(bottom: float) -> void:
 			Sfx.play("coins")
 		else:
 			message.emit(error, true)
-		_queue_rebuild()
+		_queue_refresh()
 	)
 	add_child(button)
 
@@ -183,7 +245,8 @@ func _add_row(y: float, id: int, count: int, price: int, index: int) -> void:
 		count_label.size.x = (ICON - 1) * _ui_scale
 		count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_text(row, Vector2(ICON + 4, 0), item.name, quality, FONT_SIZE)
-	_text(row, Vector2(ICON + 4, 7), ItemDB.money_text(price), PRICE if GameState.money >= price else TOO_EXPENSIVE, 5)
+	var price_label := _text(row, Vector2(ICON + 4, 7), ItemDB.money_text(price), PRICE if GameState.money >= price else TOO_EXPENSIVE, 5)
+	_price_labels.append([price_label, price])
 	row.mouse_entered.connect(func() -> void:
 		row.color = Color(1, 1, 1, 0.08)
 		hovered.emit(item)
@@ -201,7 +264,7 @@ func _add_row(y: float, id: int, count: int, price: int, index: int) -> void:
 			Sfx.play("coins")
 		else:
 			message.emit(error, true)
-		_queue_rebuild()
+		_queue_refresh()
 	)
 
 

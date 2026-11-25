@@ -6239,7 +6239,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -7424,7 +7423,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9544,7 +9542,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9807,7 +9804,6 @@
 					"book_tab": 0,
 					"link": 24406,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 9,
@@ -11562,6 +11558,146 @@
 						}
 					],
 					"book_tab": 2
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Quick Shots",
+			"ranks": [
+				{
+					"id": 6150,
+					"name": "Quick Shots",
+					"proc_chance": 101,
+					"icon_id": 561,
+					"duration": 12,
+					"attributes": [
+						"ability",
+						"keeps_sheath"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "ranged_haste",
+							"value": 30,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Dazed",
+			"ranks": [
+				{
+					"id": 15571,
+					"name": "Dazed",
+					"level": 20,
+					"base_level": 20,
+					"proc_chance": 101,
+					"icon_id": 15,
+					"duration": 4,
+					"attributes": [
+						"negative"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "slow",
+							"value": -70,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Improved Crippling Cut (triggered)",
+			"ranks": [
+				{
+					"id": 19229,
+					"name": "Improved Crippling Cut",
+					"proc_chance": 101,
+					"icon_id": 517,
+					"prevention": 2,
+					"duration": 5,
+					"range": 50000,
+					"mechanic": "root",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "root",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Improved Hobbling Shot (triggered)",
+			"ranks": [
+				{
+					"id": 19410,
+					"name": "Improved Hobbling Shot",
+					"damage_class": "magic",
+					"proc_chance": 101,
+					"icon_id": 15,
+					"duration": 3,
+					"attributes": [
+						"castable_while_dead"
+					],
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Menace (triggered)",
+			"ranks": [
+				{
+					"id": 24394,
+					"name": "Menace",
+					"damage_class": "magic",
+					"level": 40,
+					"base_level": 40,
+					"proc_chance": 101,
+					"icon_id": 166,
+					"prevention": 1,
+					"duration": 3,
+					"range": 5,
+					"requires_item": "none",
+					"item_types": "all",
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "threat",
+							"value": 580,
+							"per_level": 21,
+							"target": "enemy"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						}
+					]
 				}
 			],
 			"chain": false

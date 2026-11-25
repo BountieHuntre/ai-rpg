@@ -39,6 +39,17 @@ const UNMET := Color(1, 0.13, 0.13)
 ## Item spell lines, by spelltrigger_1: use, equip, chance on hit, learn.
 const USE_COLOR := Color(0.12, 1, 0)
 const SPELL_TRIGGERS := { 0: "Use", 1: "Equip", 2: "Chance on hit", 6: "Use" }
+## spelltrigger_1 for a weapon's spell that may fire on a melee hit.
+const TRIGGER_ON_HIT := 2
+
+
+## A weapon's "Chance on hit:" spell's chance per hit in %: its own
+## `spellchance_1` (classic's rate per minute, made a flat chance on export),
+## else the spell's (SpellDB.proc_chance).
+static func on_hit_chance(item: Dictionary) -> float:
+	if float(item.get("spellchance_1", 0.0)) > 0.0:
+		return float(item.spellchance_1)
+	return SpellDB.proc_chance(SpellDB.get_spell(int(item.get("spellid_1", 0))))
 const GAIN := Color(0.15, 1, 0.15)
 const LOSS := Color(1, 0.2, 0.2)
 const BONDING := { 1: "Binds when picked up", 2: "Binds when equipped", 3: "Binds when used", 4: "Quest Item" }
@@ -155,6 +166,13 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 	for stat: Array in item.stats:
 		var value := int(stat[1])
 		lines.append(_line("%s%d %s" % ["+" if value > 0 else "", value, STAT_MODS.get(int(stat[0]), "?")]))
+	# Its enchant, in green (a stack's, passed as `_enchant`; Enchanting).
+	if int(item.get("_enchant", 0)) > 0:
+		lines.append([Enchanting.line(int(item._enchant)), "", Enchanting.ENCHANT_COLOR])
+		# What it does, where its name doesn't say (Crusader's proc).
+		var does := Enchanting.describe(int(item._enchant))
+		if not does.is_empty():
+			lines.append([does, "", Enchanting.ENCHANT_COLOR])
 	if int(item.ContainerSlots) > 0:
 		lines.append(_line("%d Slot Bag" % item.ContainerSlots))
 	if int(item.MaxDurability) > 0:
@@ -177,7 +195,16 @@ static func tooltip(item: Dictionary, soulbound := false, current_durability := 
 	# hit:" for weapon procs.
 	var item_spell := int(item.get("spellid_1", 0))
 	var trigger: String = SPELL_TRIGGERS.get(int(item.get("spelltrigger_1", 0)), "")
-	if item_spell > 0 and not trigger.is_empty():
+	if item_spell > 0 and int(item.get("spelltrigger_1", 0)) == TRIGGER_ON_HIT:
+		# "Chance on hit: 5% chance to deal 40 Fire damage."
+		var spell := SpellDB.get_spell(item_spell)
+		var chance := on_hit_chance(item)
+		var proc := Enchanting.proc_text(spell, GameState.level, chance).replace(" chance on hit to ", " chance to ")
+		if proc.is_empty():
+			var does := SpellText.describe(spell, GameState.level)
+			proc = "%s%% chance%s" % [SpellText._number(chance), ": " + does if not does.is_empty() else "."]
+		lines.append(["%s: %s" % [trigger, proc], "", USE_COLOR])
+	elif item_spell > 0 and not trigger.is_empty():
 		var text := SpellText.describe(SpellDB.get_spell(item_spell), GameState.level)
 		if not text.is_empty():
 			lines.append(["%s: %s" % [trigger, text], "", USE_COLOR])

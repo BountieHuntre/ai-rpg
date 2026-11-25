@@ -158,11 +158,15 @@ var manager: BotManager
 var last_death := {}
 var last_quest_done := {}
 var last_kill := 0
+## Kills of its own so far (BotProfessions looks for a corpse to skin after each).
+var kills := 0
 var _last_attacker := ""
 ## Its quest log, saved in its roster entry.
 var quests := BotQuests.new()
 ## Its loot and money, for trading; saved in its roster entry.
 var bag := BotBag.new()
+## Its professions at work (BotProfessions): gathering, skinning, making.
+var professions := BotProfessions.new()
 ## Standing still for a trade with the player.
 var trading := false
 ## Walking over to the player (to trade), until this time (seconds).
@@ -259,6 +263,7 @@ var _tame_search_left := 0.0
 
 
 func _ready() -> void:
+	professions.bot = self
 	combatant.display_name = profile.char_name
 	apply_race_look()
 	combatant.faces_point = is_facing
@@ -322,6 +327,8 @@ func learn_spells() -> void:
 				for proficiency in SpellDB.proficiencies_of(SpellDB.get_spell(int(id))):
 					if not proficiency in profile.proficiencies:
 						profile.proficiencies.append(proficiency)
+	# Its professions' ranks and recipes, kept up as its spells are.
+	BotProfessions.keep_up(profile)
 	stats.refresh()
 
 
@@ -446,6 +453,7 @@ func _on_died() -> void:
 	_resting = false
 	_enemy = null
 	_has_destination = false
+	professions.forget()
 
 
 func _physics_process(delta: float) -> void:
@@ -867,6 +875,9 @@ func _solo_idle() -> void:
 	if is_coming():
 		_come_closer()
 		return
+	# Herbs, ore and corpses near it, and making things at a forge.
+	if professions.step(false):
+		return
 	if _quest_business():
 		var npc := _business
 		if npc:
@@ -1069,6 +1080,9 @@ func _party_idle() -> void:
 			_go_to(_stay_at)
 		elif _needs_rest() and not _resting:
 			_start_rest()
+		return
+	# Herbs, ore and corpses near the player while nothing's going on.
+	if not leader.combatant.is_in_combat() and professions.step(true):
 		return
 	var spot := _follow_spot(leader)
 	if global_position.distance_to(spot) > 1.5:

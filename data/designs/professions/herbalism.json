@@ -1,0 +1,927 @@
+{
+	"class": 0,
+	"trainer": "herbalism",
+	"spells": [
+		{
+			"name": "Herb Gathering",
+			"ranks": [
+				{
+					"id": 2366,
+					"name": "Herb Gathering",
+					"rank_text": "Apprentice",
+					"proc_chance": 101,
+					"icon_id": 39,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"cast": 5,
+					"range": 5,
+					"attributes": [
+						"hidden"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 2,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 1,
+							"misc": 182
+						}
+					],
+					"trainer": {
+						"level": 5,
+						"price": 10,
+						"teach": 2372,
+						"skill": 0
+					}
+				},
+				{
+					"id": 2368,
+					"name": "Herb Gathering",
+					"rank_text": "Journeyman",
+					"proc_chance": 101,
+					"icon_id": 39,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"cast": 5,
+					"range": 5,
+					"attributes": [
+						"hidden"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 2,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 2,
+							"misc": 182
+						}
+					],
+					"trainer": {
+						"level": 10,
+						"price": 500,
+						"teach": 2373,
+						"skill": 50
+					}
+				},
+				{
+					"id": 3570,
+					"name": "Herb Gathering",
+					"rank_text": "Expert",
+					"proc_chance": 101,
+					"icon_id": 39,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"cast": 5,
+					"range": 5,
+					"attributes": [
+						"hidden"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 2,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 3,
+							"misc": 182
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 5000,
+						"teach": 3571,
+						"skill": 125
+					}
+				},
+				{
+					"id": 11993,
+					"name": "Herb Gathering",
+					"rank_text": "Artisan",
+					"proc_chance": 101,
+					"icon_id": 39,
+					"target_flags": 16384,
+					"interrupt_flags": 31,
+					"cast": 5,
+					"range": 5,
+					"attributes": [
+						"hidden"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "open_lock",
+							"value": 0,
+							"per_level": 5,
+							"misc": 2,
+							"target": "game_object"
+						},
+						{
+							"type": "skill",
+							"value": 4,
+							"misc": 182
+						}
+					],
+					"trainer": {
+						"level": 35,
+						"price": 50000,
+						"teach": 11994,
+						"skill": 200
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Apprentice Herbalist",
+			"ranks": [
+				{
+					"id": 2372,
+					"name": "Apprentice Herbalist",
+					"proc_chance": 101,
+					"icon_id": 345,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 2366
+						},
+						{
+							"type": "skill_step",
+							"value": 1,
+							"misc": 182
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Journeyman Herbalist",
+			"ranks": [
+				{
+					"id": 2373,
+					"name": "Journeyman Herbalist",
+					"proc_chance": 101,
+					"icon_id": 345,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 2368
+						},
+						{
+							"type": "skill_step",
+							"value": 2,
+							"misc": 182
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Find Herbs",
+			"ranks": [
+				{
+					"id": 2383,
+					"name": "Find Herbs",
+					"level": 3,
+					"proc_chance": 101,
+					"gcd_category": 133,
+					"icon_id": 1216,
+					"duration": "until_cancelled",
+					"gcd": 1.5,
+					"attributes": [
+						"passive",
+						"hide_in_combat_log",
+						"castable_while_mounted",
+						"castable_while_sitting"
+					],
+					"attributes_ex": [
+						"0x20"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "track_resources",
+							"value": 0,
+							"dice": 0,
+							"misc": 2,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Expert Herbalist",
+			"ranks": [
+				{
+					"id": 3571,
+					"name": "Expert Herbalist",
+					"proc_chance": 101,
+					"icon_id": 345,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 3570
+						},
+						{
+							"type": "skill_step",
+							"value": 3,
+							"misc": 182
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Artisan Herbalist",
+			"ranks": [
+				{
+					"id": 11994,
+					"name": "Artisan Herbalist",
+					"proc_chance": 101,
+					"icon_id": 345,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 11993
+						},
+						{
+							"type": "skill_step",
+							"value": 4,
+							"misc": 182
+						}
+					]
+				}
+			],
+			"chain": false
+		}
+	],
+	"profession": {
+		"name": "Herbalism",
+		"skill": 182,
+		"ranks": [
+			{
+				"spell": 2366,
+				"rank": "Apprentice",
+				"max": 75,
+				"level": 5,
+				"skill": 0,
+				"price": 10
+			},
+			{
+				"spell": 2368,
+				"rank": "Journeyman",
+				"max": 150,
+				"level": 10,
+				"skill": 50,
+				"price": 500
+			},
+			{
+				"spell": 3570,
+				"rank": "Expert",
+				"max": 225,
+				"level": 20,
+				"skill": 125,
+				"price": 5000
+			},
+			{
+				"spell": 11993,
+				"rank": "Artisan",
+				"max": 300,
+				"level": 35,
+				"skill": 200,
+				"price": 50000
+			}
+		],
+		"start": [
+			2383
+		],
+		"tools": []
+	},
+	"nodes": [
+		{
+			"id": 1617,
+			"name": "Pale Sageleaf",
+			"skill": 1,
+			"size": 0.6,
+			"respawn": 300,
+			"loot_id": 1414,
+			"loot": [
+				{
+					"item": 765,
+					"name": "Pale Sageleaf",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				},
+				{
+					"item": 5056,
+					"name": "Root Sample",
+					"count": [
+						1,
+						1
+					],
+					"chance": -40
+				}
+			]
+		},
+		{
+			"id": 1618,
+			"name": "Meadow Blossom",
+			"skill": 1,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1415,
+			"loot": [
+				{
+					"item": 2447,
+					"name": "Meadow Blossom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1619,
+			"name": "Earthroot",
+			"skill": 15,
+			"size": 0.4,
+			"respawn": 300,
+			"loot_id": 1416,
+			"loot": [
+				{
+					"item": 2449,
+					"name": "Earthroot",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				},
+				{
+					"item": 5056,
+					"name": "Root Sample",
+					"count": [
+						1,
+						1
+					],
+					"chance": -40
+				}
+			]
+		},
+		{
+			"id": 1620,
+			"name": "Mageblossom",
+			"skill": 50,
+			"size": 0.3,
+			"respawn": 300,
+			"loot_id": 1417,
+			"loot": [
+				{
+					"item": 785,
+					"name": "Mageblossom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				},
+				{
+					"item": 2452,
+					"name": "Quickthistle",
+					"count": [
+						1,
+						3
+					],
+					"chance": 20
+				},
+				{
+					"item": 5056,
+					"name": "Root Sample",
+					"count": [
+						1,
+						1
+					],
+					"chance": -40
+				}
+			]
+		},
+		{
+			"id": 1621,
+			"name": "Briarthorn",
+			"skill": 70,
+			"size": 0.4,
+			"respawn": 300,
+			"loot_id": 1418,
+			"loot": [
+				{
+					"item": 2450,
+					"name": "Briarthorn",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				},
+				{
+					"item": 2452,
+					"name": "Quickthistle",
+					"count": [
+						1,
+						3
+					],
+					"chance": 40
+				},
+				{
+					"item": 5056,
+					"name": "Root Sample",
+					"count": [
+						1,
+						1
+					],
+					"chance": -40
+				}
+			]
+		},
+		{
+			"id": 2045,
+			"name": "Tanglekelp",
+			"skill": 85,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1733,
+			"loot": [
+				{
+					"item": 3820,
+					"name": "Tanglekelp",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1622,
+			"name": "Bruisewort",
+			"skill": 100,
+			"size": 0.7,
+			"respawn": 300,
+			"loot_id": 1419,
+			"loot": [
+				{
+					"item": 2453,
+					"name": "Bruisewort",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1623,
+			"name": "Wild Ironbloom",
+			"skill": 115,
+			"size": 0.4,
+			"respawn": 300,
+			"loot_id": 1420,
+			"loot": [
+				{
+					"item": 3355,
+					"name": "Wild Ironbloom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1628,
+			"name": "Tomb Moss",
+			"skill": 120,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 1424,
+			"loot": [
+				{
+					"item": 3369,
+					"name": "Tomb Moss",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 1624,
+			"name": "Crownblood",
+			"skill": 125,
+			"size": 0.4,
+			"respawn": 300,
+			"loot_id": 1421,
+			"loot": [
+				{
+					"item": 3356,
+					"name": "Crownblood",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2041,
+			"name": "Heartroot",
+			"skill": 150,
+			"size": 0.6,
+			"respawn": 300,
+			"loot_id": 1730,
+			"loot": [
+				{
+					"item": 3357,
+					"name": "Heartroot",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2042,
+			"name": "Dimleaf",
+			"skill": 160,
+			"size": 0.4,
+			"respawn": 300,
+			"loot_id": 1731,
+			"loot": [
+				{
+					"item": 3818,
+					"name": "Dimleaf",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2046,
+			"name": "Gildthorn",
+			"skill": 170,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 1734,
+			"loot": [
+				{
+					"item": 3821,
+					"name": "Gildthorn",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2043,
+			"name": "Sage's Whisker",
+			"skill": 185,
+			"size": 0.5,
+			"respawn": 300,
+			"loot_id": 1423,
+			"loot": [
+				{
+					"item": 3358,
+					"name": "Sage's Whisker",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2044,
+			"name": "Frostnip",
+			"skill": 195,
+			"size": 0.3,
+			"respawn": 300,
+			"loot_id": 1732,
+			"loot": [
+				{
+					"item": 3819,
+					"name": "Frostnip",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 2866,
+			"name": "Emberbloom",
+			"skill": 205,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 2292,
+			"loot": [
+				{
+					"item": 4625,
+					"name": "Emberbloom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142140,
+			"name": "Violet Lotus",
+			"skill": 210,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 6142,
+			"loot": [
+				{
+					"item": 8153,
+					"name": "Wildvine",
+					"count": [
+						1,
+						1
+					],
+					"chance": 10
+				},
+				{
+					"reference": 12009,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142141,
+			"name": "Weeping Bell",
+			"skill": 220,
+			"size": 1.3,
+			"respawn": 300,
+			"loot_id": 6150,
+			"loot": [
+				{
+					"item": 8836,
+					"name": "Weeping Bell",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142142,
+			"name": "Dawngrass",
+			"skill": 230,
+			"size": 1.8,
+			"respawn": 300,
+			"loot_id": 6151,
+			"loot": [
+				{
+					"reference": 12010,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142143,
+			"name": "Blindweed",
+			"skill": 235,
+			"size": 1.5,
+			"respawn": 300,
+			"loot_id": 6152,
+			"loot": [
+				{
+					"reference": 12011,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142144,
+			"name": "Wraithcap",
+			"skill": 245,
+			"size": 0.3,
+			"respawn": 86400,
+			"loot_id": 6312,
+			"loot": [
+				{
+					"item": 8845,
+					"name": "Wraithcap",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 142145,
+			"name": "Gorebloom",
+			"skill": 250,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 6313,
+			"loot": [
+				{
+					"item": 8846,
+					"name": "Gorebloom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176583,
+			"name": "Golden Sorrel",
+			"skill": 260,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 13945,
+			"loot": [
+				{
+					"reference": 12012,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176584,
+			"name": "Slumberleaf",
+			"skill": 270,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 13946,
+			"loot": [
+				{
+					"reference": 12013,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176586,
+			"name": "Mountain Greysage",
+			"skill": 280,
+			"size": 1.8,
+			"respawn": 300,
+			"loot_id": 13947,
+			"loot": [
+				{
+					"reference": 12014,
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176587,
+			"name": "Blightbloom",
+			"skill": 285,
+			"size": 1.8,
+			"respawn": 300,
+			"loot_id": 13948,
+			"loot": [
+				{
+					"item": 13466,
+					"name": "Blightbloom",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176588,
+			"name": "Rimecap",
+			"skill": 290,
+			"size": 1,
+			"respawn": 300,
+			"loot_id": 13949,
+			"loot": [
+				{
+					"item": 13467,
+					"name": "Rimecap",
+					"count": [
+						1,
+						3
+					],
+					"chance": 100
+				}
+			]
+		},
+		{
+			"id": 176589,
+			"name": "Night Lotus",
+			"skill": 300,
+			"size": 1,
+			"respawn": 3600,
+			"loot_id": 13950,
+			"loot": [
+				{
+					"item": 13468,
+					"name": "Night Lotus",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100
+				}
+			]
+		}
+	]
+}

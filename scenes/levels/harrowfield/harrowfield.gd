@@ -427,6 +427,7 @@ func _build_village() -> void:
 	# out front, where the weaponsmith and the Man-at-Arms trainer stand.
 	Buildings.house(kit, _near(v, Vector2(25, 7), y), Vector3(6, 4.5, 5), 0.0, { "wall": DARK_STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": STONE }, Vector2.ZERO)
 	Props.box(village, _near(v, Vector2(21.6, 7), y), Vector3(0.8, 1.4, 2.4), Color(0.12, 0.1, 0.1))
+	add_forge(_near(v, Vector2(21.6, 7), y))
 	torch(village, _near(v, Vector2(21.4, 7), y + 0.9), 5.0)
 	Props.box(village, _near(v, Vector2(19.5, 11), y), Vector3(0.7, 0.8, 0.5), DARK_STONE)
 	Props.box(village, _near(v, Vector2(19.5, 11), y + 0.8), Vector3(1.1, 0.3, 0.5), Color(0.25, 0.25, 0.28), 0.0, false)

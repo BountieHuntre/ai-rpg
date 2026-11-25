@@ -14,7 +14,7 @@
 					"proc_chance": 101,
 					"icon_id": 1822,
 					"prevention": 1,
-					"duration": 10,
+					"duration": 30,
 					"range": 100,
 					"attributes_ex": [
 						"0x8",
@@ -24,16 +24,8 @@
 					"effects": [
 						{
 							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -5,
-							"stat": "strength",
-							"target": "enemy"
-						},
-						{
-							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -5,
-							"stat": "agility",
+							"aura": "attack_power",
+							"value": -2,
 							"target": "enemy"
 						}
 					],
@@ -43,6 +35,7 @@
 					"id": 9452,
 					"name": "Righteous Rebuke",
 					"rank": 1,
+					"text": "Gives your damaging melee attacks a {chance}% chance to reduce the target's Attack Power by {trigger1:amount1} for 30 sec.",
 					"proc_chance": 100,
 					"icon_id": 1798,
 					"duration": "until_cancelled",
@@ -67,8 +60,7 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 3,
-						"chance": 0,
+						"chance": 15,
 						"cooldown": 0,
 						"family": 0,
 						"family_mask": 0,
@@ -81,6 +73,7 @@
 					"id": 26016,
 					"name": "Righteous Rebuke",
 					"rank": 2,
+					"text": "Gives your damaging melee attacks a {chance}% chance to reduce the target's Attack Power by {trigger1:amount1} for 30 sec.",
 					"proc_chance": 100,
 					"icon_id": 1798,
 					"duration": "until_cancelled",
@@ -124,16 +117,8 @@
 					"effects": [
 						{
 							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -10,
-							"stat": "strength",
-							"target": "enemy"
-						},
-						{
-							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -10,
-							"stat": "agility",
+							"aura": "attack_power",
+							"value": -4,
 							"target": "enemy"
 						}
 					],
@@ -158,16 +143,8 @@
 					"effects": [
 						{
 							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -15,
-							"stat": "strength",
-							"target": "enemy"
-						},
-						{
-							"type": "apply_aura",
-							"aura": "total_stat_percent",
-							"value": -15,
-							"stat": "agility",
+							"aura": "attack_power",
+							"value": -6,
 							"target": "enemy"
 						}
 					],
@@ -177,6 +154,7 @@
 					"id": 26021,
 					"name": "Righteous Rebuke",
 					"rank": 3,
+					"text": "Gives your damaging melee attacks a {chance}% chance to reduce the target's Attack Power by {trigger1:amount1} for 30 sec.",
 					"proc_chance": 100,
 					"icon_id": 1798,
 					"duration": "until_cancelled",
@@ -3286,6 +3264,7 @@
 					"id": 9799,
 					"name": "Tooth for a Tooth",
 					"rank": 1,
+					"text": "All critical strikes against you cause {amount1}% of the damage taken to the attacker as well.",
 					"proc_chance": 100,
 					"icon_id": 1820,
 					"duration": "until_cancelled",
@@ -3296,19 +3275,18 @@
 						"hide_in_combat_log"
 					],
 					"proc_on": [
-						"harmful_spell_taken"
+						"any_damage_taken"
 					],
 					"effects": [
 						{
 							"type": "apply_aura",
 							"aura": "dummy",
-							"value": 15,
+							"value": 5,
 							"target": "self"
 						}
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -3322,6 +3300,7 @@
 					"id": 25988,
 					"name": "Tooth for a Tooth",
 					"rank": 2,
+					"text": "All critical strikes against you cause {amount1}% of the damage taken to the attacker as well.",
 					"proc_chance": 100,
 					"icon_id": 1820,
 					"duration": "until_cancelled",
@@ -3332,13 +3311,13 @@
 						"hide_in_combat_log"
 					],
 					"proc_on": [
-						"harmful_spell_taken"
+						"any_damage_taken"
 					],
 					"effects": [
 						{
 							"type": "apply_aura",
 							"aura": "dummy",
-							"value": 30,
+							"value": 10,
 							"target": "self"
 						}
 					],
@@ -4968,6 +4947,7 @@
 				{
 					"id": 20049,
 					"name": "Avenging Zeal",
+					"text": "Physical and Holy damage increased by {trigger1:amount1}% for {trigger1:duration}. Can stack up to 5 times.",
 					"rank": 1,
 					"proc_chance": 100,
 					"icon_id": 84,
@@ -5001,7 +4981,6 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -5014,6 +4993,7 @@
 				{
 					"id": 20056,
 					"name": "Avenging Zeal",
+					"text": "Physical and Holy damage increased by {trigger1:amount1}% for {trigger1:duration}. Can stack up to 5 times.",
 					"rank": 2,
 					"proc_chance": 100,
 					"icon_id": 84,
@@ -5050,6 +5030,7 @@
 				{
 					"id": 20057,
 					"name": "Avenging Zeal",
+					"text": "Physical and Holy damage increased by {trigger1:amount1}% for {trigger1:duration}. Can stack up to 5 times.",
 					"rank": 3,
 					"proc_chance": 100,
 					"icon_id": 84,
@@ -5078,78 +5059,6 @@
 							"value": 0,
 							"dice": 0,
 							"trigger": 20053,
-							"target": "self"
-						}
-					],
-					"book_tab": 2
-				},
-				{
-					"id": 20058,
-					"name": "Avenging Zeal",
-					"rank": 4,
-					"proc_chance": 100,
-					"icon_id": 84,
-					"duration": "until_cancelled",
-					"attributes": [
-						"ability",
-						"passive",
-						"hidden",
-						"hide_in_combat_log"
-					],
-					"attributes_ex3": [
-						"0x4000000"
-					],
-					"proc_on": [
-						"melee_hit_done",
-						"melee_ability_done",
-						"ranged_hit_done",
-						"ranged_ability_done",
-						"harmful_area_done",
-						"harmful_spell_done"
-					],
-					"effects": [
-						{
-							"type": "apply_aura",
-							"aura": "proc_trigger_spell",
-							"value": 0,
-							"dice": 0,
-							"trigger": 20054,
-							"target": "self"
-						}
-					],
-					"book_tab": 2
-				},
-				{
-					"id": 20059,
-					"name": "Avenging Zeal",
-					"rank": 5,
-					"proc_chance": 100,
-					"icon_id": 84,
-					"duration": "until_cancelled",
-					"attributes": [
-						"ability",
-						"passive",
-						"hidden",
-						"hide_in_combat_log"
-					],
-					"attributes_ex3": [
-						"0x4000000"
-					],
-					"proc_on": [
-						"melee_hit_done",
-						"melee_ability_done",
-						"ranged_hit_done",
-						"ranged_ability_done",
-						"harmful_area_done",
-						"harmful_spell_done"
-					],
-					"effects": [
-						{
-							"type": "apply_aura",
-							"aura": "proc_trigger_spell",
-							"value": 0,
-							"dice": 0,
-							"trigger": 20055,
 							"target": "self"
 						}
 					],
@@ -5549,9 +5458,9 @@
 						{
 							"type": "apply_aura",
 							"aura": "percent_modifier",
-							"value": -3,
+							"value": -2,
 							"modifies": "cost",
-							"affects": 176161280,
+							"affects": "instant",
 							"target": "self"
 						}
 					],
@@ -5575,9 +5484,9 @@
 						{
 							"type": "apply_aura",
 							"aura": "percent_modifier",
-							"value": -6,
+							"value": -4,
 							"modifies": "cost",
-							"affects": 176161280,
+							"affects": "instant",
 							"target": "self"
 						}
 					],
@@ -5601,9 +5510,9 @@
 						{
 							"type": "apply_aura",
 							"aura": "percent_modifier",
-							"value": -9,
+							"value": -6,
 							"modifies": "cost",
-							"affects": 176161280,
+							"affects": "instant",
 							"target": "self"
 						}
 					],
@@ -5627,9 +5536,9 @@
 						{
 							"type": "apply_aura",
 							"aura": "percent_modifier",
-							"value": -12,
+							"value": -8,
 							"modifies": "cost",
-							"affects": 176161280,
+							"affects": "instant",
 							"target": "self"
 						}
 					],
@@ -5653,9 +5562,9 @@
 						{
 							"type": "apply_aura",
 							"aura": "percent_modifier",
-							"value": -15,
+							"value": -10,
 							"modifies": "cost",
-							"affects": 176161280,
+							"affects": "instant",
 							"target": "self"
 						}
 					],
@@ -5671,6 +5580,7 @@
 					"id": 20111,
 					"name": "Two-Handed Craft",
 					"rank": 1,
+					"text": "Increases the Physical and Holy damage you deal by {amount1}%, and reduces all threat you generate by {amount2}% while a two-handed melee weapon is equipped.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 1635,
@@ -5697,8 +5607,15 @@
 							"aura": "damage_percent_done",
 							"value": 2,
 							"schools": [
-								"physical"
+								"physical",
+								"holy"
 							],
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "threat",
+							"value": -7,
 							"target": "self"
 						}
 					],
@@ -5708,6 +5625,7 @@
 					"id": 20112,
 					"name": "Two-Handed Craft",
 					"rank": 2,
+					"text": "Increases the Physical and Holy damage you deal by {amount1}%, and reduces all threat you generate by {amount2}% while a two-handed melee weapon is equipped.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 1635,
@@ -5734,8 +5652,15 @@
 							"aura": "damage_percent_done",
 							"value": 4,
 							"schools": [
-								"physical"
+								"physical",
+								"holy"
 							],
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "threat",
+							"value": -14,
 							"target": "self"
 						}
 					],
@@ -5745,6 +5670,7 @@
 					"id": 20113,
 					"name": "Two-Handed Craft",
 					"rank": 3,
+					"text": "Increases the Physical and Holy damage you deal by {amount1}%, and reduces all threat you generate by {amount2}% while a two-handed melee weapon is equipped.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 1635,
@@ -5771,8 +5697,15 @@
 							"aura": "damage_percent_done",
 							"value": 6,
 							"schools": [
-								"physical"
+								"physical",
+								"holy"
 							],
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "threat",
+							"value": -20,
 							"target": "self"
 						}
 					],
@@ -6017,6 +5950,7 @@
 					"id": 20117,
 					"name": "Righteous Certainty",
 					"rank": 1,
+					"text": "Improves your chance to get a critical strike with all spells and attacks by {amount1}%.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 204,
@@ -6027,25 +5961,17 @@
 						"hidden",
 						"hide_in_combat_log"
 					],
-					"requires_item": "weapon",
-					"item_types": [
-						"axe",
-						"axe_2h",
-						"mace",
-						"mace_2h",
-						"polearm",
-						"sword",
-						"sword_2h",
-						"staff",
-						"fist",
-						"dagger",
-						"spear"
-					],
 					"effects": [
 						{
 							"type": "apply_aura",
 							"aura": "crit_percent",
-							"value": 1,
+							"value": 2,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance",
+							"value": 2,
 							"target": "self"
 						}
 					],
@@ -6055,6 +5981,7 @@
 					"id": 20118,
 					"name": "Righteous Certainty",
 					"rank": 2,
+					"text": "Improves your chance to get a critical strike with all spells and attacks by {amount1}%.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 204,
@@ -6065,25 +5992,17 @@
 						"hidden",
 						"hide_in_combat_log"
 					],
-					"requires_item": "weapon",
-					"item_types": [
-						"axe",
-						"axe_2h",
-						"mace",
-						"mace_2h",
-						"polearm",
-						"sword",
-						"sword_2h",
-						"staff",
-						"fist",
-						"dagger",
-						"spear"
-					],
 					"effects": [
 						{
 							"type": "apply_aura",
 							"aura": "crit_percent",
-							"value": 2,
+							"value": 4,
+							"target": "self"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "spell_crit_chance",
+							"value": 4,
 							"target": "self"
 						}
 					],
@@ -6093,6 +6012,7 @@
 					"id": 20119,
 					"name": "Righteous Certainty",
 					"rank": 3,
+					"text": "Improves your chance to get a critical strike with all spells and attacks by {amount1}%.",
 					"level": 1,
 					"proc_chance": 101,
 					"icon_id": 204,
@@ -6103,101 +6023,17 @@
 						"hidden",
 						"hide_in_combat_log"
 					],
-					"requires_item": "weapon",
-					"item_types": [
-						"axe",
-						"axe_2h",
-						"mace",
-						"mace_2h",
-						"polearm",
-						"sword",
-						"sword_2h",
-						"staff",
-						"fist",
-						"dagger",
-						"spear"
-					],
 					"effects": [
 						{
 							"type": "apply_aura",
 							"aura": "crit_percent",
-							"value": 3,
+							"value": 6,
 							"target": "self"
-						}
-					],
-					"book_tab": 2
-				},
-				{
-					"id": 20120,
-					"name": "Righteous Certainty",
-					"rank": 4,
-					"level": 1,
-					"proc_chance": 101,
-					"icon_id": 204,
-					"duration": "until_cancelled",
-					"attributes": [
-						"ability",
-						"passive",
-						"hidden",
-						"hide_in_combat_log"
-					],
-					"requires_item": "weapon",
-					"item_types": [
-						"axe",
-						"axe_2h",
-						"mace",
-						"mace_2h",
-						"polearm",
-						"sword",
-						"sword_2h",
-						"staff",
-						"fist",
-						"dagger",
-						"spear"
-					],
-					"effects": [
+						},
 						{
 							"type": "apply_aura",
-							"aura": "crit_percent",
-							"value": 4,
-							"target": "self"
-						}
-					],
-					"book_tab": 2
-				},
-				{
-					"id": 20121,
-					"name": "Righteous Certainty",
-					"rank": 5,
-					"level": 1,
-					"proc_chance": 101,
-					"icon_id": 204,
-					"duration": "until_cancelled",
-					"attributes": [
-						"ability",
-						"passive",
-						"hidden",
-						"hide_in_combat_log"
-					],
-					"requires_item": "weapon",
-					"item_types": [
-						"axe",
-						"axe_2h",
-						"mace",
-						"mace_2h",
-						"polearm",
-						"sword",
-						"sword_2h",
-						"staff",
-						"fist",
-						"dagger",
-						"spear"
-					],
-					"effects": [
-						{
-							"type": "apply_aura",
-							"aura": "crit_percent",
-							"value": 5,
+							"aura": "spell_crit_chance",
+							"value": 6,
 							"target": "self"
 						}
 					],
@@ -6249,7 +6085,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -7598,8 +7433,7 @@
 					},
 					"book_tab": 1,
 					"proc": {
-						"ppm": 5,
-						"chance": 0,
+						"chance": 25,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -7663,8 +7497,7 @@
 					},
 					"book_tab": 0,
 					"proc": {
-						"ppm": 20,
-						"chance": 0,
+						"chance": 100,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -7874,8 +7707,7 @@
 					},
 					"book_tab": 0,
 					"proc": {
-						"ppm": 20,
-						"chance": 0,
+						"chance": 100,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -8094,7 +7926,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -9578,7 +9409,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 10,
@@ -10059,7 +9889,6 @@
 					],
 					"book_tab": 0,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -10855,8 +10684,7 @@
 					],
 					"book_tab": 2,
 					"proc": {
-						"ppm": 7,
-						"chance": 0,
+						"chance": 35,
 						"cooldown": 3,
 						"family": 0,
 						"family_mask": 0,
@@ -11744,7 +11572,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -11993,7 +11820,6 @@
 					],
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -12752,7 +12578,6 @@
 					},
 					"book_tab": 1,
 					"proc": {
-						"ppm": 0,
 						"chance": 0,
 						"cooldown": 0,
 						"family": 0,
@@ -13175,6 +13000,1023 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "Radiant Strike",
+			"tags": [
+				"radiant_strike"
+			],
+			"ranks": [
+				{
+					"id": 950033,
+					"name": "Radiant Strike",
+					"rank": 1,
+					"level": 6,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 5,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 25,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								11,
+								14
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 6,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950034,
+					"name": "Radiant Strike",
+					"rank": 2,
+					"level": 12,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 9,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 29,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								15,
+								20
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 12,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950035,
+					"name": "Radiant Strike",
+					"rank": 3,
+					"level": 20,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 12,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 32,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								18,
+								22
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950036,
+					"name": "Radiant Strike",
+					"rank": 4,
+					"level": 28,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 14,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 36,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								23,
+								29
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 6,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950037,
+					"name": "Radiant Strike",
+					"rank": 5,
+					"level": 36,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 16,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 39,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								32,
+								40
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 36,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950038,
+					"name": "Radiant Strike",
+					"rank": 6,
+					"level": 44,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 17,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 43,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								54,
+								67
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 44,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950039,
+					"name": "Radiant Strike",
+					"rank": 7,
+					"level": 52,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 19,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 46,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								74,
+								91
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 52,
+						"price": 43
+					},
+					"book_tab": 2
+				},
+				{
+					"id": 950040,
+					"name": "Radiant Strike",
+					"rank": 8,
+					"level": 60,
+					"school": "holy",
+					"damage_class": "melee",
+					"cost": 20,
+					"range": 5,
+					"gcd": 1.5,
+					"family": 10,
+					"cooldown": 10,
+					"icon": "verdict",
+					"text": "Strikes an enemy for {amount1}% of your weapon damage plus {amount2} Holy damage.",
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 50,
+							"target": "enemy"
+						},
+						{
+							"type": "school_damage",
+							"value": [
+								97,
+								121
+							],
+							"target": "enemy"
+						}
+					],
+					"trainer": {
+						"level": 60,
+						"price": 43
+					},
+					"book_tab": 2
+				}
+			]
+		},
+		{
+			"name": "Radiant Arbiter",
+			"ranks": [
+				{
+					"id": 950041,
+					"name": "Radiant Arbiter",
+					"rank": 1,
+					"family": 10,
+					"duration": "until_cancelled",
+					"attributes": [
+						"ability",
+						"passive",
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "percent_modifier",
+							"value": 20,
+							"modifies": "damage",
+							"affects": "Radiant Strike",
+							"target": "self"
+						}
+					],
+					"book_tab": 2
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Verdict of Insight Intermediate",
+			"ranks": [
+				{
+					"id": 1826,
+					"name": "Verdict of Insight Intermediate",
+					"level": 99,
+					"proc_chance": 101,
+					"icon_id": 262,
+					"range": 100,
+					"power": "energy",
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy",
+							"radius": 100
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Verdict of Mending Intermediate",
+			"ranks": [
+				{
+					"id": 5373,
+					"name": "Verdict of Mending Intermediate",
+					"level": 1,
+					"proc_chance": 101,
+					"icon_id": 237,
+					"range": 100,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "enemy",
+							"radius": 100
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Dummy Trigger",
+			"ranks": [
+				{
+					"id": 18350,
+					"name": "Dummy Trigger",
+					"proc_chance": 101,
+					"icon_id": 1,
+					"range": 50000,
+					"attributes": [
+						"hidden",
+						"hide_in_combat_log"
+					],
+					"attributes_ex": [
+						"0x400",
+						"0x10000000"
+					],
+					"attributes_ex2": [
+						"0x4"
+					],
+					"effects": [
+						{
+							"type": "dummy",
+							"value": 0,
+							"dice": 0,
+							"target": "any_unit"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Hallowed Ransom (triggered)",
+			"ranks": [
+				{
+					"id": 19753,
+					"name": "Hallowed Ransom",
+					"school": "holy",
+					"level": 30,
+					"base_level": 30,
+					"proc_chance": 101,
+					"icon_id": 58,
+					"duration": 180,
+					"range": 40,
+					"attributes": [
+						"not_shapeshifted",
+						"keeps_sheath",
+						"castable_while_dead",
+						"ignores_invulnerability"
+					],
+					"attributes_ex": [
+						"0x8000"
+					],
+					"attributes_ex2": [
+						"0x8"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "school_immunity",
+							"value": 0,
+							"schools": [
+								"physical",
+								"holy",
+								"fire",
+								"nature",
+								"frost",
+								"shadow",
+								"arcane"
+							],
+							"target": "party_or_raid_member"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "party_or_raid_member"
+						},
+						{
+							"type": "apply_aura",
+							"aura": "unattackable",
+							"value": 0,
+							"target": "party_or_raid_member"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Avenging Zeal (triggered)",
+			"ranks": [
+				{
+					"id": 20050,
+					"name": "Avenging Zeal",
+					"text": "Physical and Holy damage increased by {amount1}% for {duration}. Can stack up to 5 times.",
+					"proc_chance": 101,
+					"icon_id": 84,
+					"prevention": 2,
+					"duration": 30,
+					"stacks": 5,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 1,
+							"schools": [
+								"physical",
+								"holy"
+							],
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20052,
+					"name": "Avenging Zeal",
+					"proc_chance": 101,
+					"stacks": 5,
+					"icon_id": 84,
+					"prevention": 2,
+					"duration": 30,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 2,
+							"schools": [
+								"physical",
+								"holy"
+							],
+							"target": "self"
+						}
+					],
+					"text": "Physical and Holy damage increased by {amount1}% for {duration}. Can stack up to 5 times."
+				},
+				{
+					"id": 20053,
+					"name": "Avenging Zeal",
+					"proc_chance": 101,
+					"icon_id": 84,
+					"stacks": 5,
+					"prevention": 2,
+					"duration": 30,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "damage_percent_done",
+							"value": 3,
+							"schools": [
+								"physical",
+								"holy"
+							],
+							"target": "self"
+						}
+					],
+					"text": "Physical and Holy damage increased by {amount1}% for {duration}. Can stack up to 5 times."
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Steadfast Guard (triggered)",
+			"ranks": [
+				{
+					"id": 20128,
+					"name": "Steadfast Guard",
+					"proc_chance": 100,
+					"charges": 5,
+					"icon_id": 28,
+					"duration": 10,
+					"proc_on": [
+						"melee_hit_taken",
+						"melee_ability_taken",
+						"ranged_hit_taken",
+						"ranged_ability_taken"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "block_percent",
+							"value": 6,
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 64
+					}
+				},
+				{
+					"id": 20131,
+					"name": "Steadfast Guard",
+					"proc_chance": 100,
+					"charges": 5,
+					"icon_id": 28,
+					"duration": 10,
+					"proc_on": [
+						"melee_hit_taken",
+						"melee_ability_taken",
+						"ranged_hit_taken",
+						"ranged_ability_taken"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "block_percent",
+							"value": 12,
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 64
+					}
+				},
+				{
+					"id": 20132,
+					"name": "Steadfast Guard",
+					"proc_chance": 100,
+					"charges": 5,
+					"icon_id": 28,
+					"duration": 10,
+					"proc_on": [
+						"melee_hit_taken",
+						"melee_ability_taken",
+						"ranged_hit_taken",
+						"ranged_ability_taken"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "block_percent",
+							"value": 18,
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 64
+					}
+				},
+				{
+					"id": 20133,
+					"name": "Steadfast Guard",
+					"proc_chance": 100,
+					"charges": 5,
+					"icon_id": 28,
+					"duration": 10,
+					"proc_on": [
+						"melee_hit_taken",
+						"melee_ability_taken",
+						"ranged_hit_taken",
+						"ranged_ability_taken"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "block_percent",
+							"value": 24,
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 64
+					}
+				},
+				{
+					"id": 20134,
+					"name": "Steadfast Guard",
+					"proc_chance": 100,
+					"charges": 5,
+					"icon_id": 28,
+					"duration": 10,
+					"proc_on": [
+						"melee_hit_taken",
+						"melee_ability_taken",
+						"ranged_hit_taken",
+						"ranged_ability_taken"
+					],
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "block_percent",
+							"value": 30,
+							"target": "self"
+						}
+					],
+					"proc": {
+						"chance": 0,
+						"cooldown": 0,
+						"family": 0,
+						"family_mask": 0,
+						"school": 0,
+						"flags": 0,
+						"ex": 64
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Oath of Mending (triggered)",
+			"ranks": [
+				{
+					"id": 20167,
+					"name": "Oath of Mending",
+					"rank": 1,
+					"school": "holy",
+					"level": 30,
+					"base_level": 30,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 299,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"value": 39,
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20333,
+					"name": "Oath of Mending",
+					"rank": 2,
+					"school": "holy",
+					"level": 40,
+					"base_level": 40,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 299,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"value": 53,
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20334,
+					"name": "Oath of Mending",
+					"rank": 3,
+					"school": "holy",
+					"level": 50,
+					"base_level": 50,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 299,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"value": 76,
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20340,
+					"name": "Oath of Mending",
+					"rank": 4,
+					"school": "holy",
+					"level": 60,
+					"base_level": 60,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 299,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "heal",
+							"value": 94,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Oath of Insight (triggered)",
+			"ranks": [
+				{
+					"id": 20168,
+					"name": "Oath of Insight",
+					"rank": 1,
+					"school": "holy",
+					"level": 38,
+					"base_level": 38,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 206,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "energize",
+							"value": 50,
+							"power": "mana",
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20350,
+					"name": "Oath of Insight",
+					"rank": 2,
+					"school": "holy",
+					"level": 48,
+					"base_level": 48,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 206,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "energize",
+							"value": 71,
+							"power": "mana",
+							"target": "self"
+						}
+					]
+				},
+				{
+					"id": 20351,
+					"name": "Oath of Insight",
+					"rank": 3,
+					"school": "holy",
+					"level": 58,
+					"base_level": 58,
+					"family": 10,
+					"family_flags": 262144,
+					"icon_id": 206,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex2": [
+						"0x20000000"
+					],
+					"effects": [
+						{
+							"type": "energize",
+							"value": 90,
+							"power": "mana",
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Stun",
+			"ranks": [
+				{
+					"id": 20170,
+					"name": "Stun",
+					"rank": 1,
+					"school": "holy",
+					"damage_class": "magic",
+					"level": 22,
+					"base_level": 22,
+					"proc_chance": 101,
+					"icon_id": 15,
+					"duration": 2,
+					"range": 100,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex": [
+						"0x8",
+						"0x80"
+					],
+					"mechanic": "stun",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "stun",
+							"value": 0,
+							"target": "enemy"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Reckoner's Fury (triggered)",
+			"ranks": [
+				{
+					"id": 20178,
+					"name": "Reckoner's Fury",
+					"proc_chance": 101,
+					"icon_id": 239,
+					"effects": [
+						{
+							"type": "add_extra_attacks",
+							"value": 1,
+							"target": "self"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Last Rite (triggered)",
+			"ranks": [
+				{
+					"id": 20233,
+					"name": "Last Rite",
+					"rank": 1,
+					"school": "holy",
+					"proc_chance": 101,
+					"icon_id": 79,
+					"duration": 120,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 15,
+							"schools": [
+								"physical"
+							],
+							"target": "friend"
+						}
+					]
+				},
+				{
+					"id": 20236,
+					"name": "Last Rite",
+					"rank": 2,
+					"school": "holy",
+					"proc_chance": 101,
+					"icon_id": 79,
+					"duration": 120,
+					"dispel": "magic",
+					"effects": [
+						{
+							"type": "apply_aura",
+							"aura": "base_resistance_percent",
+							"value": 30,
+							"schools": [
+								"physical"
+							],
+							"target": "friend"
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Oath of Dominion (triggered)",
+			"ranks": [
+				{
+					"id": 20424,
+					"name": "Oath of Dominion",
+					"school": "holy",
+					"damage_class": "melee",
+					"icon_id": 561,
+					"range": 5,
+					"attributes": [
+						"keeps_sheath"
+					],
+					"attributes_ex3": [
+						"0x200"
+					],
+					"effects": [
+						{
+							"type": "weapon_percent_damage",
+							"value": 70,
+							"target": "enemy"
+						}
+					],
+					"coefficients": {
+						"direct": 0.29,
+						"dot": 0
+					}
+				}
+			],
+			"chain": false
 		}
 	],
 	"talents": [
@@ -13549,16 +14391,12 @@
 			"order": 2,
 			"talents": [
 				{
-					"name": "Improved Boon of Strength",
-					"id": 1401,
-					"tier": 0,
+					"name": "Radiant Arbiter",
+					"id": 9500,
+					"tier": 3,
 					"column": 1,
 					"ranks": [
-						20042,
-						20045,
-						20046,
-						20047,
-						20048
+						950041
 					]
 				},
 				{
@@ -13585,10 +14423,10 @@
 					]
 				},
 				{
-					"name": "Improved Oath of the Vanguard",
+					"name": "Replenishing Verdict",
 					"id": 1464,
 					"tier": 1,
-					"column": 1,
+					"column": 2,
 					"ranks": [
 						20335,
 						20336,
@@ -13598,8 +14436,8 @@
 				{
 					"name": "Deflection",
 					"id": 1403,
-					"tier": 1,
-					"column": 2,
+					"tier": 0,
+					"column": 1,
 					"ranks": [
 						20060,
 						20061,
@@ -13622,14 +14460,12 @@
 				{
 					"name": "Righteous Certainty",
 					"id": 1411,
-					"tier": 2,
+					"tier": 1,
 					"column": 1,
 					"ranks": [
 						20117,
 						20118,
-						20119,
-						20120,
-						20121
+						20119
 					]
 				},
 				{
@@ -13662,20 +14498,10 @@
 					]
 				},
 				{
-					"name": "Improved Thorned Presence",
-					"id": 1405,
-					"tier": 3,
-					"column": 2,
-					"ranks": [
-						20091,
-						20092
-					]
-				},
-				{
 					"name": "Two-Handed Craft",
 					"id": 1410,
-					"tier": 4,
-					"column": 0,
+					"tier": 3,
+					"column": 3,
 					"ranks": [
 						20111,
 						20112,
@@ -13683,37 +14509,26 @@
 					]
 				},
 				{
-					"name": "Hallowed Presence",
-					"id": 1409,
+					"name": "Avenging Zeal",
+					"id": 1402,
 					"tier": 4,
 					"column": 2,
 					"ranks": [
-						20218
-					]
-				},
-				{
-					"name": "Avenging Zeal",
-					"id": 1402,
-					"tier": 5,
-					"column": 1,
-					"ranks": [
 						20049,
 						20056,
-						20057,
-						20058,
-						20059
+						20057
 					],
 					"prereq": [
 						[
-							1411,
-							5
+							1481,
+							1
 						]
 					]
 				},
 				{
 					"name": "Contrition",
 					"id": 1441,
-					"tier": 6,
+					"tier": 4,
 					"column": 1,
 					"ranks": [
 						20066

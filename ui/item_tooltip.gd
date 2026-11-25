@@ -15,6 +15,17 @@ const COMPARE_HEADER := Color(0.5, 0.5, 0.5)
 ## Pinned to the bottom right of the screen instead of following the mouse,
 ## as classic's tooltip for units in the world.
 var anchored := false
+## The item any tooltip shows now (its entry), or 0: what Ctrl+Alt+click
+## gives in developer runs (CombatHud._input).
+static var hovered_item := 0
+
+
+## Over every window, the bags (InventoryUI, z 1) included.
+const Z_INDEX := 2
+
+
+func _init() -> void:
+	z_index = Z_INDEX
 
 var _rows := VBoxContainer.new()
 var _ui_scale := 1.0
@@ -33,6 +44,9 @@ func setup(ui_scale: float) -> void:
 		_style(panel)
 		# Placed by hand beside the main panel, not laid out inside it.
 		panel.top_level = true
+		# Its own z, as a top-level panel doesn't take the tooltip's: over
+		# every window, as the tooltip is.
+		panel.z_index = Z_INDEX
 		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var rows := VBoxContainer.new()
 		_setup_rows(rows)
@@ -63,6 +77,7 @@ func _setup_rows(rows: VBoxContainer) -> void:
 ## slots it would go in; equipment slots themselves pass false.
 func show_item(item: Dictionary, soulbound := false, current_durability := -1, compare := true, count := 1) -> void:
 	var lines: Array = [] if item.is_empty() else ItemDB.tooltip(item, soulbound, current_durability, count)
+	# Set after show_lines below clears it.
 	# Nothing equipped in its slot: everything it gives is a gain.
 	if compare and not item.is_empty() and Inventory.SLOTS_FOR_TYPE.has(int(item.get("InventoryType", 0))) and equipped_for(item).is_empty():
 		var gains := ItemDB.stat_change_lines(item, {})
@@ -70,23 +85,61 @@ func show_item(item: Dictionary, soulbound := false, current_durability := -1, c
 			lines.append(["Equipping this item will give:", "", COMPARE_HEADER])
 			lines.append_array(gains)
 	show_lines(lines)
+	if visible:
+		hovered_item = int(item.get("entry", 0))
 	if visible and compare:
 		_show_compare(item)
 
 
 ## Shows rows of [left text, right text, color], or hides for an empty list.
 func show_lines(lines: Array) -> void:
+	hovered_item = 0
 	for panel in _compare:
 		panel.visible = false
 	# While the camera drags, the captured mouse reads as the screen centre,
 	# which can sit over a window's rows. No tooltips until the drag ends.
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		lines = []
+	var was_visible := visible
 	visible = not lines.is_empty()
 	if not visible:
 		return
+	# The same tooltip again with something changed (a buff's time left
+	# counting down): only the labels' text, so it never blinks out while new
+	# rows are laid out.
+	if was_visible and _update_in_place(_rows, lines):
+		return
 	_fill(_rows, lines)
 	reset_size()
+
+
+## Sets the shown rows' text and colours to `lines` when they have the same
+## shape (as many lines, each with or without its right-hand text). Returns
+## whether it could.
+func _update_in_place(rows: VBoxContainer, lines: Array) -> bool:
+	var shown := rows.get_children()
+	if shown.size() != lines.size() or lines.is_empty():
+		return false
+	# Only the same tooltip refreshing (its title line unchanged); another one
+	# is laid out afresh for its own width.
+	if (shown[0].get_child(0) as Label).text != str(lines[0][0]):
+		return false
+	for i in lines.size():
+		var line: Array = lines[i]
+		if (shown[i] as Node).is_queued_for_deletion() or shown[i].get_child_count() != (1 if str(line[1]).is_empty() else 2):
+			return false
+	for i in lines.size():
+		var line: Array = lines[i]
+		var left := shown[i].get_child(0) as Label
+		if left.text != str(line[0]):
+			left.text = str(line[0])
+		left.add_theme_color_override("font_color", line[2])
+		if shown[i].get_child_count() == 2:
+			var right := shown[i].get_child(1) as Label
+			if right.text != str(line[1]):
+				right.text = str(line[1])
+			right.add_theme_color_override("font_color", line[3] if line.size() > 3 else line[2])
+	return true
 
 
 func _show_compare(item: Dictionary) -> void:
@@ -94,6 +147,9 @@ func _show_compare(item: Dictionary) -> void:
 	for i in mini(stacks.size(), _compare.size()):
 		var stack: Dictionary = stacks[i]
 		var equipped := ItemDB.get_item(stack.id)
+		# Its enchant too (Enchanting).
+		if stack.has("enchant"):
+			equipped = equipped.merged({ "_enchant": int(stack.enchant) })
 		var lines: Array = [["Currently Equipped", "", COMPARE_HEADER]]
 		lines.append_array(ItemDB.tooltip(equipped, stack.get("bound", false), int(stack.get("durability", -1))))
 		# What swapping this one for the hovered item would change, green for

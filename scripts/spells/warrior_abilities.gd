@@ -322,6 +322,10 @@ func _melee_ability(spell: Dictionary, target: Combatant) -> bool:
 	for i in 3:
 		if int(spell.get("Effect%d" % (i + 1), 0)) == SpellDB.EFFECT_SCHOOL_DAMAGE:
 			damage += SpellDB.effect_value(spell, i, _unit.profile.level, _combatant)
+	# Weapon damage effects (a design's weapon_percent_damage...): a weapon hit.
+	var weapon := SpellDB.weapon_strike_damage(spell, me, _unit.profile.level, _normal_speed())
+	if weapon >= 0.0:
+		damage += weapon
 	var landed := false
 	if damage > 0.0:
 		landed = me.strike(target, damage, true, spell)

@@ -134,6 +134,26 @@ VENDORS = [152, 1213, 295, 74, 54,
 # Defias Rogue Wizard, the only helm a low-level character can find.
 # creature_template entry -> [(item, chance)].
 EXTRA_LOOT = {116: [(7997, 2.0)], 474: [(7997, 2.0)]}
+# Every beast skinned for its leather is skinnable (the game's own: the dump
+# leaves some without skinning loot, the starting zones' Young and Timber
+# Wolves and Young Shadecats, and the swoops). Families: wolf, cat, bear,
+# boar, crocolisk, carrion bird, gorilla, raptor, tallstrider, scorpid,
+# turtle, bat, hyena; not spiders, crabs or owls, which give no leather.
+# Those without any take the dump's own generic tables by level, as it gives
+# Small Crag Boars and Thistle Boars: Ruined Leather Scraps below 5, light
+# leather and hide to 9, medium from 10.
+SKINNED_FAMILIES = (1, 2, 4, 5, 6, 7, 9, 11, 12, 20, 21, 24, 25)
+GENERIC_SKINNING = ((5, 100008), (10, 100007), (999, 100006))
+
+
+def fill_skinning(creatures):
+    for creature in creatures.values():
+        if int(creature.get("CreatureType", 0)) != 1 or int(creature.get("Family", 0)) not in SKINNED_FAMILIES:
+            continue
+        if int(creature.get("SkinningLootId", 0)) != 0:
+            continue
+        level = int(creature.get("MinLevel", 1))
+        creature["SkinningLootId"] = next(table for below, table in GENERIC_SKINNING if level < below)
 
 # Quests whose rules (objectives, level, XP, money, rewards, chain) the game's
 # own quests are built on. Titles, text and quest givers are the game's own,
@@ -302,6 +322,38 @@ PET_TRAINER_LEFT_OUT = {"Pet Aggression", "Pet Hardiness", "Pet Recovery", "Pet 
 # The Ranger's pets. Peria Lamenur, Pet Trainer: the abilities a Ranger buys
 # to teach (Growl, Great Stamina, Natural Armor, the resistances).
 PET_TRAINER = 2878
+# The professions in the game, by their skill lines: their trainer lists (every
+# classic trainer of the profession's list joined, as no one trainer teaches it
+# all), recipes, nodes and loot go into professions.json.
+PROFESSIONS = {"herbalism": 182, "mining": 186, "skinning": 393, "enchanting": 333}
+# A profession's ranks, by their spells' rank text, and each rank's skill cap.
+PROFESSION_RANKS = {"Apprentice": 75, "Journeyman": 150, "Expert": 225, "Artisan": 300}
+# The level each rank needs, for every profession (classic's trainers ask 5,
+# 10, 20 and 35; some lists leave it 0).
+PROFESSION_RANK_LEVELS = {"Apprentice": 5, "Journeyman": 10, "Expert": 20, "Artisan": 35}
+# Lock (Lock.dbc) parts: type 2 is a skill, its index 2 Herbalism, 3 Mining.
+LOCK_TYPE_SKILL = 2
+LOCK_HERBALISM = 2
+LOCK_MINING = 3
+# Herb and ore objects left out: quest herbs (Gloom Weed, Doom Weed: the Duskmoor
+# quests' own), dungeon-only ore (Dark Iron, Indurium) and rare odd things
+# (sea creatures, bundles, Serpentbloom, Violet Tragan, Incendia Agave).
+NODES_LEFT_OUT = {"Gloom Weed", "Doom Weed", "Plant Bundle", "Beached Sea Creature", "Skeletal Sea Turtle",
+                  "Serpentbloom", "Violet Tragan", "Incendia Agave", "Indurium Mineral Vein", "Dark Iron Deposit"}
+# Supply vendors for the professions: classic's Trade Supplier Edna Mullby's
+# list, kept to what the game's professions use (the Mining Pick, Skinning
+# Knife, Copper Rod, vials, flux, Simple Wood...), and Kania, Enchanting
+# Supplier, who sells every enchanting Formula any classic vendor sold.
+TRADE_SUPPLIES_VENDOR = 1286
+ENCHANTING_SUPPLIES_VENDOR = 15419
+SPELL_EFFECT_CREATE_ITEM = 24
+SPELL_EFFECT_ENCHANT_ITEM = 53
+SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY = 54
+ITEM_CLASS_RECIPE = 9
+# Item enchantment effects (ITEM_ENCHANTMENT_TYPE): 1 a spell on hit, 2 weapon
+# damage, 3 a spell while equipped, 4 a resistance, 5 a stat.
+ENCHANT_COMBAT_SPELL = 1
+ENCHANT_EQUIP_SPELL = 3
 # Hunter pets' stats by level are pet_levelstats' creature_entry 1
 # (Pet::InitStatsForLevel, HUNTER_PET); pet_familystats scales them by family.
 HUNTER_PET_STATS = 1
@@ -382,6 +434,8 @@ TABLES = {
     "creature_ai_scripts", "creature_template_classlevelstats", "spell_affect",
     "gameobject_template", "gameobject", "gameobject_loot_template", "npc_vendor_template",
     "pet_levelstats", "pet_familystats",
+    # Professions: skinning and disenchanting loot, and proc enchants' rates.
+    "skinning_loot_template", "disenchant_loot_template", "spell_proc_item_enchant",
 }
 SPELL_FIELDS = [
     "Id", "SpellName", "Rank1", "School", "Category", "Dispel", "Mechanic", "Attributes",
@@ -421,13 +475,20 @@ CREATURE_FIELDS = [
     # CreatureTypeFlags 0x1 is tameable by a Ranger; PetSpellDataId names the
     # abilities it knows (CreatureSpellData, pet_families.json "spell_data").
     "CreatureTypeFlags", "PetSpellDataId",
+    # Its skinning loot (skinning_loot_template), for Skinning.
+    "SkinningLootId",
 ]
+# item_template spelltrigger: the spell may fire on a melee hit.
+ITEM_SPELLTRIGGER_ON_HIT = 2
 ITEM_FIELDS = [
     "entry", "name", "description", "Quality", "class", "subclass", "InventoryType", "ItemLevel",
     "RequiredLevel", "AllowableClass", "stackable", "BuyPrice", "SellPrice", "bonding", "armor",
     "block", "delay", "MaxDurability", "ContainerSlots", "dmg_min1", "dmg_max1", "dmg_type1",
     "dmg_min2", "dmg_max2", "dmg_type2", "BuyCount", "spellid_1", "spelltrigger_1", "spellcharges_1",
-    "spellcooldown_1", "spellcategory_1", "spellcategorycooldown_1", "startquest",
+    "spellcooldown_1", "spellcategory_1", "spellcategorycooldown_1", "spellppmRate_1", "startquest",
+    # Professions: the skill and level a Formula needs, and disenchanting
+    # (disenchant_loot_template by DisenchantID, and the skill it needs).
+    "RequiredSkill", "RequiredSkillRank", "DisenchantID", "RequiredDisenchantSkill",
 ] + [f"stat_{kind}{i}" for i in range(1, 11) for kind in ("type", "value")]
 
 
@@ -581,6 +642,11 @@ def main(path):
                 creature_loot[loot_id].append({"item": item, "chance": chance, "group": 0,
                                                "min_or_ref": 1, "max": 1, "condition": 0})
             pending.extend(creature_loot[loot_id])
+    professions, profession_items, profession_spells, profession_trainers, profession_stock =         export_professions(db, creatures, loot_entries)
+    item_ids.update(profession_items)
+    for table in ("node_loot", "skinning_loot", "disenchant_loot"):
+        for entries in professions[table].values():
+            pending.extend(entries)
     while pending:
         entry = pending.pop()
         if entry["min_or_ref"] < 0:
@@ -603,6 +669,10 @@ def main(path):
                                "repair": int(template["NpcFlags"]) & 0x4000 != 0,
                                "items": [int(r["item"]) for r in stock if int(r["item"]) not in ammo]}
         item_ids.update(int(r["item"]) for r in stock if int(r["item"]) not in ammo)
+    # The professions' supply vendors, their stock kept to what they use.
+    for entry, stock in profession_stock.items():
+        template = next(r for r in db["creature_template"] if int(r["Entry"]) == entry)
+        vendors[str(entry)] = {"name": template["Name"], "subname": template["SubName"], "repair": False, "items": stock}
     # Game objects: chests' loot comes from gameobject_loot_template by their
     # data1 (the loot id), and their respawn time from their classic spawns.
     object_loot_rows = {}
@@ -645,10 +715,17 @@ def main(path):
     for item in items.values():
         item["stats"] = [[item.pop(f"stat_type{i}"), item.pop(f"stat_value{i}")] for i in range(1, 11)]
         item["stats"] = [s for s in item["stats"] if s[1] != 0]
+        # A weapon's "Chance on hit:" spell gets a flat chance per hit (the
+        # game's own: classic's rate per minute at a 3 s weapon), as `spellchance_1`;
+        # without a rate it uses the spell's ProcChance, as CMaNGOS does.
+        ppm = float(item.pop("spellppmRate_1", 0) or 0)
+        if ppm > 0 and int(item["spelltrigger_1"]) == ITEM_SPELLTRIGGER_ON_HIT:
+            item["spellchance_1"] = round(min(ppm * 3.0 / 60.0 * 100.0, 100.0), 2)
         # A thrown weapon is one weapon, not a stack of 200 to throw.
         if int(item["class"]) == 2 and int(item["subclass"]) == ITEM_SUBCLASS_THROWN:
             item["stackable"] = 1
             item["BuyCount"] = 1
+    fill_skinning(creatures)
     # The game uses its own names, not the classic ones.
     renames.apply(items, creatures, vendors, {}, classic_names(db), gameobjects)
     write("gameobjects.json", gameobjects)
@@ -658,7 +735,193 @@ def main(path):
     write("characters.json", starting_characters(db, outfits, items, level_stats))
     print(f"{len(creatures)} creatures, {len(creature_loot)} loot tables, {len(references)} references, {len(items)} items, {len(vendors)} vendors")
     item_spells = {int(item["spellid_1"]) for item in items.values() if int(item["spellid_1"]) > 0}
-    export_spells(db, item_spells | creature_spells(db) | {s for q in quests.values() for s in q["learns"]})
+    for node in professions["nodes"].values():
+        node["name"] = renames.node_name(node["name"])
+    write("professions.json", professions)
+    export_spells(db, item_spells | creature_spells(db) | {s for q in quests.values() for s in q["learns"]} | profession_spells,
+                  profession_trainers)
+
+
+def export_professions(db, creatures, loot_entries):
+    """The professions (PROFESSIONS): their ranks, trainer lists, recipes (every
+    Smelting and Enchanting recipe a trainer, a Formula or the skill itself
+    teaches), herb and ore nodes with their loot, skinning loot for the
+    game's creatures, disenchanting loot, and the enchantments the recipes
+    put on items, from profession_tables.json (fetch_client_tables.py).
+    Returns (professions.json's data, the items it needs, the spells it
+    needs, the trainer lists by profession, the vendors' stock)."""
+    with open(os.path.join(OUT_DIR, "profession_tables.json"), encoding="utf8") as f:
+        tables = json.load(f)
+    spells = {r["Id"]: r for r in db["spell_template"]}
+    items = {r["entry"]: r for r in db["item_template"]}
+    skill_names = {line: name for name, line in PROFESSIONS.items()}
+    abilities = {spell: info for spell, info in tables["abilities"].items() if spell in spells}
+    item_ids, spell_ids = set(), set()
+
+    def learned_by(teach_id):
+        teach = spells.get(str(teach_id), {})
+        learned = [int(teach[f"EffectTriggerSpell{i}"]) for i in (1, 2, 3) if teach and int(teach[f"Effect{i}"]) == SPELL_EFFECT_LEARN]
+        return learned or [int(teach_id)]
+
+    # Trainer lists: every classic trainer teaching a profession's spells, joined.
+    trainers = {name: {} for name in PROFESSIONS}
+    for r in db["npc_trainer"]:
+        learned = learned_by(r["spell"])
+        info = abilities.get(str(learned[0]))
+        if not info or spells[str(learned[0])]["SpellName"].startswith("zzOLD"):
+            continue
+        entry = {"teach": int(r["spell"]), "spells": learned, "cost": int(r["spellcost"]), "level": int(r["reqlevel"]),
+                 "skill": int(r["reqskillvalue"])}
+        known = trainers[skill_names[info["skill"]]].get(learned[0])
+        if known is None or (entry["skill"], entry["cost"]) < (known["skill"], known["cost"]):
+            trainers[skill_names[info["skill"]]][learned[0]] = entry
+    # Formulas: recipe items whose use teaches a profession's recipe.
+    formulas = {}
+    for item_id, item in items.items():
+        if int(item["class"]) != ITEM_CLASS_RECIPE or int(item["spellid_1"]) <= 0:
+            continue
+        learned = learned_by(item["spellid_1"])
+        if str(learned[0]) in abilities:
+            formulas[learned[0]] = {"item": int(item_id), "skill": int(item["RequiredSkillRank"])}
+    professions, recipes = {}, {}
+    for name, line in PROFESSIONS.items():
+        mine = {int(spell): info for spell, info in abilities.items() if info["skill"] == line}
+        ranks = []
+        for spell, info in mine.items():
+            rank = spells[str(spell)]["Rank1"].strip()
+            if rank in PROFESSION_RANKS:
+                taught = trainers[name].get(spell, {})
+                level = max(taught.get("level", 0), PROFESSION_RANK_LEVELS[rank])
+                ranks.append({"spell": spell, "rank": rank, "max": PROFESSION_RANKS[rank],
+                              "level": level, "skill": taught.get("skill", 0), "cost": taught.get("cost", 0)})
+                if spell in trainers[name]:
+                    trainers[name][spell]["level"] = level
+        ranks.sort(key=lambda r: r["max"])
+        # Learned with the skill itself (AcquireMethod 1): Find Herbs,
+        # Smelting, Smelt Copper, Disenchant, the first enchants.
+        start = sorted(spell for spell, info in mine.items() if info["acquire"] == 1)
+        rank_spells = {r["spell"] for r in ranks}
+        for spell, info in mine.items():
+            row = spells[str(spell)]
+            if spell in rank_spells or not (spell in trainers[name] or spell in formulas or spell in start):
+                continue
+            effect = int(row["Effect1"])
+            if effect not in (SPELL_EFFECT_CREATE_ITEM, SPELL_EFFECT_ENCHANT_ITEM, SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY):
+                spell_ids.add(spell)
+                continue
+            taught = trainers[name].get(spell)
+            formula = formulas.get(spell)
+            orange = taught["skill"] if taught else (formula["skill"] if formula else 1)
+            yellow, grey = max(info["yellow"], orange), max(info["grey"], orange)
+            recipe = {"profession": name, "skill": orange, "levels": [orange, yellow, (yellow + grey) // 2, grey],
+                      "reagents": [[int(row[f"Reagent{i}"]), int(row[f"ReagentCount{i}"])] for i in range(1, 9) if int(row[f"Reagent{i}"]) > 0],
+                      "tools": [int(row[f"Totem{i}"]) for i in (1, 2) if int(row[f"Totem{i}"]) > 0],
+                      "focus": int(row["RequiresSpellFocus"])}
+            if effect == SPELL_EFFECT_CREATE_ITEM:
+                recipe["makes"] = [int(row["EffectItemType1"]), int(row["EffectBasePoints1"]) + 1]
+                item_ids.add(int(row["EffectItemType1"]))
+            else:
+                recipe["enchant"] = int(row["EffectMiscValue1"])
+                recipe["temporary"] = effect == SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY
+            if formula:
+                recipe["formula"] = formula["item"]
+                item_ids.add(formula["item"])
+            item_ids.update(r[0] for r in recipe["reagents"])
+            item_ids.update(recipe["tools"])
+            recipes[str(spell)] = recipe
+            spell_ids.add(spell)
+        spell_ids.update(rank_spells)
+        spell_ids.update(start)
+        for entry in trainers[name].values():
+            spell_ids.add(entry["teach"])
+        # The tool gathering needs: the rank spells' Totem (a Mining Pick, a
+        # Skinning Knife; Herbalism none).
+        tools = sorted({int(spells[str(r["spell"])][f"Totem{i}"]) for r in ranks for i in (1, 2)} - {0})
+        item_ids.update(tools)
+        professions[name] = {"skill": line, "ranks": ranks, "start": start, "tools": tools}
+    # Herb and ore nodes: chests locked by Herbalism or Mining, the kind with
+    # the most classic spawns of each name.
+    locks = tables["locks"]
+    spawn_count, respawns = {}, {}
+    for g in db["gameobject"]:
+        spawn_count[g["id"]] = spawn_count.get(g["id"], 0) + 1
+        respawns.setdefault(g["id"], []).append(int(g["spawntimesecsmin"]))
+    best = {}
+    for r in db["gameobject_template"]:
+        if int(r["type"]) != GO_TYPE_CHEST or r["name"] in NODES_LEFT_OUT or not spawn_count.get(r["entry"]):
+            continue
+        for kind, index, skill in locks.get(r["data0"], []):
+            if kind == LOCK_TYPE_SKILL and index in (LOCK_HERBALISM, LOCK_MINING):
+                node = {"name": r["name"], "kind": "herb" if index == LOCK_HERBALISM else "ore", "skill": max(skill, 1),
+                        "loot": int(r["data1"]), "size": float(r["size"]), "respawn": most_common(respawns[r["entry"]])}
+                if r["name"] not in best or spawn_count[r["entry"]] > best[r["name"]][1]:
+                    best[r["name"]] = (int(r["entry"]), spawn_count[r["entry"]], node)
+    nodes = {str(entry): node for entry, _, node in best.values()}
+    object_loot_rows = {}
+    for r in db["gameobject_loot_template"]:
+        object_loot_rows.setdefault(r["entry"], []).append(r)
+    node_loot = {str(n["loot"]): loot_entries(object_loot_rows.get(str(n["loot"]), [])) for n in nodes.values()}
+    # Skinning loot for the game's creatures (creature_template SkinningLootId).
+    skin_rows = {}
+    for r in db["skinning_loot_template"]:
+        skin_rows.setdefault(r["entry"], []).append(r)
+    skinning_loot = {}
+    for creature in creatures.values():
+        loot_id = str(creature.get("SkinningLootId", 0))
+        if loot_id != "0" and loot_id in skin_rows:
+            skinning_loot[loot_id] = loot_entries(skin_rows[loot_id])
+    disenchant_rows = {}
+    for r in db["disenchant_loot_template"]:
+        disenchant_rows.setdefault(r["entry"], []).append(r)
+    disenchant_loot = {entry: loot_entries(rows) for entry, rows in disenchant_rows.items()}
+    for table in (node_loot, skinning_loot, disenchant_loot):
+        for entries in table.values():
+            item_ids.update(e["item"] for e in entries if e["min_or_ref"] >= 0)
+    # The enchantments the recipes put on items, with their spells (procs and
+    # equip auras) where 1.12 has them, and procs' rates (spell_proc_item_enchant).
+    proc_rates = {int(r["entry"]): float(r["ppmRate"]) for r in db.get("spell_proc_item_enchant", [])}
+    ENCHANT_PROC_SPEED = 3.0  # as PROC_SPEED for spells' procs
+    enchants = {}
+    for recipe in recipes.values():
+        enchant_id = recipe.get("enchant")
+        if not enchant_id:
+            continue
+        source = tables["enchants"].get(str(enchant_id))
+        if not source:
+            continue
+        effects = []
+        for kind, low, high, arg in source["effects"]:
+            if kind in (ENCHANT_COMBAT_SPELL, ENCHANT_EQUIP_SPELL):
+                if str(arg) not in spells:
+                    continue
+                spell_ids.add(arg)
+            effects.append([kind, low, high, arg])
+        enchants[str(enchant_id)] = {"name": source["name"], "charges": source["charges"], "effects": effects}
+        for kind, _, _, arg in effects:
+            # The game's own: a flat chance per hit rather than classic's rate
+            # per minute, worked out at a weapon of ENCHANT_PROC_SPEED.
+            if kind == ENCHANT_COMBAT_SPELL and arg in proc_rates:
+                enchants[str(enchant_id)]["chance"] = round(min(proc_rates[arg] * ENCHANT_PROC_SPEED / 60.0 * 100.0, 100.0), 1)
+    # The supply vendors: tools, reagents and Formulas the professions use.
+    used = set(item_ids)
+    vendor_stock = {}
+    trade = sorted((r for r in db["npc_vendor"] if int(r["entry"]) == TRADE_SUPPLIES_VENDOR), key=lambda r: int(r["slot"]))
+    vendor_stock[TRADE_SUPPLIES_VENDOR] = [int(r["item"]) for r in trade if int(r["item"]) in used]
+    sold = {int(r["item"]) for r in db["npc_vendor"]} | {int(r["item"]) for r in db["npc_vendor_template"]}
+    enchanting = [r for r in recipes.values() if r["profession"] == "enchanting"]
+    enchanting_items = {g[0] for r in enchanting for g in r["reagents"]} | {t for r in enchanting for t in r["tools"]}
+    formulas_sold = {r["formula"] for r in enchanting if r.get("formula") in sold}
+    supplies = {item for item in vendor_stock[TRADE_SUPPLIES_VENDOR] if item in enchanting_items}
+    vendor_stock[ENCHANTING_SUPPLIES_VENDOR] = sorted(
+        supplies | formulas_sold, key=lambda item: (int(items[str(item)]["RequiredSkillRank"]), item))
+    item_ids.update(i for stock in vendor_stock.values() for i in stock)
+    data = {"professions": professions, "recipes": recipes, "nodes": nodes, "node_loot": node_loot,
+            "skinning_loot": skinning_loot, "disenchant_loot": disenchant_loot, "enchants": enchants}
+    trainer_lists = {name: sorted(entries.values(), key=lambda e: (e["skill"], e["level"], e["spells"][0]))
+                     for name, entries in trainers.items()}
+    print(f"professions: {len(recipes)} recipes, {len(nodes)} nodes, {len(skinning_loot)} skinning tables, "
+          f"{len(enchants)} enchants, {sum(len(t) for t in trainer_lists.values())} trainer entries")
+    return data, item_ids, spell_ids, trainer_lists, vendor_stock
 
 
 def export_pets(db, creatures):
@@ -789,10 +1052,14 @@ def starting_characters(db, outfits, items, level_stats):
     return characters
 
 
-def export_spells(db, item_spells):
-    """Class trainer lists, starting spells, item use spells and every spell they reach."""
+def export_spells(db, item_spells, profession_trainers=None):
+    """Class trainer lists, starting spells, item use spells and every spell
+    they reach; and the professions' trainer lists (export_professions)."""
     spells = {r["Id"]: r for r in db["spell_template"]}
-    wanted, trainers = set(item_spells), {}
+    wanted, trainers = set(item_spells), dict(profession_trainers or {})
+    for entries in trainers.values():
+        for entry in entries:
+            wanted.update(entry["spells"])
 
     def taught_by(teach_id):
         teach = spells[str(teach_id)]
@@ -957,10 +1224,13 @@ def export_spells(db, item_spells):
               for r in db["spell_chain"] if int(r["spell_id"]) in wanted}
     bonus = {r["entry"]: {"direct": float(r["direct_bonus"]), "dot": float(r["dot_bonus"])}
              for r in db["spell_bonus_data"] if int(r["entry"]) in wanted}
-    # Proc rates (procs per minute) and cooldowns, by spell, from spell_proc_event.
+    # Proc chances and cooldowns, by spell, from spell_proc_event.
+    PROC_SPEED = 3.0
     # The spell family mask says which spells' hits set a proc off (Improved
     # Hamstring only from Hobble), procEx which outcomes (2: crits).
-    procs = {r["entry"]: {"ppm": float(r["ppmRate"]), "chance": float(r["CustomChance"]), "cooldown": float(r["Cooldown"]),
+    # The game's own: no rates per minute; a rate becomes a flat chance per
+    # hit at a weapon of PROC_SPEED (3 s), the CustomChance kept where set.
+    procs = {r["entry"]: {"chance": float(r["CustomChance"]) or (round(min(float(r["ppmRate"]) * PROC_SPEED / 60.0 * 100.0, 100.0), 2) if float(r["ppmRate"]) > 0 else 0.0), "cooldown": float(r["Cooldown"]),
                           "family": int(r["SpellFamilyName"]), "family_mask": int(r["SpellFamilyMask0"]),
                           "school": int(r["SchoolMask"]), "flags": int(r["procFlags"]), "ex": int(r["procEx"])}
              for r in db["spell_proc_event"] if int(r["entry"]) in wanted}

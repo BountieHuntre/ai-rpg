@@ -208,6 +208,15 @@ static func passive_spells(profile: CharacterProfile) -> Array[Dictionary]:
 			var spell := SpellDB.get_spell(int(talent.ranks[r - 1]))
 			if SpellDB.is_passive(spell):
 				spells.append(spell)
+	# Equip: spells of the gear worn and its enchants (Enchanting), kept up
+	# while worn.
+	spells.append_array(Enchanting.equip_spells(profile.equipment))
+	# Passive profession spells (a design may make Find Minerals always on)
+	# are kept up the same way while known.
+	for id in profile.known_spells:
+		var spell := SpellDB.get_spell(id)
+		if SpellDB.is_passive(spell) and SpellDB.has_effect(spell, SpellDB.EFFECT_APPLY_AURA) and not Professions.profession_of_spell(id).is_empty():
+			spells.append(spell)
 	return spells
 
 

@@ -90,21 +90,31 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 			_on_spells_changed.call_deferred())
 
 
-## New spells: the spellbook is rebuilt and bar slots redrawn (training can
-## swap a slot to a replacing rank).
+## New spells: the book's page again only if the spells on it changed, bar
+## slots redrawn (training can swap a slot to a replacing rank), and the
+## stance bar again only if its stances changed.
 func _on_spells_changed() -> void:
 	_spells_redraw_queued = false
 	if not is_instance_valid(_book):
 		return
-	var was_open := _book.visible
-	_book.queue_free()
-	_build_book()
-	_book.visible = was_open
+	var spells := _book_spells()
+	var pages := maxi(ceili(spells.size() / float(BOOK_PER_PAGE)), 1)
+	if "%s:%d" % [spells, clampi(_book_page, 0, pages - 1)] != _book_shown:
+		_fill_book_page()
 	for i: int in _bar_slots:
 		_draw_bar_slot(i)
-	_stance_bar.queue_free()
-	_build_stance_bar()
+	var stances := _stance_key()
+	if stances != _stances_shown:
+		_stance_bar.queue_free()
+		_build_stance_bar()
 	_on_pet_changed()
+
+
+## Which stances, forms and Presences the stance bar would show.
+func _stance_key() -> String:
+	return str(stance_spells())
+
+var _stances_shown := ""
 
 
 func is_book_open() -> bool:
@@ -385,6 +395,7 @@ func stance_spells() -> Array[int]:
 func _build_stance_bar() -> void:
 	_stance_slots.clear()
 	_stance_ids = stance_spells()
+	_stances_shown = str(_stance_ids)
 	_stance_bar = Control.new()
 	_stance_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_stance_bar)
@@ -583,13 +594,15 @@ func _update_stance_state(i: int) -> void:
 ## with tabs down its right edge, General first and then one per talent tree
 ## (a spell's tab is its skill line's tree, SpellDB.book_tab), and page
 ## arrows when a tab has more.
-func _build_book() -> void:
-	var trees := Talents.trees(GameState.char_class)
-	_book_tab = clampi(_book_tab, 0, trees.size())
+## The spells on the book's open tab, in order (flyouts leading).
+func _book_spells() -> Array[int]:
 	var hide_old := bool(Settings.get_value("spellbook_hide_old_ranks"))
 	var spells: Array[int] = []
 	for id in GameState.known_spells:
 		if SpellDB.book_tab(GameState.char_class, id) + 1 != _book_tab or SpellDB.is_weapon_skill(id):
+			continue
+		# Recipes are in their trade skill window; hidden spells (Herb Gathering) nowhere.
+		if Professions.is_recipe(id) or SpellDB.is_hidden(SpellDB.get_spell(id)):
 			continue
 		if hide_old and GameState.best_rank(str(SpellDB.get_spell(id).get("SpellName", ""))) != id:
 			continue
@@ -605,33 +618,27 @@ func _build_book() -> void:
 		var inside := SpellDB.flyout_spells(flyout, GameState)
 		if not inside.is_empty() and SpellDB.book_tab(GameState.char_class, inside[0]) + 1 == _book_tab:
 			spells.push_front(flyout)
-	var pages := maxi(ceili(spells.size() / float(BOOK_PER_PAGE)), 1)
-	_book_page = clampi(_book_page, 0, pages - 1)
+	return spells
+
+
+## The book's frame, made once: the panel, title, close button, the "Hide old
+## ranks" box and boxes for the tabs and the page, which are filled on their
+## own (_fill_book_tabs, _fill_book_page) so a tab, page or spell learned
+## redoes only what changed.
+func _build_book() -> void:
+	var trees := Talents.trees(GameState.char_class)
+	_book_tab = clampi(_book_tab, 0, trees.size())
 	_book = _panel(BOOK_AT, BOOK_SIZE)
-	var tab_name := "General" if _book_tab == 0 else str(trees[_book_tab - 1].name)
-	UiStyle.title(_book, Vector2(5, 1.5), "Spellbook (P) - %s" % tab_name, _ui_scale)
+	_book_title = UiStyle.title(_book, Vector2(5, 1.5), "", _ui_scale)
 	UiStyle.close_button(_book, Vector2(BOOK_SIZE.x - 10, 2), _ui_scale, func() -> void:
 		_book.visible = false
 		_tooltip.show_lines([]))
-	var column_width := (BOOK_SIZE.x - 6) / 2.0
-	for i in range(_book_page * BOOK_PER_PAGE, mini((_book_page + 1) * BOOK_PER_PAGE, spells.size())):
-		var place := i - _book_page * BOOK_PER_PAGE
-		var at := Vector2(3 + (place % 2) * column_width, 16 + (place / 2) * BOOK_ENTRY)
-		_book_entry(spells[i], at, column_width - 2)
-	if spells.is_empty():
-		_text(_book, Vector2(6, 18), "No spells here yet.", Color(0.6, 0.6, 0.6), 6)
-	# Page arrows.
-	if pages > 1:
-		_text(_book, Vector2(BOOK_SIZE.x / 2.0 - 14, BOOK_SIZE.y - 11), "Page %d/%d" % [_book_page + 1, pages], Color(0.75, 0.75, 0.75), 6)
-		for step: int in [-1, 1]:
-			var enabled: bool = _book_page + step >= 0 and _book_page + step < pages
-			var arrow := _text(_book, Vector2(BOOK_SIZE.x / 2.0 + (24 if step > 0 else -30), BOOK_SIZE.y - 12), ">" if step > 0 else "<", TITLE if enabled else Color(0.4, 0.4, 0.4), 8)
-			if enabled:
-				arrow.mouse_filter = Control.MOUSE_FILTER_STOP
-				arrow.gui_input.connect(func(event: InputEvent) -> void:
-					if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-						_book_page += step
-						_redraw_book())
+	_book_page_box = Control.new()
+	_book_page_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_book.add_child(_book_page_box)
+	_book_tabs_box = Control.new()
+	_book_tabs_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_book.add_child(_book_tabs_box)
 	# "Hide old ranks": only each spell's highest known rank (saved).
 	var box := ColorRect.new()
 	box.color = Color(0.1, 0.1, 0.12)
@@ -646,27 +653,74 @@ func _build_book() -> void:
 	box_border.size = box.size
 	box_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(box_border)
-	if hide_old:
-		_text(box, Vector2(1.2, -1.5), "x", TITLE, 7)
+	_hide_old_mark = _text(box, Vector2(1.2, -1.5), "x", TITLE, 7)
 	var box_label := _text(_book, Vector2(13, BOOK_SIZE.y - 11), "Hide old ranks", Color(0.8, 0.8, 0.8), 6)
 	box_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	for clickable: Control in [box, box_label]:
 		clickable.gui_input.connect(func(event: InputEvent) -> void:
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-				Settings.set_value("spellbook_hide_old_ranks", not hide_old)
+				Settings.set_value("spellbook_hide_old_ranks", not bool(Settings.get_value("spellbook_hide_old_ranks")))
 				Settings.save()
 				_redraw_book())
-	# Tabs down the right edge, outside the page.
+	_fill_book_tabs()
+	_fill_book_page()
+	_book.visible = false
+
+var _book_title: Label
+var _book_page_box: Control
+var _book_tabs_box: Control
+var _hide_old_mark: Label
+## The spells and page the page shows, so a change elsewhere leaves it be.
+var _book_shown := ""
+
+
+## The tabs down the right edge, outside the page (made again on a tab
+## change, as which one is lit changes).
+func _fill_book_tabs() -> void:
+	for child in _book_tabs_box.get_children():
+		child.queue_free()
+	var trees := Talents.trees(GameState.char_class)
 	var names: Array[String] = ["General"]
 	for tree: Dictionary in trees:
 		names.append(str(tree.name))
 	for i in names.size():
 		var index := i
-		UiStyle.tab(_book, Vector2(BOOK_SIZE.x + 1, 8 + i * (BOOK_TAB.y + 2)), BOOK_TAB, names[i], i == _book_tab, _ui_scale, func() -> void:
+		UiStyle.tab(_book_tabs_box, Vector2(BOOK_SIZE.x + 1, 8 + i * (BOOK_TAB.y + 2)), BOOK_TAB, names[i], i == _book_tab, _ui_scale, func() -> void:
 			_book_tab = index
 			_book_page = 0
 			_redraw_book())
-	_book.visible = false
+	_book_title.text = "Spellbook (P) - %s" % ("General" if _book_tab == 0 else str(trees[_book_tab - 1].name))
+
+
+## The page: its spells, the empty note, and the page arrows.
+func _fill_book_page() -> void:
+	for child in _book_page_box.get_children():
+		child.queue_free()
+	_hide_old_mark.visible = bool(Settings.get_value("spellbook_hide_old_ranks"))
+	var spells := _book_spells()
+	var pages := maxi(ceili(spells.size() / float(BOOK_PER_PAGE)), 1)
+	_book_page = clampi(_book_page, 0, pages - 1)
+	_book_shown = "%s:%d" % [spells, _book_page]
+	var column_width := (BOOK_SIZE.x - 6) / 2.0
+	for i in range(_book_page * BOOK_PER_PAGE, mini((_book_page + 1) * BOOK_PER_PAGE, spells.size())):
+		var place := i - _book_page * BOOK_PER_PAGE
+		var at := Vector2(3 + (place % 2) * column_width, 16 + (place / 2) * BOOK_ENTRY)
+		_book_entry(spells[i], at, column_width - 2)
+	if spells.is_empty():
+		_text(_book_page_box, Vector2(6, 18), "No spells here yet.", Color(0.6, 0.6, 0.6), 6)
+	# Page arrows.
+	if pages > 1:
+		_text(_book_page_box, Vector2(BOOK_SIZE.x / 2.0 - 14, BOOK_SIZE.y - 11), "Page %d/%d" % [_book_page + 1, pages], Color(0.75, 0.75, 0.75), 6)
+		for step: int in [-1, 1]:
+			var enabled: bool = _book_page + step >= 0 and _book_page + step < pages
+			var arrow := _text(_book_page_box, Vector2(BOOK_SIZE.x / 2.0 + (24 if step > 0 else -30), BOOK_SIZE.y - 12), ">" if step > 0 else "<", TITLE if enabled else Color(0.4, 0.4, 0.4), 8)
+			if enabled:
+				arrow.mouse_filter = Control.MOUSE_FILTER_STOP
+				arrow.gui_input.connect(func(event: InputEvent) -> void:
+					if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+						_book_page += step
+						_fill_book_page()
+						_tooltip.show_lines([]))
 
 
 ## One spell on the page: icon, name and rank. Hover for its tooltip,
@@ -678,7 +732,7 @@ func _book_entry(id: int, at: Vector2, width: float) -> void:
 	row.position = at * _ui_scale
 	row.size = Vector2(width, BOOK_ENTRY - 1) * _ui_scale
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
-	_book.add_child(row)
+	_book_page_box.add_child(row)
 	var icon := ColorRect.new()
 	icon.size = Vector2.ONE * (BOOK_ENTRY - 3) * _ui_scale
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -701,12 +755,11 @@ func _book_entry(id: int, at: Vector2, width: float) -> void:
 	row.gui_input.connect(func(event: InputEvent) -> void: _on_book_input(event, id, row))
 
 
-## Rebuilds the book in place (a new tab or page), keeping it open.
+## A new tab or the Hide old ranks box: the tabs, title and page again,
+## the book's frame kept.
 func _redraw_book() -> void:
-	var was_open := _book.visible
-	_book.queue_free()
-	_build_book()
-	_book.visible = was_open
+	_fill_book_tabs()
+	_fill_book_page()
 	_tooltip.show_lines([])
 
 
@@ -807,8 +860,10 @@ func _draw_buffs() -> void:
 	for aura in _player.combatant.auras:
 		var spell: Dictionary = aura.spell
 		# Every buff shows, stances and forms included. Only passive spells'
-		# auras (a stance's hidden passive part) aren't buffs, as in classic.
-		if SpellDB.is_passive(spell):
+		# auras (a stance's hidden passive part) aren't buffs, as in classic,
+		# nor the always-on auras of talents and gear worn (an enchant's
+		# Minor Health).
+		if SpellDB.is_passive(spell) or aura.get("talent", false):
 			continue
 		var icon := ColorRect.new()
 		icon.position = Vector2(right - (i + 1) * (BUFF + 3), corner.y) * _ui_scale
@@ -816,6 +871,9 @@ func _draw_buffs() -> void:
 		icon.mouse_filter = Control.MOUSE_FILTER_STOP
 		_buffs.add_child(icon)
 		_draw_icon(icon, int(spell.Id))
+		# Its stacks in the corner, as classic shows them.
+		if int(aura.get("stacks", 1)) > 1:
+			UiStyle.count_label(icon, int(aura.stacks), _ui_scale, 5)
 		var time := _text(icon, Vector2(-2, BUFF), "", Color.WHITE, 5)
 		icon.set_meta("aura", aura)
 		icon.set_meta("time", time)
@@ -825,6 +883,9 @@ func _draw_buffs() -> void:
 			_buff_tooltip_text = ""
 		)
 		icon.mouse_exited.connect(func() -> void:
+			# An icon taken away by a redraw (a new stack) isn't the mouse leaving.
+			if icon.is_queued_for_deletion():
+				return
 			_hovered_aura = {}
 			_tooltip.show_lines([])
 		)
@@ -844,17 +905,22 @@ func _update_buff_tooltip() -> void:
 	if _hovered_aura.is_empty():
 		return
 	if not _hovered_aura in _player.combatant.auras:
-		_hovered_aura = {}
-		_tooltip.show_lines([])
-		return
+		# Refreshed or stacked: the same spell's new aura carries on.
+		var id := int(_hovered_aura.spell.Id)
+		_hovered_aura = _player.combatant.find_aura(func(spell: Dictionary) -> bool: return int(spell.Id) == id)
+		if _hovered_aura.is_empty():
+			_tooltip.show_lines([])
+			return
 	var remaining := _long_time(ceilf(_hovered_aura.remaining))
-	if remaining == _buff_tooltip_text and _tooltip.visible:
+	var stacks := int(_hovered_aura.get("stacks", 1))
+	# Redrawn when the time shown or the stacks change.
+	if remaining + "|%d" % stacks == _buff_tooltip_text and _tooltip.visible:
 		return
-	_buff_tooltip_text = remaining
+	_buff_tooltip_text = remaining + "|%d" % stacks
 	var spell: Dictionary = _hovered_aura.spell
 	var lines: Array = [[SpellDB.full_name(spell), "", Color.WHITE]]
-	# What the buff does, as its spell describes it.
-	var description := SpellText.describe(spell, GameState.level, _player.spells)
+	# What the buff does, as its spell describes it, for all its stacks.
+	var description := SpellText.describe(spell, GameState.level, _player.spells, stacks)
 	if not description.is_empty():
 		lines.append([description, "", DESCRIPTION])
 	if not remaining.is_empty():

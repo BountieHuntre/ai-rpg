@@ -384,6 +384,20 @@ var _was_casting := false
 ## hand_glow, pulsing) and cubes drift up from each (Vfx.hand_glow on the hand
 ## bones, made on the first cast); the school of the spell being cast.
 var _glows: Array[CPUParticles3D] = []
+## An enchanted main-hand weapon (Enchanting.weapon_look): its blade glows in
+## the enchant's colour, pulsing, in a mist of it while drawn.
+var _weapon_look: Dictionary = {}
+var _weapon_motes: CPUParticles3D
+var _weapon_light: OmniLight3D
+## The same mist and light on the weapon put away (its still copy on the hip
+## or back, _show_sheathed), made when that copy is: the prop it's for, the
+## copy it rides, and its frame (the grip bone's frame where the copy hangs).
+var _weapon_prop := ""
+var _sheath_host: Node3D
+var _sheath_frame: Node3D
+var _sheath_motes: CPUParticles3D
+var _sheath_light: OmniLight3D
+var _weapon_time := 0.0
 var _cast_school := 0
 var _glow_time := 0.0
 var _hands_lit := false
@@ -716,6 +730,144 @@ func _apply_equipment() -> void:
 	_cape_springs(_shown.has("Cloak") and _cape_moves())
 	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, CLOTH[0]))
 	_apply_props()
+	_apply_weapon_glow()
+
+
+## The main hand's enchant: the blade's glow colour, and its sprites on the
+## weapon bone, sized to the weapon's length.
+func _apply_weapon_glow() -> void:
+	var stack = _equipment.get(Inventory.Slot.MAIN_HAND)
+	_weapon_look = Enchanting.weapon_look(stack) if stack is Dictionary and not stack.is_empty() else {}
+	if _weapon_motes and is_instance_valid(_weapon_motes):
+		_weapon_motes.get_parent().queue_free()
+	_weapon_motes = null
+	_weapon_light = null
+	_drop_sheath_glow()
+	if _weapon_look.is_empty():
+		_material.set_shader_parameter("blade_glow", Color(0, 0, 0, 0))
+		return
+	# Only where the blade is (an axe's or mace's head, a sword's blade):
+	# the main prop's own blade faces.
+	_weapon_prop = str(_prop_names()[0])
+	var blade := _blade_box(_weapon_prop)
+	var attach := BoneAttachment3D.new()
+	attach.bone_name = "WeaponR"
+	_skeleton.add_child(attach)
+	_weapon_motes = Vfx.weapon_mist(attach, _weapon_look.color, str(_weapon_look.motion), blade)
+	_weapon_light = Vfx.weapon_light(attach, _weapon_look.color, blade.get_center())
+
+
+func _drop_sheath_glow() -> void:
+	if _sheath_frame and is_instance_valid(_sheath_frame):
+		_sheath_frame.queue_free()
+	_sheath_frame = null
+	_sheath_host = null
+	_sheath_motes = null
+	_sheath_light = null
+
+
+## The weapon put away: its mist and light on the still copy, made when a new
+## copy of the enchanted prop is hung (frame: the copy's transform without
+## its bind pose, the grip bone where it hangs).
+func _sheath_glow() -> void:
+	var copy: Node3D = _sheathed.get(_weapon_prop)
+	if copy == null or not is_instance_valid(copy) or copy.is_queued_for_deletion():
+		if _sheath_host != null:
+			_drop_sheath_glow()
+		return
+	if copy == _sheath_host:
+		return
+	_drop_sheath_glow()
+	_sheath_host = copy
+	_sheath_frame = Node3D.new()
+	_sheath_frame.transform = copy.transform * _grip_bind(_weapon_prop).affine_inverse()
+	copy.get_parent().add_child(_sheath_frame)
+	var blade := _blade_box(_weapon_prop)
+	_sheath_motes = Vfx.weapon_mist(_sheath_frame, _weapon_look.color, str(_weapon_look.motion), blade)
+	_sheath_light = Vfx.weapon_light(_sheath_frame, _weapon_look.color, blade.get_center())
+
+
+## A prop's bind pose to its grip bone (WeaponR, or WeaponL for the left
+## hand's), as _show_sheathed and _blade_box take it.
+func _grip_bind(part: String) -> Transform3D:
+	var bind := Transform3D.IDENTITY
+	if not _parts.has(part):
+		return bind
+	var grip: String = _sheath_place(part)[0]
+	var skin: Skin = _parts[part][1]
+	for i in skin.get_bind_count():
+		if skin.get_bind_name(i) == grip:
+			bind = skin.get_bind_pose(i)
+	return bind
+
+
+## The box round a weapon prop's blade (its faces in the BLADE colour slot:
+## a sword's blade, an axe's or mace's head), in the WeaponR bone's space,
+## from the prop's mesh and its bind pose; a guess along the bone without one.
+func _blade_box(part: String) -> AABB:
+	if _blade_boxes.has(part):
+		return _blade_boxes[part]
+	var box := AABB(Vector3(-0.02, 0.2, -0.02), Vector3(0.04, 0.7, 0.04))
+	if _parts.has(part):
+		var mesh: Mesh = _parts[part][0]
+		var skin: Skin = _parts[part][1]
+		var bind := Transform3D.IDENTITY
+		for i in skin.get_bind_count():
+			if skin.get_bind_name(i) == &"WeaponR":
+				bind = skin.get_bind_pose(i)
+		var found := false
+		for surface in mesh.get_surface_count():
+			var arrays := mesh.surface_get_arrays(surface)
+			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			for k in points.size():
+				if clampi(int(uvs[k].x * SLOT_COUNT), 0, SLOT_COUNT - 1) != BLADE:
+					continue
+				var at := bind * points[k]
+				if not found:
+					box = AABB(at, Vector3.ZERO)
+					found = true
+				else:
+					box = box.expand(at)
+	_blade_boxes[part] = box
+	return box
+
+static var _blade_boxes: Dictionary = {}
+
+
+## The weapon's glow pulses between these strengths, this fast.
+const WEAPON_GLOW_LOW := 0.25
+const WEAPON_GLOW_HIGH := 0.55
+const WEAPON_GLOW_PULSE := 2.5
+
+
+## Pulses the enchanted blade's glow, with its mist while it's drawn and
+## near.
+func _update_weapon_glow(delta: float) -> void:
+	if _weapon_look.is_empty():
+		return
+	_weapon_time += delta
+	var color: Color = _weapon_look.color
+	var strength := lerpf(WEAPON_GLOW_LOW, WEAPON_GLOW_HIGH, 0.5 + 0.5 * sin(_weapon_time * WEAPON_GLOW_PULSE))
+	_material.set_shader_parameter("blade_glow", Color(color.srgb_to_linear(), strength))
+	_sheath_glow()
+	var alive := _combatant != null and _combatant.is_alive()
+	var near := Vfx.near(self, global_position)
+	var camera := get_viewport().get_camera_3d()
+	var lit := camera != null and camera.global_position.distance_to(global_position) < Vfx.WEAPON_LIGHT_NEAR and Vfx.quality == "High"
+	# In hand, the hand's mist and light; put away, the hanging copy's.
+	var put_away := _sheath_host != null and is_instance_valid(_sheath_host)
+	var drawn := not put_away
+	if _weapon_motes and is_instance_valid(_weapon_motes):
+		_weapon_motes.emitting = drawn and alive and near
+		if _weapon_light and is_instance_valid(_weapon_light):
+			_weapon_light.visible = drawn and alive and lit
+			_weapon_light.light_energy = Vfx.WEAPON_LIGHT_ENERGY * (0.6 + strength)
+	if put_away and _sheath_motes and is_instance_valid(_sheath_motes):
+		_sheath_motes.emitting = alive and near
+		if _sheath_light and is_instance_valid(_sheath_light):
+			_sheath_light.visible = alive and lit
+			_sheath_light.light_energy = Vfx.WEAPON_LIGHT_ENERGY * (0.6 + strength)
 
 
 ## Weapons and shield in hand, or the ranged weapon while shooting, and what
@@ -1035,6 +1187,20 @@ static func outfit_for(trade: String, seed_value: int) -> Dictionary:
 		"spellsword":
 			body = Color(0.25, 0.3, 0.55)
 			body_pattern = Pattern.QUILTED
+		# Profession trainers: a miner's leather, a herbalist's greens, a
+		# skinner's hides and an enchanter's violet robe.
+		"mining":
+			body = LEATHER[rng.randi_range(0, LEATHER.size() - 1)].darkened(0.25)
+			body_pattern = Pattern.STUDDED
+		"herbalism":
+			body = [Color(0.3, 0.45, 0.25), Color(0.4, 0.5, 0.3), Color(0.25, 0.38, 0.3)][rng.randi_range(0, 2)]
+		"skinning":
+			body = LEATHER[rng.randi_range(0, LEATHER.size() - 1)]
+			body_pattern = Pattern.TOOLED
+		"enchanting":
+			body = [Color(0.42, 0.25, 0.55), Color(0.3, 0.22, 0.5)][rng.randi_range(0, 1)]
+			legs = body
+			legs_pattern = body_pattern
 	var boots: Color = LEATHER[rng.randi_range(0, LEATHER.size() - 1)].darkened(0.2)
 	return { CHEST: body, LEGS: legs, FEET: boots, HANDS: boots, WAIST: boots.darkened(0.2),
 		"patterns": { CHEST: body_pattern, WRISTS: body_pattern, SHOULDERS: body_pattern, LEGS: legs_pattern,
@@ -1392,7 +1558,8 @@ func _update_unit(delta: float) -> void:
 	_gear_check -= delta
 	if _gear_check <= 0.0 and _profile:
 		_gear_check = GEAR_CHECK
-		var key := hash(_profile.equipment.values().map(func(s: Dictionary) -> int: return int(s.get("id", 0))))
+		# Enchants too, so a new one shows (Enchanting).
+		var key := hash(_profile.equipment.values().map(func(s: Dictionary) -> int: return int(s.get("id", 0)) * 100000 + int(s.get("enchant", 0))))
 		if key != _gear_key:
 			_gear_key = key
 			show_equipment(_profile.equipment)
@@ -1409,6 +1576,7 @@ func _update_unit(delta: float) -> void:
 		sheath_state = Sheath.RANGED if _combatant.shoot_target != null else Sheath.MELEE
 	_update_loco(delta)
 	_update_glow()
+	_update_weapon_glow(delta)
 	_update_cape(delta)
 
 

@@ -45,7 +45,7 @@ static func is_talent_rank(id: int) -> bool:
 ## Talents that fire from combat or do something of their own.
 static func _special(spell: Dictionary, level: int) -> String:
 	var name: String = spell.SpellName
-	var chance := int(spell.get("ProcChance", 100))
+	var chance := roundi(SpellDB.proc_chance(spell))
 	var trigger := SpellDB.get_spell(int(spell.get("EffectTriggerSpell1", 0)))
 	var t := func(of: Dictionary, effect: int) -> String: return str(roundi(absf(SpellDB.effect_value(of, effect, level))))
 	var lasts := func(of: Dictionary) -> String: return "%d sec" % roundi(SpellDB.duration(of))
@@ -56,8 +56,7 @@ static func _special(spell: Dictionary, level: int) -> String:
 		"Swordsman's Craft":
 			return "Gives a %d%% chance to get an extra attack on the same target after hitting with your sword." % chance
 		"Maceman's Craft":
-			var ppm := float(SpellDB.proc_info(spell).get("ppm", 0.0))
-			return "Gives your mace hits a chance (%s a minute) to stun the target for 3 sec." % _num(ppm)
+			return "Gives your mace hits a %s%% chance to stun the target for 3 sec." % _num(SpellDB.proc_chance(spell))
 		"Improved Hobble":
 			return "Gives your Hobble a %d%% chance to root the target for 5 sec." % chance
 		"Improved Retort":
@@ -69,8 +68,7 @@ static func _special(spell: Dictionary, level: int) -> String:
 		"Battle Frenzy":
 			return "After landing a critical strike, your next 3 swings are %s%% faster." % t.call(trigger, 0)
 		"Surging Wrath":
-			var ppm := float(SpellDB.proc_info(spell).get("ppm", 0.0))
-			return "Gives your melee hits a chance (%s a minute) to generate 1 extra rage." % _num(ppm)
+			return "Gives your melee hits a %s%% chance to generate 1 extra rage." % _num(SpellDB.proc_chance(spell))
 		"Bloodied Resolve":
 			return "After being the victim of a critical strike, you regenerate %s%% of your health every 3 sec for 6 sec." % t.call(trigger, 0)
 		"Improved Unbridled Rage":
@@ -109,7 +107,7 @@ static func _special(spell: Dictionary, level: int) -> String:
 		"Improved Last Rite":
 			return "Last Rite also raises the target's armor from items by %s%% for 2 min." % t.call(trigger, 0)
 		"Righteous Rebuke":
-			return "Gives your melee hits a chance to lower the target's Strength and Agility by %s%% for 10 sec." % t.call(trigger, 0)
+			return "Gives your melee hits a %s%% chance to lower the target's Strength and Agility by %s%% for 10 sec." % [_num(SpellDB.proc_chance(spell)), t.call(trigger, 0)]
 		"Avenging Zeal":
 			return "After a critical strike, your Holy and physical damage is raised by %s%% for 8 sec." % t.call(trigger, 0)
 		"Tooth for a Tooth":
@@ -307,6 +305,8 @@ static func _rage(spell: Dictionary, i: int) -> bool:
 ## Lesser Mending and Greater Mending".
 ## Long lists say what the spells share: "Shadow spells", "instant spells".
 static func _affected(spell: Dictionary, i: int) -> String:
+	if int(spell.get("EffectAffectsInstant%d" % (i + 1), 0)) != 0:
+		return "instant spells and abilities"
 	var names := PackedStringArray()
 	var ids := _affected_ids(spell, i)
 	for id in ids:
@@ -362,6 +362,17 @@ static func _player_spell_ids() -> Array:
 			for tree: Dictionary in Talents.trees(int(char_class)):
 				for talent: Dictionary in tree.talents:
 					_player_spells[int(talent.ranks[0])] = true
+		# Spells in a class's spellbook, and the designs' own new spells (ids
+		# from SpellDesigns.NEW_SPELL_IDS), trained or not.
+		var data := SpellDB._get_data()
+		for tabs: Dictionary in data.get("book_tabs", {}).values():
+			for id: String in tabs:
+				var first := SpellDB.first_rank(int(id))
+				_player_spells[first if first != 0 else int(id)] = true
+		for id: String in data.spells:
+			if int(id) >= SpellDesigns.NEW_SPELL_IDS:
+				var first := SpellDB.first_rank(int(id))
+				_player_spells[first if first != 0 else int(id)] = true
 		# Verdicts come from Oaths rather than the trainer.
 		for id: int in _player_spells.keys():
 			var verdict := SpellDB.seal_judgement(SpellDB.get_spell(id))

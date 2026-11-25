@@ -61,6 +61,7 @@ const CATEGORIES := {
 		["npc_names", "Show NPC Names", "check", null],
 		["enemy_names", "Show Enemy Names", "check", null],
 		["quest_tracker", "Show Quest Tracker", "check", null],
+		["bags_display", "Bags", "choice", ["Combined", "Separate"]],
 		["bar_bottom_left", "Bottom Left Action Bar", "check", null],
 		["bar_bottom_right", "Bottom Right Action Bar", "check", null],
 		["bar_right", "Right Action Bar", "check", null],
@@ -125,7 +126,7 @@ const DEV_BUTTONS := [
 	["Level Up", "level+"], ["+1 Gold", "money 1g"], ["Respawn Creatures", "respawn"],
 	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
 	["Reload Game", "reload"], ["Train All Spells", "trainall"], ["BiS", "bis"],
-	["Randomize Bots", "randomizebots"], ["Reset Talents", "resettalents"],
+	["Randomize Bots", "randomizebots"], ["Reset Talents", "resettalents"], ["Give Bags", "givebags"],
 ]
 const RESULT := Color(0.6, 0.9, 0.6)
 ## The open "Reset Character?" confirmation, or null.
@@ -157,7 +158,8 @@ var console: DevConsole
 var _item_list := false
 ## The Developer tab is showing its spell editor (a class's design file,
 ## SpellDesigns): the class's file name, the search, and the entry shown
-## ("spell:<n>" for the nth spell group, "tree:<n>" for a talent tree).
+## ("spell:<n>" for the nth spell group, "tree:<n>" for a talent tree,
+## "enchant:<n>" for a profession's nth enchant).
 var _spell_editor := false
 var _edit_class := "man_at_arms"
 var _edit_filter := ""
@@ -547,6 +549,7 @@ func _build_developer(content: VBoxContainer) -> void:
 		grid.add_child(button)
 	content.add_child(grid)
 	content.add_child(_spawn_row(console))
+	_profession_rows(content, console)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", roundi(3 * _ui_scale))
 	var field := LineEdit.new()
@@ -615,6 +618,69 @@ func _spawn_row(console: DevConsole) -> HBoxContainer:
 	row.add_child(_button("Spawn", func() -> void:
 		_show_result(console.run("spawn %d %s" % [int(level.value), SPAWN_RANKS[_spawn_rank].to_lower()]))))
 	return row
+
+
+## The Developer tab's Professions rows: a profession to Learn (a rank at a
+## time) or Unlearn, its skill on a slider applied as it moves, and Max
+## Skills, Learn Recipes and Give Tools. They act on the targeted playerbot
+## when one is targeted, as the console's commands do.
+var _dev_profession := 0
+
+
+func _profession_rows(content: VBoxContainer, console: DevConsole) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	var label := _label("Professions", TEXT)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	var pick := OptionButton.new()
+	pick.custom_minimum_size.x = 58 * _ui_scale
+	pick.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	pick.get_popup().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	for name: String in ProfessionDB.NAMES:
+		pick.add_item(Professions.title(name))
+	pick.select(_dev_profession)
+	row.add_child(pick)
+	var chosen := func() -> String: return ProfessionDB.NAMES[pick.selected]
+	var slider := HSlider.new()
+	slider.min_value = 1
+	slider.max_value = 300
+	slider.custom_minimum_size.x = 60 * _ui_scale
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var skill_label := _label("", TEXT)
+	skill_label.custom_minimum_size.x = 18 * _ui_scale
+	# The slider shows the picked profession's skill, without running anything.
+	var show_skill := func() -> void:
+		var profile: CharacterProfile = console.player().targeting.target.profile if console.player().targeting.target is Bot else GameState
+		slider.set_value_no_signal(maxi(Professions.pure_value(profile, chosen.call()), 1))
+		skill_label.text = str(Professions.pure_value(profile, chosen.call()))
+	pick.item_selected.connect(func(index: int) -> void:
+		_dev_profession = index
+		show_skill.call())
+	row.add_child(_button("Learn", func() -> void:
+		_show_result(console.run("profession %s" % chosen.call()))
+		show_skill.call()))
+	row.add_child(_button("Unlearn", func() -> void:
+		_show_result(console.run("unlearnprofession %s" % chosen.call()))
+		show_skill.call()))
+	slider.value_changed.connect(func(value: float) -> void:
+		skill_label.text = str(int(value))
+		_show_result(console.run("skill %s %d" % [chosen.call(), int(value)])))
+	row.add_child(slider)
+	row.add_child(skill_label)
+	show_skill.call()
+	content.add_child(row)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	for entry: Array in [["Max Skills", "maxprofessions"], ["Learn Recipes", "learnrecipes"], ["Give Tools", "proftools"],
+			["Spawn Herb", "nodes herb"], ["Spawn Ore", "nodes ore"], ["Respawn Nodes", "respawnnodes"]]:
+		var command: String = entry[1]
+		var button := _button(entry[0], func() -> void:
+			_show_result(console.run(command))
+			show_skill.call())
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		buttons.add_child(button)
+	content.add_child(buttons)
 
 
 ## Asks before starting the character over (the console's "reset confirm").
@@ -688,8 +754,10 @@ func _build_spell_editor(content: VBoxContainer) -> void:
 	))
 	var classes := OptionButton.new()
 	classes.add_theme_font_size_override("font_size", small)
-	for spec: Array in SpellDesigns.CLASSES:
-		classes.add_item(str(ClassicData.CLASS_NAMES.get(int(spec[0]), spec[2])))
+	# The classes, then the professions.
+	for spec: Array in SpellDesigns.all_files():
+		var label := str(ClassicData.CLASS_NAMES.get(int(spec[0]), "")) if int(spec[0]) != 0 else str(spec[1]).capitalize()
+		classes.add_item(label)
 		classes.set_item_metadata(classes.item_count - 1, str(spec[2]))
 		if str(spec[2]) == _edit_class:
 			classes.select(classes.item_count - 1)
@@ -733,12 +801,21 @@ func _build_spell_editor(content: VBoxContainer) -> void:
 		var design := SpellDesigns.design_of(_edit_class)
 		var words := _edit_filter.strip_edges().to_lower()
 		var groups: Array = design.get("spells", [])
+		# A profession's enchants name the spells they cast or keep up
+		# (Crusader's Holy Strength), so searching an enchant finds them.
+		var cast_by := {}
+		for enchant: Dictionary in design.get("enchants", []):
+			for effect: Dictionary in enchant.get("effects", []):
+				if effect.has("spell"):
+					cast_by.get_or_add(int(effect.spell), []).append(str(enchant.get("name", "")))
 		for i in groups.size():
 			var group: Dictionary = groups[i]
 			var ids: Array[String] = []
+			var by: Array = []
 			for rank: Dictionary in group.get("ranks", []):
 				ids.append(str(int(rank.get("id", 0))))
-			var label := "%s  (%s)" % [group.get("name", "?"), ", ".join(ids)]
+				by.append_array(cast_by.get(int(rank.get("id", 0)), []))
+			var label := "%s  (%s)%s" % [group.get("name", "?"), ", ".join(ids), "  - " + ", ".join(by) + " enchant" if not by.is_empty() else ""]
 			if words.is_empty() or words in label.to_lower():
 				entries.add_item(label)
 				entries.set_item_metadata(entries.item_count - 1, "spell:%d" % i)
@@ -748,6 +825,13 @@ func _build_spell_editor(content: VBoxContainer) -> void:
 			if words.is_empty() or words in label.to_lower():
 				entries.add_item(label)
 				entries.set_item_metadata(entries.item_count - 1, "tree:%d" % i)
+		# A profession's item enchants (what they give, proc rates), after.
+		var enchants: Array = design.get("enchants", [])
+		for i in enchants.size():
+			var label := "Enchant: %s  (%d)" % [enchants[i].get("name", "?"), int(enchants[i].get("id", 0))]
+			if words.is_empty() or words in label.to_lower():
+				entries.add_item(label)
+				entries.set_item_metadata(entries.item_count - 1, "enchant:%d" % i)
 		for n in entries.item_count:
 			if entries.get_item_metadata(n) == _edit_entry:
 				entries.select(n)
@@ -779,7 +863,7 @@ func _build_spell_editor(content: VBoxContainer) -> void:
 			return false
 		var design: Dictionary = SpellDesigns.design_of(_edit_class).duplicate(true)
 		var parts := _edit_entry.split(":")
-		var list: Array = design.get("spells" if parts[0] == "spell" else "talents", [])
+		var list: Array = design.get(EDIT_SECTIONS.get(parts[0], "spells"), [])
 		list[int(parts[1])] = json.data
 		SpellDesigns.edited[_edit_class] = design
 		var warnings := SpellDB.reload_designs()
@@ -866,11 +950,15 @@ func _fill_tooltip_text(text: TextEdit) -> void:
 
 ## The spell group ("spell:<n>") or talent tree ("tree:<n>") of a design, or
 ## null.
+## The editor's entry kinds and the design sections they're in.
+const EDIT_SECTIONS := { "spell": "spells", "tree": "talents", "enchant": "enchants" }
+
+
 func _design_entry(design: Dictionary, entry: String) -> Variant:
 	var parts := entry.split(":")
 	if parts.size() != 2:
 		return null
-	var list: Array = design.get("spells" if parts[0] == "spell" else "talents", [])
+	var list: Array = design.get(EDIT_SECTIONS.get(parts[0], "spells"), [])
 	var n := int(parts[1])
 	return list[n] if n >= 0 and n < list.size() else null
 
@@ -1226,6 +1314,7 @@ func _key_button(action: String, slot: int) -> Button:
 
 ## What an option does, shown on hovering its row.
 const HINTS := {
+	"bags_display": "Combined: the backpack and every bag in one window. Separate: each bag its own frame, as classic's; right-click a bag slot to open or close that bag, B for all of them.",
 	"render_resolution": "How many rows of pixels the world is drawn with: Low 270, Medium 405, High 540, Ultra 720. Lower is chunkier and faster.",
 	"animation_quality": "How often characters and creatures further off move their limbs. Low animates distant ones less often; Ultra animates everyone within 35 yards every frame.",
 	"character_detail": "How far away weapons, shields, hair, helms and capes are drawn: Low 15 yards, Medium 25, High 35, Ultra 70.",

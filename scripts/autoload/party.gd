@@ -162,6 +162,7 @@ func reward_kill(enemy: Enemy, tapper: Combatant) -> bool:
 	if not players_group and not near.is_empty() and near[0] is Bot:
 		(near[0] as Bot).quests.on_kill(enemy.creature_entry)
 		(near[0] as Bot).last_kill = enemy.creature_entry
+		(near[0] as Bot).kills += 1
 		(near[0] as Bot).bag.loot(enemy)
 	return players_group
 

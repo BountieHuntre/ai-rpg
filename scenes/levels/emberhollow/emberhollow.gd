@@ -261,6 +261,7 @@ func _build_proving_ground() -> void:
 	# an anvil.
 	Buildings.shed(kit, Vector3(2527.5, y, -1690.5), Vector3(9, 3.6, 9), PI / 2, LOG, HIDE)
 	kit.block(Vector3(2530, y, -1691), Vector3(2.4, 1.8, 2.2), DARK_ROCK, 0.0, true)
+	add_forge(Vector3(2530, y, -1691))
 	kit.block(Vector3(2530, y + 1.8, -1691), Vector3(1.8, 0.12, 1.6), Color(0.55, 0.2, 0.08))
 	kit.block(Vector3(2526, y, -1688), Vector3(0.6, 0.6, 0.45), LOG, 0.0, true)
 	kit.block(Vector3(2526, y + 0.6, -1688), Vector3(1.1, 0.3, 0.55), Color(0.25, 0.25, 0.28))

@@ -148,3 +148,43 @@ appearance = {
 "body": 0
 }
 race = "undead"
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1763.3, 5.05, -4155.0)
+rotation = Vector3(0, -0.1644, 0)
+npc_name = "Garrick Coldvein"
+subname = "Mining Trainer"
+trainer = "mining"
+race = "undead"
+
+[node name="HerbalismTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1758.8, 5.05, -4166.9)
+rotation = Vector3(0, 0.5236, 0)
+npc_name = "Mortimer Thrale"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
+race = "undead"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1764.7, 5.05, -4169.4)
+rotation = Vector3(0, -1.309, 0)
+npc_name = "Sabine Crowle"
+subname = "Skinning Trainer"
+trainer = "skinning"
+race = "undead"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1756.9, 5.05, -4171.4)
+rotation = Vector3(0, 1.8326, 0)
+npc_name = "Lucan Grimsby"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+race = "undead"
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1764.3, 5.05, -4173.9)
+rotation = Vector3(0, -2.3562, 0)
+npc_name = "Ottilie Wane"
+subname = "Enchanting Supplies"
+vendor = 15419
+race = "undead"

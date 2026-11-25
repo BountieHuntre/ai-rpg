@@ -229,6 +229,7 @@ func _spawn(entry: Dictionary, at: Vector3) -> Bot:
 	profile.xp = int(entry.xp)
 	if entry.get("appearance") is Dictionary:
 		profile.appearance = entry.appearance
+	profile.professions = Professions.read_saved(entry.get("professions", {}))
 	_equip_starting_gear(profile)
 	_restore_equipment(profile, entry.get("equipment", {}))
 	var bot: Bot = BOT_SCENE.instantiate()
@@ -278,6 +279,8 @@ static func _restore_equipment(profile: CharacterProfile, saved: Dictionary) -> 
 		var id := int(stack.get("id", 0))
 		if not ItemDB.get_item(id).is_empty():
 			profile.equipment[int(key)] = { "id": id, "count": maxi(int(stack.get("count", 1)), 1), "bound": bool(stack.get("bound", false)) }
+			if stack.has("enchant"):
+				profile.equipment[int(key)].enchant = int(stack.enchant)
 
 
 static func _saved_equipment(profile: CharacterProfile) -> Dictionary:
@@ -286,6 +289,8 @@ static func _saved_equipment(profile: CharacterProfile) -> Dictionary:
 		var stack: Dictionary = profile.equipment[slot]
 		if not stack.is_empty():
 			saved[str(slot)] = { "id": int(stack.id), "count": int(stack.get("count", 1)), "bound": bool(stack.get("bound", false)) }
+			if stack.has("enchant"):
+				saved[str(slot)].enchant = int(stack.enchant)
 	return saved
 
 
@@ -315,6 +320,7 @@ func _store(bot: Bot) -> void:
 		entry.quests = bot.quests.to_dict()
 		entry.bag = bot.bag.to_dict()
 		entry.equipment = _saved_equipment(bot.profile)
+		entry.professions = bot.profile.professions
 		if not bot.profile.appearance.is_empty():
 			entry.appearance = bot.profile.appearance
 
@@ -731,6 +737,7 @@ func _load_roster() -> void:
 				"bag": entry.get("bag", {}),
 				"equipment": entry.get("equipment", {}),
 				"appearance": entry.get("appearance", {}),
+				"professions": entry.get("professions", {}),
 			})
 
 

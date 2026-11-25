@@ -14,6 +14,7 @@ signal spells_changed
 signal money_changed
 signal quests_changed
 signal friends_changed
+signal professions_changed
 ## Quest progress lines ("Burrowling Runt slain: 3/10") for the HUD.
 signal quest_message(text: String)
 ## A quest taken and one handed in (escorts set off on the first; the Thunder
@@ -323,6 +324,7 @@ func save_to_disk() -> bool:
 		"spells": known_spells,
 		"talents": talents,
 		"talent_reset_cost": talent_reset_cost,
+		"professions": professions,
 		"action_bar": action_bar,
 		"quests": quests,
 		"quests_done": quests_done,
@@ -387,6 +389,7 @@ func _start_fresh() -> void:
 	stable = []
 	stable_slots = 0
 	pet_spells.clear()
+	professions = {}
 	buyback.clear()
 	_reset_items()
 	Inventory.start_character(self)
@@ -464,6 +467,7 @@ func _apply_save(data: Dictionary) -> void:
 	for key: String in saved_talents:
 		talents[key] = int(saved_talents[key])
 	talent_reset_cost = int(data.get("talent_reset_cost", 0))
+	professions = Professions.read_saved(data.get("professions", {}))
 	Talents.validate(self)
 
 
@@ -485,6 +489,9 @@ func _read_stack(stack: Dictionary) -> Dictionary:
 	var read := { "id": int(stack.id), "count": int(stack.count), "bound": bool(stack.get("bound", false)) }
 	if stack.has("durability"):
 		read.durability = int(stack.durability)
+	# Its enchant (Enchanting).
+	if stack.has("enchant"):
+		read.enchant = int(stack.enchant)
 	return read
 
 

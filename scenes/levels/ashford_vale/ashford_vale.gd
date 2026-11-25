@@ -265,6 +265,7 @@ func _build_priory() -> void:
 	# and an anvil.
 	Buildings.shed(kit, at.call(-16, -2), Vector3(8.5, 4, 8.5), PI / 2, DARK_WOOD, DARK_STONE)
 	kit.block(at.call(-18.5, -4), Vector3(3, 1.6, 2.5), DARK_STONE, 0.0, true)
+	add_forge(at.call(-18.5, -4))
 	kit.block(at.call(-18.5, -4) + Vector3(0, 1.6, 0), Vector3(2.2, 0.15, 1.8), Color(0.55, 0.2, 0.08))
 	kit.cylinder(at.call(-18.5, -4) + Vector3(0, 2.6, 0), 1.3, 1.6, DARK_STONE, 4, 0.35)
 	kit.block(at.call(-18.5, -4) + Vector3(0, 4.2, 0), Vector3(0.7, 2.4, 0.7), DARK_STONE)

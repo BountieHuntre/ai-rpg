@@ -396,6 +396,7 @@ func _build_village() -> void:
 	# The smithy: a slate roof on posts over a forge with its hood and an anvil.
 	Buildings.shed(kit, _near(t, Vector2(25, 18), y), Vector3(8, 3.6, 7), 0.0, TIMBER, SLATE)
 	kit.block(_near(t, Vector2(26, 16), y), Vector3(3, 1.6, 2.5), DARK_STONE, 0.0, true)
+	add_forge(_near(t, Vector2(26, 16), y))
 	kit.block(_near(t, Vector2(26, 16), y + 1.6), Vector3(2.2, 0.15, 1.8), Color(0.55, 0.2, 0.08))
 	kit.cylinder(_near(t, Vector2(26, 16), y + 2.6), 1.3, 1.6, DARK_STONE, 4, 0.35)
 	kit.block(_near(t, Vector2(26, 16), y + 4.2), Vector3(0.7, 2.2, 0.7), DARK_STONE)

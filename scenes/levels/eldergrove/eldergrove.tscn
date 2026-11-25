@@ -259,3 +259,51 @@ appearance = {
 "body": 0
 }
 race = "wood_elf"
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2056.8, 6.05, -4367.1)
+rotation = Vector3(0, 1.4778, 0)
+npc_name = "Theron Stonesong"
+subname = "Mining Trainer"
+trainer = "mining"
+race = "wood_elf"
+
+[node name="HerbalismTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2086.0, 6.05, -4373.1)
+rotation = Vector3(0, -2.618, 0)
+npc_name = "Faelyn Dewpetal"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
+race = "wood_elf"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2080.8, 6.05, -4372.0)
+rotation = Vector3(0, 2.2253, 0)
+npc_name = "Kaelith Swiftknife"
+subname = "Skinning Trainer"
+trainer = "skinning"
+race = "wood_elf"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2087.9, 6.05, -4368.6)
+rotation = Vector3(0, -1.309, 0)
+npc_name = "Ysanne Starweave"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+race = "wood_elf"
+
+[node name="TradeSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2079.4, 6.05, -4367.7)
+rotation = Vector3(0, 1.1781, 0)
+npc_name = "Elowen Greenhollow"
+subname = "Trade Supplies"
+vendor = 1286
+race = "wood_elf"
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-2090.5, 6.05, -4372.3)
+rotation = Vector3(0, -1.9635, 0)
+npc_name = "Miravel Lumen"
+subname = "Enchanting Supplies"
+vendor = 15419
+race = "wood_elf"

@@ -93,6 +93,13 @@ static func item_key(item: Dictionary) -> String:
 			if SLOTS.has(slot):
 				return "%s_%s_%s" % [SLOTS[slot], MATERIALS.get(subclass, "cloth"), quality]
 		1:
+			# The game's big bags: coffers and chests, and packs.
+			for word: String in ["coffer", "chest"]:
+				if lower.contains(word):
+					return "coffer_" + quality
+			for word: String in ["pack", "rucksack", "haversack", "duffel"]:
+				if lower.contains(word):
+					return "pack_" + quality
 			for color in BAG_COLORS:
 				if lower.contains(color):
 					return "bag_" + color

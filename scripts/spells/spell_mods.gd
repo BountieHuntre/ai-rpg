@@ -52,15 +52,24 @@ static func percent(caster: Combatant, spell: Dictionary, op: int) -> float:
 	return _totals(caster, spell, op).y
 
 
+## Whether a spell counts for `"affects": "instant"` modifiers: one the
+## caster casts at once (its cast time after their talents is 0), not a
+## channel, a passive or Attack and Shoot.
+static func is_instant(caster: Combatant, spell: Dictionary) -> bool:
+	if SpellDB.is_passive(spell) or SpellDB.is_channeled(spell) or int(spell.get("Id", 0)) in [SpellDB.ATTACK, SpellDB.SHOOT]:
+		return false
+	return SpellDB.cast_time(spell, caster) <= 0.0
+
+
 ## (flat, percent) of the caster's modifiers for an operation on the spell.
 static func _totals(caster: Combatant, spell: Dictionary, op: int) -> Vector2:
 	var totals := Vector2.ZERO
 	if caster == null or not is_instance_valid(caster) or not caster.is_player or spell.is_empty():
 		return totals
 	var flags := int(spell.get("SpellFamilyFlags", 0))
-	if flags == 0:
-		return totals
 	var family := int(spell.get("SpellFamilyName", 0))
+	# Whether the spell is instant, worked out once, if a modifier asks.
+	var instant := -1
 	for aura in caster.auras:
 		var mod: Dictionary = aura.spell
 		if int(mod.get("SpellFamilyName", 0)) != family:
@@ -71,7 +80,17 @@ static func _totals(caster: Combatant, spell: Dictionary, op: int) -> Vector2:
 				continue
 			if int(mod.get("EffectMiscValue%d" % (i + 1), -1)) != op:
 				continue
-			if int(mod.get("EffectItemType%d" % (i + 1), 0)) & flags == 0:
+			if int(mod.get("EffectAffectsInstant%d" % (i + 1), 0)) != 0:
+				# The game's own (a design's `"affects": "instant"`): every spell
+				# and ability of the class with no cast time, after the caster's
+				# other talents, not channelled. Never for cast time itself.
+				if op == CASTING_TIME:
+					continue
+				if instant < 0:
+					instant = 1 if is_instant(caster, spell) else 0
+				if instant == 0:
+					continue
+			elif int(mod.get("EffectItemType%d" % (i + 1), 0)) & flags == 0:
 				continue
 			if kind == AURA_FLAT:
 				totals.x += aura.amounts[i]

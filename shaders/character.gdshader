@@ -14,6 +14,10 @@ uniform float flash = 0.0;
 uniform vec4 hand_glow = vec4(0.0);
 // The hands' colour slot (HumanoidModel's HANDS).
 const int HANDS_SLOT = 6;
+// An enchanted weapon's blade glowing in its enchant's colour, alpha how
+// strongly (HumanoidModel, Enchanting.weapon_look).
+uniform vec4 blade_glow = vec4(0.0);
+const int BLADE_SLOT = 12;
 // What each slot is made of (HumanoidModel.Pattern: weave, leather, mail,
 // plate, wood...): a grey tile from gear_patterns laid under its colour, by
 // the model's second UV map (yards along and around each piece); 0 is none.
@@ -35,6 +39,10 @@ void fragment() {
 	}
 	color = mix(color, tint.rgb, tint.a);
 	vec3 glow = slot == HANDS_SLOT ? hand_glow.rgb * hand_glow.a : vec3(0.0);
+	if (slot == BLADE_SLOT) {
+		glow += blade_glow.rgb * blade_glow.a;
+		color = mix(color, blade_glow.rgb, min(blade_glow.a * 1.2, 0.9));
+	}
 	ALBEDO = mix(mix(color, hand_glow.rgb, slot == HANDS_SLOT ? hand_glow.a * 0.7 : 0.0), vec3(1.0), flash);
 	EMISSION = vec3(flash * 0.8) + glow * 1.5;
 	ROUGHNESS = 0.9;

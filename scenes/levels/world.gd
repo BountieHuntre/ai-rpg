@@ -196,10 +196,19 @@ func zone_at(point: Vector3) -> Zone:
 	return best
 
 
+## Classic's spell focus for forges (RequiresSpellFocus 3): the zones' forges.
+const FORGE_FOCUS := 3
+
+
 ## Whether a spell focus (RequiresSpellFocus) is within its reach of a
 ## point: a moonwell for filling a phial, a well for cleansing it.
 func spell_focus_near(focus: int, point: Vector3) -> bool:
 	for zone in zones:
+		# Forges (Smelting) are the zones' own.
+		if focus == FORGE_FOCUS:
+			for forge: Vector2 in zone.forges:
+				if Vector2(point.x, point.z).distance_to(forge) <= Zone.FORGE_RADIUS:
+					return true
 		for spec: Array in zone.spell_focuses:
 			var data := GameObject.data(int(spec[0]))
 			if int(data.get("focus", -1)) == focus and Vector2(point.x, point.z).distance_to(spec[1]) <= float(data.get("radius", 10.0)):

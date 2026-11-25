@@ -327,3 +327,51 @@ appearance = {
 "body": 1
 }
 race = "dwarf"
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-123.5, 7.05, -768.8)
+rotation = Vector3(0, 1.4231, 0)
+npc_name = "Dorgan Deepdelve"
+subname = "Mining Trainer"
+trainer = "mining"
+race = "dwarf"
+
+[node name="HerbalismTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-145.1, 7.05, -768.1)
+rotation = Vector3(0, -0.3927, 0)
+npc_name = "Fenna Mossbeard"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
+race = "dwarf"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-145.1, 7.05, -775.5)
+rotation = Vector3(0, -2.7489, 0)
+npc_name = "Brakki Hidesplit"
+subname = "Skinning Trainer"
+trainer = "skinning"
+race = "dwarf"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-140.1, 7.05, -775.3)
+rotation = Vector3(0, 2.3562, 0)
+npc_name = "Tilda Sparkwhistle"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+race = "gnome"
+
+[node name="TradeSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-148.6, 7.05, -771.8)
+rotation = Vector3(0, -1.5708, 0)
+npc_name = "Hobb Barrelbottom"
+subname = "Trade Supplies"
+vendor = 1286
+race = "dwarf"
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-141.8, 7.05, -765.0)
+rotation = Vector3(0, 0.2618, 0)
+npc_name = "Nissa Cogspindle"
+subname = "Enchanting Supplies"
+vendor = 15419
+race = "gnome"

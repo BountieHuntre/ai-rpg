@@ -69,7 +69,88 @@ static func title(parent: Control, at_units: Vector2, text: String, ui_scale: fl
 	label.add_theme_constant_override("shadow_offset_y", maxi(roundi(ui_scale * 0.6), 1))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(label)
+	# A title in the top band also drags its window.
+	if at_units.y < 4.0 and not _has_handle(parent):
+		_drag_handle(parent, text, ui_scale)
 	return label
+
+
+## The title band's height, in HUD units: where a window is dragged from.
+const BAND_HEIGHT := 12.0
+
+
+## Which window a title belongs to, for remembering where it was dragged (the
+## `window_positions` option, in HUD units): its script's class
+## (TrainerWindow, LootWindow...), else its title's first words ("Bags (B)"
+## is Bags, "Spellbook (P) - General" Spellbook).
+static func window_key(window: Control, text: String) -> String:
+	var script := window.get_script() as Script
+	var named := script.get_global_name() if script else &""
+	if named != &"" and named != &"GiltPanel":
+		return str(named)
+	return text.get_slice(" - ", 0).get_slice(" (", 0).strip_edges()
+
+
+## Makes the top band of `window` drag it about, kept on screen, and puts it
+## where it was last dragged. The handle lies just over the window's
+## background, under everything else (close buttons, tabs), so they still
+## take their clicks.
+static func _drag_handle(window: Control, text: String, ui_scale: float) -> void:
+	var key := window_key(window, text)
+	var handle := Control.new()
+	window.set_meta("drag_handle", handle)
+	handle.name = "DragHandle"
+	handle.size = Vector2(_window_size(window).x, BAND_HEIGHT * ui_scale)
+	handle.mouse_filter = Control.MOUSE_FILTER_STOP
+	handle.mouse_default_cursor_shape = Control.CURSOR_MOVE
+	window.add_child(handle)
+	# First in a window that is its own background; else just over the background.
+	window.move_child(handle, 0 if window is GiltPanel else mini(1, window.get_child_count() - 1))
+	var saved: Dictionary = Settings.get_value("window_positions")
+	if saved.has(key):
+		window.position = _on_screen(window, (saved[key] as Vector2) * ui_scale)
+	var grab := { "on": false, "from": Vector2.ZERO }
+	handle.gui_input.connect(func(event: InputEvent) -> void:
+		var button := event as InputEventMouseButton
+		if button and button.button_index == MOUSE_BUTTON_LEFT:
+			grab.on = button.pressed
+			grab.from = window.get_global_mouse_position() - window.position
+			if not button.pressed:
+				var positions: Dictionary = (Settings.get_value("window_positions") as Dictionary).duplicate()
+				positions[key] = window.position / ui_scale
+				Settings.set_value("window_positions", positions)
+				Settings.save()
+			handle.accept_event()
+			return
+		if event is InputEventMouseMotion and grab.on:
+			window.position = _on_screen(window, window.get_global_mouse_position() - grab.from)
+			handle.accept_event())
+
+
+## Whether a window already has a drag handle: one not freed by the window
+## rebuilding its contents (the trade skill window, trainers, loot...).
+static func _has_handle(window: Control) -> bool:
+	if not window.has_meta("drag_handle"):
+		return false
+	var handle: Variant = window.get_meta("drag_handle")
+	return handle is Control and is_instance_valid(handle) and not (handle as Control).is_queued_for_deletion()
+
+
+## A window's size: its own, or its background's (windows that are plain
+## Controls holding a panel).
+static func _window_size(window: Control) -> Vector2:
+	var size := window.size
+	for child in window.get_children():
+		if child is Control:
+			size = size.max((child as Control).size)
+			break
+	return size
+
+
+## A window's position kept on screen.
+static func _on_screen(window: Control, at: Vector2) -> Vector2:
+	var screen := window.get_viewport_rect().size
+	return at.clamp(Vector2.ZERO, (screen - _window_size(window)).max(Vector2.ZERO))
 
 
 ## The close button at a window's top right: a small gilt square with a

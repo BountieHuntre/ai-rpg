@@ -237,7 +237,7 @@ static func _encode_effect(raw: Dictionary, n: int) -> Dictionary:
 	for field: String in ["Effect", "EffectApplyAuraName", "EffectBasePoints", "EffectBaseDice", "EffectDieSides",
 			"EffectDicePerLevel", "EffectRealPointsPerLevel", "EffectImplicitTargetA", "EffectImplicitTargetB",
 			"EffectRadiusIndex", "EffectAmplitude", "EffectTriggerSpell", "EffectMiscValue", "EffectItemType",
-			"EffectMechanic", "EffectMultipleValue", "DmgMultiplier", "EffectCostShare", "EffectCostOf"]:
+			"EffectMechanic", "EffectMultipleValue", "DmgMultiplier", "EffectCostShare", "EffectCostOf", "EffectAffectsInstant"]:
 		fields[field] = raw.get(field + str(n), 0)
 		raw.erase(field + str(n))
 	var type := int(fields.Effect)
@@ -265,6 +265,9 @@ static func _encode_effect(raw: Dictionary, n: int) -> Dictionary:
 			e[pair[1]] = value
 	var misc := int(fields.EffectMiscValue)
 	_name_misc(e, type, aura, misc, int(fields.EffectItemType))
+	# The game's own: a spell modifier on every instant spell of the class.
+	if int(fields.EffectAffectsInstant) != 0:
+		e.affects = "instant"
 	var target := int(fields.EffectImplicitTargetA)
 	if target != 0:
 		e.target = name_of("targets", target)
@@ -381,7 +384,7 @@ static func decode(d: Dictionary, where := "") -> Dictionary:
 	var known := { "id": true, "name": true, "rank": true, "rank_text": true, "trainer": true, "book_tab": true,
 		"school": true, "damage_class": true,
 		"link": true, "proc": true, "coefficients": true, "extra": true, "effects": true, "raw": true, "chain_entry": true,
-		"chain_link": true }
+		"chain_link": true, "recipe": true }
 	row.Id = int(d.get("id", 0))
 	row.SpellName = str(d.get("name", ""))
 	if d.has("rank"):
@@ -536,7 +539,11 @@ static func _decode_effect(e: Dictionary, n: int, row: Dictionary, where: String
 		if e.has(pair[1]):
 			row[pair[0] + str(n)] = e[pair[1]]
 	row["EffectMiscValue%d" % n] = _misc_of(e, where)
-	row["EffectItemType%d" % n] = int(e.get("affects", e.get("item", 0)))
+	if str(e.get("affects", "")) == "instant":
+		row["EffectAffectsInstant%d" % n] = 1
+		row["EffectItemType%d" % n] = 0
+	else:
+		row["EffectItemType%d" % n] = int(e.get("affects", e.get("item", 0)))
 	if e.has("target"):
 		row["EffectImplicitTargetA%d" % n] = number_of("targets", e.target, where)
 	if e.has("target_b"):
@@ -642,6 +649,9 @@ static func encode_class(data: Dictionary, class_id: int, trainer: String, owned
 				design.proc = data.procs[str(id)]
 			if data.bonus.has(str(id)):
 				design.coefficients = data.bonus[str(id)]
+			# A profession's recipe (professions.json): reagents, tools, what it makes.
+			if data.get("recipes", {}).has(str(id)):
+				design.recipe = ProfessionDesigns.encode_recipe(data.recipes[str(id)])
 			var extra := {}
 			for table: String in SIDE_TABLES:
 				if data.get(table, {}).has(str(id)):
@@ -704,11 +714,102 @@ static func encode_class(data: Dictionary, class_id: int, trainer: String, owned
 ## A class's design file back in spells.json's shape: { spells, chains,
 ## trainer (its list), talents, start_spells, book_tabs, links, procs, bonus,
 ## and the side tables }.
+## Each class's spell family (SpellFamilyName), by its trainer list.
+const CLASS_FAMILIES := { "warrior": 4, "paladin": 10, "hunter": 9, "priest": 6, "spellsword": 12 }
+
+
+## Tags: a rank's `"tags": ["radiant_strike"]` gives it a bit of the class's
+## family_flags of its own (one free bit a tag, worked out here, the same for
+## every rank with the tag), and a spell modifier's `affects` or a proc's
+## `family_mask` may be a list of tags and spell names ("Verdict": the bits
+## its ranks carry) in place of a number. Returns the design's spell groups
+## with those turned into numbers, for decode.
+static func _resolve_tags(design: Dictionary, where: String) -> Array:
+	var groups: Array = (design.get("spells", []) as Array).duplicate(true)
+	var family := int(CLASS_FAMILIES.get(str(design.get("trainer", "")), 0))
+	# A group's tags (beside its name, before its ranks) are every rank's.
+	for group: Dictionary in groups:
+		if group.has("tags"):
+			for rank: Dictionary in group.get("ranks", []):
+				var all: Array = Array(group.tags).duplicate()
+				for tag: Variant in rank.get("tags", []):
+					if not tag in all:
+						all.append(tag)
+				rank.tags = all
+			group.erase("tags")
+	var used := 0
+	var by_name := {}
+	var tags := {}
+	for group: Dictionary in groups:
+		for rank: Dictionary in group.get("ranks", []):
+			if int(rank.get("family", family)) != family:
+				continue
+			var flags := int(rank.get("family_flags", 0))
+			used |= flags
+			var name := str(rank.get("name", group.get("name", "")))
+			by_name[name] = int(by_name.get(name, 0)) | flags
+			for tag: Variant in rank.get("tags", []):
+				tags[str(tag)] = 0
+	# Free bits for the tags, in name order so they come out the same each time.
+	var names := tags.keys()
+	names.sort()
+	var bit := 0
+	for tag: String in names:
+		while bit < 63 and used & (1 << bit):
+			bit += 1
+		if bit >= 63:
+			warnings.append("%s: no free family_flags bit left for tag \"%s\"" % [where, tag])
+			break
+		tags[tag] = 1 << bit
+		used |= 1 << bit
+	for group: Dictionary in groups:
+		for rank: Dictionary in group.get("ranks", []):
+			if rank.has("tags"):
+				rank.family = int(rank.get("family", family))
+				var flags := int(rank.get("family_flags", 0))
+				for tag: Variant in rank.tags:
+					flags |= int(tags.get(str(tag), 0))
+				rank.family_flags = flags
+				var name := str(rank.get("name", group.get("name", "")))
+				by_name[name] = int(by_name.get(name, 0)) | flags
+				rank.erase("tags")
+	var mask_of_names := func(list: Variant, at: String) -> int:
+		var mask := 0
+		for entry: Variant in list:
+			if entry is float or entry is int:
+				mask |= int(entry)
+			elif tags.has(str(entry)):
+				mask |= int(tags[str(entry)])
+			elif by_name.has(str(entry)) and int(by_name[str(entry)]) != 0:
+				mask |= int(by_name[str(entry)])
+			else:
+				warnings.append("%s: \"%s\" is no tag or spell with family_flags" % [at, entry])
+		return mask
+	for group: Dictionary in groups:
+		for rank: Dictionary in group.get("ranks", []):
+			var at := "%s, %s" % [where, rank.get("name", group.get("name", "?"))]
+			for effect: Dictionary in rank.get("effects", []):
+				var affects: Variant = effect.get("affects")
+				# A list, or one name on its own ("instant" is its own rule).
+				if affects is String and affects != "instant" and not (affects as String).is_valid_int():
+					affects = [affects]
+				if affects is Array:
+					effect.affects = mask_of_names.call(affects, at)
+			var proc: Variant = rank.get("proc")
+			if proc is Dictionary and (proc as Dictionary).get("family_mask") is String 					and not str(proc.family_mask).is_valid_int():
+				proc.family_mask = [proc.family_mask]
+			if proc is Dictionary and (proc as Dictionary).get("family_mask") is Array:
+				proc.family_mask = mask_of_names.call(proc.family_mask, at)
+				if not proc.has("family"):
+					proc.family = family
+	return groups
+
+
 static func decode_class(design: Dictionary, where: String) -> Dictionary:
-	var out := { "spells": {}, "chains": {}, "trainer": [], "book_tabs": {}, "links": {}, "procs": {}, "bonus": {} }
+	var out := { "spells": {}, "chains": {}, "trainer": [], "book_tabs": {}, "links": {}, "procs": {}, "bonus": {}, "recipes": {} }
 	for table: String in SIDE_TABLES:
 		out[table] = {}
-	for group: Dictionary in design.get("spells", []):
+	for group: Dictionary in _resolve_tags(design, where):
 		var ranks: Array = group.get("ranks", [])
 		var first := int(ranks[0].get("id", 0)) if not ranks.is_empty() else 0
 		var previous := 0
@@ -742,6 +843,8 @@ static func decode_class(design: Dictionary, where: String) -> Dictionary:
 				out.procs[str(id)] = d.proc
 			if d.has("coefficients"):
 				out.bonus[str(id)] = d.coefficients
+			if d.has("recipe"):
+				out.recipes[str(id)] = d.recipe
 			for table: String in d.get("extra", {}):
 				if out.has(table):
 					out[table][str(id)] = d.extra[table]
@@ -771,9 +874,19 @@ static func decode_class(design: Dictionary, where: String) -> Dictionary:
 
 ## Every class's design file read over the data (spells.json's shape, its
 ## classes' entries replaced by their designs').
+## Every design file as [class id, trainer list, file]: the classes', then
+## the professions' (class 0, their trainer list named for them,
+## ProfessionDesigns.FILES).
+static func all_files() -> Array:
+	var files := CLASSES.duplicate()
+	for spec: Array in ProfessionDesigns.FILES:
+		files.append([0, spec[0], spec[1]])
+	return files
+
+
 static func apply(data: Dictionary) -> void:
 	warnings.clear()
-	for spec: Array in CLASSES:
+	for spec: Array in all_files():
 		var path := DESIGN_DIR + str(spec[2]) + ".json"
 		if not edited.has(str(spec[2])) and not FileAccess.file_exists(path):
 			continue
@@ -788,10 +901,12 @@ static func apply(data: Dictionary) -> void:
 			data.spells[id] = built.spells[id]
 		data.chains.merge(built.chains, true)
 		data.trainers[spec[1]] = built.trainer
-		data.talents[str(spec[0])] = built.talents
-		data.book_tabs[str(spec[0])] = built.book_tabs
-		for key: String in built.start_spells:
-			data.start_spells[key] = built.start_spells[key]
+		# A class's talents, spellbook and start spells (a profession has none).
+		if int(spec[0]) != 0:
+			data.talents[str(spec[0])] = built.talents
+			data.book_tabs[str(spec[0])] = built.book_tabs
+			for key: String in built.start_spells:
+				data.start_spells[key] = built.start_spells[key]
 		for table: String in ["links", "procs", "bonus"] + SIDE_TABLES:
 			if not data.has(table):
 				data[table] = {}
@@ -836,7 +951,7 @@ static func free_spell_id() -> int:
 	var id := NEW_SPELL_IDS + 1
 	while SpellDB.get_spell(id).size() > 0:
 		id += 1
-	for spec: Array in CLASSES:
+	for spec: Array in all_files():
 		for group: Dictionary in design_of(str(spec[2])).get("spells", []):
 			for rank: Dictionary in group.get("ranks", []):
 				id = maxi(id, int(rank.get("id", 0)) + 1)

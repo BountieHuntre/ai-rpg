@@ -33,6 +33,14 @@ var _tooltip: ItemTooltip
 var _panel: Control
 var _hovered := 0
 var _rebuild_queued := false
+## What's drawn, kept to update in place when points are spent: each
+## talent's view ({ id, box, edge, badge, rank_label, icon }), each tree's
+## title ([label, tree]), the points line, and the trees' layout it was built
+## for (only a change to that, a design applied live, builds it again).
+var _talent_views: Array[Dictionary] = []
+var _tree_titles: Array = []
+var _footer: Label
+var _layout := ""
 
 
 func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemTooltip, open: bool) -> void:
@@ -49,6 +57,12 @@ func setup(player: Player, ui_scale: float, screen: Vector2, tooltip: ItemToolti
 		var progression := _player.get_node("Progression")
 		if progression.has_signal("leveled_up"):
 			progression.leveled_up.connect(func(_level: int) -> void: _queue_rebuild())
+
+
+## The trees' layout: which talents, where (a change means building again).
+func _layout_key() -> String:
+	return str(Talents.trees(GameState.char_class).map(func(tree: Dictionary) -> Array:
+		return tree.talents.map(func(t: Dictionary) -> Array: return [t.id, t.tier, t.column, t.ranks.size(), t.prereq])))
 
 
 func is_open() -> bool:
@@ -81,9 +95,14 @@ func _queue_rebuild() -> void:
 		_rebuild.call_deferred()
 
 
+## Points spent or a level gained: every talent's rank, frame and dimming,
+## the trees' totals and the points left, in place.
 func _rebuild() -> void:
 	_rebuild_queued = false
 	if _panel == null:
+		return
+	if _layout_key() == _layout:
+		_refresh()
 		return
 	var was_open := _panel.visible
 	_panel.queue_free()
@@ -94,6 +113,9 @@ func _rebuild() -> void:
 
 
 func _build() -> void:
+	_talent_views.clear()
+	_tree_titles.clear()
+	_layout = _layout_key()
 	var trees := Talents.trees(GameState.char_class)
 	var tree_width := COLUMNS * CELL + 6.0
 	var width := SIDE * 2 + maxf(trees.size(), 1) * tree_width + maxf(trees.size() - 1, 0) * TREE_GAP
@@ -117,13 +139,27 @@ func _build() -> void:
 		back.size = Vector2(tree_width, TIERS * CELL + 14) * _ui_scale
 		back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_panel.add_child(back)
-		UiStyle.title(_panel, Vector2(left + 3, TOP - 11.5), "%s (%d)" % [tree.name, Talents.spent_in(GameState, tree)], _ui_scale, 6)
+		var tree_title := UiStyle.title(_panel, Vector2(left + 3, TOP - 11.5), "%s (%d)" % [tree.name, Talents.spent_in(GameState, tree)], _ui_scale, 6)
+		_tree_titles.append([tree_title, tree])
 		_draw_lines(tree, left)
 		for talent: Dictionary in tree.talents:
 			_draw_talent(talent, Vector2(left + 3 + int(talent.column) * CELL, TOP + int(talent.tier) * CELL))
-	var left_points := Talents.points_left(GameState)
-	var footer := "Talent points: %d" % left_points if GameState.level >= Talents.FIRST_LEVEL else "Talents start at level %d." % Talents.FIRST_LEVEL
-	_text(_panel, Vector2(SIDE, height - 11), footer, CAN_LEARN if left_points > 0 else GREY, 7)
+	_footer = _text(_panel, Vector2(SIDE, height - 11), "", GREY, 7)
+	_refresh()
+
+
+## Updates what spending points changes, without making anything again.
+func _refresh() -> void:
+	for view: Dictionary in _talent_views:
+		_update_talent(view)
+	for entry: Array in _tree_titles:
+		(entry[0] as Label).text = "%s (%d)" % [entry[1].name, Talents.spent_in(GameState, entry[1])]
+	if _footer and is_instance_valid(_footer):
+		var left_points := Talents.points_left(GameState)
+		_footer.text = "Talent points: %d" % left_points if GameState.level >= Talents.FIRST_LEVEL else "Talents start at level %d." % Talents.FIRST_LEVEL
+		_footer.add_theme_color_override("font_color", CAN_LEARN if left_points > 0 else GREY)
+	if _hovered != 0 and _panel.visible:
+		_show_tooltip(_hovered)
 
 
 ## Lines from each talent to the talents that need it.
@@ -155,14 +191,9 @@ func _line(from: Vector2, to: Vector2) -> void:
 
 func _draw_talent(talent: Dictionary, at: Vector2) -> void:
 	var id := int(talent.id)
-	var rank := Talents.rank(GameState, id)
-	var most: int = talent.ranks.size()
-	var spell := SpellDB.get_spell(int(talent.ranks[maxi(rank - 1, 0)]))
-	var learnable := Talents.problem(GameState, id).is_empty()
-	var maxed := rank >= most
 	# A gilt slot like every other button: its painted icon in the frame, a
 	# bright gold edge when a point can go in, solid gold once maxed, and
-	# darkened while it can't be learned.
+	# darkened while it can't be learned (set by _update_talent).
 	var box := ColorRect.new()
 	box.position = at * _ui_scale
 	box.size = Vector2.ONE * ICON * _ui_scale
@@ -171,29 +202,23 @@ func _draw_talent(talent: Dictionary, at: Vector2) -> void:
 	_panel.add_child(box)
 	UiStyle.frame_box(box, _ui_scale)
 	var inset := maxf(roundf(_ui_scale * 1.2), 2.0)
-	UiStyle.icon(box, Icons.texture(Icons.spell_key(spell)), inset)
-	if maxed or learnable:
-		var edge := ReferenceRect.new()
-		edge.border_color = UiStyle.GOLD if maxed else UiStyle.GOLD_BRIGHT
-		edge.border_width = maxf(_ui_scale * (1.0 if maxed else 1.4), 1.0)
-		edge.editor_only = false
-		edge.size = box.size
-		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(edge)
-	if rank == 0 and not learnable:
-		box.modulate = Color(0.45, 0.45, 0.45)
+	var icon := UiStyle.icon(box, Icons.texture(Icons.spell_key(SpellDB.get_spell(int(talent.ranks[0])))), inset)
+	var edge := ReferenceRect.new()
+	edge.editor_only = false
+	edge.size = box.size
+	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(edge)
 	# The rank in a small gilt badge at the corner.
 	var badge := Panel.new()
-	var line := maxi(roundi(_ui_scale * 0.5), 1)
-	badge.add_theme_stylebox_override("panel", UiStyle._box(UiStyle.SLOT, UiStyle.GOLD if maxed or rank > 0 or learnable else UiStyle.GOLD_DARK, line, roundi(_ui_scale)))
 	badge.position = (at + Vector2(ICON - 7, ICON - 4.5)) * _ui_scale
 	badge.size = Vector2(9, 6) * _ui_scale
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(badge)
-	var rank_label := _text(badge, Vector2.ZERO, "%d/%d" % [rank, most], UiStyle.GOLD_BRIGHT if maxed else CAN_LEARN if rank > 0 or learnable else LOCKED, 5)
+	var rank_label := _text(badge, Vector2.ZERO, "", LOCKED, 5)
 	rank_label.size = badge.size
 	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_talent_views.append({ "talent": talent, "box": box, "edge": edge, "badge": badge, "rank_label": rank_label, "icon": icon })
 	box.mouse_entered.connect(func() -> void:
 		_hovered = id
 		_show_tooltip(id))
@@ -206,6 +231,27 @@ func _draw_talent(talent: Dictionary, at: Vector2) -> void:
 		if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
 			_learn(id)
 			get_viewport().set_input_as_handled())
+
+
+## A talent's rank, frame, dimming and icon (its current rank's).
+func _update_talent(view: Dictionary) -> void:
+	var talent: Dictionary = view.talent
+	var id := int(talent.id)
+	var rank := Talents.rank(GameState, id)
+	var most: int = talent.ranks.size()
+	var learnable := Talents.problem(GameState, id).is_empty()
+	var maxed := rank >= most
+	var edge: ReferenceRect = view.edge
+	edge.visible = maxed or learnable
+	edge.border_color = UiStyle.GOLD if maxed else UiStyle.GOLD_BRIGHT
+	edge.border_width = maxf(_ui_scale * (1.0 if maxed else 1.4), 1.0)
+	(view.box as Control).modulate = Color(0.45, 0.45, 0.45) if rank == 0 and not learnable else Color.WHITE
+	(view.icon as TextureRect).texture = Icons.texture(Icons.spell_key(SpellDB.get_spell(int(talent.ranks[maxi(rank - 1, 0)]))))
+	var line := maxi(roundi(_ui_scale * 0.5), 1)
+	(view.badge as Panel).add_theme_stylebox_override("panel", UiStyle._box(UiStyle.SLOT, UiStyle.GOLD if maxed or rank > 0 or learnable else UiStyle.GOLD_DARK, line, roundi(_ui_scale)))
+	var rank_label: Label = view.rank_label
+	rank_label.text = "%d/%d" % [rank, most]
+	rank_label.add_theme_color_override("font_color", UiStyle.GOLD_BRIGHT if maxed else CAN_LEARN if rank > 0 or learnable else LOCKED)
 
 
 func _learn(id: int) -> void:

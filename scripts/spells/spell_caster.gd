@@ -8,6 +8,12 @@ extends Node
 ## its targets.
 
 signal failed(message: String)
+## SPELL_EFFECT_SKINNING: the Skinning spell.
+const EFFECT_SKINNING := 95
+## A profession's spell (Smelting, Enchanting) asks for its trade skill window.
+signal trade_skill_requested(profession: String)
+## A spell cast on an item (Disenchant) asks for one to be picked.
+signal item_pick_requested(spell_id: int)
 ## A spell was cast (its cast time done, or an instant), before its effects.
 signal spell_finished(spell: Dictionary)
 ## A channel held to its end (Tame Beast tames on it).
@@ -126,6 +132,8 @@ func _interrupt() -> void:
 		_stop_channel()
 	else:
 		casting = {}
+	_action = Callable()
+	_action_spell = 0
 	_unit.combatant.is_casting = false
 	_unit.combatant.cast_interrupted.emit()
 	failed.emit("Interrupted")
@@ -145,6 +153,20 @@ func cast(id: int) -> void:
 	var spell := SpellDB.get_spell(id)
 	_item_ref = {}
 	_item_spell = 0
+	# Disenchant is cast on an item the player picks (Enchanting).
+	if SpellDB.has_effect(spell, Enchanting.EFFECT_DISENCHANT):
+		item_pick_requested.emit(id)
+		return
+	# Skinning is done by right-clicking a looted corpse (Skinning).
+	if SpellDB.has_effect(spell, EFFECT_SKINNING):
+		failed.emit("Right-click a looted corpse to skin it.")
+		return
+	# A profession's window (Smelting, Enchanting) opens rather than casts.
+	if SpellDB.has_effect(spell, Crafting.EFFECT_TRADE_SKILL):
+		var profession := Professions.profession_of_spell(id)
+		if not profession.is_empty():
+			trade_skill_requested.emit(profession)
+		return
 	# Clicking the stance you're already in does nothing, as in classic.
 	var form := SpellDB.stance_form(spell)
 	if form != 0 and SpellDB.uses_rage(spell) and form == current_form():
@@ -282,12 +304,22 @@ func _physics_process(delta: float) -> void:
 		return
 	if _unit.is_moving() or not _unit.combatant.is_alive():
 		casting = {}
+		_action = Callable()
+		_action_spell = 0
 		failed.emit("Interrupted")
 		return
 	_cast_left -= delta
 	if _cast_left <= 0.0:
 		var spell := casting
 		casting = {}
+		# A cast_action (gathering, smelting) does its own work.
+		if _action_spell == int(spell.Id) and _action.is_valid():
+			var done := _action
+			_action = Callable()
+			_action_spell = 0
+			spell_finished.emit(spell)
+			done.call()
+			return
 		# A quest item's spell checks its own needs (its target is the beast or
 		# grave QuestSpells found, not the caster the cast was held on).
 		var problem: String = QuestSpells.problem(_unit, spell) if _quest_spell == int(spell.Id) else _find_problem(spell, _cast_target, false)
@@ -605,6 +637,8 @@ func _templar_spell(spell: Dictionary, target: Combatant) -> bool:
 func _cleric_spell(spell: Dictionary, target: Combatant, extra_crit: float) -> void:
 	if _templar_spell(spell, target):
 		return
+	if _weapon_strike(spell, target):
+		return
 	var me := _unit.combatant
 	match spell.SpellName:
 		"Blessed Burst":
@@ -827,6 +861,41 @@ func _judgement(target: Combatant, verdict: Dictionary) -> void:
 	me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, Combatant.PROC_EX_NORMAL, target, verdict, 0)
 
 
+## Any class's melee spell with weapon damage effects (a design's
+## weapon_percent_damage, weapon_damage...): one weapon strike, rolled on the
+## melee table, then its auras on the target if it lands.
+func _weapon_strike(spell: Dictionary, target: Combatant) -> bool:
+	if target == null or SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY:
+		return false
+	var me := _unit.combatant
+	var damage := SpellDB.weapon_strike_damage(spell, me, _unit.profile.level)
+	if damage < 0.0:
+		return false
+	# Damage talents for the spell count on the weapon part too.
+	damage = SpellMods.apply(me, spell, SpellMods.DAMAGE, damage)
+	var landed := me.strike(target, damage, true, spell)
+	# School damage beside the weapon hit (Holy, say): dealt when the strike
+	# lands, on its roll, in the spell's school, past armour, with spell power.
+	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_SCHOOL_DAMAGE):
+		var school := int(spell.get("School", SpellDB.School.HOLY))
+		var amount := 0.0
+		for i in 3:
+			if int(spell.get("Effect%d" % (i + 1), 0)) == SpellDB.EFFECT_SCHOOL_DAMAGE:
+				amount += SpellDB.effect_value(spell, i, _unit.profile.level, me)
+		amount += _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+		amount = SpellMods.apply(me, spell, SpellMods.DAMAGE, amount)
+		var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) \
+				and CombatRules.roll_heal(me, _talent_crit(spell)) == CombatRules.Outcome.CRIT
+		_holy_damage(target, roundi(amount * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0)), crit, school)
+	if landed and target.is_alive() and SpellDB.has_effect(spell, SpellDB.EFFECT_APPLY_AURA):
+		target.add_aura(spell, me)
+		if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+			target.stun(SpellDB.duration(spell, me))
+	if target.body is Enemy:
+		(target.body as Enemy).provoke(me)
+	return true
+
+
 ## A magic stun: resisted on a failed spell hit roll.
 func _hammer_of_justice(spell: Dictionary, target: Combatant) -> void:
 	var me := _unit.combatant
@@ -979,6 +1048,38 @@ func tracked_type() -> int:
 	return _ranger.tracked_type()
 
 
+## The resources Find Herbs (2) and Find Minerals (3) show on the minimap.
+func tracked_resources() -> Array[int]:
+	return _ranger.tracked_resources()
+
+
+## A cast that isn't a spell's effects: gathering a herb or ore, smelting.
+## It casts `spell` (for its cast time, bar and name) and, if it isn't
+## interrupted, calls `done` instead of the spell's own effects.
+func cast_action(spell: Dictionary, done: Callable, time := -1.0) -> String:
+	if not casting.is_empty():
+		return ERR_IN_PROGRESS
+	# No global cooldown: gathering and recipes have no StartRecoveryTime.
+	if _unit.is_moving():
+		return ERR_MOVING
+	if not _unit.combatant.is_alive():
+		return ""
+	_unit.sitting = false
+	Sfx.play_at("cast", _unit.global_position)
+	casting = spell
+	_unit.combatant.is_casting = true
+	_pushbacks = 0
+	_cast_left = time if time >= 0.0 else SpellDB.cast_time(spell)
+	_cast_total = maxf(_cast_left, 0.01)
+	_cast_target = _unit.combatant
+	_action = done
+	_action_spell = int(spell.Id)
+	return ""
+
+var _action: Callable
+var _action_spell := 0
+
+
 ## Uses up one of the item whose spell just landed.
 func _use_up_item() -> void:
 	_item_spell = 0
@@ -1068,7 +1169,10 @@ static func learn(ids: Array) -> Array[String]:
 			if GameState.action_bar[slot] == 0:
 				empty = slot
 				break
-		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_stance_bar_spell(spell):
+		# Profession spells stay in the spellbook (recipes in their trade skill
+		# window), and hidden spells (Herb Gathering) go nowhere.
+		if not on_bar_already and empty >= 0 and not SpellDB.is_passive(spell) and not SpellDB.is_stance_bar_spell(spell) \
+				and Professions.profession_of_spell(id).is_empty() and not SpellDB.is_hidden(spell):
 			GameState.action_bar[empty] = id
 		learned.append(SpellDB.full_name(spell))
 		# Plate Mail teaches wearing plate, Two-Handed Swords wielding them.

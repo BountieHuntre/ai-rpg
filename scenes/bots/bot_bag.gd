@@ -138,7 +138,9 @@ func remove(id: int, count: int, bound := false) -> void:
 ## money, rolled from the classic tables as the player's kills are.
 func loot(enemy: Enemy) -> void:
 	var data := Enemy.creature_data(enemy.creature_entry)
-	for drop in LootTable.roll_creature(int(data.get("LootId", 0))):
+	var drops := LootTable.roll_creature(int(data.get("LootId", 0)))
+	drops.append_array(WorldDrops.roll(enemy.level, int(data.get("Rank", 0))))
+	for drop in drops:
 		if can_trade(int(drop.id)):
 			add(int(drop.id), int(drop.count))
 	money += LootTable.roll_money(int(data.get("MinLootGold", 0)), int(data.get("MaxLootGold", 0)))

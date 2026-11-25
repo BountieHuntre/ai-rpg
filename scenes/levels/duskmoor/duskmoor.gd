@@ -240,6 +240,8 @@ func _ready() -> void:
 	_build_trees()
 	_build_rocks()
 	_build_clutter()
+	# A forge by the Mining trainer, for Smelting.
+	build_forge(self, ground_point(-1761.3, -4151.5), 0.5236, Color(0.32, 0.32, 0.36), Color(0.3, 0.22, 0.16))
 	spawn_creatures(SEED + 3, "Dusk", [], WATER_LEVEL)
 	spawn_objects(SEED + 6, WATER_LEVEL)
 

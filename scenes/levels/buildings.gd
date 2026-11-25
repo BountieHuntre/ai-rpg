@@ -81,7 +81,7 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 		kit.block(Vector3.ZERO, Vector3(length, height, span), wall, 0.0, true)
 		kit.block(Vector3(0, -0.1, 0), Vector3(length + 0.3, 0.55, span + 0.3), stone)
 	if _look(look, "timber", false):
-		_timber(kit, length, span, height, storeys, trim, windows)
+		_timber(kit, length, span, height, storeys, trim, windows, door)
 	var shutter: Color = _look(look, "shutter", SHUTTER)
 	for place: Array in windows:
 		_window(kit, place[0], place[1], trim, shutter, thick)
@@ -112,6 +112,10 @@ const WALL_THICK := 0.45
 ## Half the doorway's width, and its height.
 const DOOR_HALF := 0.9
 const DOOR_HEIGHT := 2.6
+## A closed door on a solid house: half its width between the jambs, and the
+## top of its frame.
+const DOOR_SOLID_HALF := 0.62
+const DOOR_SOLID_TOP := 2.45
 ## The planks' color (WOOD in the zones), so it's drawn with their texture.
 const FLOOR := Color(0.45, 0.31, 0.2)
 const WARM := Color(1.0, 0.8, 0.55)
@@ -218,7 +222,10 @@ static func _doorway(kit: BuildingKit, at: Vector3, out: Vector3, thick: float, 
 		kit.block(through + across * s * (DOOR_HALF + 0.05), across * 0.22 + Vector3.UP * (DOOR_HEIGHT + 0.1) + out.abs() * (thick + 0.14), trim)
 	kit.block(through + Vector3.UP * DOOR_HEIGHT, across * (DOOR_HALF * 2.0 + 0.5) + Vector3.UP * 0.28 + out.abs() * (thick + 0.16), trim)
 	kit.block(at + out * 0.35 - Vector3.UP * 0.12, across * 2.2 + Vector3.UP * 0.25 + out.abs() * 0.7, stone)
-	kit.block(at - out * (thick + 0.55) + across * (DOOR_HALF - 0.05), out.abs() * 1.1 + Vector3.UP * (DOOR_HEIGHT - 0.15) + across * 0.08, trim.darkened(0.25))
+	# The door, swung in against the inside wall from its hinge at the jamb:
+	# as wide and tall as the doorway it closes.
+	var leaf := DOOR_HALF * 2.0 - 0.1
+	kit.block(at - out * (thick + leaf / 2.0) + across * (DOOR_HALF - 0.06), out.abs() * leaf + Vector3.UP * (DOOR_HEIGHT - 0.05) + across * 0.08, trim.darkened(0.25))
 
 
 ## A hearth inside an end wall (`side` +1 for +x, -1 for -x): the chimney
@@ -279,39 +286,101 @@ static func roof(kit: BuildingKit, height: float, length: float, span: float, ri
 
 ## Dark timber over the walls: corner posts, sill, top plate, studs and
 ## braces (and a band between storeys).
-static func _timber(kit: BuildingKit, length: float, span: float, height: float, storeys: int, trim: Color, windows: Array = []) -> void:
+static func _timber(kit: BuildingKit, length: float, span: float, height: float, storeys: int, trim: Color, windows: Array = [], door: Array = []) -> void:
 	var out := 0.06
 	for x: float in [-length / 2.0, length / 2.0]:
 		for z: float in [-span / 2.0, span / 2.0]:
 			kit.block(Vector3(x, 0.3, z), Vector3(0.34, height - 0.3, 0.34), trim)
+	# Each wall's openings, as [from, to] along the wall and [bottom, top],
+	# with room for their frames: no beam, stud or brace crosses one.
+	var holes := { "z+": [], "z-": [], "x+": [], "x-": [] }
+	for place: Array in windows:
+		var at: Vector3 = place[0]
+		var facing: Vector3 = place[1]
+		var key := _wall_key(facing)
+		var along := at.z if key.begins_with("x") else at.x
+		holes[key].append([along - WINDOW_HALF_WIDTH - 0.32, along + WINDOW_HALF_WIDTH + 0.32,
+			at.y - WINDOW_HALF_HEIGHT - 0.2, at.y + WINDOW_HALF_HEIGHT + 0.2])
+	if not door.is_empty():
+		var at: Vector3 = door[0]
+		var key := _wall_key(door[1])
+		var along := at.z if key.begins_with("x") else at.x
+		holes[key].append([along - DOOR_HALF - 0.3, along + DOOR_HALF + 0.3, -1.0, DOOR_HEIGHT + 0.35])
 	var levels := [0.45, height - 0.15]
 	if storeys > 1:
 		levels.append(height / 2.0)
 	for y: float in levels:
 		for z: float in [-1.0, 1.0]:
-			kit.box(Vector3(0, y, z * (span / 2.0 + out)), Vector3(length + 0.1, 0.24, 0.14), trim)
+			for piece: Array in _beam_pieces(-length / 2.0 - 0.05, length / 2.0 + 0.05, y, holes["z+" if z > 0 else "z-"]):
+				kit.box(Vector3((piece[0] + piece[1]) / 2.0, y, z * (span / 2.0 + out)), Vector3(piece[1] - piece[0], 0.24, 0.14), trim)
 		for x: float in [-1.0, 1.0]:
-			kit.box(Vector3(x * (length / 2.0 + out), y, 0), Vector3(0.14, 0.24, span + 0.1), trim)
+			for piece: Array in _beam_pieces(-span / 2.0 - 0.05, span / 2.0 + 0.05, y, holes["x+" if x > 0 else "x-"]):
+				kit.box(Vector3(x * (length / 2.0 + out), y, (piece[0] + piece[1]) / 2.0), Vector3(0.14, 0.24, piece[1] - piece[0]), trim)
 	# Studs and braces on the long walls.
 	var bays := maxi(int(length / 2.4), 2)
 	for z: float in [-1.0, 1.0]:
 		var face := z * (span / 2.0 + out)
+		var wall_holes: Array = holes["z+" if z > 0 else "z-"]
 		for i in range(1, bays):
 			var x := -length / 2.0 + length * i / bays
-			# Not across a window.
-			var clear := true
-			for place: Array in windows:
-				var at: Vector3 = place[0]
-				if signf(at.z) == z and absf(at.x - x) < 0.7:
-					clear = false
-			if clear:
+			if _clear_of(wall_holes, x, 0.1, 0.0, height):
 				kit.box(Vector3(x, height / 2.0, face), Vector3(0.2, height - 0.4, 0.12), trim)
 		for end: float in [-1.0, 1.0]:
 			var corner := end * length / 2.0
-			kit.beam(Vector3(corner - end * 0.2, 0.55, face), Vector3(corner - end * minf(1.6, length / bays), minf(height - 0.3, height / storeys), face), 0.16, trim)
-	# Studs on the ends.
+			var from := Vector2(corner - end * 0.2, 0.55)
+			var to := Vector2(corner - end * minf(1.6, length / bays), minf(height - 0.3, height / storeys))
+			if _line_clear_of(wall_holes, from, to):
+				kit.beam(Vector3(from.x, from.y, face), Vector3(to.x, to.y, face), 0.16, trim)
+	# Studs on the ends: one in the middle, or one either side of what's there.
 	for x: float in [-1.0, 1.0]:
-		kit.box(Vector3(x * (length / 2.0 + out), height / 2.0, 0), Vector3(0.12, height - 0.4, 0.2), trim)
+		var end_holes: Array = holes["x+" if x > 0 else "x-"]
+		var spots := [0.0] if _clear_of(end_holes, 0.0, 0.1, 0.0, height) else [-span / 4.0, span / 4.0]
+		for z: float in spots:
+			if _clear_of(end_holes, z, 0.1, 0.0, height):
+				kit.box(Vector3(x * (length / 2.0 + out), height / 2.0, z), Vector3(0.12, height - 0.4, 0.2), trim)
+
+
+## Which wall faces `facing`: "z+", "z-", "x+" or "x-".
+static func _wall_key(facing: Vector3) -> String:
+	if absf(facing.x) > absf(facing.z):
+		return "x+" if facing.x > 0.0 else "x-"
+	return "z+" if facing.z > 0.0 else "z-"
+
+
+## A beam from `a` to `b` along a wall at height `y`, in the pieces left
+## where it doesn't cross an opening (`holes`, [from, to, bottom, top]).
+static func _beam_pieces(a: float, b: float, y: float, holes: Array) -> Array:
+	var pieces := [[a, b]]
+	for hole: Array in holes:
+		if y + 0.12 < float(hole[2]) or y - 0.12 > float(hole[3]):
+			continue
+		var kept := []
+		for piece: Array in pieces:
+			if float(hole[0]) > piece[0]:
+				kept.append([piece[0], minf(piece[1], float(hole[0]))])
+			if float(hole[1]) < piece[1]:
+				kept.append([maxf(piece[0], float(hole[1])), piece[1]])
+		pieces = kept
+	return pieces.filter(func(piece: Array) -> bool: return piece[1] - piece[0] > 0.2)
+
+
+## Whether an upright `half` wide at `along`, from `bottom` to `top`, misses
+## every opening.
+static func _clear_of(holes: Array, along: float, half: float, bottom: float, top: float) -> bool:
+	for hole: Array in holes:
+		if along + half > float(hole[0]) and along - half < float(hole[1]) and top > float(hole[2]) and bottom < float(hole[3]):
+			return false
+	return true
+
+
+## Whether a straight brace from `from` to `to` (along the wall, height)
+## misses every opening.
+static func _line_clear_of(holes: Array, from: Vector2, to: Vector2) -> bool:
+	for i in 11:
+		var point := from.lerp(to, i / 10.0)
+		if not _clear_of(holes, point.x, 0.1, point.y - 0.1, point.y + 0.1):
+			return false
+	return true
 
 
 ## Where a house's windows go: along the long walls (two rows for two
@@ -373,11 +442,17 @@ static func _window(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, sh
 ## its foot, `out` the way it faces.
 static func _door(kit: BuildingKit, at: Vector3, out: Vector3, trim: Color, stone: Color) -> void:
 	var across := Vector3(out.z, 0, out.x).abs()
-	kit.block(at + out * 0.05 + Vector3.UP * 0.35, across * 1.25 + Vector3.UP * 2.1 + out.abs() * 0.1, trim.darkened(0.25))
+	# Stood out past the plinth (0.15 proud of the wall) so the whole door
+	# shows down to its step, filling its frame: the jambs either side, the
+	# lintel over its top.
+	var sill := 0.2
+	var top := DOOR_SOLID_TOP
+	var inner := DOOR_SOLID_HALF
+	kit.block(at + out * 0.22 + Vector3.UP * sill, across * (inner * 2.0 + 0.04) + Vector3.UP * (top - sill) + out.abs() * 0.1, trim.darkened(0.25))
 	for s: float in [-1.0, 1.0]:
-		kit.block(at + out * 0.1 + across * s * 0.72 + Vector3.UP * 0.35, across * 0.2 + Vector3.UP * 2.25 + out.abs() * 0.16, trim)
-	kit.block(at + out * 0.1 + Vector3.UP * 2.5, across * 1.75 + Vector3.UP * 0.25 + out.abs() * 0.2, trim)
-	kit.block(at + out * 0.4 - Vector3.UP * 0.1, across * 1.7 + Vector3.UP * 0.3 + out.abs() * 0.7, stone)
+		kit.block(at + out * 0.25 + across * s * (inner + 0.1) + Vector3.UP * sill, across * 0.2 + Vector3.UP * (top - sill + 0.05) + out.abs() * 0.18, trim)
+	kit.block(at + out * 0.25 + Vector3.UP * top, across * (inner * 2.0 + 0.5) + Vector3.UP * 0.25 + out.abs() * 0.22, trim)
+	kit.block(at + out * 0.45 - Vector3.UP * 0.1, across * (inner * 2.0 + 0.5) + Vector3.UP * 0.3 + out.abs() * 0.7, stone)
 
 
 ## A chapel: a stone nave with tall windows, buttresses and an arched door

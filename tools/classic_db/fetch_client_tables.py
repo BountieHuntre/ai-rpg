@@ -30,6 +30,11 @@ the abilities it may learn, and its size range) and CreatureSpellData (the
 abilities a wild beast knows, by creature_template's PetSpellDataId, which a
 Ranger learns by taming it), into data/classic/pet_families.json.
 `python tools/classic_db/fetch_client_tables.py pets` fetches only these.
+
+Professions: SkillLineAbility (each Herbalism, Mining, Skinning and Enchanting
+ability's yellow and grey skill levels), Lock (the skill a node needs) and
+SpellItemEnchantment (what each enchant gives an item), into
+data/classic/profession_tables.json. `... professions` fetches only these.
 """
 
 import csv
@@ -172,10 +177,46 @@ def export_talents():
     print(f"{sum(len(t['talents']) for c in by_class.values() for t in c)} talents in {len(tabs)} trees")
 
 
+# The professions in the game: Herbalism, Mining, Skinning, Enchanting.
+PROFESSION_SKILLS = {"182", "186", "393", "333"}
+
+
+def export_professions():
+    """The client tables professions need, into profession_tables.json:
+    each profession ability's skill line and its yellow and grey skill
+    levels (SkillLineAbility: TrivialSkillLineRankLow and High), every lock's
+    requirements (Lock: a herb or ore node's skill and level), and every item
+    enchantment's effects (SpellItemEnchantment). extract.py keeps what the
+    game's spells use."""
+    abilities = {}
+    for row in fetch("SkillLineAbility"):
+        if row["SkillLine"] in PROFESSION_SKILLS:
+            abilities[row["Spell"]] = {"skill": int(row["SkillLine"]), "yellow": int(row["TrivialSkillLineRankLow"]),
+                                       "grey": int(row["TrivialSkillLineRankHigh"]), "acquire": int(row["AcquireMethod"]),
+                                       "replaces": int(row["SupercedesSpell"])}
+    locks = {}
+    for row in fetch("Lock"):
+        parts = [[int(row[f"Type_{i}"]), int(row[f"_Index_{i}"]), int(row[f"Skill_{i}"])] for i in range(8) if int(row[f"Type_{i}"])]
+        if parts:
+            locks[row["ID"]] = parts
+    enchants = {}
+    for row in fetch("SpellItemEnchantment"):
+        effects = [[int(row[f"Effect_{i}"]), int(row[f"EffectPointsMin_{i}"]), int(row[f"EffectPointsMax_{i}"]), int(row[f"EffectArg_{i}"])]
+                   for i in range(3) if int(row[f"Effect_{i}"])]
+        if effects:
+            enchants[row["ID"]] = {"name": row["Name_lang"], "charges": int(row["Charges"]), "effects": effects}
+    with open(os.path.join(OUT_DIR, "profession_tables.json"), "w", encoding="utf8") as out:
+        json.dump({"abilities": abilities, "locks": locks, "enchants": enchants}, out, separators=(",", ":"))
+    print(f"{len(abilities)} profession abilities, {len(locks)} locks, {len(enchants)} item enchantments")
+
+
 if __name__ == "__main__":
     import sys
     if sys.argv[1:] == ["pets"]:
         export_pet_families()
+    elif sys.argv[1:] == ["professions"]:
+        export_professions()
     else:
         main()
         export_pet_families()
+        export_professions()

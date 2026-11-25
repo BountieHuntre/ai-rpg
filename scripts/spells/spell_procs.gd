@@ -29,6 +29,7 @@ func _ready() -> void:
 	_combatant.melee_hit_taken.connect(_on_hit_taken)
 	_combatant.blocked_attack.connect(_on_block)
 	_combatant.damage_done.connect(_on_damage_done)
+	_combatant.proc_event.connect(_on_proc_event)
 
 
 func _physics_process(delta: float) -> void:
@@ -72,12 +73,76 @@ func _on_melee_hit(target: Combatant) -> void:
 			_apply(SpellDB.get_spell(proc_id), target)
 
 
-## Procs per minute make the chance per hit scale with weapon speed, as in
-## Unit::GetPPMProcChance: ppm * swing time / 60.
+## A melee hit landed, a swing or an ability that strikes with the weapon:
+## the hand's weapon enchant may fire (CMaNGOS CastItemCombatSpell, run for
+## melee swings and melee abilities alike). The off hand's swing rolls its own
+## weapon's enchant. Each has a flat chance per hit (the game's own; classic
+## scaled a rate per minute by weapon speed).
+func _on_proc_event(flags: int, ex: int, target: Combatant, _spell: Dictionary, _amount: int) -> void:
+	if flags & (Combatant.PROC_MELEE_HIT | Combatant.PROC_MELEE_ABILITY) == 0 or target == null:
+		return
+	if ex & (Combatant.PROC_EX_NORMAL | Combatant.PROC_EX_CRIT) == 0:
+		return
+	var off := _combatant.striking_off_hand
+	var stack: Dictionary = _unit.profile.equipment.get(Inventory.Slot.OFF_HAND if off else Inventory.Slot.MAIN_HAND, {})
+	if stack.is_empty():
+		return
+	for proc: Array in Enchanting.proc_spells(stack):
+		if randf() * 100.0 < float(proc[1]):
+			_enchant_effect(proc[0], target)
+	# The weapon's own "Chance on hit:" spell.
+	var item := ItemDB.get_item(int(stack.id))
+	if int(item.get("spelltrigger_1", -1)) == ItemDB.TRIGGER_ON_HIT:
+		var spell := SpellDB.get_spell(int(item.get("spellid_1", 0)))
+		if not spell.is_empty() and randf() * 100.0 < ItemDB.on_hit_chance(item):
+			_enchant_effect(spell, target)
+
+
+## A proc enchant's spell: damage (Smite Demon only on demons), a leech, a
+## heal and buff on you (Holy Strength) or a debuff on the target, which may
+## resist it.
+func _enchant_effect(spell: Dictionary, target: Combatant) -> void:
+	var level := _unit.profile.level
+	var only_type := int(spell.get("TargetCreatureType", 0))
+	if only_type != 0 and target.body is Enemy and only_type & (1 << ((target.body as Enemy).creature_type() - 1)) == 0:
+		return
+	var school := int(spell.get("School", SpellDB.School.PHYSICAL))
+	var aura_on_target := false
+	for i in 3:
+		var value := SpellDB.effect_value(spell, i, level, _combatant)
+		var on_self := int(spell.get("EffectImplicitTargetA%d" % (i + 1), 0)) == SpellDB.TARGET_SELF
+		match int(spell.get("Effect%d" % (i + 1), 0)):
+			SpellDB.EFFECT_SCHOOL_DAMAGE:
+				if target.is_alive():
+					target.take_damage(roundi(value), _combatant, false, school)
+			EFFECT_HEALTH_LEECH:
+				if target.is_alive():
+					target.take_damage(roundi(value), _combatant, false, school)
+					_combatant.heal(roundi(value), false, _combatant)
+			SpellDB.EFFECT_HEAL:
+				_combatant.heal(roundi(value), false, _combatant)
+			SpellDB.EFFECT_APPLY_AURA:
+				if on_self:
+					_combatant.add_aura(spell, _combatant)
+				else:
+					aura_on_target = true
+	if aura_on_target and target.is_alive():
+		if CombatRules.roll_spell(_combatant, target) == CombatRules.Outcome.RESIST:
+			target.avoid("Resist", _combatant)
+		else:
+			target.add_aura(spell, _combatant)
+			# A stun (Demonslaying's, a mace's) stops it, as aura 12 does.
+			if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+				target.stun(SpellDB.duration(spell, _combatant))
+
+
+## SPELL_EFFECT_HEALTH_LEECH: Life Steal.
+const EFFECT_HEALTH_LEECH := 9
+
+
+## The proc's chance per hit, the same at any weapon speed (the game's own:
+## classic scaled a rate per minute by swing time), else the spell's ProcChance.
 func _proc_chance(spell: Dictionary, info: Dictionary) -> float:
-	var ppm := float(info.get("ppm", 0.0))
-	if ppm > 0.0:
-		return ppm * _combatant.swing_interval / 60.0 * 100.0
 	if float(info.get("chance", 0.0)) > 0.0:
 		return float(info.chance)
 	return float(spell.get("ProcChance", 0))

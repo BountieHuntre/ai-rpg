@@ -51,6 +51,8 @@ const DEFAULTS := {
 	"npc_names": true,
 	"enemy_names": true,
 	"quest_tracker": true,
+	# The bags: one window for them all, or a frame each (InventoryUI).
+	"bags_display": "Combined",
 	# Extra action bars (GameState.EXTRA_BARS): two rows above the XP bar and
 	# two columns down the right side.
 	"bar_bottom_left": false,
@@ -92,6 +94,9 @@ const DEFAULTS := {
 	"dev_console": true,
 	# Where the Options window was dragged to, from the middle of the screen.
 	"options_window_offset": Vector2.ZERO,
+	# Where windows were dragged to by their title bands (UiStyle), in HUD
+	# units, by window.
+	"window_positions": {},
 	# The cape's spring physics (HumanoidModel._cape_springs, _update_cape),
 	# tuned live from the Developer tab (these are the values settled on).
 	"cape_stiffness": 0.0,

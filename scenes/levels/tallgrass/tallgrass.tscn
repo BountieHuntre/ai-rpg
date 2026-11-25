@@ -139,3 +139,51 @@ appearance = {
 "body": 0
 }
 race = "hornkin"
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-771.4, 6.05, 657.9)
+rotation = Vector3(0, -1.007, 0)
+npc_name = "Toro Rockhoof"
+subname = "Mining Trainer"
+trainer = "mining"
+race = "hornkin"
+
+[node name="HerbalismTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-753.6, 6.05, 649.7)
+rotation = Vector3(0, 1.4399, 0)
+npc_name = "Kaya Sweetroot"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
+race = "hornkin"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-757.1, 6.05, 653.2)
+rotation = Vector3(0, 0.1309, 0)
+npc_name = "Mahka Sharphorn"
+subname = "Skinning Trainer"
+trainer = "skinning"
+race = "hornkin"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-761.6, 6.05, 649.7)
+rotation = Vector3(0, -1.4399, 0)
+npc_name = "Wena Spiritcall"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+race = "hornkin"
+
+[node name="TradeSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-758.1, 6.05, 645.2)
+rotation = Vector3(0, -3.0107, 0)
+npc_name = "Haku Longtrail"
+subname = "Trade Supplies"
+vendor = 1286
+race = "hornkin"
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-761.9, 6.05, 654.8)
+rotation = Vector3(0, -0.6545, 0)
+npc_name = "Nita Starsong"
+subname = "Enchanting Supplies"
+vendor = 15419
+race = "hornkin"

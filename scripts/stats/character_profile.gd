@@ -20,6 +20,8 @@ var equipment: Dictionary = {}
 var known_spells: Array[int] = []
 ## Talent id (as a string, as JSON keeps it) -> points spent in it. See Talents.
 var talents: Dictionary = {}
+## Professions known, by name: { "value": skill, "max": cap }. See Professions.
+var professions: Dictionary = {}
 
 
 ## The highest rank of a known spell, by name, or 0.

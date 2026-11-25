@@ -444,6 +444,113 @@ static func hand_glow(anchor: Node3D, radius := 0.18) -> CPUParticles3D:
 	return p
 
 
+## An enchanted weapon's mist (Enchanting.weapon_look): soft puffs of its
+## colour, see-through and adding light, swelling and fading as they drift
+## off the blade: from within `blade` (a box in the weapon bone's space, the
+## blade's own faces: an axe's or mace's head, a sword's blade past its
+## hilt) on `anchor`: rising, sinking or hanging round it by `motion`.
+## Unlike the other effects it's blended, not cut out, so it reads as a glow
+## rather than as shapes.
+static func weapon_mist(anchor: Node3D, color: Color, motion: String, blade: AABB) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.emitting = false
+	p.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	p.mesh = _mist_quad()
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	p.amount = count(34)
+	p.lifetime = 1.2
+	# The blade glow's deep tone (its colour in linear light, as the glow
+	# has it), a little brighter so it shines without washing out to white.
+	var deep := color.srgb_to_linear()
+	p.color = Color(deep.r * MIST_SHINE, deep.g * MIST_SHINE, deep.b * MIST_SHINE)
+	p.color_ramp = _mist_fade()
+	p.scale_amount_min = 0.7
+	p.scale_amount_max = 1.1
+	p.scale_amount_curve = _grow_curve(Vector2(0.6, 1.2))
+	# Close about the blade's line, barely drifting off it.
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	# Kept in a little from the blade's edges, so it hugs it.
+	p.emission_box_extents = (blade.size / 2.0 * 0.8).max(Vector3.ONE * 0.01)
+	p.position = blade.get_center()
+	p.direction = Vector3.DOWN if motion == "down" else Vector3.UP
+	p.spread = 180.0 if motion == "swirl" else 30.0
+	p.initial_velocity_min = 0.0
+	p.initial_velocity_max = 0.05 if motion == "swirl" else 0.08
+	p.gravity = Vector3(0, -0.06, 0) if motion == "down" else (Vector3.ZERO if motion == "swirl" else Vector3(0, 0.06, 0))
+	p.angle_min = -180.0
+	p.angle_max = 180.0
+	p.local_coords = false
+	anchor.add_child(p)
+	return p
+
+
+## How much brighter than its colour an enchanted weapon's mist is drawn.
+const MIST_SHINE := 1.3
+## An enchanted weapon's own light: its reach in yards and strength, shown
+## only within WEAPON_LIGHT_NEAR yards of the camera, at High effects.
+const WEAPON_LIGHT_RANGE := 2.2
+const WEAPON_LIGHT_ENERGY := 0.9
+const WEAPON_LIGHT_NEAR := 25.0
+
+
+## A soft light in an enchanted weapon's colour at the middle of its blade
+## (`at`, in the weapon bone's space), so its mist shines on the hand and
+## what's near. Not counted in MAX_LIGHTS (it lasts as long as the enchant);
+## the model shows it only when near.
+static func weapon_light(anchor: Node3D, color: Color, at: Vector3) -> OmniLight3D:
+	var l := OmniLight3D.new()
+	l.light_color = color
+	l.light_energy = WEAPON_LIGHT_ENERGY
+	l.omni_range = WEAPON_LIGHT_RANGE
+	l.shadow_enabled = false
+	l.light_volumetric_fog_energy = 0.0
+	l.position = at
+	l.visible = false
+	anchor.add_child(l)
+	return l
+
+
+## A puff of mist: a soft round patch, clear at its rim, blended over what's
+## behind (unlit, facing the camera).
+static func _mist_quad() -> QuadMesh:
+	if not _quads.has("mist"):
+		var quad := QuadMesh.new()
+		quad.size = Vector2.ONE * 0.24
+		var material := StandardMaterial3D.new()
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		# Mixed rather than added, so overlapping puffs keep their colour
+		# instead of piling up to white.
+		material.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+		material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		material.vertex_color_use_as_albedo = true
+		material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		material.no_depth_test = false
+		var n := SPRITE_SIZE
+		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		var c := (n - 1) / 2.0
+		for y in n:
+			for x in n:
+				var r := Vector2((x - c) / c, (y - c) / c).length()
+				var a := clampf(1.0 - r, 0.0, 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, a * a))
+		material.albedo_texture = ImageTexture.create_from_image(img)
+		quad.material = material
+		_quads["mist"] = quad
+	return _quads["mist"]
+
+
+## Mist fades in, holds faintly and fades out.
+static func _mist_fade() -> Gradient:
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 0.0))
+	fade.set_color(1, Color(1, 1, 1, 0.0))
+	fade.add_point(0.2, Color(1, 1, 1, 0.65))
+	fade.add_point(0.7, Color(1, 1, 1, 0.45))
+	return fade
+
+
 ## A ring flying out from a point and thinning away: a shockwave, facing the
 ## camera, `size` yards across at its widest.
 static func shockwave(anchor: Node3D, at: Vector3, color: Color, size: float, time: float) -> void:

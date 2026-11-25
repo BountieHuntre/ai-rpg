@@ -1,0 +1,1901 @@
+{
+	"class": 0,
+	"trainer": "skinning",
+	"spells": [
+		{
+			"name": "Skinning",
+			"ranks": [
+				{
+					"id": 8613,
+					"name": "Skinning",
+					"rank_text": "Apprentice",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 1026,
+					"interrupt_flags": 31,
+					"cast": 1.5,
+					"range": 5,
+					"attributes": [
+						"ability"
+					],
+					"attributes_ex": [
+						"0x400"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "skinning",
+							"value": 1,
+							"per_level": 5,
+							"target": "any_unit"
+						},
+						{
+							"type": "skill",
+							"value": 1,
+							"misc": 393
+						}
+					],
+					"trainer": {
+						"level": 5,
+						"price": 10,
+						"teach": 8615,
+						"skill": 0
+					}
+				},
+				{
+					"id": 8617,
+					"name": "Skinning",
+					"rank_text": "Journeyman",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 1026,
+					"interrupt_flags": 31,
+					"cast": 1.5,
+					"range": 5,
+					"attributes": [
+						"ability"
+					],
+					"attributes_ex": [
+						"0x400"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "skinning",
+							"value": 1,
+							"per_level": 5,
+							"target": "any_unit"
+						},
+						{
+							"type": "skill",
+							"value": 2,
+							"misc": 393
+						}
+					],
+					"trainer": {
+						"level": 10,
+						"price": 500,
+						"teach": 8619,
+						"skill": 50
+					}
+				},
+				{
+					"id": 8618,
+					"name": "Skinning",
+					"rank_text": "Expert",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 1026,
+					"interrupt_flags": 31,
+					"cast": 1.5,
+					"range": 5,
+					"attributes": [
+						"ability"
+					],
+					"attributes_ex": [
+						"0x400"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "skinning",
+							"value": 1,
+							"per_level": 5,
+							"target": "any_unit"
+						},
+						{
+							"type": "skill",
+							"value": 3,
+							"misc": 393
+						}
+					],
+					"trainer": {
+						"level": 20,
+						"price": 5000,
+						"teach": 8620,
+						"skill": 125
+					}
+				},
+				{
+					"id": 10768,
+					"name": "Skinning",
+					"rank_text": "Artisan",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 1026,
+					"interrupt_flags": 31,
+					"cast": 1.5,
+					"range": 5,
+					"attributes": [
+						"ability"
+					],
+					"attributes_ex": [
+						"0x400"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "skinning",
+							"value": 1,
+							"per_level": 5,
+							"target": "any_unit"
+						},
+						{
+							"type": "skill",
+							"value": 4,
+							"misc": 393
+						}
+					],
+					"trainer": {
+						"level": 35,
+						"price": 50000,
+						"teach": 10769,
+						"skill": 200
+					}
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Apprentice Skinning",
+			"ranks": [
+				{
+					"id": 8615,
+					"name": "Apprentice Skinning",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log",
+						"keeps_sheath"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 8613
+						},
+						{
+							"type": "skill_step",
+							"value": 1,
+							"misc": 393
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Journeyman Skinning",
+			"ranks": [
+				{
+					"id": 8619,
+					"name": "Journeyman Skinning",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 8617
+						},
+						{
+							"type": "skill_step",
+							"value": 2,
+							"misc": 393
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Expert Skinning",
+			"ranks": [
+				{
+					"id": 8620,
+					"name": "Expert Skinning",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 8618
+						},
+						{
+							"type": "skill_step",
+							"value": 3,
+							"misc": 393
+						}
+					]
+				}
+			],
+			"chain": false
+		},
+		{
+			"name": "Artisan Skinning",
+			"ranks": [
+				{
+					"id": 10769,
+					"name": "Artisan Skinning",
+					"proc_chance": 101,
+					"icon_id": 736,
+					"target_flags": 256,
+					"range": 100,
+					"attributes": [
+						"hide_in_combat_log"
+					],
+					"requires_item": "none",
+					"item_types": "all",
+					"effects": [
+						{
+							"type": "learn_spell",
+							"value": 0,
+							"trigger": 10768
+						},
+						{
+							"type": "skill_step",
+							"value": 4,
+							"misc": 393
+						}
+					]
+				}
+			],
+			"chain": false
+		}
+	],
+	"profession": {
+		"name": "Skinning",
+		"skill": 393,
+		"ranks": [
+			{
+				"spell": 8613,
+				"rank": "Apprentice",
+				"max": 75,
+				"level": 5,
+				"skill": 0,
+				"price": 10
+			},
+			{
+				"spell": 8617,
+				"rank": "Journeyman",
+				"max": 150,
+				"level": 10,
+				"skill": 50,
+				"price": 500
+			},
+			{
+				"spell": 8618,
+				"rank": "Expert",
+				"max": 225,
+				"level": 20,
+				"skill": 125,
+				"price": 5000
+			},
+			{
+				"spell": 10768,
+				"rank": "Artisan",
+				"max": 300,
+				"level": 35,
+				"skill": 200,
+				"price": 50000
+			}
+		],
+		"start": [],
+		"tools": [
+			{
+				"item": 7005,
+				"name": "Skinning Knife"
+			}
+		]
+	},
+	"skinning_loot": [
+		{
+			"id": 113,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.2962,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.7038,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 118,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.9457,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.0374,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 330,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.0685,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.9315,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 390,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 41.0463,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.9537,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 524,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.0997,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.9003,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 525,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.7361,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.6266,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 822,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.0715,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.9285,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1125,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.6922,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.3078,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1126,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.8664,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.1336,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1127,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.6709,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.3291,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1128,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.1722,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.8278,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1130,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 2.9412,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						2
+					],
+					"chance": 61.7647,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 35.2941,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1131,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.701,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.299,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1132,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 36,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 64,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1133,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 26.1682,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 73.8318,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1134,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.3362,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.6638,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1135,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.7931,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 61.2069,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1137,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 32.5,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 67.5,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1138,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.189,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.811,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1196,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.3221,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.6779,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1199,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.9904,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 57.9634,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1201,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.7729,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.2271,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1271,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 9.6154,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						2
+					],
+					"chance": 69.2308,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 21.1538,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1388,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 8.1818,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						2
+					],
+					"chance": 72.7273,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 19.0909,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1547,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.7979,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.2021,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1548,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.7009,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 61.2991,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1549,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 44.9761,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 55.0239,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1553,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.2346,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.7654,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1554,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.2453,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.7547,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1689,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 42.3682,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 57.6318,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1922,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.8831,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.1169,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 1961,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 10.6796,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						2
+					],
+					"chance": 71.8447,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 17.4757,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2033,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 42.4021,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 57.5979,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2034,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 41.1978,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.8022,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2042,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.4358,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.5642,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2043,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 41.2225,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.7775,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2956,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.4919,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 61.5081,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2957,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.7258,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 61.2742,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2958,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.6289,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.3711,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2959,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.7046,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.2954,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 2960,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.3959,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.6041,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3035,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.6707,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.3293,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3056,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 3.9683,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						2
+					],
+					"chance": 65.0794,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 30.9524,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3068,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 37.3418,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 62.6582,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3099,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.3146,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.4717,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3100,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.3871,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.6129,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3110,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 36.5724,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 63.4276,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3121,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 41.0959,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.9041,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3122,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.5443,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.4557,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3123,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.5094,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.4906,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3125,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 38.4427,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 61.5573,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3126,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 41.5783,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 58.4217,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3127,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3130,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.2924,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.7076,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3131,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.9518,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.0482,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 3566,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 39.5852,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 60.4148,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 10356,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 62.069,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 37.931,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 14430,
+			"loot": [
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 40.9091,
+					"group": 1
+				},
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 59.0909,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 100006,
+			"loot": [
+				{
+					"item": 2319,
+					"name": "Medium Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 80,
+					"group": 1
+				},
+				{
+					"item": 4232,
+					"name": "Medium Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 20,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 100007,
+			"loot": [
+				{
+					"item": 783,
+					"name": "Light Hide",
+					"count": [
+						1,
+						1
+					],
+					"chance": 20,
+					"group": 1
+				},
+				{
+					"item": 2318,
+					"name": "Light Leather",
+					"count": [
+						1,
+						1
+					],
+					"chance": 80,
+					"group": 1
+				}
+			]
+		},
+		{
+			"id": 100008,
+			"loot": [
+				{
+					"item": 2934,
+					"name": "Ruined Leather Scraps",
+					"count": [
+						1,
+						1
+					],
+					"chance": 100,
+					"group": 1
+				}
+			]
+		}
+	]
+}

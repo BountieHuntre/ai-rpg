@@ -33,6 +33,14 @@ static func roll_object(loot_id: int) -> Array[Dictionary]:
 	return drops
 
 
+## Rolls a loot table given as its entries (the professions' node, skinning
+## and disenchanting loot, ProfessionDB), like a creature's.
+static func roll_entries(entries: Array) -> Array[Dictionary]:
+	var drops: Array[Dictionary] = []
+	_process(entries, drops)
+	return drops
+
+
 ## Every item a game object's loot can hold, quest-only ones included.
 static func object_items(loot_id: int) -> Array[int]:
 	var items: Array[int] = []

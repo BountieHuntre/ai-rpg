@@ -239,3 +239,51 @@ appearance = {
 "body": 1
 }
 race = "troll"
+
+[node name="MiningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2050.0, 5.05, -1783.1)
+rotation = Vector3(0, -1.5593, 0)
+npc_name = "Durthak Stonefist"
+subname = "Mining Trainer"
+trainer = "mining"
+race = "orc"
+
+[node name="HerbalismTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2055.8, 5.05, -1785.6)
+rotation = Vector3(0, 2.2253, 0)
+npc_name = "Mazgra Rootgrip"
+subname = "Herbalism Trainer"
+trainer = "herbalism"
+race = "orc"
+
+[node name="SkinningTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2049.7, 5.05, -1778.0)
+rotation = Vector3(0, -0.5236, 0)
+npc_name = "Krosh Hidecutter"
+subname = "Skinning Trainer"
+trainer = "skinning"
+race = "orc"
+
+[node name="EnchantingTrainer" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2045.3, 5.05, -1780.1)
+rotation = Vector3(0, -1.1781, 0)
+npc_name = "Zal'tesh"
+subname = "Enchanting Trainer"
+trainer = "enchanting"
+race = "troll"
+
+[node name="TradeSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2055.7, 5.05, -1790.6)
+rotation = Vector3(0, 2.7489, 0)
+npc_name = "Grenna Saltpouch"
+subname = "Trade Supplies"
+vendor = 1286
+race = "orc"
+
+[node name="EnchantingSupplies" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2060.5, 5.05, -1787.7)
+rotation = Vector3(0, 2.0944, 0)
+npc_name = "Vel'kazi"
+subname = "Enchanting Supplies"
+vendor = 15419
+race = "troll"

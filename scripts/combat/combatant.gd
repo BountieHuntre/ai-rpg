@@ -10,6 +10,9 @@ signal off_hand_swung(target: Combatant)
 ## A shot with the ranged weapon left for its target (Shoot).
 signal shot(target: Combatant)
 signal took_damage(amount: int, source: Combatant, crit: bool)
+## The school of the hit took_damage is reporting (0 physical), for the
+## floating combat text's colour.
+var last_damage_school := 0
 ## A hit that was turned away entirely, such as a miss, dodge or resist.
 signal avoided(text: String, source: Combatant)
 signal healed(amount: int, crit: bool)
@@ -17,6 +20,9 @@ signal stunned
 signal died
 ## A white melee swing hit (including glancing, crushing, blocked and crits).
 signal auto_attack_landed(target: Combatant)
+## True while the off hand's swing resolves, so its procs (the off-hand
+## weapon's enchant) know which hand hit.
+var striking_off_hand := false
 signal auras_changed
 ## This combatant's hit landed on a target (damage greater than zero).
 signal dealt_damage(target: Combatant)
@@ -247,6 +253,13 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 		for old in auras:
 			if int(old.spell.Id) == int(spell.Id) and old.caster == caster:
 				stacks = mini(int(old.get("stacks", 1)) + 1, most)
+	# A buff refreshed or stacked keeps its place among the others (its icon
+	# stays where it was in the buff bar).
+	var place := -1
+	for n in auras.size():
+		if int(auras[n].spell.Id) == int(spell.Id):
+			place = n
+			break
 	remove_aura(int(spell.Id), false)
 	# The caster's talents may lengthen it or strengthen its effects, and its
 	# damage over time (SpellMods DURATION, ALL_EFFECTS, DOT).
@@ -267,7 +280,10 @@ func add_aura(spell: Dictionary, caster: Combatant) -> void:
 	# may add more (SpellMods CHARGES: Improved Shield Brace).
 	if int(spell.get("ProcCharges", 0)) > 0:
 		aura.charges = roundi(SpellMods.apply(caster, spell, SpellMods.CHARGES, int(spell.ProcCharges)))
-	auras.append(aura)
+	if place >= 0 and place <= auras.size():
+		auras.insert(place, aura)
+	else:
+		auras.append(aura)
 	auras_changed.emit()
 	# A buff cast on the unit (not a passive, nor a debuff from the other
 	# side): a ring rising from its feet.
@@ -714,6 +730,7 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 	health = maxi(health - amount, 0)
 	last_hit_school = school
 	reward_rage(amount, false)
+	last_damage_school = school
 	took_damage.emit(amount, source, crit)
 	Vfx.hit(body, school, crit)
 	if source and is_instance_valid(source) and amount > 0:
@@ -860,7 +877,10 @@ func _physics_process(delta: float) -> void:
 			# Two-Weapon Craft raises the off hand's share (SPELL_AURA_MOD_OFFHAND_DAMAGE_PCT).
 			var share := OFF_HAND_DAMAGE * (1.0 + aura_total(AURA_MOD_OFFHAND_DAMAGE_PCT) / 100.0)
 			var damage := (randf_range(off_min_damage, off_max_damage) + attack_power / 14.0 * off_swing_interval) * share
-			if _resolve_melee(target, damage, CombatRules.roll_auto_attack(self, target), true):
+			striking_off_hand = true
+			var landed := _resolve_melee(target, damage, CombatRules.roll_auto_attack(self, target), true)
+			striking_off_hand = false
+			if landed:
 				auto_attack_landed.emit(target)
 			_off_swing_left = off_swing_interval
 	_tick_shooting(delta)
