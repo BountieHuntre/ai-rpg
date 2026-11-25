@@ -1,5 +1,13 @@
 [
 	{
+		"version": "0.23.0",
+		"date": "11-24-2026",
+		"notes": [
+			"Every zone's open land now rolls in hills, from low knolls to tall rises with bumpy slopes, so the world has real ups and downs.",
+			"Towns, camps, roads and lakes stay level, and the hills leave the mountains and existing high ground as they were."
+		]
+	},
+	{
 		"version": "0.22.1",
 		"date": "11-24-2026",
 		"notes": [
