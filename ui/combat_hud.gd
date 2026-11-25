@@ -1375,7 +1375,13 @@ func _input(event: InputEvent) -> void:
 	var item := ItemDB.get_item(ItemTooltip.hovered_item)
 	var stack := click.button_index == MOUSE_BUTTON_RIGHT or click.shift_pressed
 	var count := maxi(int(item.get("stackable", 1)), 1) if stack else 1
-	var left := GameState.add_item(ItemTooltip.hovered_item, count)
+	var left := count
+	if ItemTooltip.hovered_enchant > 0:
+		# An enchanted item: copies with its enchant, each in a slot of its own.
+		for i in count:
+			left -= 1 - Inventory.add_stack({ "id": ItemTooltip.hovered_item, "count": 1, "enchant": ItemTooltip.hovered_enchant })
+	else:
+		left = GameState.add_item(ItemTooltip.hovered_item, count)
 	if left >= count:
 		_on_loot_message("Inventory is full.", true)
 	else:

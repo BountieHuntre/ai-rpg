@@ -148,6 +148,26 @@ static func add_item(id: int, count: int, bound := false) -> int:
 	return count
 
 
+## A stack into the bags as it was: an enchanted one (from a bot) takes an
+## empty slot of its own, keeping its enchant; others go in as add_item.
+## Returns how many didn't fit.
+static func add_stack(stack: Dictionary) -> int:
+	var count := maxi(int(stack.get("count", 1)), 1)
+	if not stack.has("enchant"):
+		return add_item(int(stack.id), count, bool(stack.get("bound", false)))
+	for container: Array in GameState.containers:
+		for i in container.size():
+			if container[i].is_empty():
+				var placed := _stack(int(stack.id), count, bool(stack.get("bound", false)))
+				placed.enchant = int(stack.enchant)
+				if stack.has("durability"):
+					placed.durability = int(stack.durability)
+				container[i] = placed
+				GameState.inventory_changed.emit()
+				return 0
+	return count
+
+
 ## How many of an item are in the bags.
 static func count_item(id: int) -> int:
 	var total := 0

@@ -136,7 +136,7 @@ func _equip_slot(at: Vector2, slot: int) -> void:
 		if worn.is_empty():
 			_tooltip.show_lines([[Inventory.SLOT_LABELS[slot], "", Color.WHITE]])
 		else:
-			_tooltip.show_item(ItemDB.get_item(int(worn.id)), bool(worn.get("bound", false)), -1, false))
+			_tooltip.show_item(_with_enchant(worn), bool(worn.get("bound", false)), -1, false))
 	box.mouse_exited.connect(func() -> void: _tooltip.show_item({}))
 	box.gui_input.connect(func(event: InputEvent) -> void:
 		var click := event as InputEventMouseButton
@@ -163,7 +163,7 @@ func _bag_slot(at: Vector2, index: int) -> void:
 	if int(stack.count) > 1:
 		UiStyle.count_label(box, int(stack.count), _ui_scale)
 	box.mouse_entered.connect(func() -> void:
-		var lines: Array = ItemDB.tooltip(item, BotBag.is_bound(stack), -1, int(stack.count))
+		var lines: Array = ItemDB.tooltip(_with_enchant(stack), BotBag.is_bound(stack), -1, int(stack.count))
 		if BotGear.slots_for(item, bot.profile).size() > 0:
 			var why := BotGear.why_not(item, bot.profile)
 			lines.append(["Click: equip on %s" % bot.profile.char_name if why.is_empty() else why, "", Color(0.4, 0.9, 0.4) if why.is_empty() else Color(1, 0.4, 0.4)])
@@ -199,14 +199,12 @@ func _take(index: int) -> void:
 	if index >= bot.bag.stacks.size():
 		return
 	var stack: Dictionary = bot.bag.stacks[index]
-	var id := int(stack.id)
 	var count := int(stack.count)
-	var bound := BotBag.is_bound(stack)
-	var left := Inventory.add_item(id, count, bound)
+	var left := Inventory.add_stack(stack)
 	if left >= count:
 		_report(Inventory.ERR_FULL)
 		return
-	bot.bag.remove(id, count - left, bound)
+	bot.bag.take_at(index, count - left)
 	Sfx.play("loot")
 	_build()
 
@@ -223,7 +221,7 @@ func _give_from_bag(ref: Dictionary) -> void:
 		_report(BotGear.ERR_BAG_FULL % bot.profile.char_name)
 		return
 	Inventory.take_stack(ref)
-	bot.bag.add(int(stack.id), int(stack.count), bound)
+	bot.bag.add_stack(stack.merged({ "bound": bound }, true))
 	Sfx.play("loot")
 	_build()
 
@@ -243,18 +241,23 @@ func _equip_from_bag(ref: Dictionary, slot := -1) -> void:
 
 ## An item from its own bag put on.
 func _equip_from_own_bag(index: int) -> void:
-	var id := int(bot.bag.stacks[index].id)
-	var bound := BotBag.is_bound(bot.bag.stacks[index])
 	# Out of the bag first, so what it takes off has its place.
-	bot.bag.remove(id, 1, bound)
-	var problem := BotGear.equip(bot, { "id": id, "count": 1, "bound": bound })
+	var piece := bot.bag.take_at(index, 1)
+	piece.bound = BotBag.is_bound(piece)
+	var problem := BotGear.equip(bot, piece)
 	if problem.is_empty():
 		Sfx.play("loot")
 		GameState.inventory_changed.emit()
 	else:
-		bot.bag.add(id, 1, bound)
+		bot.bag.add_stack(piece)
 	_report(problem)
 	_build()
+
+
+## An item's data with its stack's enchant, for its tooltip.
+func _with_enchant(stack: Dictionary) -> Dictionary:
+	var item := ItemDB.get_item(int(stack.id))
+	return item.merged({ "_enchant": int(stack.enchant) }) if stack.has("enchant") else item
 
 
 func _report(problem: String) -> void:

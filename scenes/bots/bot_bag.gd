@@ -109,7 +109,7 @@ func count_of(id: int) -> int:
 func add(id: int, count: int, bound := false) -> void:
 	var stack_size := maxi(int(ItemDB.get_item(id).get("stackable", 1)), 1)
 	for stack in stacks:
-		if count > 0 and int(stack.id) == id and is_bound(stack) == bound and int(stack.count) < stack_size:
+		if count > 0 and int(stack.id) == id and is_bound(stack) == bound and not stack.has("enchant") and int(stack.count) < stack_size:
 			var moved := mini(stack_size - int(stack.count), count)
 			stack.count = int(stack.count) + moved
 			count -= moved
@@ -123,15 +123,63 @@ func add(id: int, count: int, bound := false) -> void:
 	_make_room()
 
 
+## A stack as it was, its enchant kept (gear given, traded or taken off):
+## an enchanted one stays a stack of its own.
+func add_stack(stack: Dictionary) -> void:
+	if not stack.has("enchant"):
+		add(int(stack.id), maxi(int(stack.get("count", 1)), 1), bool(stack.get("bound", false)))
+		return
+	var kept := { "id": int(stack.id), "count": maxi(int(stack.get("count", 1)), 1), "enchant": int(stack.enchant) }
+	if bool(stack.get("bound", false)):
+		kept.bound = true
+	stacks.append(kept)
+	_make_room()
+
+
 ## Takes some of an item, of its unbound stacks (or its bound ones).
 func remove(id: int, count: int, bound := false) -> void:
-	for i in range(stacks.size() - 1, -1, -1):
-		if count > 0 and int(stacks[i].id) == id and is_bound(stacks[i]) == bound:
+	take(id, count, bound)
+
+
+## Takes some of an item, plain stacks before enchanted ones, and returns
+## what it took as stacks, enchants and all.
+func take(id: int, count: int, bound := false) -> Array[Dictionary]:
+	var taken_stacks: Array[Dictionary] = []
+	for enchanted: bool in [false, true]:
+		for i in range(stacks.size() - 1, -1, -1):
+			if count <= 0:
+				break
+			if int(stacks[i].id) != id or is_bound(stacks[i]) != bound or stacks[i].has("enchant") != enchanted:
+				continue
 			var taken := mini(int(stacks[i].count), count)
+			var piece: Dictionary = stacks[i].duplicate()
+			piece.count = taken
+			taken_stacks.append(piece)
 			stacks[i].count = int(stacks[i].count) - taken
 			count -= taken
 			if int(stacks[i].count) <= 0:
 				stacks.remove_at(i)
+	return taken_stacks
+
+
+## Takes one of an item with this enchant (picked in a trade), or {}.
+func take_enchanted(id: int, enchant: int) -> Dictionary:
+	for i in stacks.size():
+		if int(stacks[i].id) == id and int(stacks[i].get("enchant", 0)) == enchant and not is_bound(stacks[i]):
+			return take_at(i, 1)
+	return {}
+
+
+## Takes some of the stack at `index`, returned as a stack, enchant and all.
+func take_at(index: int, count := 1) -> Dictionary:
+	if index < 0 or index >= stacks.size():
+		return {}
+	var piece: Dictionary = stacks[index].duplicate()
+	piece.count = mini(count, int(stacks[index].count))
+	stacks[index].count = int(stacks[index].count) - int(piece.count)
+	if int(stacks[index].count) <= 0:
+		stacks.remove_at(index)
+	return piece
 
 
 ## Its share of a creature it killed: the loot that can change hands, and the
@@ -223,6 +271,8 @@ static func from_dict(data: Dictionary) -> BotBag:
 			var kept := { "id": int(stack.id), "count": int(stack.count) }
 			if bool(stack.get("bound", false)):
 				kept.bound = true
+			if stack.has("enchant"):
+				kept.enchant = int(stack.enchant)
 			bag.stacks.append(kept)
 	bag.money = int(data.get("money", 0))
 	bag.markup = float(data.get("markup", bag.markup))

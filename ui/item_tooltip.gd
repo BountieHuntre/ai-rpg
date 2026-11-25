@@ -18,6 +18,8 @@ var anchored := false
 ## The item any tooltip shows now (its entry), or 0: what Ctrl+Alt+click
 ## gives in developer runs (CombatHud._input).
 static var hovered_item := 0
+## The enchant on the item under the mouse, or 0 (the dev give copies it).
+static var hovered_enchant := 0
 
 
 ## Over every window, the bags (InventoryUI, z 1) included.
@@ -87,6 +89,7 @@ func show_item(item: Dictionary, soulbound := false, current_durability := -1, c
 	show_lines(lines)
 	if visible:
 		hovered_item = int(item.get("entry", 0))
+		hovered_enchant = int(item.get("_enchant", 0))
 	if visible and compare:
 		_show_compare(item)
 
@@ -94,6 +97,7 @@ func show_item(item: Dictionary, soulbound := false, current_durability := -1, c
 ## Shows rows of [left text, right text, color], or hides for an empty list.
 func show_lines(lines: Array) -> void:
 	hovered_item = 0
+	hovered_enchant = 0
 	for panel in _compare:
 		panel.visible = false
 	# While the camera drags, the captured mouse reads as the screen centre,

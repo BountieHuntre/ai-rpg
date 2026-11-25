@@ -62,6 +62,9 @@ var _picked: Array[int] = []
 ## How many of a picked item go in, when fewer than it has (the number talked
 ## about in chat); otherwise all of them.
 var _counts: Dictionary = {}
+## The enchant of each picked item that has one, by item id: that copy is
+## the one traded.
+var _picked_enchants: Dictionary = {}
 var _money_field: LineEdit
 var _rebuild_queued := false
 
@@ -113,6 +116,7 @@ func open(with_bot: Bot, greet := true) -> void:
 	_i_accept = false
 	_they_accept = false
 	_picked.clear()
+	_picked_enchants.clear()
 	_counts.clear()
 	visible = true
 	_inventory.trading = true
@@ -253,9 +257,14 @@ func _bot_offers() -> void:
 	var i := 0
 	for id in _picked:
 		var count := mini(bot.bag.count_of(id), int(_counts.get(id, 1 << 30)))
+		# An enchanted copy picked: that one alone.
+		if _picked_enchants.has(id):
+			count = mini(count, 1)
 		if i >= SLOTS or count <= 0:
 			continue
 		_theirs[i] = { "id": id, "count": count, "price": bot.bag.asking_price(id, count) }
+		if _picked_enchants.has(id):
+			_theirs[i].enchant = int(_picked_enchants[id])
 		i += 1
 	_bot_thinks()
 
@@ -292,10 +301,12 @@ func _greet() -> void:
 
 
 ## Picks one of its goods from the panel, to go in the trade.
-func _pick(id: int) -> void:
+func _pick(id: int, enchant := 0) -> void:
 	if not is_open() or id in _picked or _picked.size() >= SLOTS:
 		return
 	_picked.append(id)
+	if enchant > 0:
+		_picked_enchants[id] = enchant
 	_bot_offers()
 	_i_accept = false
 	_queue_rebuild()
@@ -309,6 +320,7 @@ func _put_back(slot: int) -> void:
 	if stack.is_empty():
 		return
 	_picked.erase(int(stack.id))
+	_picked_enchants.erase(int(stack.id))
 	_counts.erase(int(stack.id))
 	_bot_offers()
 	_i_accept = false
@@ -357,11 +369,21 @@ func _complete() -> void:
 			var stack := Inventory.take_stack(slot.ref)
 			# A party member's soulbound things stay so.
 			var bound: bool = stack.get("bound", false) or int(ItemDB.get_item(int(stack.id)).get("bonding", 0)) == 1
-			bot.bag.add(int(stack.id), int(stack.count), bound)
-	for entry: Array in incoming:
-		bot.bag.remove(int(entry[0]), int(entry[1]))
-		Inventory.add_item(int(entry[0]), int(entry[1]))
-		bot.bag.quotes.sell.erase(int(entry[0]))
+			bot.bag.add_stack(stack.merged({ "bound": bound }, true))
+	for slot in _theirs:
+		if slot.is_empty():
+			continue
+		var pieces: Array[Dictionary] = []
+		if slot.has("enchant"):
+			var piece := bot.bag.take_enchanted(int(slot.id), int(slot.enchant))
+			if not piece.is_empty():
+				pieces.append(piece)
+		else:
+			pieces = bot.bag.take(int(slot.id), int(slot.count))
+		for piece: Dictionary in pieces:
+			piece.erase("bound")
+			Inventory.add_stack(piece)
+		bot.bag.quotes.sell.erase(int(slot.id))
 	for slot in _mine:
 		if not slot.is_empty():
 			bot.bag.quotes.buy.erase(int(slot.id))
@@ -477,8 +499,18 @@ func _slot(at: Vector2, stack: Dictionary, on_input: Callable) -> void:
 		var price := _text(row, Vector2(0, 2), ItemDB.money_text(int(stack.price)), GOLD, FONT_SIZE)
 		price.size.x = (COLUMN - 2) * _ui_scale
 		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.mouse_entered.connect(func() -> void: hovered.emit(item))
+	var shown := _with_enchant(item, stack)
+	row.mouse_entered.connect(func() -> void: hovered.emit(shown))
 	row.mouse_exited.connect(func() -> void: hovered.emit({}))
+
+
+## An item's data with the enchant of the stack it stands for (yours in the
+## bags, or the bot's), for its tooltip.
+func _with_enchant(item: Dictionary, stack: Dictionary) -> Dictionary:
+	var enchant := int(stack.get("enchant", 0))
+	if enchant == 0 and stack.has("ref"):
+		enchant = int(Inventory.stack_at(stack.ref).get("enchant", 0))
+	return item.merged({ "_enchant": enchant }) if enchant > 0 else item
 
 
 ## Your slot: drop the held item in, right-click to take one back.
@@ -535,10 +567,11 @@ func _build_wares() -> void:
 		row.gui_input.connect(func(event: InputEvent) -> void:
 			var click := event as InputEventMouseButton
 			if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
-				_pick.call_deferred(id)
+				_pick.call_deferred(id, int(stack.get("enchant", 0)))
 				accept_event()
 		)
-		row.mouse_entered.connect(func() -> void: hovered.emit(item))
+		var shown := _with_enchant(item, stack)
+		row.mouse_entered.connect(func() -> void: hovered.emit(shown))
 		row.mouse_exited.connect(func() -> void: hovered.emit({}))
 
 

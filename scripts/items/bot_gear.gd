@@ -61,7 +61,7 @@ static func equip(bot: Bot, stack: Dictionary, slot := -1) -> String:
 	if off.size() > BotBag.MAX_STACKS - bot.bag.stacks.size():
 		return ERR_BAG_FULL % who.char_name
 	for taken in off:
-		bot.bag.add(int(taken.id), maxi(int(taken.get("count", 1)), 1), bool(taken.get("bound", false)))
+		bot.bag.add_stack(taken)
 	if two_hander:
 		who.equipment.erase(Inventory.Slot.OFF_HAND)
 	var worn := stack.duplicate()
@@ -80,6 +80,6 @@ static func unequip(bot: Bot, slot: int) -> String:
 	if not bot.bag.has_room(int(worn.id), 1, bool(worn.get("bound", false))):
 		return ERR_BAG_FULL % bot.profile.char_name
 	bot.profile.equipment.erase(slot)
-	bot.bag.add(int(worn.id), 1, bool(worn.get("bound", false)))
+	bot.bag.add_stack(worn)
 	bot.stats.refresh()
 	return ""
