@@ -65,6 +65,10 @@ func _enter_tree() -> void:
 ## Makes the zones of a continent joined to a zone (once, before any are
 ## there): all of them if the zone isn't on it.
 func build(which: String, around := "") -> void:
+	# The sun doesn't light the caves' rock (Zone.CAVE_RENDER_LAYER).
+	var sun := get_node_or_null("Sun") as DirectionalLight3D
+	if sun:
+		sun.light_cull_mask &= ~Zone.CAVE_RENDER_LAYER
 	continent = which if CONTINENTS.has(which) else DEFAULT_CONTINENT
 	var wanted := region_of(around)
 	for zone_name: String in CONTINENTS[continent]:
@@ -223,8 +227,10 @@ func zone_named(zone_name: String) -> Zone:
 	return null
 
 
-func height_at(x: float, z: float) -> float:
-	return zone_at(Vector3(x, 0, z)).ground_height(x, z)
+## The ground's height; with `near_y` a cave's floor where that's nearer
+## (for units walking without collision).
+func height_at(x: float, z: float, near_y := NAN) -> float:
+	return zone_at(Vector3(x, 0, z)).ground_height(x, z, near_y)
 
 
 func set_clutter(level: String) -> void:

@@ -170,6 +170,41 @@ func _draw_for_spell(spell: Dictionary) -> void:
 
 
 ## Moving or in the air. Either interrupts casting.
+## How high a lip or hump a unit walks up without jumping (classic's step),
+## and how far below it the floor still holds it going down bumps.
+const STEP_HEIGHT := 0.6
+const FLOOR_SNAP := 0.6
+## Steeper than this is a wall to step up (its normal's height).
+const STEP_WALL := 0.7
+
+
+## move_and_slide that steps up lips and humps up to STEP_HEIGHT (a cave's
+## uneven floor, a rock's edge): on the ground, when the way ahead runs into
+## something steep, it rises, moves on above it and comes down onto it, if
+## there's room up there and floor to land on. For the player, playerbots and
+## creatures alike.
+static func slide_stepping(body: CharacterBody3D, delta: float) -> void:
+	body.floor_snap_length = FLOOR_SNAP
+	var ahead := Vector3(body.velocity.x, 0.0, body.velocity.z) * delta
+	if body.is_on_floor() and ahead.length_squared() > 0.000001 and body.velocity.y <= 0.0:
+		var hit := KinematicCollision3D.new()
+		if body.test_move(body.global_transform, ahead, hit) and hit.get_normal().y < STEP_WALL:
+			var up := Vector3.UP * STEP_HEIGHT
+			var raised := body.global_transform.translated(up)
+			if not body.test_move(body.global_transform, up) and not body.test_move(raised, ahead):
+				var over := raised.translated(ahead)
+				var down := KinematicCollision3D.new()
+				if body.test_move(over, -up, down) and down.get_normal().y >= STEP_WALL:
+					body.global_position = over.origin + down.get_travel()
+					# Moved this step already: only settle on the floor.
+					var kept := body.velocity
+					body.velocity = Vector3(0.0, -0.1, 0.0)
+					body.move_and_slide()
+					body.velocity = Vector3(kept.x, 0.0, kept.z)
+					return
+	body.move_and_slide()
+
+
 func is_moving() -> bool:
 	return not is_on_floor() or Vector2(velocity.x, velocity.z).length() > 0.1
 

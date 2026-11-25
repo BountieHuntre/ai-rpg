@@ -216,6 +216,12 @@ const GROUND_TEXTURES := {
 }
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[(FLATS[QUARRY][0] as Vector2) + Vector2(-18.0, 18.0), atan2(-18.0, 18.0), "the Grey Quarry", true],
+		[(FLATS[HOLD][0] as Vector2) + Vector2(-14.0, 14.0), -PI / 4.0, "Icemane Hold", false],
+		[Vector2(-268.0, -1099.0), PI, "the Grizzled Den", false]]
+
 func _ready() -> void:
 	Props.use_texture(STONE, "stone_wall", 4.0)
 	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
@@ -343,15 +349,7 @@ func _house(kit: BuildingKit, at: Vector3, size: Vector3, door_side: Vector2) ->
 
 
 ## A cave mouth: a dark opening framed in rough stone, facing `yaw` (0 faces north).
-func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
-	var mouth := Node3D.new()
-	mouth.position = at
-	mouth.rotation.y = yaw
-	parent.add_child(mouth)
-	Props.box(mouth, Vector3(0, 0, 1.0), Vector3(width, 4.0, 2.0), Color(0.06, 0.06, 0.08), 0.0, false)
-	for side in [-1, 1]:
-		Props.box(mouth, Vector3(side * (width / 2.0 + 0.8), 0, 0), Vector3(1.8, 5.0, 3.0), ROCK)
-	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
+
 
 
 ## A great dwarven gate: two towers, a lintel and shut iron doors, facing `yaw`.
@@ -480,8 +478,6 @@ func _build_quarry() -> void:
 		var at := q + Vector2(cos(angle), sin(angle)) * 22.0
 		blocks.append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3(2.0, 1.4, 1.4)), Vector3(at.x, y + 0.7, at.y)))
 	Props.scatter(quarry, BoxMesh.new(), QUARRY_ROCK, blocks)
-	for burrow in [Vector2(-18, 18), Vector2(16, 22), Vector2(26, -6)]:
-		_cave_mouth(quarry, _near(q, burrow, y), atan2(burrow.x, burrow.y), 4.0)
 	Props.box(quarry, _near(q, Vector2(-6, -20), y), Vector3(0.6, 9, 0.6), TIMBER, 0.0, false)
 	Props.box(quarry, _near(q, Vector2(-3, -20), y + 8.6), Vector3(7, 0.4, 0.4), TIMBER, 0.0, false)
 	# The dwarves' camp at the quarry's edge.
@@ -498,7 +494,6 @@ func _build_hold() -> void:
 	var flat: Array = FLATS[HOLD]
 	var h: Vector2 = flat[0]
 	var y: float = flat[2]
-	_cave_mouth(hold, _near(h, Vector2(-14, 14), y), -PI / 4.0, 6.0)
 	for i in 4:
 		var angle := TAU * i / 4.0 + 0.4
 		var at := h + Vector2(cos(angle), sin(angle)) * 12.0
@@ -521,7 +516,6 @@ func _build_den() -> void:
 	den.name = "GrizzledDen"
 	add_child(den)
 	var flat: Array = FLATS[DEN]
-	_cave_mouth(den, Vector3(-268, height_at(-268, -1099), -1099), PI, 5.0)
 	var bones: Array[Transform3D] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 9

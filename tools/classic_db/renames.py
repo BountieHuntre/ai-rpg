@@ -703,6 +703,8 @@ CREATURES = {
 # Vendor names and titles, by creature entry.
 # Game objects (gameobject_template names).
 OBJECTS = {
+    # Treasure chests in the caves.
+    "Battered Chest": "Weathered Strongbox",
     # Quests with items and objects to use.
     "Attack Plan: Sen'jin Village": 'Attack Plan: Tidebone Village',
     'Attack Plan: Orgrimmar': 'Attack Plan: Ironmaw Hold',

@@ -261,6 +261,13 @@ func _init() -> void:
 	chests = CHESTS
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	var delve: Vector2 = FLATS[DELVE][0]
+	var copper: Vector2 = FLATS[COPPERHOLLOW][0]
+	return [[delve + Vector2(-14.0, 0.0), -PI / 2.0, "the Old Delve", true],
+		[copper + Vector2(14.0, 0.0), PI / 2.0, "Copperhollow", true]]
+
 func _ready() -> void:
 	# Stone, plaster, thatch, roofs and wood with painted textures.
 	Props.use_texture(STONE, "stone_wall", 4.0)
@@ -493,7 +500,6 @@ func _build_mine(flat: Array, side: int, node_name: String) -> void:
 	var y: float = flat[2]
 	var x := at.x + side * 14.0
 	var z := at.y
-	Props.box(mine, Vector3(x + side * 3.5, y, z), Vector3(7, 5, 5), Color(0.05, 0.04, 0.04))
 	for end in [-1, 1]:
 		Props.box(mine, Vector3(x, y, z + end * 2.7), Vector3(0.6, 4.6, 0.6), DARK_WOOD)
 	Props.box(mine, Vector3(x, y + 4.6, z), Vector3(0.8, 0.6, 6.2), DARK_WOOD, 0.0, false)

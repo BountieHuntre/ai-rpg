@@ -15,6 +15,9 @@ const TYPE_CHEST := 3
 ## Objects to use (classic's goobers): the Kolkar attack plans, taken by
 ## clicking; Maren's Grave, where remains are buried with an item's spell.
 const TYPE_GOOBER := 10
+## Treasure chests (the caves' Weathered Strongboxes): open to anyone while
+## they hold loot, not just for quests.
+const TREASURE := [2843, 106318]
 
 static var _data: Dictionary
 
@@ -23,6 +26,9 @@ var loot: Array[Dictionary] = []
 var loot_money := 0
 ## Unix time it comes back, or 0 while it's there.
 var respawn_at := 0.0
+## The share of its respawns it's there on (a cave's chest: half), as
+## classic's chests come and go.
+var chance := 1.0
 var _rolled := false
 var _sparkle: Node3D
 var _model: Node3D
@@ -70,6 +76,9 @@ func _ready() -> void:
 	add_child(_model)
 	_sparkle = _build_sparkle()
 	add_child(_sparkle)
+	# Not there this time: back on a later respawn, maybe.
+	if chance < 1.0 and randf() > chance:
+		_despawn()
 
 
 ## A bundle of short logs tied with rope; for objects to use, by their name:
@@ -84,6 +93,15 @@ func _build_model() -> Node3D:
 	if "Attack Plan" in thing:
 		Props.box(model, Vector3.ZERO, Vector3(0.9, 0.6, 0.7), Color(0.45, 0.32, 0.2), 0.0, false)
 		Props.box(model, Vector3(0, 0.6, 0), Vector3(0.7, 0.05, 0.5), Color(0.85, 0.8, 0.65), 0.2, false)
+		return model
+	if "Strongbox" in thing or "Chest" in thing:
+		# A banded chest with a domed lid.
+		Props.box(model, Vector3.ZERO, Vector3(1.2, 0.6, 0.8), Color(0.42, 0.28, 0.16), 0.0, false)
+		Props.box(model, Vector3(0, 0.6, 0), Vector3(1.24, 0.22, 0.84), Color(0.38, 0.25, 0.14), 0.0, false)
+		Props.box(model, Vector3(0, 0.82, 0), Vector3(1.2, 0.14, 0.6), Color(0.38, 0.25, 0.14), 0.0, false)
+		for band in [-0.42, 0.42]:
+			Props.box(model, Vector3(band, 0, 0), Vector3(0.1, 0.65, 0.84), Color(0.35, 0.33, 0.3), 0.0, false)
+		Props.box(model, Vector3(0, 0.45, 0.41), Vector3(0.18, 0.22, 0.04), Color(0.75, 0.62, 0.25), 0.0, false)
 		return model
 	if "Pick" in thing:
 		Props.cylinder(model, Vector3.ZERO, 0.6, 0.5, Color(0.42, 0.4, 0.38), false, 0.4)
@@ -145,10 +163,16 @@ func is_usable() -> bool:
 		return QuestLog.needs_object(-entry, 0)
 	if _rolled:
 		return not loot.is_empty()
+	if is_treasure():
+		return true
 	for item in LootTable.object_items(loot_id()):
 		if QuestLog.needs_item(item):
 			return true
 	return false
+
+
+func is_treasure() -> bool:
+	return entry in TREASURE
 
 
 func has_loot() -> bool:
@@ -201,6 +225,10 @@ func _despawn() -> void:
 func _process(delta: float) -> void:
 	if not is_spawned():
 		if Time.get_unix_time_from_system() >= respawn_at:
+			# A chest that's there only some of the time: maybe not this time.
+			if chance < 1.0 and randf() > chance:
+				respawn_at = Time.get_unix_time_from_system() + float(data(entry).get("respawn", 180))
+				return
 			respawn_at = 0.0
 			_model.visible = true
 			collision_layer = Enemy.CORPSE_LAYER

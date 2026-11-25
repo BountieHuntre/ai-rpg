@@ -544,7 +544,7 @@ func _physics_process(delta: float) -> void:
 		# its long steps stopping where it's going rather than overshooting.
 		var reach := minf(Vector2(velocity.x, velocity.z).length() * delta, Vector2(offset.x, offset.z).length())
 		var step := global_position + Vector3(velocity.x, 0.0, velocity.z).normalized() * reach
-		global_position = Vector3(step.x, World.current.height_at(step.x, step.z), step.z)
+		global_position = Vector3(step.x, World.current.height_at(step.x, step.z, global_position.y), step.z)
 		velocity.y = 0.0
 		return
 	# Standing still on the ground: nothing to move, so no collision work.
@@ -553,7 +553,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_on_floor():
 		velocity.y -= gravity * delta
-	move_and_slide()
+	PlayerUnit.slide_stepping(self, delta)
 
 
 func set_far(far: bool) -> void:

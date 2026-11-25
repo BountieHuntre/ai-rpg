@@ -154,7 +154,9 @@ func _restore_player() -> void:
 		_player.facing = graveyard.graveyard_facing
 	else:
 		var at: Array = state.position
-		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2])), at[2])
+		# On the ground nearest where it was saved (a cave's floor, not the
+		# hill over it).
+		_player.global_position = Vector3(at[0], maxf(at[1], _world.height_at(at[0], at[2], at[1])), at[2])
 		_player.facing = float(state.facing)
 	_zone_name = _world.zone_at(_player.global_position).zone_name
 	if zone == null:
@@ -226,6 +228,14 @@ func _update_shafts(delta: float) -> void:
 		if absf(local.x) < reach.x and absf(local.y) < reach.y and absf(local.z) < reach.z:
 			near = true
 			if _indoors:
+				break
+	# In a cave: indoors for the dark, with no light shafts' fog.
+	if not _indoors:
+		for air: Node3D in get_tree().get_nodes_in_group(Zone.CAVE_AIR_GROUP):
+			var local := air.global_transform.affine_inverse() * eye
+			var half: Vector3 = (air.get_meta("size") as Vector3) / 2.0
+			if absf(local.x) < half.x and absf(local.y) < half.y and absf(local.z) < half.z:
+				_indoors = true
 				break
 	near = near and not _shaft_grid.is_empty()
 	if environment.volumetric_fog_enabled != near:

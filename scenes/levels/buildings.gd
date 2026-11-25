@@ -101,7 +101,10 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 		kit.block(Vector3(x, height + rise * 0.8 + 1.0, -span * 0.18), Vector3(1.15, 0.22, 1.15), stone)
 	if hollow:
 		_trusses(kit, length, span, height, rise, thick, trim)
-		_room_lights(kit, length, span, height, 0.9)
+		var openings: Array = windows.map(func(place: Array) -> Vector3: return place[0])
+		if not door.is_empty():
+			openings.append(door[0])
+		_room_lights(kit, length, span, height, 0.9, thick, openings)
 		kit.dust(Vector3(0, (height + rise * 0.5) / 2.0, 0), Vector3(length - thick * 2.0, height + rise * 0.5, span - thick * 2.0))
 	kit.frame = Transform3D.IDENTITY
 	return { "frame": made[0], "yaw": yaw + (PI / 2.0 if made[3] else 0.0), "x": length / 2.0 - thick, "z": span / 2.0 - thick,
@@ -126,18 +129,52 @@ const FLAME := Color(1.0, 0.86, 0.5)
 ## A room's lamps: lanterns hung from the tie beams down its middle, one every
 ## 7 yards or so, so a long hall or nave is lit to its far end (one lamp in
 ## the middle left the ends dark).
-static func _room_lights(kit: BuildingKit, length: float, span: float, height: float, energy: float) -> void:
+## Torches on a room's long walls, about every 7 yards and on alternate
+## sides, each moved along its wall clear of the door and windows
+## (`openings`: their middles, the room's own yards).
+static func _room_lights(kit: BuildingKit, length: float, span: float, height: float, energy: float, thick: float, openings: Array) -> void:
 	var count := maxi(1, roundi(length / 7.0))
 	var step := length / count
 	var reach := maxf(span, step) * 1.1 + 2.0
 	for i in count:
+		var side := 1.0 if i % 2 == 0 else -1.0
+		var z := side * (span / 2.0 - thick)
 		var x := -length / 2.0 + step * (i + 0.5)
-		var y := height - 1.1
-		kit.beam(Vector3(x, height, 0), Vector3(x, y + 0.3, 0), 0.04, IRON)
-		kit.block(Vector3(x, y + 0.25, 0), Vector3(0.36, 0.06, 0.36), IRON)
-		kit.block(Vector3(x, y - 0.1, 0), Vector3(0.18, 0.3, 0.18), FLAME)
-		kit.block(Vector3(x, y - 0.17, 0), Vector3(0.36, 0.05, 0.36), IRON)
-		kit.light(Vector3(x, y - 0.3, 0), WARM, reach, energy * 0.5)
+		# Along the wall to the nearest spot clear of its openings; where
+		# they're close set (a chapel's lancets), the middle of the gap
+		# between the two nearest.
+		var on_wall: Array[float] = []
+		for opening: Vector3 in openings:
+			if absf(opening.z - z) < 1.0:
+				on_wall.append(opening.x)
+		var placed := false
+		for shift: float in [0.0, 1.6, -1.6, 3.0, -3.0, 4.2, -4.2]:
+			if on_wall.all(func(at: float) -> bool: return absf(at - (x + shift)) >= 2.4):
+				x += shift
+				placed = true
+				break
+		if not placed:
+			on_wall.sort()
+			var best := x
+			var nearest := INF
+			for k in on_wall.size() - 1:
+				var middle := (on_wall[k] + on_wall[k + 1]) / 2.0
+				if absf(middle - x) < nearest:
+					nearest = absf(middle - x)
+					best = middle
+			x = best
+		var y := minf(2.3, height - 0.6)
+		wall_torch(kit, Vector3(x, y, z), Vector3(0, 0, -side), reach, energy * 0.5)
+
+
+## A torch on a wall: an iron bracket at `at` (on the wall's face), a stick
+## leaning out of it along `out` (into the room) and its flame, with a light.
+static func wall_torch(kit: BuildingKit, at: Vector3, out: Vector3, reach: float, energy: float) -> void:
+	kit.block(at + out * 0.04 - Vector3(0, 0.12, 0), Vector3(0.14, 0.24, 0.14), IRON)
+	var top := at + out * 0.32 + Vector3(0, 0.3, 0)
+	kit.beam(at + out * 0.06 - Vector3(0, 0.2, 0), top, 0.07, Color(0.35, 0.22, 0.12))
+	kit.block(top, Vector3(0.16, 0.26, 0.16), FLAME)
+	kit.light(top + out * 0.2 + Vector3(0, 0.2, 0), WARM, reach, energy)
 const FIRE := Color(1.0, 0.55, 0.25)
 
 
@@ -529,7 +566,9 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 		"height": height, "door": placed, "hearth": false }
 	if hollow:
 		_trusses(kit, length, span, height, rise, thick, trim)
-		_room_lights(kit, length, span, height, 1.0)
+		var openings: Array = lancets.map(func(lancet: Array) -> Vector3: return lancet[0])
+		openings.append(face)
+		_room_lights(kit, length, span, height, 1.0, thick, openings)
 		kit.dust(Vector3(0, (height + rise * 0.5) / 2.0, 0), Vector3(length - thick * 2.0, height + rise * 0.5, span - thick * 2.0))
 	kit.frame = Transform3D.IDENTITY
 	if hollow:

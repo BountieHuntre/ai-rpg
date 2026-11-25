@@ -132,6 +132,10 @@ func _init() -> void:
 	enclosures = ENCLOSURES
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[Vector2(-113.0, 5.0), -PI / 2.0, "the mine", true]]
+
 func _ready() -> void:
 	# Stone, roofs and wood with painted textures.
 	Props.use_texture(STONE, "stone_wall", 4.0)
@@ -284,7 +288,6 @@ func _build_mine() -> void:
 	add_child(mine)
 	var y: float = FLATS[0][2]
 	var x := -113.0
-	Props.box(mine, Vector3(x - 3.5, y, 5), Vector3(7, 5, 5), Color(0.05, 0.04, 0.04))
 	for side in [-1, 1]:
 		Props.box(mine, Vector3(x, y, 5 + side * 2.7), Vector3(0.6, 4.6, 0.6), DARK_WOOD)
 	Props.box(mine, Vector3(x, y + 4.6, 5), Vector3(0.8, 0.6, 6.2), DARK_WOOD, 0.0, false)

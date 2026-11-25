@@ -149,6 +149,12 @@ const HUTS := [
 const CACTUS_VARIANTS := 4
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	var mouth: Vector2 = FLATS[CAVE][0]
+	# The cult's imps live inside with Vurrok; the ashstalkers keep the hill.
+	return [[mouth + Vector2(9.0, 0.0), PI / 2.0, "the Ember Cult Cave", true, [3101]]]
+
 func _ready() -> void:
 	Props.use_texture(LOG, "bark", 2.0)
 	Props.use_texture(HIDE, "hide", 2.5)
@@ -312,7 +318,6 @@ func _build_cave() -> void:
 	var y: float = mouth[2]
 	var x: float = mouth[0].x + 9.0
 	var z: float = mouth[0].y
-	Props.box(cave, Vector3(x + 3.5, y, z), Vector3(7, 6, 7), Color(0.04, 0.03, 0.03))
 	for side in [-1, 1]:
 		Props.box(cave, Vector3(x, y, z + side * 3.4), Vector3(0.7, 5.4, 0.7), BONE)
 	Props.box(cave, Vector3(x, y + 5.4, z), Vector3(0.9, 0.7, 7.6), BONE, 0.0, false)

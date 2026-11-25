@@ -405,9 +405,9 @@ func _route_in_zone(from: Vector3, to: Vector3) -> Array[Vector3]:
 				corners = _around(walls, b, a)
 				corners.reverse()
 			for point in corners:
-				points.append(Vector3(point.x, _world.height_at(point.x, point.y), point.y))
+				points.append(Vector3(point.x, _world.height_at(point.x, point.y, from.y), point.y))
 		if i < flat.size() - 1:
-			points.append(Vector3(b.x, _world.height_at(b.x, b.y), b.y))
+			points.append(Vector3(b.x, _world.height_at(b.x, b.y, from.y), b.y))
 	points.append(to)
 	return points
 
@@ -543,8 +543,8 @@ func far_from_player(point: Vector3) -> bool:
 
 
 ## The ground's height at a point.
-func ground_height(x: float, z: float) -> float:
-	return _world.height_at(x, z)
+func ground_height(x: float, z: float, near_y := NAN) -> float:
+	return _world.height_at(x, z, near_y)
 
 
 ## The named place a point is in (the zone's PLACES), or "".

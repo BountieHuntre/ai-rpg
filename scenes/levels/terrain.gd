@@ -14,7 +14,9 @@ extends StaticBody3D
 ## the edges (this zone's inside, a neighbour's beyond): the edge points'
 ## normals are taken from it, so zones side by side shade their shared edge
 ## alike and no outline is drawn along the border.
-func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO, weights := Callable(), across := Callable()) -> void:
+## With `hole` (f(x, z, y) -> bool) a cell whose middle is in a hole is left
+## out, mesh and collision (a cave's mouth, Zone.cave_hole).
+func build(size: float, step: float, height: Callable, color: Callable, material: Material, center := Vector2.ZERO, weights := Callable(), across := Callable(), hole := Callable()) -> void:
 	var cells := roundi(size / step)
 	var width := cells + 1
 	var half := size / 2.0
@@ -107,6 +109,8 @@ func build(size: float, step: float, height: Callable, color: Callable, material
 			var bottom := _edge_points(x0, x0 + step) if row == cells - 1 else []
 			var left := _edge_points(z0, z0 + step) if column == 0 else []
 			if top.is_empty() and right.is_empty() and bottom.is_empty() and left.is_empty():
+				if hole.is_valid() and hole.call(x0 + step / 2.0, z0 + step / 2.0, (_heights[a] + _heights[a + 1] + _heights[c] + _heights[c + 1]) / 4.0):
+					continue
 				indices[i] = a
 				indices[i + 1] = a + 1
 				indices[i + 2] = c

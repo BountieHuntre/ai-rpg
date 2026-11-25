@@ -199,6 +199,11 @@ const GROUND_TEXTURES := {
 }
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[(FLATS[GLOAMROCK][0] as Vector2) + Vector2(6.0, -14.0), atan2(6.0, -14.0), "the Gloamrock", true],
+		[(FLATS[DEN][0] as Vector2) + Vector2(-12.0, -12.0), -PI * 0.75, "the Thornbarrow Den", false]]
+
 func _ready() -> void:
 	Props.use_texture(ROCK, "blue_rock", 3.0)
 	Props.use_texture(PALE_WOOD, "pale_bark", 2.0)
@@ -280,15 +285,7 @@ func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 
 
 ## A cave mouth: a dark opening framed in rough stone, facing `yaw` (0 faces north).
-func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
-	var mouth := Node3D.new()
-	mouth.position = at
-	mouth.rotation.y = yaw
-	parent.add_child(mouth)
-	Props.box(mouth, Vector3(0, 0, 1.0), Vector3(width, 4.0, 2.0), Color(0.04, 0.04, 0.07), 0.0, false)
-	for side in [-1, 1]:
-		Props.box(mouth, Vector3(side * (width / 2.0 + 0.8), 0, 0), Vector3(1.8, 5.0, 3.0), ROCK)
-	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
+
 
 
 ## An elven bower (one solid, Nature's), violet or teal, turned by `yaw`.
@@ -357,7 +354,6 @@ func _build_gloamrock() -> void:
 	rock.name = "Gloamrock"
 	add_child(rock)
 	var flat: Array = FLATS[GLOAMROCK]
-	_cave_mouth(rock, _near(flat[0], Vector2(6, -14), flat[2]), atan2(6.0, -14.0), 5.0)
 	torch(rock, _near(flat[0], Vector2(0, 0), flat[2] + 0.5), 5.0)
 
 
@@ -388,7 +384,6 @@ func _build_den() -> void:
 	den.name = "ThornbarrowDen"
 	add_child(den)
 	var flat: Array = FLATS[DEN]
-	_cave_mouth(den, _near(flat[0], Vector2(-12, -12), flat[2]), -PI * 0.75, 6.0)
 	for hut in [Vector2(10, 6), Vector2(4, 14), Vector2(14, -6)]:
 		_log_hut(den, _near(flat[0], hut, flat[2]), 2.6, atan2(-hut.x, -hut.y) + PI)
 	torch(den, _near(flat[0], Vector2(0, 0), flat[2] + 0.5), 6.0)

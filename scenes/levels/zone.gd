@@ -123,9 +123,881 @@ var gather_field: GatherNodes
 ## The ground's layers function (build_ground's `weights`), for telling
 ## grass from rock and roads.
 var _weights := Callable()
+## The ground's colour function (build_ground's), for cave mouths' rims.
+var _ground_color := Callable()
 ## Walled places bots go in and out of by the gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 var enclosures: Array = []
+
+
+# Caves (Caves): tunnels and chambers dug into the zone's own hills and
+# mountains, the ground opened where the hillside crosses the way in.
+
+## The zone's caves (add_cave): { kind, variant, mouth (x, z), facing,
+## layout (Caves.layout), base (the mouth's floor height, worked out before
+## the ground is built), to_local, rect (the box it and its levelled ground
+## cover), lit, creature and count (a wild cave's dwellers) }.
+var caves: Array[Dictionary] = []
+## Set while working out the ground without the caves (their bases).
+var _caves_off := false
+## The rock texture of this land's ground (build_ground's rock_tex).
+var _rock_key := "rock"
+## Yards of ground kept over a cave's ceiling (raised where the hill is thin),
+## and how far round it the raising eases out.
+const CAVE_COVER := 3.0
+const CAVE_RAMP := 14.0
+## Within this of the mouth (along the way in, the cave's own yards) the
+## ground isn't raised, so the hillside meets the tunnel there.
+const CAVE_MOUTH := 6.0
+## The render layer the caves' rock is drawn on, which the sun doesn't
+## light (World.build takes it out of the sun's light_cull_mask).
+const CAVE_RENDER_LAYER := 1 << 2
+## A cave's mouth is made new (_mouth): in its own yards, the ground's
+## cells in a window hugging the tunnel (as wide as it is where it's cut and
+## MOUTH_MARGIN more either side, at most MOUTH_HALF; `cave.window`), from
+## MOUTH_BACK inside to MOUTH_FRONT out, are left out whole, and the cave is
+## cut by an upright plane MOUTH_DEPTH inside, just within the hillside, so
+## its own rock makes the mouth; a new rim joins the window's edge to the
+## cut's edge, sharing both edges' points.
+const MOUTH_HALF := 9.0
+const MOUTH_MARGIN := 1.5
+const MOUTH_BACK := 2.5
+const MOUTH_DEPTH := 1.0
+const MOUTH_FRONT := 1.0
+## Boxes inside the caves (Node3D, their `size` meta): the camera in one is
+## indoors (main.gd), for the dark.
+const CAVE_AIR_GROUP := &"cave_air"
+## How many wild caves a zone gets for its size (400 yards: 2).
+const WILD_CAVES_PER_AREA := 2.0
+const WILD_CAVE_SEARCH := 400
+
+
+## Adds a cave: its mouth at `mouth`, the cave running back the way `facing`
+## turns -Z (yaw), of `kind` ("den" or "lair") variant `variant`. Options:
+## "lit" (torches inside; lairs by default), "creature" and "count" (who
+## lives in a wild cave). Call before the ground is built.
+func add_cave(mouth: Vector2, facing: float, kind: String, variant: int, options := {}) -> Dictionary:
+	variant = variant % int(Caves.VARIANTS[kind])
+	var layout := Caves.layout(kind, variant)
+	var turn := Transform3D(Basis(Vector3.UP, facing), Vector3(mouth.x, 0, mouth.y))
+	var box := Rect2(Vector2(INF, INF), Vector2.ZERO)
+	var corners: Rect2 = (layout.footprint as Rect2).grow(CAVE_RAMP + 4.0)
+	var first := true
+	for corner: Vector2 in [corners.position, corners.position + Vector2(corners.size.x, 0), corners.end, corners.position + Vector2(0, corners.size.y)]:
+		var w := turn * Vector3(corner.x, 0, corner.y)
+		box = Rect2(Vector2(w.x, w.z), Vector2.ZERO) if first else box.expand(Vector2(w.x, w.z))
+		first = false
+	# The apron before the mouth too.
+	var apron := turn * Vector3(0, 0, 14.0)
+	box = box.expand(Vector2(apron.x, apron.z))
+	var cave := {
+		"kind": kind, "variant": variant, "mouth": mouth, "facing": facing, "layout": layout, "base": NAN,
+		"to_local": turn.affine_inverse(), "rect": box, "lit": bool(options.get("lit", kind == "lair")),
+		"creature": int(options.get("creature", 0)), "count": int(options.get("count", 0)),
+		"name": str(options.get("name", "")), "takes": options.get("takes", []),
+	}
+	caves.append(cave)
+	return cave
+
+
+## The zone's own caves: [mouth (x, z), the way the cave runs into the hill
+## (a yaw: 0 runs toward +z), its place's name, lit with torches, and the
+## creature entries it takes in wherever they spawn (besides the groups by
+## its mouth)]. Each is a lair (Caves); the zone adds wild dens of its own.
+func cave_mouths() -> Array:
+	return []
+
+
+## A cave's place in the world: its own yards to the world's.
+func cave_transform(cave: Dictionary) -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, cave.facing), Vector3(cave.mouth.x, cave.base, cave.mouth.y))
+
+
+func _cave_local(cave: Dictionary, x: float, z: float) -> Vector2:
+	var local: Vector3 = (cave.to_local as Transform3D) * Vector3(x, 0, z)
+	return Vector2(local.x, local.z)
+
+
+## The floor's height inside a cave at a point, or NAN outside every cave
+## (or in its rock).
+func cave_floor(x: float, z: float) -> float:
+	for cave: Dictionary in caves:
+		if is_nan(cave.base) or not (cave.rect as Rect2).has_point(Vector2(x, z)):
+			continue
+		var height := Caves.floor_at(cave.layout, _cave_local(cave, x, z))
+		if not is_nan(height):
+			return float(cave.base) + height
+	return NAN
+
+
+## The ground for the caves: raised where the hill over a cave would leave
+## less than CAVE_COVER over its ceiling (easing out over CAVE_RAMP), never
+## over the mouth, and level with its floor on an apron before the mouth, so
+## the hillside meets the way in.
+func _ground_for_caves(x: float, z: float, height: float) -> float:
+	for cave: Dictionary in caves:
+		if is_nan(cave.base) or not (cave.rect as Rect2).has_point(Vector2(x, z)):
+			continue
+		var local := _cave_local(cave, x, z)
+		var layout: Dictionary = cave.layout
+		var base := float(cave.base)
+		# Over the hollows (spread out, so the hill rounds over them), all but
+		# the way in by the mouth, where the hillside meets the tunnel.
+		# (Over the collar too, back to the window's edge.)
+		var by_mouth := 1.0 - smoothstep(7.0, 12.0, absf(local.x))
+		var deep := 1.0 - by_mouth * (1.0 - smoothstep(MOUTH_FRONT, -MOUTH_BACK, local.y))
+		if deep > 0.0:
+			var wanted := NAN
+			var reach := 0.0
+			for spread: float in [1.0, 1.6, 2.4]:
+				var roof := Caves.ceiling_at(layout, local, spread)
+				if not is_nan(roof):
+					wanted = base + roof + CAVE_COVER
+					reach = 1.0 - smoothstep(1.0, 2.4, spread)
+					break
+			if not is_nan(wanted) and height < wanted:
+				var weight := deep * (1.0 if reach >= 1.0 else smoothstep(0.0, 1.0, reach + 0.35))
+				height = lerpf(height, wanted, weight)
+		# The apron before the mouth, level with its floor right up to the
+		# mouth across the way in, so the grass is the floor out front and
+		# the hillside rises from the mouth itself.
+		var across := 1.0 - smoothstep(6.0, 10.0, absf(local.x))
+		var before := smoothstep(-1.5, 1.0, local.y) * (1.0 - smoothstep(14.0, 20.0, local.y))
+		var apron := maxf(across * before, 1.0 - smoothstep(5.0, 11.0, local.distance_to(Vector2(0, 9))))
+		if apron > 0.0:
+			height = lerpf(height, base, apron)
+	return height
+
+
+## Whether the ground's point (x, z, height) is in a cave's hollows: the
+## ground built leaves its triangles out there (Terrain.build's `hole`), the
+## opening where the hillside crosses the way in. Read from the ground's
+## worker threads once the bases are settled.
+func cave_hole(x: float, z: float, y: float) -> bool:
+	for cave: Dictionary in caves:
+		if is_nan(cave.base) or not (cave.rect as Rect2).has_point(Vector2(x, z)):
+			continue
+		var local := _cave_local(cave, x, z)
+		# The window round the mouth, where the new mouth (_mouth) takes the
+		# ground's place.
+		if _in_window(cave, local):
+			return true
+		# Further in (never out front), wherever the ground would show inside
+		# the hollows.
+		var at := Vector3(local.x, y - float(cave.base), local.y)
+		if local.y < -MOUTH_BACK and Caves.inside(cave.layout, at, 0.0) and at.y > Caves.floor_at(cave.layout, local) + 0.35:
+			return true
+	return false
+
+
+## Whether a point (a cave's own yards, x and z) is in its mouth's window.
+static func _in_window(cave: Dictionary, local: Vector2) -> bool:
+	var window: Vector2 = cave.get("window", Vector2(-MOUTH_HALF, MOUTH_HALF))
+	return local.x > window.x and local.x < window.y and local.y > -MOUTH_BACK and local.y < MOUTH_FRONT
+
+
+## How many steps a mouth's rim takes from the ground to the cave, and how
+## far (yards) the noise pushes its rock in or out between.
+const RIM_STEPS := 4
+const RIM_CRAG := 1.4
+
+
+## How far a cave's tunnel reaches to either side where it's cut (MOUTH_DEPTH
+## in), at any height between its floor and roof, plus MOUTH_MARGIN: its
+## window's sides (Vector2(left, right), in its own yards).
+static func _window_of(cave: Dictionary) -> Vector2:
+	var layout: Dictionary = cave.layout
+	var sides := Vector2.ZERO
+	for side: float in [-1.0, 1.0]:
+		var reach := 0.0
+		var x := 0.0
+		while x < MOUTH_HALF:
+			var at := Vector2(side * x, -MOUTH_DEPTH)
+			var low := Caves.floor_at(layout, at)
+			var any := false
+			if not is_nan(low):
+				var y := low + 0.3
+				while y < low + 8.0:
+					if Caves.inside(layout, Vector3(at.x, y, at.y), 0.0):
+						any = true
+						break
+					y += 0.5
+			if any:
+				reach = x
+			elif x > 1.0:
+				break
+			x += 0.25
+		var edge := minf(reach + MOUTH_MARGIN, MOUTH_HALF)
+		if side < 0.0:
+			sides.x = -edge
+		else:
+			sides.y = edge
+	return sides
+
+
+## Works out each cave's base (the ground at its mouth without the caves),
+## once, on the main thread before the ground is built.
+func _settle_caves() -> void:
+	_caves_off = true
+	for cave: Dictionary in caves:
+		if is_nan(cave.base):
+			cave.base = height_at(cave.mouth.x, cave.mouth.y)
+		cave.window = _window_of(cave)
+	_caves_off = false
+	# No grass on the apron or in the mouth.
+	for cave: Dictionary in caves:
+		var apron := cave_transform(cave) * Vector3(0, 0, 4.0)
+		clear_ground(Rect2(apron.x - 8.0, apron.z - 8.0, 16.0, 16.0))
+
+
+## Wild caves dug into the zone's slopes: a den with its mouth on a slope
+## and running uphill into ground that already covers most of it (the rest
+## is raised), away from what's kept clear, water, the borders and each
+## other; WILD_CAVES_PER_AREA for 400 by 400 yards, home to the creature
+## whose spawn is nearest. Run once the hills are known.
+func _place_wild_caves() -> void:
+	var wanted := mini(roundi(WILD_CAVES_PER_AREA * size * size / (400.0 * 400.0)), 4)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = absi(hash(zone_name + ":caves"))
+	var keep: Array = edge_keep()[0]
+	var half := size / 2.0
+	var placed := 0
+	for attempt in WILD_CAVE_SEARCH * 3:
+		if placed >= wanted:
+			break
+		var point := center + Vector2(rng.randf_range(-half + 50.0, half - 50.0), rng.randf_range(-half + 50.0, half - 50.0))
+		if keep.any(func(circle: Array) -> bool: return point.distance_to(circle[0]) < float(circle[1]) + 25.0):
+			continue
+		if caves.any(func(other: Dictionary) -> bool: return point.distance_to(other.mouth) < 100.0):
+			continue
+		var y := height_at(point.x, point.y)
+		if y - base_height(point.x, point.y) < -0.5:
+			continue
+		# Uphill, and steep enough to dig into.
+		var slope := Vector2(height_at(point.x + 2.0, point.y) - height_at(point.x - 2.0, point.y),
+			height_at(point.x, point.y + 2.0) - height_at(point.x, point.y - 2.0)) / 4.0
+		if slope.length() < 0.22 or slope.length() > 1.2:
+			continue
+		var uphill := slope.normalized()
+		var facing := atan2(-uphill.x, -uphill.y)
+		var variant := rng.randi_range(0, int(Caves.VARIANTS.den) - 1)
+		var layout := Caves.layout("den", variant)
+		# The ground must already cover most of it, and it must stay in the zone.
+		var turn := Transform3D(Basis(Vector3.UP, facing), Vector3(point.x, y, point.y))
+		var covered := 0
+		var counted := 0
+		var outside := false
+		for hollow: Array in layout.voids:
+			var c: Vector3 = hollow[0]
+			if c.z > -CAVE_MOUTH:
+				continue
+			var w := turn * c
+			if not Rect2(center - Vector2.ONE * (half - 30.0), Vector2.ONE * (size - 60.0)).has_point(Vector2(w.x, w.z)):
+				outside = true
+				break
+			counted += 1
+			if height_at(w.x, w.z) >= w.y + float(hollow[3]) + 1.0:
+				covered += 1
+		if outside or counted == 0 or covered < counted * 0.6:
+			continue
+		var nearest := 0
+		var best := INF
+		for spawn: Array in spawns:
+			var d := point.distance_to(spawn[1])
+			if d < best:
+				best = d
+				nearest = int(spawn[0])
+		if nearest == 0:
+			continue
+		add_cave(point, facing, "den", variant, { "creature": nearest, "count": rng.randi_range(3, 4), "lit": false })
+		placed += 1
+
+
+## The caves' walls, darkness, torches, rocks round their mouths and the
+## way in for bots; nature cleared from their mouths, and creatures moved in
+## (spawn_creatures runs it first).
+func build_caves() -> void:
+	if caves.is_empty():
+		return
+	var root := Node3D.new()
+	root.name = "Caves"
+	add_child(root)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/textured_prop.gdshader")
+	material.set_shader_parameter("albedo_tex", load("res://assets/textures/%s.png" % _rock_key))
+	material.set_shader_parameter("texture_size", 5.0)
+	material.set_shader_parameter("tint", Vector3(0.9, 0.9, 0.9))
+	enclosures = enclosures.duplicate()
+	var noise := FastNoiseLite.new()
+	noise.seed = absi(hash(zone_name))
+	noise.frequency = 0.32
+	for cave: Dictionary in caves:
+		var place := cave_transform(cave)
+		var mesh: Mesh = load(Caves.BAKED_PATH % [cave.kind, cave.variant])
+		if mesh == null:
+			continue
+		# The cave behind an upright plane MOUTH_DEPTH in, cut exactly, and a
+		# new mouth in front of it (_mouth).
+		var faces := mesh.get_faces()
+		for i in faces.size():
+			faces[i] = place * faces[i]
+		var clipped := _clip_behind(faces, cave)
+		var kept: PackedVector3Array = clipped[0]
+		var rim: Array = _mouth(cave, clipped[1], noise)
+		_draw_rim(root, rim[0], rim[1], material)
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		# Each face its own normal, so the texture's projection follows it.
+		surface.set_smooth_group(-1)
+		for point in kept:
+			surface.add_vertex(point)
+		surface.generate_normals()
+		var view := MeshInstance3D.new()
+		view.mesh = surface.commit()
+		view.material_override = material
+		# It faces inward, so from the sun its roof is a back face: shadows
+		# from both sides, or the sun lights the floor through it. And the sun
+		# leaves its rock alone altogether (CAVE_RENDER_LAYER), as shadows
+		# leak where floor meets wall: torches and the sky's dim ambient light
+		# it.
+		view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+		view.layers = CAVE_RENDER_LAYER
+		root.add_child(view)
+		var shape := ConcavePolygonShape3D.new()
+		var solid := kept.duplicate()
+		solid.append_array(rim[0])
+		shape.set_faces(solid)
+		shape.backface_collision = true
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		var body := StaticBody3D.new()
+		body.add_child(collision)
+		root.add_child(body)
+		var layout: Dictionary = cave.layout
+		# Its rock as placed, for setting things against it (ore veins).
+		cave.faces = solid
+		_frame_mouth(root, cave, place, material, noise)
+		# Dark inside, as rooms are, with no haze: boxes that only say the
+		# camera is indoors (CAVE_AIR_GROUP, main.gd's indoor ambient), not
+		# the rooms' dust, so the sun at the mouth lights no fog.
+		for box: Array in layout.dust:
+			var air := Node3D.new()
+			air.name = "Air"
+			air.transform = place * Transform3D(Basis(), box[0])
+			air.set_meta("size", box[1])
+			air.add_to_group(CAVE_AIR_GROUP)
+			root.add_child(air)
+		if cave.lit:
+			# Torches on the walls, found by a ray from the tunnel's middle to
+			# the rock; a campfire on the first chamber's floor.
+			for spot: Array in layout.torches:
+				var from := place * (spot[0] as Vector3)
+				var way := (place.basis * (spot[1] as Vector3)).normalized()
+				var hit := _ray_to_faces(from, way, kept)
+				if not hit.is_empty():
+					wall_torch(root, hit[0], hit[1], 9.0)
+			var fire := place * (layout.campfire as Vector3)
+			campfire(root, Vector3(fire.x, ground_height(fire.x, fire.z, fire.y), fire.z), 11.0)
+		# A strongbox at the back, there about half the time.
+		var chest := GameObject.new()
+		chest.entry = GameObject.TREASURE[0] if continent == "aldmark" else GameObject.TREASURE[1]
+		chest.chance = 0.5
+		var spot := place * (layout.chest as Vector3)
+		chest.position = Vector3(spot.x, ground_height(spot.x, spot.z, spot.y), spot.z)
+		chest.rotation.y = float(cave.facing) + PI
+		root.add_child(chest)
+		# Bots go in and out by the mouth.
+		var hollow: Rect2 = layout.footprint
+		var low := Vector2(INF, INF)
+		var high := -low
+		for corner: Vector2 in [hollow.position, hollow.position + Vector2(hollow.size.x, 0), hollow.end, hollow.position + Vector2(0, hollow.size.y)]:
+			var w := place * Vector3(corner.x, 0, corner.y)
+			low = low.min(Vector2(w.x, w.z))
+			high = high.max(Vector2(w.x, w.z))
+		var outside := place * (layout.outside as Vector3)
+		var inside := place * (layout.inside as Vector3)
+		enclosures.append([low.x, low.y, high.x, high.y, Vector2(outside.x, outside.z), Vector2(inside.x, inside.z)])
+	_clear_nature_in_caves(root)
+	_move_spawns_into_caves()
+
+
+## Where ore grows in the caves: each one's veins at the foot of its
+## chamber walls, on its floor, as [point, yaw facing out of the wall]
+## (GatherNodes puts nodes there first).
+func cave_ore_spots() -> Array:
+	var spots: Array = []
+	for cave: Dictionary in caves:
+		if is_nan(cave.base):
+			continue
+		var place := cave_transform(cave)
+		var faces: PackedVector3Array = cave.get("faces", PackedVector3Array())
+		var placed: Array[Vector3] = []
+		for vein: Array in cave.layout.ore:
+			var at := place * (vein[0] as Vector3)
+			var inward := (place.basis * (vein[1] as Vector3)).normalized()
+			# Right against the rock: rays out to the placed walls (passing the
+			# floor's humps and steps) a yard over the floor, the nearest one
+			# that's clear of the other veins, the vein set a little short of it.
+			var best := Vector3.INF
+			var best_in := inward
+			for k in 8:
+				var way := (-inward).rotated(Vector3.UP, TAU * k / 8.0)
+				var hit := _ray_to_faces(at + Vector3(0, 1.0, 0), way, faces, true)
+				if hit.is_empty():
+					continue
+				var foot := (hit[0] as Vector3) - way * 0.45
+				if placed.any(func(other: Vector3) -> bool: return other.distance_to(foot) < 3.0):
+					continue
+				if best == Vector3.INF or at.distance_to(foot) < at.distance_to(best):
+					best = foot
+					best_in = -way
+			if best != Vector3.INF:
+				at = best
+				inward = best_in
+			placed.append(at)
+			spots.append([Vector3(at.x, ground_height(at.x, at.z, at.y), at.z), atan2(inward.x, inward.z)])
+	return spots
+
+
+## The nearest of `faces` (triangles, world yards) a ray meets within 22
+## yards: [point, the face's normal turned back toward the ray], or [].
+## With `walls_only` faces no steeper than a slope (the floor's humps) are
+## passed through.
+static func _ray_to_faces(from: Vector3, way: Vector3, faces: PackedVector3Array, walls_only := false) -> Array:
+	var best := 22.0
+	var found := []
+	for t in range(0, faces.size(), 3):
+		var hit: Variant = Geometry3D.ray_intersects_triangle(from, way, faces[t], faces[t + 1], faces[t + 2])
+		if hit == null:
+			continue
+		var distance := from.distance_to(hit)
+		if distance < best:
+			var normal := (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t]).normalized()
+			if walls_only and absf(normal.y) > 0.6:
+				continue
+			best = distance
+			if normal.dot(way) > 0.0:
+				normal = -normal
+			found = [hit, normal]
+	return found
+
+
+## A torch fixed to a wall at `at`, leaning out along `out` (the wall's
+## normal, kept level): an iron bracket, a stick and its flame, with a light
+## that lights the place, not the air.
+func wall_torch(parent: Node3D, at: Vector3, out: Vector3, light_range := 8.0) -> void:
+	out.y = 0.0
+	out = out.normalized() if out.length() > 0.01 else Vector3.FORWARD
+	var torch_root := Node3D.new()
+	torch_root.name = "WallTorch"
+	torch_root.position = at
+	torch_root.basis = Basis.looking_at(-out)
+	parent.add_child(torch_root)
+	Props.box(torch_root, Vector3(0, -0.24, 0.04), Vector3(0.14, 0.24, 0.12), Color(0.2, 0.2, 0.22), 0.0, false)
+	var stick := Props.box(torch_root, Vector3(0, -0.2, 0.18), Vector3(0.08, 0.6, 0.08), Color(0.35, 0.22, 0.12), 0.0, false)
+	stick.rotation.x = 0.45
+	torch(torch_root, Vector3(0, 0.22, 0.32), light_range)
+
+
+## A campfire on the ground at `at`: a ring of stones, crossed logs and
+## flames, with a low light.
+func campfire(parent: Node3D, at: Vector3, light_range := 10.0) -> void:
+	var fire := Node3D.new()
+	fire.name = "Campfire"
+	fire.position = at
+	parent.add_child(fire)
+	for i in 8:
+		var angle := TAU * i / 8.0
+		Props.box(fire, Vector3(cos(angle), 0, sin(angle)) * 0.75, Vector3(0.32, 0.22, 0.28), Color(0.38, 0.36, 0.34), angle, false)
+	for i in 3:
+		var log_box := Props.box(fire, Vector3(0, 0.08, 0), Vector3(1.0, 0.16, 0.16), Color(0.32, 0.2, 0.11), TAU * i / 3.0, false)
+		log_box.rotation.z = 0.25
+	var flame_material := StandardMaterial3D.new()
+	flame_material.albedo_color = Color(1.0, 0.55, 0.15)
+	flame_material.emission_enabled = true
+	flame_material.emission = Color(1.0, 0.45, 0.1)
+	flame_material.emission_energy_multiplier = 2.5
+	for flame_at: Vector3 in [Vector3(0, 0.3, 0), Vector3(0.12, 0.22, 0.08), Vector3(-0.1, 0.2, -0.08)]:
+		var flame := MeshInstance3D.new()
+		flame.mesh = Props.blob(0.22, 5, 3)
+		flame.material_override = flame_material
+		flame.position = flame_at
+		flame.scale = Vector3(1.0, 1.6, 1.0)
+		fire.add_child(flame)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1.0, 0.6, 0.3)
+	light.omni_range = light_range
+	light.light_energy = 1.4
+	light.position = Vector3(0, 0.8, 0)
+	light.light_volumetric_fog_energy = 0.0
+	fire.add_child(light)
+
+
+## A few boulders on the ground beside a cave's mouth, off the way in and
+## out of the opening, each resting partly sunk in the ground.
+func _frame_mouth(parent: Node3D, cave: Dictionary, place: Transform3D, material: Material, noise: FastNoiseLite) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = absi(hash(cave.mouth))
+	var body := StaticBody3D.new()
+	for k in rng.randi_range(2, 4):
+		var side := 1.0 if k % 2 == 0 else -1.0
+		var local := Vector3(side * rng.randf_range(5.5, 8.0), 0, rng.randf_range(2.0, 7.0))
+		var w := place * local
+		var size := rng.randf_range(0.8, 1.6)
+		w.y = ground_height(w.x, w.z) + size * 0.15
+		var lump := Caves.rock(w, Vector3(size * rng.randf_range(0.9, 1.3), size * rng.randf_range(0.6, 0.9), size * rng.randf_range(0.9, 1.3)), rng.randf() * TAU, noise)
+		var view := MeshInstance3D.new()
+		view.mesh = lump
+		view.material_override = material
+		view.layers = CAVE_RENDER_LAYER | 1
+		parent.add_child(view)
+		var shape := CollisionShape3D.new()
+		shape.shape = lump.create_convex_shape()
+		body.add_child(shape)
+	parent.add_child(body)
+
+
+## A cave mouth's rim, drawn with the ground's own material: each point
+## coloured and layered as the ground would be there (its edge on the
+## ground exactly as the ground's), turning to rock as it goes in (`shares`,
+## 0 at the ground to 1 at the cave). Without a textured ground, the cave's
+## rock.
+func _draw_rim(parent: Node3D, faces: PackedVector3Array, shares: PackedFloat32Array, rock: Material) -> void:
+	if faces.is_empty():
+		return
+	var ground_material: Material = null
+	if _ground != null:
+		for child in _ground.get_children():
+			if child is MeshInstance3D:
+				ground_material = (child as MeshInstance3D).mesh.surface_get_material(0)
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	surface.set_smooth_group(-1)
+	var textured := ground_material != null and _weights.is_valid() and _ground_color.is_valid()
+	var step := _ground._step if _ground != null else 2.0
+	for k in faces.size():
+		var p := faces[k]
+		if textured:
+			var normal := Vector3(height_at(p.x - step, p.z) - height_at(p.x + step, p.z), 2.0 * step, height_at(p.x, p.z - step) - height_at(p.x, p.z + step)).normalized()
+			var share := smoothstep(0.0, 0.7, shares[k])
+			var layers: Color = _weights.call(p.x, p.z, p.y, normal)
+			layers.b = lerpf(layers.b, 1.0, share)
+			surface.set_uv(Vector2(layers.r, layers.g))
+			surface.set_uv2(Vector2(layers.b, layers.a))
+			surface.set_color(_ground_color.call(p.x, p.z, p.y, normal))
+		surface.add_vertex(p)
+	surface.generate_normals()
+	var view := MeshInstance3D.new()
+	view.name = "Rim"
+	view.mesh = surface.commit()
+	view.material_override = ground_material if textured else rock
+	view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	parent.add_child(view)
+
+
+## A cave's faces cut by the upright plane MOUTH_DEPTH inside its mouth:
+## the part behind it, triangles crossing it split exactly, and the cut's
+## edge as segments in the plane. [faces, segments].
+func _clip_behind(faces: PackedVector3Array, cave: Dictionary) -> Array:
+	var to_local: Transform3D = cave.to_local
+	var kept := PackedVector3Array()
+	var segments: Array = []
+	# Where an edge meets the plane, worked out the same way from either face
+	# that has it, so neighbours share the point exactly.
+	var meet := func(p: Vector3, q: Vector3, dp: float, dq: float) -> Vector3:
+		if str(p) > str(q):
+			return q.lerp(p, dq / (dq - dp))
+		return p.lerp(q, dp / (dp - dq))
+	for t in range(0, faces.size(), 3):
+		var tri := [faces[t], faces[t + 1], faces[t + 2]]
+		var d := [(to_local * (tri[0] as Vector3)).z + MOUTH_DEPTH, (to_local * (tri[1] as Vector3)).z + MOUTH_DEPTH, (to_local * (tri[2] as Vector3)).z + MOUTH_DEPTH]
+		var behind := 0
+		for k in 3:
+			if float(d[k]) < 0.0:
+				behind += 1
+		if behind == 3:
+			kept.append_array([tri[0], tri[1], tri[2]])
+			continue
+		if behind == 0:
+			continue
+		# The part behind the plane, its corners in order.
+		var polygon: Array = []
+		var cut: Array = []
+		for k in 3:
+			var p: Vector3 = tri[k]
+			var q: Vector3 = tri[(k + 1) % 3]
+			var dp: float = d[k]
+			var dq: float = d[(k + 1) % 3]
+			if dp < 0.0:
+				polygon.append(p)
+			if (dp < 0.0) != (dq < 0.0):
+				var on: Vector3 = meet.call(p, q, dp, dq)
+				polygon.append(on)
+				cut.append(on)
+		for k in range(1, polygon.size() - 1):
+			kept.append_array([polygon[0], polygon[k], polygon[k + 1]])
+		if cut.size() == 2:
+			segments.append(cut)
+	return [kept, segments]
+
+
+## The ground's cells in a cave's mouth window (by their middles), as grid
+## cells (column, row), as Terrain.build left them out.
+func _window_cells(cave: Dictionary) -> Dictionary:
+	var cells := {}
+	if _ground == null:
+		return cells
+	var origin := _ground._origin
+	var step := _ground._step
+	var count := _ground._cells
+	var rect: Rect2 = cave.rect
+	var low := Vector2i(clampi(floori((rect.position.x - origin.x) / step), 0, count - 1), clampi(floori((rect.position.y - origin.y) / step), 0, count - 1))
+	var high := Vector2i(clampi(ceili((rect.end.x - origin.x) / step), 0, count - 1), clampi(ceili((rect.end.y - origin.y) / step), 0, count - 1))
+	for row in range(low.y, high.y + 1):
+		for column in range(low.x, high.x + 1):
+			if _in_window(cave, _cave_local(cave, origin.x + (column + 0.5) * step, origin.y + (row + 0.5) * step)):
+				cells[Vector2i(column, row)] = true
+	return cells
+
+
+## A closed loop from segments sharing their ends (points matched to a
+## thousandth of a yard): the longest, in order.
+static func _chain(segments: Array) -> Array:
+	var key := func(point: Vector3) -> Vector3i: return Vector3i(roundi(point.x * 1000.0), roundi(point.y * 1000.0), roundi(point.z * 1000.0))
+	var links := {}
+	for segment: Array in segments:
+		for k in 2:
+			var here: Vector3i = key.call(segment[k])
+			if not links.has(here):
+				links[here] = []
+			(links[here] as Array).append(segment[1 - k])
+	var used := {}
+	var best: Array = []
+	for start_key: Vector3i in links:
+		if used.has(start_key):
+			continue
+		var loop: Array = []
+		var current_key := start_key
+		var current: Vector3 = Vector3.ZERO
+		var previous_key := Vector3i(2147483647, 0, 0)
+		for segment: Array in segments:
+			if key.call(segment[0]) == start_key:
+				current = segment[0]
+				break
+			if key.call(segment[1]) == start_key:
+				current = segment[1]
+				break
+		while not used.has(current_key):
+			used[current_key] = true
+			loop.append(current)
+			var next: Variant = null
+			for candidate: Vector3 in links[current_key]:
+				var candidate_key: Vector3i = key.call(candidate)
+				if candidate_key != previous_key and not used.has(candidate_key):
+					next = candidate
+					break
+			if next == null:
+				break
+			previous_key = current_key
+			current = next
+			current_key = key.call(next)
+		if loop.size() > best.size():
+			best = loop
+	return best
+
+
+## A cave's new mouth: the surface joining the edge of the window the
+## ground left out (a loop of the ground's own edge points, round the cut
+## cells) to the cave's cut edge (a loop in the plane MOUTH_DEPTH inside).
+## Both loops start at their bottom middle (the floor's middle, the window's
+## front middle) and run the same way round; their points are paired by how
+## far round each loop they are, so nothing crosses, and both loops' points
+## are shared exactly: the ground, the mouth and the cave are one surface.
+## Both sides, as it's seen from in and out.
+func _mouth(cave: Dictionary, segments: Array, noise: FastNoiseLite) -> Array:
+	var surface := PackedVector3Array()
+	var cells := _window_cells(cave)
+	if cells.is_empty() or segments.is_empty():
+		return [surface, PackedFloat32Array()]
+	var to_local: Transform3D = cave.to_local
+	var base := float(cave.base)
+	# The window's edge: each cut cell's sides, the ones two cut cells share
+	# cancelled, chained round.
+	var origin := _ground._origin
+	var step := _ground._step
+	var width := _ground._cells + 1
+	var heights: PackedFloat32Array = _ground._heights
+	var corner_at := func(at: Vector2i) -> Vector3:
+		return Vector3(origin.x + at.x * step, heights[at.y * width + at.x], origin.y + at.y * step)
+	var sides := {}
+	for cell: Vector2i in cells:
+		var corners := [cell, cell + Vector2i(1, 0), cell + Vector2i(1, 1), cell + Vector2i(0, 1)]
+		for k in 4:
+			var a: Vector2i = corners[k]
+			var b: Vector2i = corners[(k + 1) % 4]
+			var reverse := str([b, a])
+			if sides.has(reverse):
+				sides.erase(reverse)
+			else:
+				sides[str([a, b])] = [a, b]
+	var window_segments: Array = []
+	for pair: Array in sides.values():
+		window_segments.append([corner_at.call(pair[0]), corner_at.call(pair[1])])
+	var outer := _chain(window_segments)
+	var inner := _chain(segments)
+	if outer.size() < 3 or inner.size() < 3:
+		return [surface, PackedFloat32Array()]
+	# Both from their bottom middle, the same way round (toward the cave's +x
+	# first).
+	var start_outer := 0
+	var start_inner := 0
+	var best_outer := INF
+	var best_inner := INF
+	for k in outer.size():
+		var l := to_local * (outer[k] as Vector3)
+		var score := absf(l.x) + absf(l.z - MOUTH_FRONT) * 2.0
+		if score < best_outer:
+			best_outer = score
+			start_outer = k
+	for k in inner.size():
+		var l := to_local * (inner[k] as Vector3)
+		var score := absf(l.x) + (l.y - base) * 3.0
+		if score < best_inner:
+			best_inner = score
+			start_inner = k
+	outer = outer.slice(start_outer) + outer.slice(0, start_outer)
+	inner = inner.slice(start_inner) + inner.slice(0, start_inner)
+	for loop: Array in [outer, inner]:
+		var ahead := to_local * (loop[mini(2, loop.size() - 1)] as Vector3)
+		var first := to_local * (loop[0] as Vector3)
+		if ahead.x < first.x:
+			var rest := loop.slice(1)
+			rest.reverse()
+			loop.resize(1)
+			loop.append_array(rest)
+	# How far round each loop each point is (0 to 1).
+	var round_of := func(loop: Array) -> Array:
+		var lengths: Array = [0.0]
+		for k in loop.size():
+			lengths.append(float(lengths[k]) + (loop[k] as Vector3).distance_to(loop[(k + 1) % loop.size()]))
+		var total: float = lengths.back()
+		return lengths.map(func(length: float) -> float: return length / total)
+	var t_outer: Array = round_of.call(outer)
+	var t_inner: Array = round_of.call(inner)
+	# Rungs from the window's edge to the cut's, zipped all the way round
+	# back to the start.
+	var rungs: Array = [[outer[0], inner[0]]]
+	var i := 0
+	var j := 0
+	while i < outer.size() or j < inner.size():
+		if j >= inner.size() or (i < outer.size() and float(t_outer[i + 1]) <= float(t_inner[j + 1])):
+			i += 1
+		else:
+			j += 1
+		rungs.append([outer[i % outer.size()], inner[j % inner.size()]])
+	# Each rung in RIM_STEPS, its middle pushed in or out from the tunnel's
+	# middle by the noise (never on the floor, never at its ends), so the
+	# rim is craggy rock while both edges stay shared.
+	var to_world := to_local.affine_inverse()
+	var points: Array = []
+	for rung: Array in rungs:
+		var row: Array = []
+		for m in RIM_STEPS + 1:
+			var along := float(m) / RIM_STEPS
+			var p: Vector3 = (rung[0] as Vector3).lerp(rung[1], along)
+			if m > 0 and m < RIM_STEPS:
+				var l := to_local * p
+				var radial := Vector3(l.x, l.y - base - 2.8, 0.0)
+				if radial.length() > 0.01:
+					var lift := smoothstep(0.5, 2.0, l.y - base)
+					p += to_world.basis * radial.normalized() * noise.get_noise_3dv(p * 1.6) * RIM_CRAG * sin(PI * along) * lift
+			row.append(p)
+		points.append(row)
+	var shares := PackedFloat32Array()
+	for r in range(rungs.size() - 1):
+		var a: Array = points[r]
+		var b: Array = points[r + 1]
+		for m in RIM_STEPS:
+			var s0 := float(m) / RIM_STEPS
+			var s1 := float(m + 1) / RIM_STEPS
+			for tri: Array in [[a[m], b[m], b[m + 1], s0, s0, s1], [a[m], b[m + 1], a[m + 1], s0, s1, s1]]:
+				var p0: Vector3 = tri[0]
+				var p1: Vector3 = tri[1]
+				var p2: Vector3 = tri[2]
+				if p0.distance_squared_to(p1) < 1e-8 or p1.distance_squared_to(p2) < 1e-8 or p0.distance_squared_to(p2) < 1e-8:
+					continue
+				surface.append_array([p0, p1, p2, p0, p2, p1])
+				shares.append_array([tri[3], tri[4], tri[5], tri[3], tri[5], tri[4]])
+	return [surface, shares]
+
+
+## Trees, boulders and cacti the zone scattered in a cave's mouth or on its
+## apron: their copies shrunk to nothing, their trunks' shapes gone.
+func _clear_nature_in_caves(skip: Node) -> void:
+	var inside := func(at: Vector3) -> bool:
+		for cave: Dictionary in caves:
+			if not (cave.rect as Rect2).has_point(Vector2(at.x, at.z)):
+				continue
+			var local := _cave_local(cave, at.x, at.z)
+			if local.distance_to(Vector2(0, 6)) < 10.0 or cave_hole(at.x, at.z, at.y + 0.5):
+				return true
+		return false
+	for node: Node in find_children("*", "MultiMeshInstance3D", true, false):
+		var view := node as MultiMeshInstance3D
+		var multimesh := view.multimesh
+		if multimesh == null or multimesh.transform_format != MultiMesh.TRANSFORM_3D:
+			continue
+		var origin := view.global_transform
+		for i in multimesh.instance_count:
+			var t := multimesh.get_instance_transform(i)
+			if inside.call(origin * t.origin):
+				multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), t.origin))
+	for node: Node in find_children("*", "CollisionShape3D", true, false):
+		var shape := node as CollisionShape3D
+		if skip.is_ancestor_of(shape) or not shape.get_parent() is StaticBody3D:
+			continue
+		if not (shape.shape is CylinderShape3D or shape.shape is SphereShape3D or shape.shape is CapsuleShape3D):
+			continue
+		if inside.call(shape.global_position):
+			shape.queue_free()
+
+
+## Creatures move into the caves: a lair takes the spawn groups whose middle
+## lies within 35 yards of its mouth or over it, spread over its spots inside; a wild cave gets a group of
+## its own. Each group keeps its place in `spawns` (enemy names and saved
+## corpses go by it); a group in a cave carries its points as a fifth field.
+func _move_spawns_into_caves() -> void:
+	spawns = spawns.duplicate(true)
+	var claimed := {}
+	for cave: Dictionary in caves:
+		var place := cave_transform(cave)
+		var layout: Dictionary = cave.layout
+		var points: Array = []
+		for spot: Vector3 in layout.creatures:
+			points.append(place * spot)
+		if points.is_empty():
+			continue
+		if int(cave.creature) != 0:
+			var mouth: Vector3 = points[0]
+			spawns.append([int(cave.creature), Vector2(mouth.x, mouth.z), 0.0, int(cave.count), points.slice(maxi(points.size() - int(cave.count) - 1, 0))])
+			continue
+		# The groups about its mouth, or over the cave itself.
+		var groups: Array[int] = []
+		for i in spawns.size():
+			var at: Vector2 = spawns[i][1]
+			if claimed.has(i) or spawns[i].size() > 4:
+				continue
+			if at.distance_to(cave.mouth) < 35.0 or int(spawns[i][0]) in cave.takes or not is_nan(Caves.floor_at(layout, _cave_local(cave, at.x, at.y))):
+				groups.append(i)
+		var next := 0
+		for i in groups:
+			claimed[i] = true
+			var count := int(spawns[i][3])
+			var own: Array = []
+			for k in count:
+				own.append(points[(next + k) % points.size()])
+			next += count
+			spawns[i] = [spawns[i][0], Vector2((own[0] as Vector3).x, (own[0] as Vector3).z), 0.0, count, own]
 
 
 static var _hill_noise: FastNoiseLite
@@ -547,9 +1419,12 @@ func passes() -> Array:
 ## border the same in every zone.
 func carve_passes(x: float, z: float, height: float) -> float:
 	var point := Vector2(x, z)
-	# The rolling hills over open land (hill_height), before the border and
-	# passes, which are cut alike in every zone.
+	# The rolling hills over open land (hill_height), then the ground over and
+	# before the caves (_ground_for_caves), before the border and passes,
+	# which are cut alike in every zone.
 	height += hill_height(x, z, height)
+	if not _caves_off and not caves.is_empty():
+		height = _ground_for_caves(x, z, height)
 	# Within EDGE_FULL of the border the ground is plain full mountain, which
 	# every zone works out alike, so neighbours meet exactly whatever either
 	# has near its edge (a gate's flat, a raised upland). The passes are cut
@@ -635,19 +1510,32 @@ func build_ground(step: float, color: Callable, weights := Callable(), textures 
 	hill_noise()
 	hill_size_noise()
 	hill_bump_noise()
+	_rock_key = str(textures.get("rock_tex", "rock"))
 	if _edge_depths.is_empty():
 		make_edges()
 	if _hill_mask.is_empty():
 		make_hill_mask()
+	# The zone's own caves (cave_mouths), lairs at its old cave mouths and
+	# mines, running into the hill the way the old mouth faced.
+	if caves.is_empty():
+		for mouth: Array in cave_mouths():
+			add_cave(mouth[0], float(mouth[1]) + PI, "lair", absi(hash(str(mouth[2]))) % int(Caves.VARIANTS.lair),
+				{ "name": str(mouth[2]), "lit": bool(mouth[3]) if mouth.size() > 3 else true, "takes": mouth[4] if mouth.size() > 4 else [] })
+	if not caves.any(func(cave: Dictionary) -> bool: return cave.kind == "den"):
+		_caves_off = true
+		_place_wild_caves()
+		_caves_off = false
+	_settle_caves()
 	# The layers see the ground's height as it was without the rolling hills,
 	# so a hilltop isn't painted as the high rock meant for mountains.
 	if weights.is_valid():
 		var layers := weights
 		weights = func(x: float, z: float, y: float, normal: Vector3) -> Color:
 			return layers.call(x, z, y - hill_estimate(x, z), normal)
-	ground.build(size, step, height_at, color, material, center, weights, _ground_across)
+	ground.build(size, step, height_at, color, material, center, weights, _ground_across, cave_hole if not caves.is_empty() else Callable())
 	_ground = ground
 	_weights = weights
+	_ground_color = color
 	lift_npcs()
 
 
@@ -790,8 +1678,14 @@ var _ground: Terrain
 
 ## The height of the ground as built (Terrain.sample), once it is; before
 ## that, the height function.
-func ground_height(x: float, z: float) -> float:
-	return _ground.sample(x, z) if _ground else height_at(x, z)
+func ground_height(x: float, z: float, near_y := NAN) -> float:
+	var ground := _ground.sample(x, z) if _ground else height_at(x, z)
+	# Over a cave: its floor for what's nearer it than the ground on top.
+	if not is_nan(near_y):
+		var floor_y := cave_floor(x, z)
+		if not is_nan(floor_y) and absf(near_y - floor_y) < absf(near_y - ground):
+			return floor_y
+	return ground
 
 
 ## Water at a height over the zone's square.
@@ -937,6 +1831,8 @@ func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:
 	light.light_color = Color(1.0, 0.65, 0.35)
 	light.omni_range = light_range
 	light.position = at + Vector3(0, 0.3, 0)
+	# Lights the place, not the dust in it (rooms' and caves' haze).
+	light.light_volumetric_fog_energy = 0.0
 	parent.add_child(light)
 
 
@@ -1127,6 +2023,7 @@ func spawn_objects(rng_seed: int, water_level: float) -> void:
 ## Creatures, placed the same way each time so saved corpses match by name:
 ## `prefix` keeps names apart between zones.
 func spawn_creatures(rng_seed: int, prefix: String, passive_entries: Array, water_level: float) -> void:
+	build_caves()
 	gather_field = GatherNodes.populate(self, rng_seed + 77, water_level)
 	var creatures := Node3D.new()
 	creatures.name = "Creatures"
@@ -1135,9 +2032,16 @@ func spawn_creatures(rng_seed: int, prefix: String, passive_entries: Array, wate
 	rng.seed = rng_seed
 	for group in spawns.size():
 		var spawn: Array = spawns[group]
+		var in_cave: Array = spawn[4] if spawn.size() > 4 else []
 		for i in int(spawn[3]):
 			var at := _spawn_point(rng, spawn[1], spawn[2], water_level)
+			# In a cave: on its spots, on the cave's floor.
+			if not in_cave.is_empty():
+				var spot: Vector3 = in_cave[i % in_cave.size()]
+				at = Vector3(spot.x, ground_height(spot.x, spot.z, spot.y), spot.z)
 			var enemy: Enemy = AshfordVale.ENEMY_SCENE.instantiate()
+			if not in_cave.is_empty():
+				enemy.wander_override = 2.0
 			enemy.name = "%s%02d_%02d" % [prefix, group, i]
 			enemy.creature_entry = spawn[0]
 			enemy.passive = spawn[0] in passive_entries

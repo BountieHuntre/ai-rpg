@@ -114,6 +114,11 @@ const GROUND_TEXTURES := {
 }
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[(FLATS[SILKHOLLOW][0] as Vector2) + Vector2(8.0, 8.0), PI / 4.0, "the Silkhollow", false],
+		[(FLATS[SHADOWROCK][0] as Vector2) + Vector2(-8.0, 8.0), -PI / 4.0, "the Shadowrock", true]]
+
 func _ready() -> void:
 	Props.use_texture(ROCK, "blue_rock", 3.0)
 	Props.use_texture(PALE_WOOD, "pale_bark", 2.0)
@@ -185,15 +190,7 @@ func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 
 
 ## A cave mouth: a dark opening framed in rough stone, facing `yaw` (0 faces north).
-func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
-	var mouth := Node3D.new()
-	mouth.position = at
-	mouth.rotation.y = yaw
-	parent.add_child(mouth)
-	Props.box(mouth, Vector3(0, 0, 1.0), Vector3(width, 4.0, 2.0), Color(0.04, 0.04, 0.07), 0.0, false)
-	for side in [-1, 1]:
-		Props.box(mouth, Vector3(side * (width / 2.0 + 0.8), 0, 0), Vector3(1.8, 5.0, 3.0), ROCK)
-	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
+
 
 
 ## A moonwell: a ring of pale stones (one solid, Nature's "moonwell_ring")
@@ -255,7 +252,6 @@ func _build_caves() -> void:
 	caves.name = "Caves"
 	add_child(caves)
 	var silk: Array = FLATS[SILKHOLLOW]
-	_cave_mouth(caves, _near(silk[0], Vector2(8, 8), silk[2]), PI / 4.0, 6.0)
 	var webs: Array[Transform3D] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 9
@@ -264,7 +260,6 @@ func _build_caves() -> void:
 		webs.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(2.4, 2.0, 0.05)), Vector3(at.x, silk[2] + 1.2, at.y)))
 	Props.scatter(caves, BoxMesh.new(), Color(0.86, 0.86, 0.9), webs)
 	var shadow: Array = FLATS[SHADOWROCK]
-	_cave_mouth(caves, _near(shadow[0], Vector2(-8, 8), shadow[2]), -PI / 4.0, 5.0)
 
 
 func _clear(point: Vector2) -> bool:

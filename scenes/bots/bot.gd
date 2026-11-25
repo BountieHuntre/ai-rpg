@@ -1735,7 +1735,7 @@ func _move(delta: float) -> void:
 		velocity = Vector3.ZERO
 		_stuck_for = 0.0
 		var step := global_position + direction * minf(RUN_SPEED * combatant.speed_multiplier() * delta, to_waypoint)
-		global_position = Vector3(step.x, manager.ground_height(step.x, step.z), step.z)
+		global_position = Vector3(step.x, manager.ground_height(step.x, step.z, global_position.y), step.z)
 		return
 	# Standing still on the ground: nothing to move, so no collision work.
 	if direction == Vector3.ZERO and is_on_floor() and velocity.y <= 0.0:
@@ -1751,7 +1751,7 @@ func _move(delta: float) -> void:
 		if combatant.has_aura_type(SpellDB.AURA_FEATHER_FALL):
 			velocity.y = maxf(velocity.y, -FEATHER_FALL_SPEED)
 	var before := global_position
-	move_and_slide()
+	slide_stepping(self, delta)
 	if direction == Vector3.ZERO or not is_on_floor():
 		_stuck_for = 0.0
 		return

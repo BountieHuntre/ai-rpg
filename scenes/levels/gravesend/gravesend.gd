@@ -128,6 +128,10 @@ const ENCLOSURES := [
 const DEAD_TREE_VARIANTS := 4
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[(FLATS[VAULT][0] as Vector2) + Vector2(0.0, -8.0), PI, "the Webbed Vault", false]]
+
 func _ready() -> void:
 	Props.use_texture(STONE, "stone_wall", 4.0)
 	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
@@ -277,7 +281,6 @@ func _build_vault() -> void:
 	var flat: Array = FLATS[VAULT]
 	var at: Vector2 = flat[0] + Vector2(0, -8)
 	var y: float = flat[2]
-	Props.box(vault, Vector3(at.x, y, at.y), Vector3(8, 6, 5), Color(0.04, 0.04, 0.05))
 	var web := Color(0.86, 0.86, 0.84)
 	for strand in [[Vector3(-3, 4.5, 2.6), 0.5], [Vector3(2, 3.5, 2.6), -0.6], [Vector3(0, 5.2, 2.6), 0.1]]:
 		var box := Props.box(vault, Vector3(at.x, y, at.y) + strand[0], Vector3(4, 0.06, 0.06), web, 0.0, false)

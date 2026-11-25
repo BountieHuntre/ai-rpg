@@ -2,8 +2,9 @@ class_name GatherNodes
 extends Node3D
 ## A zone's herbs and ore (GatherNode), scattered by its ground: herbs on
 ## grass and forest floor (never on rock, roads, water or buildings' ground),
-## ore on rock gentle enough to stand on (the foot of slopes and hills) and
-## in its mines. How many depends on the zone's area; which kinds on whether
+## ore where classic's lies, at the foot of steep ground: where a mountain's
+## or a hill's slope meets level ground (its rocky places first), set into the
+## rise, and in its caves at the foot of the walls. How many depends on the zone's area; which kinds on whether
 ## it's a starting zone (Zone.gather_kinds). Spots are found once from the
 ## zone's seed, a pool of several for each node, and an emptied node comes
 ## back after its respawn time at another free spot of the pool, as classic's
@@ -20,9 +21,13 @@ const HUB_CLEAR := 40.0
 ## Steepest ground a node stands on (its normal's height).
 const HERB_FLAT := 0.8
 const ORE_FLAT := 0.7
-## Ground no flatter than this (its normal's height) is a hill's slope, where
-## ore lies when a zone has too little rock.
-const HILL_SLOPE := 0.94
+## Ore stands at the foot of steep ground: within FOOT_NEAR yards the ground
+## rises at least FOOT_RISE, and keeps rising to FOOT_HIGH by twice as far.
+const FOOT_NEAR := 2.5
+const FOOT_RISE := 1.4
+const FOOT_HIGH := 2.6
+## How far into the rise a node is set, so it sits in the slope.
+const FOOT_SET := 0.5
 ## Places whose names say they're mines or rock: ore spots there whatever
 ## the ground shows.
 const MINE_WORDS := ["delve", "mine", "hollow", "quarry", "dig", "cave", "rock", "crag"]
@@ -30,6 +35,11 @@ const MINE_WORDS := ["delve", "mine", "hollow", "quarry", "dig", "cave", "rock",
 var zone: Zone
 ## Free spots by kind (Vector3).
 var spots := { "herb": [], "ore": [] }
+## Ore spots inside the zone's caves (Zone.cave_ore_spots): in the pool like
+## any spot, but not checked for a roof, and filled first.
+var cave_spots: Array[Vector3] = []
+## The way a node on a spot faces (out of its slope or wall), by spot.
+var facings := {}
 ## [unix time, kind] of emptied nodes waiting to come back.
 var waiting: Array = []
 var _rng := RandomNumberGenerator.new()
@@ -55,6 +65,11 @@ static func populate(owner: Zone, rng_seed: int, water_level: float) -> GatherNo
 			continue
 		field.spots[kind] = field._find_spots(kind, count * POOL, water_level)
 		field._first[kind] = count
+		if kind == "ore":
+			for vein: Array in owner.cave_ore_spots():
+				field.cave_spots.append(vein[0])
+				field.facings[vein[0]] = vein[1]
+			field._first[kind] = count + field.cave_spots.size()
 	return field
 
 
@@ -67,7 +82,13 @@ func _physics_process(_delta: float) -> void:
 		return
 	var space := get_world_3d().direct_space_state
 	for kind: String in spots:
-		spots[kind] = (spots[kind] as Array).filter(func(spot: Vector3) -> bool: return _clear(space, spot))
+		spots[kind] = (spots[kind] as Array).filter(func(spot: Vector3) -> bool: return kind == "ore" and facings.has(spot) and spot in cave_spots or _clear(space, spot))
+	# The caves' veins: one on each spot first, and in the pool after.
+	if _first.has("ore"):
+		for spot: Vector3 in cave_spots:
+			_spawn_at("ore", spot)
+		(spots["ore"] as Array).append_array(cave_spots)
+		_first["ore"] = int(_first["ore"]) - cave_spots.size()
 	for kind: String in _first:
 		for i in mini(int(_first[kind]), spots[kind].size()):
 			_spawn(kind)
@@ -88,18 +109,26 @@ func _clear(space: PhysicsDirectSpaceState3D, spot: Vector3) -> bool:
 func _find_spots(kind: String, wanted: int, water_level: float) -> Array:
 	var found: Array = []
 	var half := zone.size / 2.0 - 20.0
-	# Mines and rocks first, for ore.
 	if kind == "ore":
+		# The feet of slopes in mines and rocky places first, then anywhere.
 		for place: Array in zone.places:
 			var name := str(place[0]).to_lower()
 			if not MINE_WORDS.any(func(word: String) -> bool: return word in name):
 				continue
-			for attempt in 30:
+			for attempt in 40:
 				var angle := _rng.randf() * TAU
-				var p: Vector2 = place[1] + Vector2(cos(angle), sin(angle)) * sqrt(_rng.randf()) * float(place[2])
-				var spot := _try(p, kind, water_level, found, false)
+				var p: Vector2 = place[1] + Vector2(cos(angle), sin(angle)) * sqrt(_rng.randf()) * (float(place[2]) + 20.0)
+				var spot := _ore_foot(p, water_level, found)
 				if spot != Vector3.INF:
 					found.append(spot)
+		for attempt in wanted * 80:
+			if found.size() >= wanted:
+				break
+			var p := zone.center + Vector2(_rng.randf_range(-half, half), _rng.randf_range(-half, half))
+			var spot := _ore_foot(p, water_level, found)
+			if spot != Vector3.INF:
+				found.append(spot)
+		return found
 	for attempt in wanted * 40:
 		if found.size() >= wanted:
 			break
@@ -107,21 +136,67 @@ func _find_spots(kind: String, wanted: int, water_level: float) -> Array:
 		var spot := _try(p, kind, water_level, found, true)
 		if spot != Vector3.INF:
 			found.append(spot)
-	# Too little rock (the edge mountains aside): ore on the slopes of hills.
-	if kind == "ore":
-		for attempt in wanted * 40:
-			if found.size() >= wanted:
-				break
-			var p := zone.center + Vector2(_rng.randf_range(-half, half), _rng.randf_range(-half, half))
-			var spot := _try(p, kind, water_level, found, false, true)
-			if spot != Vector3.INF:
-				found.append(spot)
 	return found
+
+
+## An ore spot at the foot of steep ground near `p`, or Vector3.INF: level
+## enough to stand on there, with the ground rising steeply right beside it
+## (FOOT_RISE within FOOT_NEAR, FOOT_HIGH by twice as far) the way it faces
+## most; set FOOT_SET into the rise, facing out of it (`facings`).
+func _ore_foot(p: Vector2, water_level: float, found: Array) -> Vector3:
+	if not zone.contains(p) or zone.is_cleared(p) or p.distance_to(zone.hub) < HUB_CLEAR:
+		return Vector3.INF
+	# The foot of the edge mountains is fine; not up them.
+	if zone.edge_ring(p) > 0.35:
+		return Vector3.INF
+	for e: Array in zone.enclosures:
+		if p.x >= float(e[0]) - 4.0 and p.x <= float(e[2]) + 4.0 and p.y >= float(e[1]) - 4.0 and p.y <= float(e[3]) + 4.0:
+			return Vector3.INF
+	var y := zone.height_at(p.x, p.y)
+	if y < water_level + 0.4:
+		return Vector3.INF
+	var normal := Vector3(zone.height_at(p.x - 1.0, p.y) - zone.height_at(p.x + 1.0, p.y), 2.0,
+		zone.height_at(p.x, p.y - 1.0) - zone.height_at(p.x, p.y + 1.0)).normalized()
+	if normal.y < 0.8:
+		return Vector3.INF
+	for other: Vector3 in found:
+		if Vector2(other.x, other.z).distance_to(p) < SPACING:
+			return Vector3.INF
+	# The steepest way up, all round.
+	var best := Vector2.ZERO
+	var best_rise := 0.0
+	for k in 12:
+		var way := Vector2(cos(TAU * k / 12.0), sin(TAU * k / 12.0))
+		var near := zone.height_at(p.x + way.x * FOOT_NEAR, p.y + way.y * FOOT_NEAR) - y
+		var far := zone.height_at(p.x + way.x * FOOT_NEAR * 2.0, p.y + way.y * FOOT_NEAR * 2.0) - y
+		if near >= FOOT_RISE and far >= FOOT_HIGH and near > best_rise:
+			best_rise = near
+			best = way
+	if best == Vector2.ZERO:
+		return Vector3.INF
+	# Not on a road or in a field.
+	var weights := zone.ground_weights()
+	if weights.is_valid():
+		var layers: Color = weights.call(p.x, p.y, y, normal)
+		if layers.r > 0.6 or layers.g > 0.3:
+			return Vector3.INF
+	# On toward the rise until the ground starts climbing, so the node sits
+	# where the slope meets the level ground.
+	var foot := p
+	for k in int(FOOT_NEAR * 2.0 / 0.25):
+		var next := foot + best * 0.25
+		if zone.height_at(next.x, next.y) - zone.height_at(foot.x, foot.y) > 0.12:
+			break
+		foot = next
+	var set := foot + best * FOOT_SET
+	var spot := Vector3(set.x, zone.height_at(foot.x, foot.y), set.y)
+	facings[spot] = atan2(-best.x, -best.y)
+	return spot
 
 
 ## A spot for a node of `kind` at `p`, or Vector3.INF. `by_ground` asks the
 ## ground to show the right thing (rock for ore, grass for herbs).
-func _try(p: Vector2, kind: String, water_level: float, found: Array, by_ground: bool, sloped := false) -> Vector3:
+func _try(p: Vector2, kind: String, water_level: float, found: Array, by_ground: bool) -> Vector3:
 	if not zone.contains(p) or zone.is_cleared(p) or p.distance_to(zone.hub) < HUB_CLEAR:
 		return Vector3.INF
 	# Not up the edge mountains, which can't be climbed.
@@ -137,9 +212,6 @@ func _try(p: Vector2, kind: String, water_level: float, found: Array, by_ground:
 	var normal := Vector3(zone.height_at(p.x - step, p.y) - zone.height_at(p.x + step, p.y), 2.0 * step,
 		zone.height_at(p.x, p.y - step) - zone.height_at(p.x, p.y + step)).normalized()
 	if normal.y < (HERB_FLAT if kind == "herb" else ORE_FLAT):
-		return Vector3.INF
-	# A hill's slope (`sloped`): not flat ground.
-	if sloped and normal.y > HILL_SLOPE:
 		return Vector3.INF
 	for other: Vector3 in found:
 		if Vector2(other.x, other.z).distance_to(p) < SPACING:
@@ -178,12 +250,17 @@ func _spawn(kind: String) -> GatherNode:
 		break
 	if spot == Vector3.INF:
 		return null
+	return _spawn_at(kind, spot)
+
+
+## Puts a node of `kind` on `spot`.
+func _spawn_at(kind: String, spot: Vector3) -> GatherNode:
 	var node := GatherNode.new()
 	node.kind = kind
 	node.entry = _pick(kind)
 	node.field = self
 	node.position = spot
-	node.rotation.y = _rng.randf() * TAU
+	node.rotation.y = float(facings[spot]) if facings.has(spot) else _rng.randf() * TAU
 	add_child(node)
 	return node
 

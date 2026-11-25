@@ -120,6 +120,11 @@ const GROUND_TEXTURES := {
 }
 
 
+## The caves dug into this zone's hills (Zone.cave_mouths).
+func cave_mouths() -> Array:
+	return [[(FLATS[CAVES][0] as Vector2) + Vector2(-6.0, -14.0), PI, "the Troll Caves", true],
+		[(FLATS[DIGGINGS][0] as Vector2) + Vector2(8.0, -15.0), PI, "the Stonejaw diggings", true]]
+
 func _ready() -> void:
 	Props.use_texture(STONE, "stone_wall", 4.0)
 	Props.use_texture(DARK_STONE, "stone_wall", 4.0)
@@ -199,15 +204,7 @@ func _near(at: Vector2, offset: Vector2, y: float) -> Vector3:
 
 
 ## A cave mouth: a dark opening framed in rough stone, facing `yaw` (0 faces north).
-func _cave_mouth(parent: Node3D, at: Vector3, yaw: float, width := 5.0) -> void:
-	var mouth := Node3D.new()
-	mouth.position = at
-	mouth.rotation.y = yaw
-	parent.add_child(mouth)
-	Props.box(mouth, Vector3(0, 0, 1.0), Vector3(width, 4.0, 2.0), Color(0.06, 0.06, 0.08), 0.0, false)
-	for side in [-1, 1]:
-		Props.box(mouth, Vector3(side * (width / 2.0 + 0.8), 0, 0), Vector3(1.8, 5.0, 3.0), ROCK)
-	Props.box(mouth, Vector3(0, 4.0, 0), Vector3(width + 3.4, 1.6, 3.0), ROCK, 0.0, false)
+
 
 
 # The Hollow Hall: a long stone hall under snowy slates, open inside, its
@@ -281,8 +278,6 @@ func _build_caves() -> void:
 	add_child(caves)
 	var flat: Array = FLATS[CAVES]
 	var at: Vector2 = flat[0]
-	_cave_mouth(caves, _near(at, Vector2(-6, -14), flat[2]), PI)
-	_cave_mouth(caves, _near(at, Vector2(9, -12), flat[2]), PI, 4.0)
 	Props.cylinder(caves, _near(at, Vector2(2, 4), flat[2]), 0.3, 4.0, TIMBER, true)
 	var skull := MeshInstance3D.new()
 	skull.mesh = Props.blob(0.45, 6, 3)
@@ -306,7 +301,6 @@ func _build_diggings() -> void:
 		heaps.append(Transform3D(Basis().scaled(Vector3(2.4, 1.2, 2.4)), Vector3(at.x, flat[2], at.y)))
 	Props.scatter(diggings, Props.blob(1.0, 6, 3), Color(0.42, 0.38, 0.34), heaps)
 	Props.box(diggings, _near(flat[0], Vector2(2, 3), flat[2] + 0.4), Vector3(2.4, 1.0, 1.4), TIMBER, 0.6)
-	_cave_mouth(diggings, _near(flat[0], Vector2(8, -15), flat[2]), PI, 4.0)
 	torch(diggings, _near(flat[0], Vector2(-3, -2), flat[2] + 0.5), 6.0)
 
 

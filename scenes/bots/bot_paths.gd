@@ -26,6 +26,9 @@ var _frame := -1
 var _this_frame := 0
 ## Cells known: true blocked, false open.
 var _cells := {}
+## The height the search is about (where the bot walks), so a cave's floor
+## is told from the hill over it (Zone.ground_height's near_y).
+var _near_y := NAN
 var _manager: BotManager
 var _box := BoxShape3D.new()
 var _query := PhysicsShapeQueryParameters3D.new()
@@ -45,17 +48,19 @@ static func cell_of(point: Vector3) -> Vector2i:
 func _center(cell: Vector2i) -> Vector3:
 	var x := (cell.x + 0.5) * CELL
 	var z := (cell.y + 0.5) * CELL
-	return Vector3(x, _manager.ground_height(x, z), z)
+	return Vector3(x, _manager.ground_height(x, z, _near_y), z)
 
 
 func blocked(cell: Vector2i) -> bool:
-	var known: Variant = _cells.get(cell)
+	# Kept by cell and height: a cave's floor and the hill over it apart.
+	var at := _center(cell)
+	var key := Vector3i(cell.x, cell.y, roundi(at.y / 3.0))
+	var known: Variant = _cells.get(key)
 	if known != null:
 		return known
-	var at := _center(cell)
 	_query.transform = Transform3D(Basis.IDENTITY, at + Vector3.UP * BOX_LIFT)
 	var hit := not _manager.space_state().intersect_shape(_query, 1).is_empty()
-	_cells[cell] = hit
+	_cells[key] = hit
 	return hit
 
 
@@ -65,6 +70,7 @@ func busy() -> bool:
 
 
 func blocked_at(point: Vector3) -> bool:
+	_near_y = point.y
 	return blocked(cell_of(point))
 
 
@@ -72,6 +78,7 @@ func blocked_at(point: Vector3) -> bool:
 ## REACH yards along the way), ending at `to`'s cell; empty when there's no
 ## way within the search, or too many bots asked this frame.
 func detour(from: Vector3, to: Vector3) -> Array[Vector3]:
+	_near_y = from.y
 	if Engine.get_physics_frames() != _frame:
 		_frame = Engine.get_physics_frames()
 		_this_frame = 0
@@ -136,6 +143,7 @@ func _clear(a: Vector2i, b: Vector2i) -> bool:
 ## The nearest open place to a point (itself when it's open), within a few
 ## yards; the point when there's none.
 func free_spot(point: Vector3) -> Vector3:
+	_near_y = point.y
 	var here := cell_of(point)
 	if not blocked(here):
 		return point

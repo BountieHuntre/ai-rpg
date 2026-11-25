@@ -265,6 +265,9 @@ QUESTS = [783, 5261, 33, 18, 7, 15, 21, 60, 47,
 # givers and enders (type 2: A half-eaten body, Rolf's corpse) and chests to
 # loot (type 3: Bundle of Wood), with their loot and usual respawn time.
 GAMEOBJECTS = [55, 56, 176793,
+               # Treasure in the caves: the Battered Chests, the Alliance's
+               # low-level one (Aldmark) and the Horde's (Kareth).
+               2843, 106318,
                # Kareth's chests: Cactus Apple, Gnomish Toolbox, Imprisoned
                # Darkspear (Minshina's Skull), Taillasher Eggs, Stolen Supply Sack.
                171938, 3236, 3237, 3240, 3290,
@@ -695,6 +698,17 @@ def main(path):
         if int(r["type"]) == GO_TYPE_CHEST and loot_id in object_loot_rows:
             object_loot[loot_id] = loot_entries(object_loot_rows[loot_id])
             item_ids.update(entry["item"] for entry in object_loot[loot_id] if entry["min_or_ref"] >= 0)
+            # Chests' shared tables (reference loot), as creatures' are.
+            pending.extend(object_loot[loot_id])
+    while pending:
+        entry = pending.pop()
+        if entry["min_or_ref"] < 0:
+            ref = str(-entry["min_or_ref"])
+            if ref not in references:
+                references[ref] = loot_entries(reference_rows.get(ref, []))
+                pending.extend(references[ref])
+        else:
+            item_ids.add(entry["item"])
     write("loot_tables.json", {"creature": creature_loot, "reference": references, "gameobject": object_loot})
     export_pets(db, creatures)
     quests = export_quests(db)

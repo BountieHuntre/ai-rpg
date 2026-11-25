@@ -116,7 +116,7 @@ func _physics_process(delta: float) -> void:
 		# Featherfall: a slow drift down.
 		if combatant.has_aura_type(SpellDB.AURA_FEATHER_FALL):
 			velocity.y = maxf(velocity.y, -FEATHER_FALL_SPEED)
-	move_and_slide()
+	slide_stepping(self, delta)
 
 
 ## Velocity from the movement keys, already scaled to the right speed.
