@@ -1,5 +1,21 @@
 [
 	{
+		"version": "0.22.0",
+		"date": "11-24-2026",
+		"notes": [
+			"Professions: Herbalism, Mining with Smelting, Skinning and Enchanting, learned from new trainers in every second town (two at a time), with supply vendors for their tools and materials.",
+			"Herbs and ore grow across every zone; right-click to gather. Find Herbs and Find Minerals are always on, marking them on the minimap.",
+			"Smelt ore into bars at the forges by the smithies, and skin the beasts you kill: every beast skinned for its leather, Young Wolves included, now can be.",
+			"Enchanting: enchant your gear with stats and weapon enchants such as Crusader and Fiery Weapon, disenchant greens and better into reagents, and learn new Formulas. Enchanted weapons glow in a mist of their colour, drawn or sheathed.",
+			"A new Skills tab in the character window, and a trade skill window for making things.",
+			"Playerbots take up professions too: they gather, skin, smelt, disenchant and enchant their own gear, and sell what they gather in trade chat.",
+			"Procs now have a flat chance per hit instead of a rate per minute: enchants, Oaths and talents. Weapon abilities can trigger enchants, and each hand triggers its own weapon's.",
+			"Tooltips give every proc's chance, and each Oath says exactly what its Verdict does. Oath of Binding's tooltip now says it stuns.",
+			"New bags from 6 to 48 slots: small ones from provisioners, bigger ones dropped by creatures. Show them combined in one window or as separate frames (Interface options).",
+			"Every window can be dragged by its title and stays where you put it, and windows no longer jump back to the top when something changes."
+		]
+	},
+	{
 		"version": "0.21.0",
 		"date": "11-20-2026",
 		"notes": [
