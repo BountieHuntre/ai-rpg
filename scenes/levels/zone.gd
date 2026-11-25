@@ -70,6 +70,20 @@ const PASS_RIDGE_SPAN := 45.0
 ## Ragged places (`ragged_distance`): a circle's rim wobbles in and out by up
 ## to this share of its radius.
 const RAGGED := 0.3
+## Rolling hills over every zone's open land (hill_height): how high they
+## rise, how far apart (yards between tops, roughly), and how far they take
+## to fade out round what's kept level (hill_keep).
+const HILL_HEIGHT := 20.0
+## How much the hills differ in size (the smallest a share of HILL_HEIGHT),
+## how far apart big and small ones lie, and the bumps over their slopes.
+const HILL_LEAST := 0.35
+const HILL_SIZE_SPACING := 420.0
+const HILL_BUMPS := 2.2
+const HILL_BUMP_SPACING := 45.0
+const HILL_SPACING := 170.0
+const HILL_FADE := 30.0
+## The hills' level mask: a grid this many yards a cell.
+const HILL_CELL := 4.0
 
 static var _land: FastNoiseLite
 static var _ragged: FastNoiseLite
@@ -112,6 +126,177 @@ var _weights := Callable()
 ## Walled places bots go in and out of by the gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
 var enclosures: Array = []
+
+
+static var _hill_noise: FastNoiseLite
+static var _hill_size_noise: FastNoiseLite
+static var _hill_bump_noise: FastNoiseLite
+
+
+## Which hills are big and which small (HILL_SIZE_SPACING), and the bumps
+## over their slopes (HILL_BUMP_SPACING): world-yard noise, shared.
+static func hill_size_noise() -> FastNoiseLite:
+	if _hill_size_noise == null:
+		_hill_size_noise = FastNoiseLite.new()
+		_hill_size_noise.seed = LAND_SEED + 37
+		_hill_size_noise.frequency = 1.0 / HILL_SIZE_SPACING
+		_hill_size_noise.fractal_octaves = 2
+	return _hill_size_noise
+
+
+static func hill_bump_noise() -> FastNoiseLite:
+	if _hill_bump_noise == null:
+		_hill_bump_noise = FastNoiseLite.new()
+		_hill_bump_noise.seed = LAND_SEED + 41
+		_hill_bump_noise.frequency = 1.0 / HILL_BUMP_SPACING
+		_hill_bump_noise.fractal_octaves = 2
+	return _hill_bump_noise
+
+
+## The noise the rolling hills follow, in world yards, so neighbouring zones
+## share it.
+static func hill_noise() -> FastNoiseLite:
+	if _hill_noise == null:
+		_hill_noise = FastNoiseLite.new()
+		_hill_noise.seed = LAND_SEED + 31
+		_hill_noise.frequency = 1.0 / HILL_SPACING
+		_hill_noise.fractal_octaves = 3
+		_hill_noise.fractal_gain = 0.45
+	return _hill_noise
+
+
+## How much of the hills a point gets (0 to 1), from the grid made by
+## make_hill_mask: none on and round what the zone keeps level.
+var _hill_mask := PackedFloat32Array()
+var _hill_cells := Vector2i.ZERO
+var _hill_origin := Vector2.ZERO
+
+
+## The rolling hills at a point, before anything else is cut: broad rounded
+## rises with plains between, faded out round towns, roads, NPCs and the
+## like (hill_keep), where the zone has cut the ground below its plain level
+## (lakes, streams, the sea, so no water is filled in) and where it has raised
+## it already (its own hills, the edge mountains). `height` is the ground
+## there without them.
+func hill_height(x: float, z: float, height: float) -> float:
+	if _hill_mask.is_empty() or _hills_off:
+		return 0.0
+	var n := hill_noise().get_noise_2d(x, z)
+	# Rounded tops: the shape only tops out where the noise rarely reaches,
+	# so each hill peaks at its own height rather than a common plateau.
+	var rise := smoothstep(-0.08, 0.65, n)
+	if rise <= 0.0:
+		return 0.0
+	# Big hills and small ones, and bumps over their slopes.
+	var size := lerpf(HILL_LEAST, 1.0, clampf(hill_size_noise().get_noise_2d(x, z) * 1.4 + 0.5, 0.0, 1.0))
+	var bumps := hill_bump_noise().get_noise_2d(x, z) * HILL_BUMPS * minf(rise * 2.0, 1.0)
+	var mask := _mask_at(x, z)
+	# Ground cut below the plain land (water) keeps none, and ground the zone
+	# has already raised (its own hills, the edge mountains) little more, so
+	# they don't pile up into crags.
+	var raised := height - base_height(x, z)
+	mask *= smoothstep(-2.5, 0.0, raised) * (1.0 - smoothstep(3.0, 12.0, raised))
+	return maxf(HILL_HEIGHT * size * rise + bumps, 0.0) * mask
+
+
+## About how much the rolling hills raise a point (for the ground's layers):
+## their shape and the level mask, less on the edge mountains, without the
+## exact checks against the zone's own height, so it needs nothing but the
+## point (safe on the ground's worker threads).
+func hill_estimate(x: float, z: float) -> float:
+	if _hill_mask.is_empty():
+		return 0.0
+	var rise := smoothstep(-0.08, 0.65, hill_noise().get_noise_2d(x, z))
+	if rise <= 0.0:
+		return 0.0
+	var size := lerpf(HILL_LEAST, 1.0, clampf(hill_size_noise().get_noise_2d(x, z) * 1.4 + 0.5, 0.0, 1.0))
+	return HILL_HEIGHT * size * rise * _mask_at(x, z) * (1.0 - edge_ring(Vector2(x, z)))
+
+
+## The level mask at a point, bilinear in its grid.
+func _mask_at(x: float, z: float) -> float:
+	var g := (Vector2(x, z) - _hill_origin) / HILL_CELL
+	var i := clampi(floori(g.x), 0, _hill_cells.x - 2)
+	var j := clampi(floori(g.y), 0, _hill_cells.y - 2)
+	var fx := clampf(g.x - i, 0.0, 1.0)
+	var fz := clampf(g.y - j, 0.0, 1.0)
+	var row := _hill_cells.x
+	var a := lerpf(_hill_mask[j * row + i], _hill_mask[j * row + i + 1], fx)
+	var b := lerpf(_hill_mask[(j + 1) * row + i], _hill_mask[(j + 1) * row + i + 1], fx)
+	return lerpf(a, b, fz)
+
+
+## What the hills keep level: circles [center, radius] and lines (lists of
+## points): what the edge mountains keep clear of but the spawns (creatures
+## may roam hills). NPCs out in the open are raised onto them instead
+## (lift_npcs).
+func hill_keep() -> Array:
+	var keep := edge_keep()
+	var circles: Array = []
+	var spawn_middles := {}
+	for spawn: Array in spawns:
+		spawn_middles[Vector2(spawn[1])] = true
+	for circle: Array in keep[0]:
+		if not spawn_middles.has(Vector2(circle[0])):
+			circles.append(circle)
+	return [circles, keep[1]]
+
+
+## Set while working out the ground without the hills (lift_npcs).
+var _hills_off := false
+
+
+## NPCs are placed at heights in their scenes, on the ground as it was
+## without the hills: each is raised by as much as the hills add under it
+## (nothing on level ground, so those on floors and counters stay put), and
+## its spot to come back to with it.
+func lift_npcs() -> void:
+	for node: Node in find_children("*", "Npc", true, false):
+		var npc := node as Npc
+		var at := npc.global_position
+		var with_hills := height_at(at.x, at.z)
+		_hills_off = true
+		var without := height_at(at.x, at.z)
+		_hills_off = false
+		var lift := with_hills - without
+		if absf(lift) < 0.01:
+			continue
+		npc.global_position.y += lift
+		npc._home = npc.position
+
+
+## Stamps hill_keep onto the level mask, once, before the ground is built
+## (its worker threads only read it).
+func make_hill_mask() -> void:
+	_hill_origin = center - Vector2.ONE * size / 2.0 - Vector2.ONE * HILL_CELL
+	_hill_cells = Vector2i.ONE * (ceili(size / HILL_CELL) + 3)
+	_hill_mask = PackedFloat32Array()
+	_hill_mask.resize(_hill_cells.x * _hill_cells.y)
+	_hill_mask.fill(1.0)
+	var keep := hill_keep()
+	for circle: Array in keep[0]:
+		_stamp(circle[0], circle[0], float(circle[1]))
+	for line: Array in keep[1]:
+		for k in line.size() - 1:
+			_stamp(line[k], line[k + 1], 6.0)
+
+
+## Lowers the mask round a segment (a circle when `a` is `b`) of `radius`.
+func _stamp(a: Vector2, b: Vector2, radius: float) -> void:
+	var reach := radius + HILL_FADE
+	var low := ((Vector2(minf(a.x, b.x), minf(a.y, b.y)) - Vector2.ONE * reach - _hill_origin) / HILL_CELL).floor()
+	var high := ((Vector2(maxf(a.x, b.x), maxf(a.y, b.y)) + Vector2.ONE * reach - _hill_origin) / HILL_CELL).ceil()
+	var along := b - a
+	var length_squared := along.length_squared()
+	for j in range(maxi(int(low.y), 0), mini(int(high.y), _hill_cells.y - 1) + 1):
+		for i in range(maxi(int(low.x), 0), mini(int(high.x), _hill_cells.x - 1) + 1):
+			var point := _hill_origin + Vector2(i, j) * HILL_CELL
+			var t := 0.0 if length_squared < 0.001 else clampf((point - a).dot(along) / length_squared, 0.0, 1.0)
+			var d := point.distance_to(a + along * t)
+			if d >= reach:
+				continue
+			var index := j * _hill_cells.x + i
+			_hill_mask[index] = minf(_hill_mask[index], smoothstep(radius, reach, d))
 
 
 static func land_noise() -> FastNoiseLite:
@@ -362,6 +547,9 @@ func passes() -> Array:
 ## border the same in every zone.
 func carve_passes(x: float, z: float, height: float) -> float:
 	var point := Vector2(x, z)
+	# The rolling hills over open land (hill_height), before the border and
+	# passes, which are cut alike in every zone.
+	height += hill_height(x, z, height)
 	# Within EDGE_FULL of the border the ground is plain full mountain, which
 	# every zone works out alike, so neighbours meet exactly whatever either
 	# has near its edge (a gate's flat, a raised upland). The passes are cut
@@ -444,11 +632,23 @@ func build_ground(step: float, color: Callable, weights := Callable(), textures 
 	# threads read them.
 	land_noise()
 	ragged_noise()
+	hill_noise()
+	hill_size_noise()
+	hill_bump_noise()
 	if _edge_depths.is_empty():
 		make_edges()
+	if _hill_mask.is_empty():
+		make_hill_mask()
+	# The layers see the ground's height as it was without the rolling hills,
+	# so a hilltop isn't painted as the high rock meant for mountains.
+	if weights.is_valid():
+		var layers := weights
+		weights = func(x: float, z: float, y: float, normal: Vector3) -> Color:
+			return layers.call(x, z, y - hill_estimate(x, z), normal)
 	ground.build(size, step, height_at, color, material, center, weights, _ground_across)
 	_ground = ground
 	_weights = weights
+	lift_npcs()
 
 
 func ground_weights() -> Callable:
