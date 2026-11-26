@@ -5,15 +5,15 @@ extends Node3D
 ## Flash and corpse colors are opaque because the outline shader draws over
 ## transparent materials.
 
-const FLASH_TIME := 0.1
-const LUNGE_DISTANCE := 0.45
-const LUNGE_OUT_TIME := 0.07
-const LUNGE_BACK_TIME := 0.13
-const FALL_TIME := 0.35
-const STAR_COUNT := 3
-const STAR_RADIUS := 0.4
-const STAR_HEIGHT := 2.1
-const STAR_SPIN := 5.0
+static var FLASH_TIME := 0.1
+static var LUNGE_DISTANCE := 0.45
+static var LUNGE_OUT_TIME := 0.07
+static var LUNGE_BACK_TIME := 0.13
+static var FALL_TIME := 0.35
+static var STAR_COUNT := 3
+static var STAR_RADIUS := 0.4
+static var STAR_HEIGHT := 2.1
+static var STAR_SPIN := 5.0
 
 @export var hurt_sound := "enemy_hurt"
 @export var death_sound := "enemy_die"

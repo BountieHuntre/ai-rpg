@@ -2,7 +2,7 @@ class_name Projectile
 extends Node3D
 ## Flies at a combatant and runs a callback when it arrives.
 
-const AIM_HEIGHT := 1.1
+static var AIM_HEIGHT := 1.1
 
 var _target: Combatant
 var _speed := 0.0

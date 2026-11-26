@@ -76,7 +76,7 @@ static func title(parent: Control, at_units: Vector2, text: String, ui_scale: fl
 
 
 ## The title band's height, in HUD units: where a window is dragged from.
-const BAND_HEIGHT := 12.0
+static var BAND_HEIGHT := 12.0
 
 
 ## Which window a title belongs to, for remembering where it was dragged (the

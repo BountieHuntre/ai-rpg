@@ -16,19 +16,19 @@ extends Zone
 
 const ZONE_NAME := "Redsand Coast"
 const CENTER := Vector2(1800, -1900)
-const SIZE := 1000.0
-const STEP := 2.5
-const WATER_LEVEL := 1.4
+static var SIZE := 1000.0
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
 ## The sea's floor: shallow enough to wade, as everywhere in the game.
-const SEA_BED := -0.9
-const STREAM_BED := 0.2
-const STREAM_WIDTH := 4.0
-const ROAD_WIDTH := 2.6
-const SEED := 3301
+static var SEA_BED := -0.9
+static var STREAM_BED := 0.2
+static var STREAM_WIDTH := 4.0
+static var ROAD_WIDTH := 2.6
+static var SEED := 3301
 
 const TOWN := Vector2(2060, -1790)
 const TOWN_HEIGHT := 5.0
-const TOWN_FLAT := 38.0
+static var TOWN_FLAT := 38.0
 ## Spikewall's graveyard, by the north palisade.
 const GRAVEYARD := Vector3(2050, TOWN_HEIGHT, -1815)
 const GRAVEYARD_FACING := PI
@@ -76,17 +76,17 @@ const FLATS := [
 	[Vector2(1508, -1508), 9.0, 3.2],    # Vazzar's hut on the isle
 	[Vector2(2235, -2318), 14.0, 12.0],  # before the gate of Ironmaw Hold
 ]
-const VILLAGE := 0
-const KEEP := 1
-const SKULL_ROCK := 2
-const CENTAUR_CAMP := 3
-const GULCH := 4
-const RUZGA := 5
-const WAGON := 6
-const BREKA := 7
-const RIDGE_CAMP := 8
-const ISLE_HUT := 9
-const IRONMAW_GATE := 10
+static var VILLAGE := 0
+static var KEEP := 1
+static var SKULL_ROCK := 2
+static var CENTAUR_CAMP := 3
+static var GULCH := 4
+static var RUZGA := 5
+static var WAGON := 6
+static var BREKA := 7
+static var RIDGE_CAMP := 8
+static var ISLE_HUT := 9
+static var IRONMAW_GATE := 10
 ## Rounded hills: [center, radius, height]. The isles are hills in the sea.
 const HILLS := [
 	[Vector2(1730, -2240), 95.0, 22.0],  # Stormcrag Ridge
@@ -121,7 +121,7 @@ const ROADS := [
 	[Vector2(1612, -2058), Vector2(1520, -1990), Vector2(1440, -1920), Vector2(1408, -1890)],
 ]
 ## Where the Spikewall road crosses the Redwater.
-const BRIDGE_X := 1890.0
+static var BRIDGE_X := 1890.0
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
@@ -250,8 +250,8 @@ const ENCLOSURES := [
 ]
 ## Spikewall's round huts, as offsets from the town's middle.
 const HUTS := [Vector2(-22, -14), Vector2(-24, 6), Vector2(-10, 20), Vector2(14, 20), Vector2(20, -20)]
-const CACTUS_VARIANTS := 4
-const PALM_VARIANTS := 3
+static var CACTUS_VARIANTS := 4
+static var PALM_VARIANTS := 3
 
 
 func _ready() -> void:

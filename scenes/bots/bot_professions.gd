@@ -10,20 +10,20 @@ extends RefCounted
 ## player's (Gathering, Skinning, Professions), its tools taken as carried.
 
 ## How far a bot on its own looks for a node or corpse, in yards.
-const SEARCH := 50.0
+static var SEARCH := 50.0
 ## How far from the player a party bot looks.
-const PARTY_SEARCH := 18.0
+static var PARTY_SEARCH := 18.0
 ## A random bot leaves nodes within this of the player that the player can
 ## gather (as it leaves what the player's quests need).
-const PLAYER_CLAIM := 40.0
+static var PLAYER_CLAIM := 40.0
 ## How often it looks around, and what it may make, in seconds.
-const CHECK_EVERY := 2.0
+static var CHECK_EVERY := 2.0
 ## Professions take up from this level (Apprentice's).
-const FIRST_LEVEL := 5
+static var FIRST_LEVEL := 5
 ## Its kept-up skill: this much a level, as a player who kept at it.
-const SKILL_PER_LEVEL := 5
+static var SKILL_PER_LEVEL := 5
 ## The quality it disenchants (greens: blues and better it keeps to trade).
-const DISENCHANT_QUALITY := 2
+static var DISENCHANT_QUALITY := 2
 
 var bot: Bot
 var node: GatherNode

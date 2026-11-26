@@ -10,7 +10,7 @@ extends RefCounted
 ## become permanent auras on the unit, their highest rank only (sync_passives),
 ## and only while their weapon or stance requirement is met.
 
-const FIRST_LEVEL := 10
+static var FIRST_LEVEL := 10
 ## Talents bots leave alone: not in the game yet, or no use yet (no wands).
 const BOT_SKIPS := ["Lingering Spirit", "Font of Light", "Wandwork",
 	# The Ranger's: Beast's Eyes isn't in the game, creatures have no
@@ -20,12 +20,12 @@ const BOT_SKIPS := ["Lingering Spirit", "Font of Light", "Wandwork",
 ## (Player::resetTalentsCost in CMaNGOS; the cost there also falls back by
 ## 5 gold a month, which isn't kept here).
 const RESET_STEPS := [10000, 50000, 100000]
-const RESET_STEP := 50000
-const RESET_MOST := 500000
-const POINTS_PER_TIER := 5
+static var RESET_STEP := 50000
+static var RESET_MOST := 500000
+static var POINTS_PER_TIER := 5
 ## EquippedItemClass: a weapon, or armor (a shield).
-const ITEM_CLASS_WEAPON := 2
-const ITEM_CLASS_ARMOR := 4
+static var ITEM_CLASS_WEAPON := 2
+static var ITEM_CLASS_ARMOR := 4
 
 
 static var _rank_of: Dictionary = {}

@@ -12,17 +12,17 @@ extends Zone
 
 const ZONE_NAME := "Mossglen"
 const CENTER := Vector2(-2200, -5000)
-const SIZE := 400.0
-const STEP := 2.0
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.2
-const SEED := 5301
+static var SIZE := 400.0
+static var STEP := 2.0
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.2
+static var SEED := 5301
 
 const HUB := Vector2(-2200, -5010)
 const HUB_HEIGHT := 5.0
-const HUB_FLAT := 36.0
+static var HUB_FLAT := 36.0
 ## The Elderbough's trunk, in the middle of the hub.
-const TREE_RADIUS := 9.0
+static var TREE_RADIUS := 9.0
 ## Where Wood Elves wake and the dead of Mossglen come back: by the moonwell,
 ## south of the great tree, facing south.
 const GRAVEYARD := Vector3(-2200, HUB_HEIGHT, -4984)
@@ -47,9 +47,9 @@ const FLATS := [
 	[Vector2(-2320, -4945), 12.0, 7.0],   # before the Shadowrock
 	[Vector2(-2290, -5020), 8.0, 5.0],    # Thalindra's grove
 ]
-const SILKHOLLOW := 0
-const SHADOWROCK := 1
-const GROVE := 2
+static var SILKHOLLOW := 0
+static var SHADOWROCK := 1
+static var GROVE := 2
 const HILLS := [
 	[Vector2(-2070, -4880), 36.0, 18.0],  # the Silkhollow's hill
 	[Vector2(-2345, -4925), 34.0, 16.0],  # the Shadowrock

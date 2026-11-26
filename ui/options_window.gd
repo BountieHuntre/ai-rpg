@@ -10,8 +10,8 @@ extends PanelContainer
 
 signal closed
 
-const WIDTH := 190.0
-const FONT_SIZE := 7
+static var WIDTH := 190.0
+static var FONT_SIZE := 7
 const GOLD := Color("ffd100")
 const TEXT := Color(0.92, 0.9, 0.84)
 
@@ -117,7 +117,11 @@ var _moving := false
 
 const KEY_BINDINGS := "Key Bindings"
 const DEVELOPER := "Developer"
-const TABS := ["Video", "Performance", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, DEVELOPER]
+## Every tunable number in the game, by system and script (Tuning).
+const TUNING := "Tuning"
+const TABS := ["Video", "Performance", "Sound", "Interface", "Chat", "Playerbots", KEY_BINDINGS, TUNING, DEVELOPER]
+## Developer-only tabs, left out of release builds.
+const DEVELOPER_TABS := [TUNING, DEVELOPER]
 ## One-click developer commands: [button text, console command]. "level+" is
 ## the next level (of the targeted playerbot, else the player's), filled in
 ## when pressed.
@@ -138,7 +142,7 @@ var _spawn_level := 0
 var _spawn_rank := 0
 const ERROR_COLOR := Color(1, 0.6, 0.4)
 const TAB_SELECTED := Color(1, 0.85, 0.3)
-const TAB_WIDTH := 58.0
+static var TAB_WIDTH := 58.0
 const TAB_OTHER := Color(0.6, 0.6, 0.65)
 const LIST_HEIGHT := 125.0
 ## Every tab's page height: down to just above the buttons. Lists that scroll
@@ -146,8 +150,8 @@ const LIST_HEIGHT := 125.0
 const PAGE_HEIGHT := 176.0
 const EXTRA_PAGE := PAGE_HEIGHT - (LIST_HEIGHT + 13.0)
 ## Room beside a page for its scrollbar, and the result line's two rows.
-const SCROLLBAR_ROOM := 8.0
-const NOTE_HEIGHT := 20.0
+static var SCROLLBAR_ROOM := 8.0
+static var NOTE_HEIGHT := 20.0
 const WAITING := Color(0.4, 1, 0.4)
 
 ## The in-game developer console the Developer tab runs commands through, or
@@ -272,6 +276,8 @@ func _exit_tree() -> void:
 func defaults() -> void:
 	if _category == KEY_BINDINGS:
 		_keys = Settings.default_keys()
+	elif _category == TUNING:
+		_set_tuning({})
 	else:
 		for row: Array in CATEGORIES[_category]:
 			_set_pending(row[0], Settings.default_value(row[0]))
@@ -305,6 +311,7 @@ func _update_apply() -> void:
 ## the binding, with the Shift, Ctrl and Alt held (Shift-1). Left and right
 ## clicks still work the window.
 func _input(event: InputEvent) -> void:
+	_release_text_focus(event)
 	if not visible or _binding.is_empty():
 		return
 	var code := 0
@@ -399,7 +406,7 @@ func _build() -> void:
 	tabs.custom_minimum_size.x = TAB_WIDTH * _ui_scale
 	body.add_child(tabs)
 	# Release builds have no Developer tab.
-	for tab: String in TABS.filter(func(t: String) -> bool: return t != DEVELOPER or Settings.developer_tools()):
+	for tab: String in TABS.filter(func(t: String) -> bool: return not t in DEVELOPER_TABS or Settings.developer_tools()):
 		var button := _button(tab, show_tab.bind(tab))
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var selected := tab == _category
@@ -430,6 +437,8 @@ func _build() -> void:
 	_note.custom_minimum_size = Vector2(10, NOTE_HEIGHT) * _ui_scale
 	if _category == KEY_BINDINGS:
 		_build_keys(content)
+	elif _category == TUNING:
+		_build_tuning(content)
 	elif not (_category == DEVELOPER and (_item_list or _spell_editor)):
 		# The item search has the page to itself (no console or cape options).
 		for row: Array in CATEGORIES[_category]:
@@ -1481,3 +1490,335 @@ func _button(text: String, pressed: Callable) -> Button:
 	# Deferred: closing or rebuilding frees this button mid-press otherwise.
 	button.pressed.connect(func() -> void: pressed.call_deferred())
 	return button
+
+
+# ---------------------------------------------------------------- tuning
+
+## The Tuning tab's groups and scripts opened (by name), kept while the game
+## runs; and what its search box holds.
+static var _tuning_open: Dictionary = {}
+static var _tuning_search := ""
+## Rows of values shown, by key: [slider, number box, reset button], updated
+## in place when a value changes.
+var _tuning_rows: Dictionary = {}
+var _tuning_quiet := false
+## The mark on values read only as things are made (Tuning's `reload`), and
+## what it means.
+const RELOAD_COLOR := Color(0.95, 0.65, 0.35)
+const RELOAD_NOTE := "Read as things are made (zones, models, effects as they start): changes show after Reload Game, or on things made afterwards."
+
+
+## Every tunable number (Tuning.entries), in collapsible groups by system
+## (Levels, Effects, Bots...) and then by script, each with a slider, its
+## exact number and, once changed, a reset icon putting its code's value
+## back. Changes take effect as they're made (Apply saves them, Cancel and
+## Defaults put them back); values read when something's built need a reload.
+## Developer runs only (editor saves): release builds neither show the tab
+## nor apply tuning (Settings._apply).
+func _build_tuning(content: VBoxContainer) -> void:
+	_tuning_rows.clear()
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", roundi(4 * _ui_scale))
+	content.add_child(top)
+	var search := LineEdit.new()
+	search.placeholder_text = "Search names, notes and scripts"
+	search.text = _tuning_search
+	search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	search.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	top.add_child(search)
+	top.add_child(_button("Reload Game", func() -> void:
+		_show_result(console.run("reload") if console != null else "Reload from in the game.")
+	))
+	var hint := _label("Values marked reload are read as things are made (zones, caves, models): they change after Reload Game.", Color(0.7, 0.68, 0.6))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+	content.add_child(hint)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+	content.add_child(list)
+	search.text_changed.connect(func(text: String) -> void:
+		_tuning_search = text
+		_fill_tuning(list)
+	)
+	_fill_tuning(list)
+
+
+## The groups, or with a search, every value matching it in its group.
+func _fill_tuning(list: VBoxContainer) -> void:
+	for child in list.get_children():
+		child.queue_free()
+	_tuning_rows.clear()
+	var words := _tuning_search.strip_edges().to_lower()
+	var groups := {}
+	for entry: Dictionary in Tuning.entries():
+		if not words.is_empty():
+			var text := ("%s %s %s %s" % [entry.name, String(entry.name).capitalize(), entry.script, entry.comment]).to_lower()
+			if not text.contains(words):
+				continue
+		if not groups.has(entry.category):
+			groups[entry.category] = {}
+		if not (groups[entry.category] as Dictionary).has(entry.script):
+			groups[entry.category][entry.script] = []
+		(groups[entry.category][entry.script] as Array).append(entry)
+	if groups.is_empty():
+		list.add_child(_label("Nothing matches.", TEXT))
+		return
+	var changes := _tuning_changes()
+	var names := groups.keys()
+	names.sort()
+	for category: String in names:
+		var scripts: Dictionary = groups[category]
+		var count := 0
+		var changed := 0
+		for entries: Array in scripts.values():
+			count += entries.size()
+			changed += entries.filter(func(e: Dictionary) -> bool: return changes.has(e.key)).size()
+		var body := VBoxContainer.new()
+		body.add_theme_constant_override("separation", roundi(2 * _ui_scale))
+		var label := "%s (%d%s)" % [category, count, ", %d changed" % changed if changed > 0 else ""]
+		list.add_child(_tuning_header(label, "c:" + category, body, 0, _fill_scripts.bind(body, category, scripts), not words.is_empty()))
+		list.add_child(body)
+
+
+func _fill_scripts(body: VBoxContainer, category: String, scripts: Dictionary) -> void:
+	var names := scripts.keys()
+	names.sort()
+	var searching := not _tuning_search.strip_edges().is_empty()
+	for script: String in names:
+		var entries: Array = scripts[script]
+		var rows := VBoxContainer.new()
+		rows.add_theme_constant_override("separation", roundi(1 * _ui_scale))
+		body.add_child(_tuning_header("%s (%d)" % [script, entries.size()], "s:%s/%s" % [category, script], rows, 1, _fill_rows.bind(rows, entries), searching))
+		body.add_child(rows)
+
+
+func _fill_rows(rows: VBoxContainer, entries: Array) -> void:
+	for entry: Dictionary in entries:
+		rows.add_child(_tuning_row(entry))
+
+
+## A header that opens and closes what's under it, filling it the first time
+## it opens.
+func _tuning_header(text: String, id: String, body: VBoxContainer, depth: int, fill: Callable, open_now: bool) -> Button:
+	var button := Button.new()
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.flat = depth > 0
+	button.custom_minimum_size = Vector2(40, 12) * _ui_scale
+	button.add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	button.add_theme_color_override("font_color", GOLD if depth == 0 else TEXT)
+	var filled := [false]
+	var show := func(now_open: bool) -> void:
+		button.text = "%s%s  %s" % ["      ".repeat(depth), "v" if now_open else ">", text]
+		body.visible = now_open
+		if now_open and not filled[0]:
+			filled[0] = true
+			fill.call()
+	show.call(open_now or bool(_tuning_open.get(id, false)))
+	button.pressed.connect(func() -> void:
+		var now_open := not body.visible
+		_tuning_open[id] = now_open
+		show.call(now_open)
+	)
+	return button
+
+
+## One value: its name (its notes and default on hover), a slider, its exact
+## number (which can go past the slider) and a reset icon once it's changed.
+func _tuning_row(entry: Dictionary) -> Control:
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", roundi(3 * _ui_scale))
+	var whole: bool = entry.int
+	var default_value := float(Tuning.default_of(entry.path, entry.name))
+	var current := float(Tuning.value(entry.path, entry.name))
+	var name_label := _label("            " + String(entry.name).capitalize(), TEXT)
+	name_label.custom_minimum_size.x = 95 * _ui_scale
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.clip_text = true
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	var when := RELOAD_NOTE if entry.reload else "Changes as you move it."
+	name_label.tooltip_text = "%s\n%s\nDefault: %s\n%s" % [entry.name, entry.comment if entry.comment != "" else "(no notes)", _tuning_text(default_value, whole), when]
+	line.add_child(name_label)
+	# Values read only as things are made: marked, as they show after a reload.
+	if entry.reload:
+		var mark := _label("reload", RELOAD_COLOR)
+		mark.add_theme_font_size_override("font_size", roundi((FONT_SIZE - 1) * _ui_scale))
+		mark.tooltip_text = RELOAD_NOTE
+		mark.mouse_filter = Control.MOUSE_FILTER_PASS
+		line.add_child(mark)
+	var limits := _tuning_limits(default_value, whole)
+	var slider := HSlider.new()
+	slider.custom_minimum_size = Vector2(50, 10) * _ui_scale
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.min_value = limits[0]
+	slider.max_value = limits[1]
+	slider.step = limits[2]
+	slider.allow_greater = true
+	slider.allow_lesser = true
+	slider.value = current
+	# The wheel scrolls the page, never the value.
+	slider.scrollable = false
+	line.add_child(slider)
+	var number := SpinBox.new()
+	number.min_value = limits[0]
+	number.max_value = limits[1]
+	number.step = limits[2]
+	number.allow_greater = true
+	number.allow_lesser = true
+	number.value = current
+	number.custom_minimum_size.x = 40 * _ui_scale
+	number.get_line_edit().add_theme_font_size_override("font_size", roundi(FONT_SIZE * _ui_scale))
+	number.gui_input.connect(_scroll_past.bind(number))
+	number.get_line_edit().gui_input.connect(_scroll_past.bind(number))
+	line.add_child(number)
+	var reset := Button.new()
+	reset.icon = _reset_icon()
+	reset.tooltip_text = "Back to %s (its code's value)" % _tuning_text(default_value, whole)
+	reset.custom_minimum_size = Vector2(12, 12) * _ui_scale
+	reset.expand_icon = true
+	line.add_child(reset)
+	_tuning_rows[entry.key] = [slider, number, reset]
+	_show_reset(entry.key, current, default_value)
+	slider.value_changed.connect(func(to: float) -> void: _tuning_changed(entry, to))
+	number.value_changed.connect(func(to: float) -> void: _tuning_changed(entry, to))
+	reset.pressed.connect(func() -> void: _tuning_changed(entry, default_value))
+	return line
+
+
+## A value moved (slider, number or reset): changed now, kept in the tuning
+## option (dropped from it at its default), and its row brought in line.
+func _tuning_changed(entry: Dictionary, to: float) -> void:
+	if _tuning_quiet:
+		return
+	var whole: bool = entry.int
+	if whole:
+		to = roundf(to)
+	var default_value := float(Tuning.default_of(entry.path, entry.name))
+	var changes := _tuning_changes().duplicate()
+	if is_equal_approx(to, default_value):
+		changes.erase(entry.key)
+	else:
+		changes[entry.key] = int(to) if whole else to
+	_set_tuning(changes)
+	_tuning_quiet = true
+	var row: Array = _tuning_rows.get(entry.key, [])
+	if not row.is_empty():
+		(row[0] as HSlider).value = to
+		(row[1] as SpinBox).value = to
+	_tuning_quiet = false
+	_show_reset(entry.key, to, default_value)
+
+
+## The tuning option as it stands in the window.
+func _tuning_changes() -> Dictionary:
+	return _value("tuning")
+
+
+## Puts the tuning option in place now (live), to be saved by Apply or put
+## back by Cancel.
+func _set_tuning(changes: Dictionary) -> void:
+	_set_pending("tuning", changes)
+	if not _live_before.has("tuning"):
+		_live_before["tuning"] = Settings.get_value("tuning")
+	Settings.set_value("tuning", changes)
+	if changes.is_empty():
+		# Defaults: every row shown back at its code's value.
+		for key: String in _tuning_rows:
+			var row: Array = _tuning_rows[key]
+			var parts := key.split("|")
+			var back := float(Tuning.default_of(parts[0], parts[1]))
+			_tuning_quiet = true
+			(row[0] as HSlider).value = back
+			(row[1] as SpinBox).value = back
+			_tuning_quiet = false
+			_show_reset(key, back, back)
+
+
+func _show_reset(key: String, now: float, default_value: float) -> void:
+	var row: Array = _tuning_rows.get(key, [])
+	if row.is_empty():
+		return
+	var reset: Button = row[2]
+	# Kept in place (unseen) so rows don't shift as it comes and goes.
+	var changed := not is_equal_approx(now, default_value)
+	reset.modulate.a = 1.0 if changed else 0.0
+	reset.disabled = not changed
+	reset.mouse_filter = Control.MOUSE_FILTER_STOP if changed else Control.MOUSE_FILTER_IGNORE
+
+
+static var _reset_texture: ImageTexture
+
+
+## A small gold arrow curling back round (the reset icon), drawn in code.
+static func _reset_icon() -> ImageTexture:
+	if _reset_texture != null:
+		return _reset_texture
+	var n := 16
+	var image := Image.create_empty(n, n, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var c := Vector2(7.5, 8.5)
+	for y in n:
+		for x in n:
+			var d := Vector2(x, y) - c
+			var angle := atan2(d.y, d.x)
+			# A ring open at the top right, three quarters round.
+			if absf(d.length() - 5.0) < 1.1 and not (angle < -0.2 and angle > -1.9):
+				image.set_pixel(x, y, GOLD)
+	# Its arrowhead at the open end, pointing back up.
+	for p: Vector2i in [Vector2i(12, 3), Vector2i(12, 4), Vector2i(12, 5), Vector2i(13, 5), Vector2i(14, 5), Vector2i(11, 5), Vector2i(10, 5), Vector2i(13, 4), Vector2i(11, 4)]:
+		image.set_pixelv(p, GOLD)
+	_reset_texture = ImageTexture.create_from_image(image)
+	return _reset_texture
+
+
+## A slider's range for a value: 0 to four times it (both ways for negative
+## values), whole steps for whole numbers, else about a hundredth of it.
+static func _tuning_limits(value: float, whole: bool) -> Array:
+	var size := absf(value)
+	if size < 0.000001:
+		return [0.0, 10.0, 1.0] if whole else [0.0, 1.0, 0.01]
+	var low := 0.0 if value > 0.0 else -size * 4.0
+	var high := size * 4.0
+	if whole:
+		return [low, maxf(high, 10.0), 1.0]
+	var step := pow(10.0, floorf(log(size) / log(10.0)) - 2.0)
+	return [low, high, step]
+
+
+static func _tuning_text(value: float, whole: bool) -> String:
+	return str(int(value)) if whole else String.num(value, 4)
+
+
+## The mouse wheel over a number box scrolls the page it's on instead of
+## changing the number (a SpinBox steps its value on the wheel otherwise).
+func _scroll_past(event: InputEvent, box: Control) -> void:
+	var wheel := event as InputEventMouseButton
+	if wheel == null or not wheel.pressed:
+		return
+	if wheel.button_index != MOUSE_BUTTON_WHEEL_UP and wheel.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+		return
+	box.accept_event()
+	var page := box.get_parent()
+	while page != null and not page is ScrollContainer:
+		page = page.get_parent()
+	if page != null:
+		var scroll := page as ScrollContainer
+		var amount := scroll.get_v_scroll_bar().page / 8.0 * wheel.factor
+		scroll.scroll_vertical += roundi(-amount if wheel.button_index == MOUSE_BUTTON_WHEEL_UP else amount)
+
+
+## A click anywhere but the text box being typed in (a search box, a number
+## box) stops it taking typing, as a click away does in most programs. A
+## number box keeps what was typed (it takes it as it lets go).
+func _release_text_focus(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if not visible or click == null or not click.pressed:
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if not focus is LineEdit and not focus is TextEdit:
+		return
+	var owner_box: Control = focus
+	if focus.get_parent() is SpinBox:
+		owner_box = focus.get_parent()
+	if not owner_box.get_global_rect().has_point(click.position):
+		focus.release_focus()
+

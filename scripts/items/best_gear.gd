@@ -61,7 +61,7 @@ const WEIGHTS := {
 const DEFAULT_WEIGHTS := { "stats": [1.0, 1.0, 1.0, 1.0, 1.0], "armor": 0.04, "health": 0.1, "mana": 0.07, "dps": 5.0, "block": 0.2, "hands": "any" }
 ## How much a build favours its own weapon style: a matching set's score is
 ## multiplied by this.
-const STYLE_BONUS := 1.5
+static var STYLE_BONUS := 1.5
 ## ITEM_MOD stat types to Strength, Agility, Stamina, Intellect, Spirit.
 const STAT_INDEX := { 4: 0, 3: 1, 7: 2, 5: 3, 6: 4 }
 const INVTYPE_HELD := 23

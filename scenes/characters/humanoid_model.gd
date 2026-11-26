@@ -19,7 +19,7 @@ const RACE_MODELS := {
 	ClassicData.Race.TROLL: "troll", ClassicData.Race.TAUREN: "hornkin",
 }
 ## Colour slots, as the build script's SLOT_NAMES; the shader has room for 32.
-const SLOT_COUNT := 32
+static var SLOT_COUNT := 32
 
 enum { SKIN, HAIR, EYES, CHEST, LEGS, FEET, HANDS, WAIST, SHOULDERS, WRISTS, HEAD, TRIM, BLADE, HANDLE, SHIELD, SHIELD_TRIM,
 	BACK, RANGED, RANGED_TRIM, HELM_TRIM, TUSK, PAINT, GEM, STRAP, EMBLEM, SCLERA }
@@ -123,8 +123,8 @@ const RACE_OPTIONS := {
 	"wood_elf": { "feature": ["Ears", ["Long", "Swept", "Tall"]], "marks": ["Runes", ["None", "Brow", "Cheeks", "Full"]], "paint": Color(0.45, 0.95, 1.0) },
 	"undead": { "feature": ["Jaw", ["Bare", "Whole", "Fanged"]], "marks": ["Scars", ["None", "Scar", "Stitches", "Both"]], "paint": Color(0.32, 0.07, 0.07) },
 }
-const FEATURE_COUNT := 3
-const MARKS_COUNT := 4
+static var FEATURE_COUNT := 3
+static var MARKS_COUNT := 4
 ## What character creation calls each hair style and beard mesh.
 const STYLE_NAMES := {
 	"": "None", "HairShort": "Short", "HairLong": "Long", "HairCrest": "Crest", "HairFLong": "Long", "HairFTail": "Tail",
@@ -162,7 +162,7 @@ const SMALLCLOTHES := Color(0.62, 0.58, 0.5)
 const TRIM_COLOR := Color(0.72, 0.56, 0.26)
 const WOOD := Color(0.4, 0.26, 0.13)
 const STEEL := Color(0.72, 0.74, 0.78)
-const INVTYPE_ROBE := 20
+static var INVTYPE_ROBE := 20
 
 ## Armour colours by subclass (cloth, leather, mail, plate), picked by item.
 const CLOTH := [Color(0.68, 0.24, 0.2), Color(0.26, 0.37, 0.66), Color(0.36, 0.53, 0.25), Color(0.52, 0.33, 0.62),
@@ -283,15 +283,15 @@ const EMOTES := {
 	"laugh": "laugh", "cry": "cry", "dance": "dance",
 }
 ## Speeds the walk and run cycles were made for, in yards per second.
-const WALK_SPEED := 2.5
-const RUN_SPEED := 7.0
+static var WALK_SPEED := 2.5
+static var RUN_SPEED := 7.0
 ## Animation steps by distance from the camera: [beyond yards, seconds], in
 ## rising order; nearer than the first animates every frame.
 const ANIM_STEPS: Array[Vector2] = [Vector2(15, 1.0 / 30.0), Vector2(25, 1.0 / 15.0), Vector2(35, 0.1)]
 ## Out of view: just enough to keep the pose right when turned to.
-const OFF_SCREEN_STEP := 0.5
+static var OFF_SCREEN_STEP := 0.5
 ## Yards from the camera past which parts other than the body aren't drawn.
-const PART_RANGE := 35.0
+static var PART_RANGE := 35.0
 ## The graphics options (set_graphics): animation steps by Animation Quality,
 ## part range by Character Detail Distance, Character Shadows ("Off", "Normal":
 ## not weapons, hair or beards, "Full") and Cloak Physics ("Off", "Player
@@ -319,7 +319,7 @@ static func set_graphics(animation: String, detail: String, shadows: String, clo
 	if tree:
 		tree.call_group("character_models", "refresh_graphics")
 ## How often gear is checked for changes, in seconds.
-const GEAR_CHECK := 0.5
+static var GEAR_CHECK := 0.5
 
 ## Per race: meshes and skins of every part, from its model file, by name.
 static var _parts_by_race: Dictionary = {}
@@ -426,25 +426,25 @@ const CAPE_COLLIDERS := [
 ]
 ## The Human's shoulder span (the upper arms' heads apart), which races'
 ## widths are measured against.
-const HUMAN_SHOULDERS := 0.56
+static var HUMAN_SHOULDERS := 0.56
 ## The cape's joints' radius: the cloth between them (the chains are a hand's
 ## width apart) stays out of the body as long as a leg can't slip between two.
-const CAPE_JOINT_RADIUS := 0.055
+static var CAPE_JOINT_RADIUS := 0.055
 var _springs: Array[SpringBoneSimulator3D] = []
 ## The cape's chains (left edge, middle, right edge; the build script's
 ## CAPE_CHAINS), bones in each, and how far out of step each chain's flutter
 ## is with the next (radians).
 const CAPE_CHAINS := ["L", "C", "R"]
-const CAPE_BONES := 5
-const CAPE_PHASE_STEP := 1.1
+static var CAPE_BONES := 5
+static var CAPE_PHASE_STEP := 1.1
 var _cape_wind := Vector3.ZERO
 ## The flapping's phase (see _update_cape).
 var _flutter_time := randf() * TAU
 var _last_yaw := 0.0
 ## How fast the hands' glow pulses, and its strength's range.
-const GLOW_PULSE := 5.0
-const GLOW_LOW := 0.45
-const GLOW_HIGH := 0.9
+static var GLOW_PULSE := 5.0
+static var GLOW_LOW := 0.45
+static var GLOW_HIGH := 0.9
 var _profile: CharacterProfile
 var _equipment: Dictionary = {}
 var _gear_key := -1
@@ -836,9 +836,9 @@ static var _blade_boxes: Dictionary = {}
 
 
 ## The weapon's glow pulses between these strengths, this fast.
-const WEAPON_GLOW_LOW := 0.25
-const WEAPON_GLOW_HIGH := 0.55
-const WEAPON_GLOW_PULSE := 2.5
+static var WEAPON_GLOW_LOW := 0.25
+static var WEAPON_GLOW_HIGH := 0.55
+static var WEAPON_GLOW_PULSE := 2.5
 
 
 ## Pulses the enchanted blade's glow, with its mist while it's drawn and

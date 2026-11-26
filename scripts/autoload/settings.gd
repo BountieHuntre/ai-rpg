@@ -107,6 +107,9 @@ const DEFAULTS := {
 	"cape_wind_smoothing": 8.0,
 	"cape_flutter": 0.15,
 	"cape_flutter_rate": 2.0,
+	# The tunable numbers changed from their code's values (Tuning, the
+	# Options window's Tuning tab): { "res://path.gd|NAME": value }.
+	"tuning": {},
 }
 
 ## Rebindable actions in the Key Bindings window: [action, label, section].
@@ -242,7 +245,8 @@ func _read_into(file: ConfigFile, values: Dictionary, keys: Dictionary) -> void:
 ## The shipped defaults, read over DEFAULTS in every build.
 const SHIPPED_PATH := "res://default_options.cfg"
 ## Options that belong to one machine, never shipped.
-const NOT_SHIPPED := ["monitor", "chatframe_rect"]
+## Tuning stays with the editor's saves: release builds never take it.
+const NOT_SHIPPED := ["monitor", "chatframe_rect", "tuning"]
 
 
 ## An option's default in this build (the shipped one, if any).
@@ -439,11 +443,37 @@ func _binding_wins(binding: int, held_mods: int) -> bool:
 	return true
 
 
+## Esc in a text box lets go of it (the chat and the console handle their own
+## Esc first: input reaches this autoload after every node added later).
+func _input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key and key.pressed and not key.echo and key.keycode == KEY_ESCAPE and typing():
+		get_viewport().gui_get_focus_owner().release_focus()
+		get_viewport().set_input_as_handled()
+
+
+## Whether a text box has the keyboard (a search or number box, the chat or
+## console line): game keys then do nothing (pressed, held and axis say no),
+## so typing never moves the character or fires the action bar.
+func typing() -> bool:
+	var viewport := get_viewport()
+	if viewport == null:
+		return false
+	var focus := viewport.gui_get_focus_owner()
+	return (focus is LineEdit and (focus as LineEdit).editable) or (focus is TextEdit and (focus as TextEdit).editable)
+
+
 ## Whether an input event presses an action, with the bindings' modifiers
 ## taken into account: use it rather than event.is_action_pressed for bound
 ## actions.
 func pressed(event: InputEvent, action: String) -> bool:
 	if not event.is_action_pressed(action):
+		return false
+	# Keys typed into a text box are only typing; Esc there lets go of the box.
+	if event is InputEventKey and typing():
+		if action == "pause":
+			get_viewport().gui_get_focus_owner().release_focus()
+			get_viewport().set_input_as_handled()
 		return false
 	# Actions with fixed keys (Esc's "pause") have no bindings to weigh.
 	if not _values.keys.has(action):
@@ -462,7 +492,7 @@ func pressed(event: InputEvent, action: String) -> bool:
 ## Whether an action is held now, as pressed() judges it: use it rather than
 ## Input.is_action_pressed for bound actions.
 func held(action: String) -> bool:
-	if not Input.is_action_pressed(action):
+	if not Input.is_action_pressed(action) or typing():
 		return false
 	if not _values.keys.has(action):
 		return true
@@ -601,6 +631,10 @@ static func _keys_in_map(action: String) -> Array:
 
 func _apply(key: String) -> void:
 	match key:
+		"tuning":
+			# Editor and debug runs only: release builds play the code's values.
+			if developer_tools():
+				Tuning.apply(get_value(key))
 		"display_mode":
 			# Headless runs have no window to change.
 			if DisplayServer.get_name() == "headless":

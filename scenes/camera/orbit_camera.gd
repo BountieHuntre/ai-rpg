@@ -8,9 +8,9 @@ extends Camera3D
 ## Emitted for a mouse press and release without dragging.
 signal clicked(screen_position: Vector2, button: MouseButton)
 
-const CLICK_DRAG_LIMIT := 8.0
+static var CLICK_DRAG_LIMIT := 8.0
 ## Closer than this is first person, with the character hidden.
-const FIRST_PERSON_DISTANCE := 0.6
+static var FIRST_PERSON_DISTANCE := 0.6
 
 @export var target: Player
 ## Pivot at eye height.

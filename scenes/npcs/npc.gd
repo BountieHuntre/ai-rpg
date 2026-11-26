@@ -35,13 +35,13 @@ extends StaticBody3D
 ## behind, or the player dies), when the quest fails; then it walks home.
 @export var escort := 0
 
-const WAKE_TIME := 120.0
+static var WAKE_TIME := 120.0
 const WAKE_LINES := ["Ow! Okay, okay, I'm going!", "Hey! I was just resting my eyes!", "All right, all right, back to work..."]
 ## Escorts keep this far behind the player, walk at walking pace and run to
 ## catch up, and reach the ender within ESCORT_END yards.
-const ESCORT_GAP := 3.0
-const ESCORT_END := 8.0
-const ESCORT_LOST := 60.0
+static var ESCORT_GAP := 3.0
+static var ESCORT_END := 8.0
+static var ESCORT_LOST := 60.0
 
 var _model: Node3D
 var _awake_left := 0.0

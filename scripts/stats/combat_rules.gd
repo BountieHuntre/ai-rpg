@@ -9,13 +9,13 @@ const OUTCOME_TEXT := {
 	Outcome.MISS: "Miss", Outcome.DODGE: "Dodge", Outcome.PARRY: "Parry",
 	Outcome.BLOCK: "Block", Outcome.RESIST: "Resist",
 }
-const MELEE_CRIT_MULTIPLIER := 2.0
-const SPELL_CRIT_MULTIPLIER := 1.5
-const BASE_MELEE_MISS := 5.0
-const BASE_SPELL_MISS := 4.0
+static var MELEE_CRIT_MULTIPLIER := 2.0
+static var SPELL_CRIT_MULTIPLIER := 1.5
+static var BASE_MELEE_MISS := 5.0
+static var BASE_SPELL_MISS := 4.0
 ## NPCs that can dodge, parry or block all start at this chance.
-const NPC_AVOIDANCE := 5.0
-const NPC_CRIT := 5.0
+static var NPC_AVOIDANCE := 5.0
+static var NPC_CRIT := 5.0
 
 
 ## Fraction of physical damage armor removes, capped at 75%.
@@ -88,10 +88,10 @@ static func roll_heal(caster: Combatant, extra_crit := 0.0) -> Outcome:
 	return Outcome.CRIT if _chance(caster.spell_crit + extra_crit) else Outcome.HIT
 
 
-const DUAL_WIELD_MISS := 19.0
+static var DUAL_WIELD_MISS := 19.0
 
 
-const AURA_MOD_HIT_CHANCE := 54
+static var AURA_MOD_HIT_CHANCE := 54
 
 
 static func miss_chance(attacker: Combatant, victim: Combatant, ability: bool) -> float:

@@ -13,21 +13,21 @@ extends Zone
 
 const ZONE_NAME := "Emberhollow"
 const CENTER := Vector2(2500, -1700)
-const SIZE := 400.0
-const STEP := 2.0
+static var SIZE := 400.0
+static var STEP := 2.0
 ## No water in the canyon.
-const WATER_LEVEL := -100.0
-const ROAD_WIDTH := 2.6
-const SEED := 3101
+static var WATER_LEVEL := -100.0
+static var ROAD_WIDTH := 2.6
+static var SEED := 3101
 
 const HUB := Vector2(2510, -1690)
 const HUB_HEIGHT := 6.0
-const HUB_FLAT := 32.0
+static var HUB_FLAT := 32.0
 ## The Proving Ground's palisade: x 2486..2534, z -1712..-1668, its gate in
 ## the west wall.
 const WALL_MIN := Vector2(2486, -1712)
 const WALL_MAX := Vector2(2534, -1668)
-const GATE_Z := -1690.0
+static var GATE_Z := -1690.0
 ## Where new Horde characters start and the dead of Emberhollow come back:
 ## inside the gate, facing out of it (west).
 const GRAVEYARD := Vector3(2497, HUB_HEIGHT, -1690)
@@ -63,9 +63,9 @@ const FLATS := [
 	[Vector2(2530, -1792), 8.0, 7.0],   # Tazula's camp
 	[Vector2(2462, -1716), 8.0, 6.0],   # the peons' camp
 ]
-const CAVE := 0
-const CAMP := 1
-const PEONS := 2
+static var CAVE := 0
+static var CAMP := 1
+static var PEONS := 2
 ## Rounded hills: [center, radius, height].
 const HILLS := [
 	[Vector2(2648, -1805), 55.0, 26.0],  # the cult's hill, the cave in its west face
@@ -146,7 +146,7 @@ const HUTS := [
 	[Vector2(2510, -1704), 6.5], [Vector2(2492, -1704), 3.6], [Vector2(2528, -1704), 3.6],
 	[Vector2(2528, -1676), 3.6], [Vector2(2492, -1676), 3.6],
 ]
-const CACTUS_VARIANTS := 4
+static var CACTUS_VARIANTS := 4
 
 
 ## The caves dug into this zone's hills (Zone.cave_mouths).

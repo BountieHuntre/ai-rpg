@@ -10,20 +10,20 @@ extends Zone
 
 const ZONE_NAME := "Sunfold Camp"
 const CENTER := Vector2(-500, 1200)
-const SIZE := 400.0
-const STEP := 2.0
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.4
-const SEED := 4501
+static var SIZE := 400.0
+static var STEP := 2.0
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.4
+static var SEED := 4501
 
 const HUB := Vector2(-490, 1190)
 const HUB_HEIGHT := 5.0
-const HUB_FLAT := 32.0
+static var HUB_FLAT := 32.0
 ## Where Hornkin wake and the dead of Sunfold come back: by the totem, facing north.
 const GRAVEYARD := Vector3(-490, HUB_HEIGHT, 1206)
-const GRAVEYARD_FACING := 0.0
+static var GRAVEYARD_FACING := 0.0
 const SPRING := Vector2(-462, 1088)
-const SPRING_RADIUS := 9.0
+static var SPRING_RADIUS := 9.0
 
 const PLACES := [
 	["the Wellspring", Vector2(-462, 1088), 14.0],
@@ -38,7 +38,7 @@ const PLACES := [
 const FLATS := [
 	[Vector2(-400, 1332), 18.0, 3.0],  # the Briartusk camp in the ravine
 ]
-const RAVINE := 0
+static var RAVINE := 0
 const HILLS := [
 	[Vector2(-640, 1250), 55.0, 14.0],
 	[Vector2(-360, 1290), 30.0, 10.0],
@@ -103,8 +103,8 @@ const GROUND_TEXTURES := {
 const ENCLOSURES := [
 	[-497.0, 1173.0, -483.0, 1179.0, Vector2(-490, 1183), Vector2(-490, 1177)],
 ]
-const TREE_ATTEMPTS := 1500
-const ROCK_ATTEMPTS := 1000
+static var TREE_ATTEMPTS := 1500
+static var ROCK_ATTEMPTS := 1000
 
 
 func _ready() -> void:
@@ -337,12 +337,8 @@ func _normal_at(point: Vector2, y: float) -> Vector3:
 ## south), with a warm lamp inside.
 func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0, depth := 7.0) -> void:
 	place_baked(parent, "longhouse", Transform3D(Basis(Vector3.UP, yaw) * Basis().scaled(Vector3(length / 14.0, 1.0, depth / 7.0)), at))
-	var lamp := OmniLight3D.new()
-	lamp.light_color = Color(1.0, 0.75, 0.45)
-	lamp.omni_range = length * 0.7
-	lamp.light_energy = 0.9
-	lamp.position = at + Vector3(0, 2.8, 0)
-	parent.add_child(lamp)
+	# Its lamp, flickering.
+	Fire.make(parent, at + Vector3(0, 2.62, 0), 0.0, length * 0.7, 0.9, Color(1.0, 0.75, 0.45))
 
 
 ## Open ground: not on roads, in the camp or the ravine, or by the spring.

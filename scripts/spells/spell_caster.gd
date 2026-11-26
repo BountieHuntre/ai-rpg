@@ -9,7 +9,7 @@ extends Node
 
 signal failed(message: String)
 ## SPELL_EFFECT_SKINNING: the Skinning spell.
-const EFFECT_SKINNING := 95
+static var EFFECT_SKINNING := 95
 ## A profession's spell (Smelting, Enchanting) asks for its trade skill window.
 signal trade_skill_requested(profession: String)
 ## A spell cast on an item (Disenchant) asks for one to be picked.
@@ -33,7 +33,7 @@ const ERR_NOTHING_TO_DISPEL := "Nothing to dispel"
 const ERR_PASSIVE := "That ability is passive."
 ## Seconds before the Homing Token can be used again. Classic's is an hour
 ## (the spell's CategoryRecoveryTime); here it's 15 minutes.
-const HOMING_TOKEN_COOLDOWN := 900.0
+static var HOMING_TOKEN_COOLDOWN := 900.0
 const ERR_NO_OATH := "You have no Oath to pass Verdict on."
 const ERR_TARGET_HEALTH := "Target must be below 20% health."
 ## Spells that only affect undead and demons (Banishment, Rebuke the Dead
@@ -45,24 +45,24 @@ const PROFICIENCY_SPELLS := { "Plate Mail": "4:4" }
 ## InterruptFlags: taking damage delays the cast.
 const INTERRUPT_DAMAGE_PUSHBACK := 0x02
 ## The Ranger's spell family, whose shots fly by their own Projectile.
-const RANGER_FAMILY := 9
+static var RANGER_FAMILY := 9
 const ERR_IN_COMBAT := "You are in combat"
 const ERR_ITEM_NOT_READY := "Item is not ready yet."
 const ERR_CANT_YET := "You can't do that yet"
 const ERR_SHAPESHIFTED := "You can't do that while shapeshifted."
 ## Dread Wail frightens up to this many enemies (MaxAffectedTargets in classic).
-const MAX_FEAR_TARGETS := 5
+static var MAX_FEAR_TARGETS := 5
 ## Leeching Embrace heals the caster's party for this share of shadow damage.
-const EMBRACE_SHARE := 0.2
+static var EMBRACE_SHARE := 0.2
 ## Stillness: the next spell costs no mana and has this much more crit chance.
-const STILLNESS_CRIT := 25.0
+static var STILLNESS_CRIT := 25.0
 ## item_template spelltrigger: 0 is "Use:".
-const ITEM_SPELL_ON_USE := 0
+static var ITEM_SPELL_ON_USE := 0
 
-const WORLD_LAYER := 1
-const EYE_HEIGHT := 1.2
+static var WORLD_LAYER := 1
+static var EYE_HEIGHT := 1.2
 ## SPELL_AURA_MOD_SPELL_CRIT_CHANCE_SCHOOL (Sacred Power).
-const AURA_MOD_SPELL_CRIT_SCHOOL := 71
+static var AURA_MOD_SPELL_CRIT_SCHOOL := 71
 
 ## The spell being cast or channeled, or {} when not casting.
 var casting: Dictionary = {}

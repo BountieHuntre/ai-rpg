@@ -8,7 +8,7 @@ extends RefCounted
 ## (Player::UpdateGatherSkill, with the pure skill).
 
 ## Classic INTERACTION_DISTANCE, in yards.
-const REACH := 5.0
+static var REACH := 5.0
 
 
 ## Why `unit` can't gather `node` now, or "".

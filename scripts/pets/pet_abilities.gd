@@ -15,7 +15,7 @@ const EFFECT_CHARGE := 96
 const TARGET_PARTY_AROUND := 20
 const TARGET_ENEMIES_AROUND := 22
 ## How far area abilities reach when the data gives no radius.
-const AREA_RADIUS := 8.0
+static var AREA_RADIUS := 8.0
 
 
 static func cast(pet: Pet, spell: Dictionary, target: Combatant) -> void:

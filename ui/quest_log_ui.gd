@@ -8,11 +8,11 @@ signal hovered(item: Dictionary)
 ## Shift-click on a quest: link it in the chat.
 signal link_requested(quest_id: int)
 
-const WIDTH := 170.0
+static var WIDTH := 170.0
 const LIST_HEIGHT := 56.0
-const DETAIL_HEIGHT := 104.0
-const ROW := 10.0
-const FONT_SIZE := 6
+static var DETAIL_HEIGHT := 104.0
+static var ROW := 10.0
+static var FONT_SIZE := 6
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const GOLD := Color("ffd100")
 const TEXT := Color(0.92, 0.9, 0.84)

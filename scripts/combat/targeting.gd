@@ -16,31 +16,31 @@ signal skin_requested(corpse: Node3D)
 ## A right-click on a corpse that can't be skinned, with why.
 signal skin_refused(why: String)
 
-const UNIT_LAYER := 2
+static var UNIT_LAYER := 2
 ## Render layer bit for units' meshes (the player, bots, creatures, NPCs),
 ## which the ring isn't projected onto.
 const UNIT_RENDER_LAYER := 1 << 1
 ## The ring: inner and outer radius at a target's normal size, and how far
 ## up and down it reaches to find the ground, in yards.
-const RING_INNER := 0.55
-const RING_OUTER := 0.9
+static var RING_INNER := 0.55
+static var RING_OUTER := 0.9
 ## The dark edge on both sides of the band, so it shows on bright ground.
-const RING_EDGE := 0.05
+static var RING_EDGE := 0.05
 ## Far off, the ring grows: from FAR_START yards from the camera, up to
 ## FAR_GROWTH times its size at FAR_START + FAR_SPAN.
-const FAR_START := 8.0
-const FAR_SPAN := 32.0
-const FAR_GROWTH := 3.0
-const RING_REACH := 3.0
+static var FAR_START := 8.0
+static var FAR_SPAN := 32.0
+static var FAR_GROWTH := 3.0
+static var RING_REACH := 3.0
 ## How far above and below the ground under the target the ring paints on
 ## flat ground (it reaches further on slopes, as far as the slope rises across
 ## it), so counters, crates and roofs over the ground stay clean.
-const RING_GROUND_SLACK := 0.25
+static var RING_GROUND_SLACK := 0.25
 ## Physics layer of the world (terrain, buildings, props), for finding the
 ## ground under the target.
-const WORLD_LAYER := 1
+static var WORLD_LAYER := 1
 ## Pixels across the ring's texture.
-const RING_TEXTURE_SIZE := 96
+static var RING_TEXTURE_SIZE := 96
 const HOSTILE_COLOR := Color(0.8, 0.2, 0.2)
 const NEUTRAL_COLOR := Color(0.95, 0.8, 0.15)
 const FRIENDLY_COLOR := Color(0.25, 1, 0.25)
@@ -49,7 +49,7 @@ const PLAYER_COLOR := Color(0.35, 0.6, 1)
 ## Creatures someone outside your group tapped.
 const TAPPED_COLOR := Color(0.6, 0.6, 0.6)
 ## In combat with the target, the ring flashes red this many times a second.
-const COMBAT_FLASH_RATE := 2.0
+static var COMBAT_FLASH_RATE := 2.0
 
 @export var tab_range := 40.0
 

@@ -12,11 +12,11 @@ signal message(text: String)
 ## A bot accepted an invitation (it greets the party).
 signal member_joined(bot: Bot)
 
-const MAX_SIZE := 5
+static var MAX_SIZE := 5
 ## CONFIG_FLOAT_GROUP_XP_DISTANCE: members further away get no share.
-const REWARD_DISTANCE := 74.0
+static var REWARD_DISTANCE := 74.0
 ## "Near My Level" invitations: within this many levels.
-const NEAR_LEVELS := 5
+static var NEAR_LEVELS := 5
 
 ## The bots in the party, in the order they joined.
 var members: Array[Bot] = []

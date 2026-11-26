@@ -10,56 +10,56 @@ extends PlayerUnit
 
 enum Command { FOLLOW, STAY }
 
-const RUN_SPEED := 7.0
-const GRAVITY := 19.29
-const JUMP_SPEED := 7.96
+static var RUN_SPEED := 7.0
+static var GRAVITY := 19.29
+static var JUMP_SPEED := 7.96
 ## Seconds between decisions; bots far from the player think less often.
-const THINK_INTERVAL := 0.25
-const FAR_THINK_INTERVAL := 0.75
+static var THINK_INTERVAL := 0.25
+static var FAR_THINK_INTERVAL := 0.75
 ## Beyond this many yards from the player a bot walks the ground's height
 ## without collision, which costs far less with hundreds of bots about. The
 ## player never sees it up close.
 static var FAR := 45.0
 ## Seconds between working out what its quests need and which quest giver it
 ## has business with.
-const QUEST_CHECK := 2.0
+static var QUEST_CHECK := 2.0
 ## Yards a bot on its own looks around for creatures to hunt.
-const HUNT_RANGE := 30.0
+static var HUNT_RANGE := 30.0
 ## How far away a creature attacking it can be: past its leash it gives up.
-const LEASH_REACH := 70.0
+static var LEASH_REACH := 70.0
 ## A bot on its own leaves creatures this many levels above it alone.
-const HUNT_LEVELS_ABOVE := 2
+static var HUNT_LEVELS_ABOVE := 2
 ## Party bots fight creatures within this many yards of the leader.
-const ASSIST_RANGE := 40.0
+static var ASSIST_RANGE := 40.0
 ## Seconds before a dead bot gets back up with half its health and mana, as
 ## if it had run back from the graveyard. Party bots wait for the fight to end.
-const REVIVE_TIME := 30.0
+static var REVIVE_TIME := 30.0
 ## Party bots further than this from the leader catch up by teleporting, when
 ## the Playerbots options allow it, as playerbots do.
-const TELEPORT_DISTANCE := 40.0
+static var TELEPORT_DISTANCE := 40.0
 ## Following bots also teleport after this many seconds of getting no closer
 ## while more than BEHIND_DISTANCE yards away (stuck on a wall or a tree).
-const BEHIND_TIME := 4.0
-const BEHIND_DISTANCE := 12.0
+static var BEHIND_TIME := 4.0
+static var BEHIND_DISTANCE := 12.0
 ## Sits down to eat below half health, to drink below a third of its mana,
 ## and stands once both are nearly full.
-const REST_HEALTH := 0.5
-const REST_MANA := 0.35
-const REST_UNTIL := 0.95
+static var REST_HEALTH := 0.5
+static var REST_MANA := 0.35
+static var REST_UNTIL := 0.95
 ## Playerbots eat and drink food for their level: a twentieth of health and
 ## mana back each second.
-const REST_RATE := 0.05
-const FOOD_SPELL := 433
-const DRINK_SPELL := 430
+static var REST_RATE := 0.05
+static var FOOD_SPELL := 433
+static var DRINK_SPELL := 430
 ## Seconds of running without getting anywhere before jumping and stepping
 ## aside.
-const STUCK_TIME := 0.6
-const SIDESTEP_TIME := 0.8
+static var STUCK_TIME := 0.6
+static var SIDESTEP_TIME := 0.8
 ## Yards from a quest giver to talk to them, and seconds spent talking.
-const NPC_REACH := 3.0
-const TALK_TIME := 1.5
+static var NPC_REACH := 3.0
+static var TALK_TIME := 1.5
 ## Templars renew their Boons with this many seconds left.
-const BOON_REFRESH := 30.0
+static var BOON_REFRESH := 30.0
 ## Spellcasters get Boon of Clarity (mana), everyone else Boon of Strength.
 const CASTER_CLASSES := [ClassicData.CharClass.PRIEST, ClassicData.CharClass.MAGE, ClassicData.CharClass.WARLOCK]
 ## Buff categories per class for the party window, and the spells in each.
@@ -92,21 +92,21 @@ const CATEGORY_SPELLS := {
 ## The Ranger's pet spells, from the taming quests, which bots skip: they
 ## know them from level 10 (unlike classic).
 const RANGER_PET_SPELLS := [1515, 883, 2641, 982, 5149]
-const RANGER_PET_LEVEL := 10
+static var RANGER_PET_LEVEL := 10
 ## A Ranger bot shoots from this far; nearer than the dead zone it fights in
 ## melee.
-const RANGER_RANGE := 25.0
+static var RANGER_RANGE := 25.0
 ## How far a Ranger bot looks for a beast to tame, and how often.
-const TAME_SEARCH := 100.0
-const TAME_EVERY := 5.0
+static var TAME_SEARCH := 100.0
+static var TAME_EVERY := 5.0
 ## Presences a Templar bot keeps up, best first.
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 ## Oaths a Templar bot fights with, best first.
 const OATHS := ["Oath of Dominion", "Oath of Valor"]
 ## How far from its enemy a Cleric bot with mana stands to cast.
-const CASTER_RANGE := 25.0
+static var CASTER_RANGE := 25.0
 ## A Cleric bot fights from range while it has this share of its mana.
-const CASTER_MANA := 0.15
+static var CASTER_MANA := 0.15
 ## Buffs a Cleric bot keeps on its group, and the ones on itself.
 const CLERIC_GROUP_BUFFS := ["Litany of Fortitude", "Uplifted Spirit"]
 const CLERIC_SELF_BUFFS := ["Inner Flame", "Umbral Guard", "Withering Touch"]
@@ -172,8 +172,8 @@ var trading := false
 ## Walking over to the player (to trade), until this time (seconds).
 var _coming_until := 0.0
 ## Yards from the player that count as there, and how long it keeps trying.
-const COME_REACH := 4.0
-const COME_TIME := 120.0
+static var COME_REACH := 4.0
+static var COME_TIME := 120.0
 var in_party := false
 var command := Command.FOLLOW
 ## How it picks fights in a party ("Assist", "Defend" or "Passive"), or "" for
@@ -190,7 +190,7 @@ const CLASS_ROLES := {
 	ClassicData.CharClass.SPELLSWORD: ["Tank", "Damage"],
 }
 ## Below this share of health, a bot that isn't the healer still heals.
-const EMERGENCY_HEAL := 0.35
+static var EMERGENCY_HEAL := 0.35
 ## Which buff it keeps up in each of its class's categories (BUFF_CATEGORIES):
 ## "Auto" (its own judgement), "None", or a spell's name.
 var buff_choices := {}
@@ -213,7 +213,7 @@ var _think_left := 0.0
 var _dead_for := 0.0
 var _resting := false
 ## How close a bot must pass a vendor to sell its trash.
-const VENDOR_REACH := 15.0
+static var VENDOR_REACH := 15.0
 var _rest_carry := Vector2.ZERO
 var _destination := Vector3.ZERO
 var _has_destination := false
@@ -231,7 +231,7 @@ var _detour: Array[Vector3] = []
 var _leg_start := Vector3.ZERO
 var _detour_until := 0.0
 ## Seconds a detour may take before the bot looks again.
-const DETOUR_TIME := 20.0
+static var DETOUR_TIME := 20.0
 var _sidestep_side := 1.0
 var _stay_at := Vector3.ZERO
 var _roam_left := 0.0
@@ -961,8 +961,8 @@ func _nearest_chest() -> GameObject:
 	return best
 
 
-const CHEST_REACH := 3.0
-const CHEST_SEARCH := 600.0
+static var CHEST_REACH := 3.0
+static var CHEST_SEARCH := 600.0
 
 
 ## Sets off to walk over to the player, to trade.

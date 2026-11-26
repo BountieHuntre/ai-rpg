@@ -7,11 +7,11 @@ extends RefCounted
 const SPELLS_PATH := "res://data/classic/spells.json"
 
 ## Spell ids with special meaning.
-const ATTACK := 6603
+static var ATTACK := 6603
 ## Shoot: repeating shots with the ranged weapon (bow, gun, thrown weapon or
 ## wand), toggled like Attack and known by everyone (classic's wand Shoot id;
 ## classic's Shoot spells aren't in the data).
-const SHOOT := 5019
+static var SHOOT := 5019
 ## Menus of spells on one button (see is_flyout).
 const BOONS := 1000001
 const GREATER_BOONS := 1000002
@@ -22,106 +22,106 @@ const FLYOUTS := {
 ## SpellFamilyName of the classes' own spells (mage to paladin and shaman).
 ## 12 is the Spellsword's, the game's own class (ClassicData.CLASS_FILES).
 const CLASS_SPELL_FAMILIES := [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-const LONG_BUFF_FROM := 300.0
-const LONG_BUFF := 3600.0
-const LONG_BUFF_DURATION_INDEX := 42
-const HOLY_LIGHT_HEAL := 19968
+static var LONG_BUFF_FROM := 300.0
+static var LONG_BUFF := 3600.0
+static var LONG_BUFF_DURATION_INDEX := 42
+static var HOLY_LIGHT_HEAL := 19968
 ## Spent Soul, which Sanctified Ward leaves on its target.
-const WEAKENED_SOUL := 6788
+static var WEAKENED_SOUL := 6788
 
 enum School { PHYSICAL, HOLY, FIRE, NATURE, FROST, SHADOW, ARCANE }
 const SCHOOL_NAMES := ["Physical", "Holy", "Fire", "Nature", "Frost", "Shadow", "Arcane"]
 
 ## spell_template Effect values used here.
 const EFFECT_SCHOOL_DAMAGE := 2
-const EFFECT_DUMMY := 3
+static var EFFECT_DUMMY := 3
 const EFFECT_APPLY_AURA := 6
 const EFFECT_HEAL := 10
-const EFFECT_PERSISTENT_AREA_AURA := 27
+static var EFFECT_PERSISTENT_AREA_AURA := 27
 const EFFECT_ENERGIZE := 30
 const EFFECT_WEAPON_PERCENT_DAMAGE := 31
 ## Weapon strikes: weapon damage plus an amount (Mortal Strike-like).
 const EFFECT_WEAPON_DAMAGE := 58
 const EFFECT_APPLY_AREA_AURA := 35
-const EFFECT_PROFICIENCY := 60
-const EFFECT_SCRIPT := 77
-const EFFECT_RESURRECT := 113
+static var EFFECT_PROFICIENCY := 60
+static var EFFECT_SCRIPT := 77
+static var EFFECT_RESURRECT := 113
 ## Aura types (EffectApplyAuraName) used here.
 const AURA_PERIODIC_DAMAGE := 3
-const AURA_DUMMY := 4
+static var AURA_DUMMY := 4
 const AURA_MOD_THREAT := 10
-const AURA_MOD_TAUNT := 11
-const AURA_MOD_INCREASE_HEALTH := 34
-const AURA_MOD_CRIT_PERCENT := 52
-const AURA_MOD_DISARM := 67
-const AURA_MOD_RESISTANCE_PCT := 101
-const AURA_MOD_FEAR := 7
+static var AURA_MOD_TAUNT := 11
+static var AURA_MOD_INCREASE_HEALTH := 34
+static var AURA_MOD_CRIT_PERCENT := 52
+static var AURA_MOD_DISARM := 67
+static var AURA_MOD_RESISTANCE_PCT := 101
+static var AURA_MOD_FEAR := 7
 const AURA_PERIODIC_HEAL := 8
-const AURA_MOD_DAMAGE_DONE := 13
+static var AURA_MOD_DAMAGE_DONE := 13
 const AURA_PERIODIC_TRIGGER_SPELL := 23
-const AURA_MOD_SILENCE := 27
-const AURA_MOD_STAT := 29
+static var AURA_MOD_SILENCE := 27
+static var AURA_MOD_STAT := 29
 const AURA_MOD_INCREASE_SPEED := 31
 const AURA_MOD_DECREASE_SPEED := 33
-const AURA_MOD_DODGE_PERCENT := 49
+static var AURA_MOD_DODGE_PERCENT := 49
 const AURA_PERIODIC_LEECH := 53
 const AURA_SCHOOL_ABSORB := 69
-const AURA_MECHANIC_IMMUNITY := 77
-const AURA_MOD_DAMAGE_PERCENT_DONE := 79
-const AURA_MOD_DAMAGE_PERCENT_TAKEN := 87
-const AURA_MOD_DETECT_RANGE := 91
-const AURA_MOD_TOTAL_THREAT := 103
-const AURA_FEATHER_FALL := 105
-const AURA_ADD_FLAT_MODIFIER := 107
-const AURA_ADD_PCT_MODIFIER := 108
-const AURA_MOD_HEALING_PCT := 118
-const AURA_MOD_HEALING_DONE_PERCENT := 136
-const AURA_MOD_ATTACK_SPEED := 9
-const AURA_MOD_STUN := 12
-const AURA_MOD_DAMAGE_TAKEN := 14
-const AURA_DAMAGE_SHIELD := 15
+static var AURA_MECHANIC_IMMUNITY := 77
+static var AURA_MOD_DAMAGE_PERCENT_DONE := 79
+static var AURA_MOD_DAMAGE_PERCENT_TAKEN := 87
+static var AURA_MOD_DETECT_RANGE := 91
+static var AURA_MOD_TOTAL_THREAT := 103
+static var AURA_FEATHER_FALL := 105
+static var AURA_ADD_FLAT_MODIFIER := 107
+static var AURA_ADD_PCT_MODIFIER := 108
+static var AURA_MOD_HEALING_PCT := 118
+static var AURA_MOD_HEALING_DONE_PERCENT := 136
+static var AURA_MOD_ATTACK_SPEED := 9
+static var AURA_MOD_STUN := 12
+static var AURA_MOD_DAMAGE_TAKEN := 14
+static var AURA_DAMAGE_SHIELD := 15
 const AURA_PERIODIC_ENERGIZE := 24
-const AURA_MOD_RESISTANCE := 22
-const AURA_MOD_PACIFY := 25
-const AURA_SCHOOL_IMMUNITY := 39
-const AURA_PROC_TRIGGER_SPELL := 42
-const AURA_PROC_TRIGGER_DAMAGE := 43
-const AURA_MOD_BLOCK_PERCENT := 51
-const AURA_MOD_ATTACK_POWER := 99
-const AURA_MOD_TOTAL_STAT_PERCENTAGE := 137
-const AURA_MOD_INCREASE_HEALTH_PERCENT := 133
-const AURA_MOD_POWER_REGEN_PERCENT := 110
+static var AURA_MOD_RESISTANCE := 22
+static var AURA_MOD_PACIFY := 25
+static var AURA_SCHOOL_IMMUNITY := 39
+static var AURA_PROC_TRIGGER_SPELL := 42
+static var AURA_PROC_TRIGGER_DAMAGE := 43
+static var AURA_MOD_BLOCK_PERCENT := 51
+static var AURA_MOD_ATTACK_POWER := 99
+static var AURA_MOD_TOTAL_STAT_PERCENTAGE := 137
+static var AURA_MOD_INCREASE_HEALTH_PERCENT := 133
+static var AURA_MOD_POWER_REGEN_PERCENT := 110
 ## Monster Hunter and Manhunter: damage and crit damage against creature
 ## types (misc value a mask of 1 << (CreatureType - 1)).
-const AURA_MOD_DAMAGE_DONE_VERSUS := 168
-const AURA_MOD_CRIT_DAMAGE_VERSUS := 169
-const AURA_MOD_MELEE_HASTE := 138
-const AURA_RESIST_PUSHBACK := 149
+static var AURA_MOD_DAMAGE_DONE_VERSUS := 168
+static var AURA_MOD_CRIT_DAMAGE_VERSUS := 169
+static var AURA_MOD_MELEE_HASTE := 138
+static var AURA_RESIST_PUSHBACK := 149
 ## Food (health) and drink (mana per 5 seconds).
-const AURA_MOD_REGEN := 84
-const AURA_MOD_POWER_REGEN := 85
+static var AURA_MOD_REGEN := 84
+static var AURA_MOD_POWER_REGEN := 85
 ## AuraInterruptFlags: the aura ends when the unit stands up.
 const AURA_INTERRUPT_NOT_SEATED := 0x80
-const EFFECT_DISPEL := 38
+static var EFFECT_DISPEL := 38
 ## Melee abilities: weapon damage plus a bonus (Mighty Blow), the same with
 ## the weapon speed normalized (Riposte Strike), a charge, a taunt, an
 ## interrupt and a triggered spell.
 const EFFECT_WEAPON_DAMAGE_NOSCHOOL := 17
 const EFFECT_NORMALIZED_WEAPON_DMG := 121
 const EFFECT_CHARGE := 96
-const EFFECT_ATTACK_ME := 114
-const EFFECT_INTERRUPT_CAST := 68
+static var EFFECT_ATTACK_ME := 114
+static var EFFECT_INTERRUPT_CAST := 68
 const EFFECT_TRIGGER_SPELL := 64
 ## Spell power types: mana, rage, and health (Blood Fury costs health).
-const POWER_MANA := 0
-const POWER_RAGE := 1
+static var POWER_MANA := 0
+static var POWER_RAGE := 1
 ## Pets' focus (their abilities' cost).
-const POWER_FOCUS := 2
-const POWER_HEALTH := 4294967294
+static var POWER_FOCUS := 2
+static var POWER_HEALTH := 4294967294
 const EFFECT_POWER_BURN := 62
 ## AuraInterruptFlags: the aura ends when the unit takes damage.
 const AURA_INTERRUPT_DAMAGE := 0x2
-const EFFECT_HEAL_MAX_HEALTH := 67
+static var EFFECT_HEAL_MAX_HEALTH := 67
 ## Attributes / AttributesEx flags.
 const ATTR_PASSIVE := 0x40
 ## Mighty Blow and Sweeping Cut wait for the next melee swing.
@@ -143,8 +143,8 @@ const TARGET_ENEMIES_AROUND := 22
 const TARGET_PARTY := 37
 const TARGET_ANY := 25
 ## creature_template CreatureType values some spells care about.
-const CREATURE_DEMON := 3
-const CREATURE_UNDEAD := 6
+static var CREATURE_DEMON := 3
+static var CREATURE_UNDEAD := 6
 ## AttributesEx2 / AttributesEx3 flags.
 const ATTR_EX2_CANT_CRIT := 0x20000000
 const ATTR_EX3_ALWAYS_HIT := 0x40000
@@ -153,10 +153,10 @@ const ATTR_EX3_DEATH_PERSISTENT := 0x100000
 ## talents: stuns and fears on the unit last this many percent shorter
 ## (Steadfast Glyphs), and critical strikes on it deal this many percent less
 ## (Rooted Stance). Read by Combatant.
-const AURA_CONTROL_DURATION_PCT := 1001
-const AURA_CRIT_DAMAGE_TAKEN_PCT := 1002
+static var AURA_CONTROL_DURATION_PCT := 1001
+static var AURA_CRIT_DAMAGE_TAKEN_PCT := 1002
 ## SPELL_AURA_MOD_SHAPESHIFT: stances and forms.
-const AURA_MOD_SHAPESHIFT := 36
+static var AURA_MOD_SHAPESHIFT := 36
 
 ## Client DBC lookup tables, for the indexes classic Paladin spells use.
 ## Values match the classic spell tooltips (Holy Light 2.5 s, Flash of Light

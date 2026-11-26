@@ -201,7 +201,7 @@ func zone_at(point: Vector3) -> Zone:
 
 
 ## Classic's spell focus for forges (RequiresSpellFocus 3): the zones' forges.
-const FORGE_FOCUS := 3
+static var FORGE_FOCUS := 3
 
 
 ## Whether a spell focus (RequiresSpellFocus) is within its reach of a

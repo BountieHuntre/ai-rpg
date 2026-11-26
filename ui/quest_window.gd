@@ -15,11 +15,11 @@ signal service(npc: Npc, kind: String)
 
 ## Classic INTERACTION_DISTANCE, in yards.
 const RANGE := 5.0
-const WIDTH := 180.0
-const BODY_HEIGHT := 168.0
-const FONT_SIZE := 6
-const TITLE_SIZE := 8
-const ICON := 13.0
+static var WIDTH := 180.0
+static var BODY_HEIGHT := 168.0
+static var FONT_SIZE := 6
+static var TITLE_SIZE := 8
+static var ICON := 13.0
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const GOLD := Color("ffd100")
 const TEXT := Color(0.92, 0.9, 0.84)

@@ -13,10 +13,10 @@ extends Control
 signal message(text: String, is_error: bool)
 
 const SLOT := 15.0
-const GAP := 2.0
-const COLUMNS := 4
-const PAD := 4.0
-const FONT_SIZE := 6
+static var GAP := 2.0
+static var COLUMNS := 4
+static var PAD := 4.0
+static var FONT_SIZE := 6
 const HINT := Color(0.6, 0.6, 0.6)
 const GOLD := Color(1, 0.85, 0.4)
 const EQUIP_LEFT := [

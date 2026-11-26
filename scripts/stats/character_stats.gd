@@ -6,30 +6,30 @@ extends Node
 ## Must be a child of a PlayerUnit (the player or a playerbot), beside its
 ## Combatant; it reads the unit's profile.
 
-const AURA_MOD_RANGED_ATTACK_POWER := 124
-const AURA_MOD_RANGED_HASTE := 140
-const REGEN_TICK := 2.0
+static var AURA_MOD_RANGED_ATTACK_POWER := 124
+static var AURA_MOD_RANGED_HASTE := 140
+static var REGEN_TICK := 2.0
 ## The five-second rule: Spirit mana regen stops for this long after spending mana.
-const MANA_REGEN_DELAY := 5.0
+static var MANA_REGEN_DELAY := 5.0
 
 ## Shield block chance when the character can block.
-const SHIELD_BLOCK_CHANCE := 5.0
+static var SHIELD_BLOCK_CHANCE := 5.0
 ## Sitting raises Spirit health regen by half.
-const SITTING_REGEN := 1.5
+static var SITTING_REGEN := 1.5
 ## Food and drink auras tick on a 5-second period.
-const FOOD_DRINK_PERIOD := 5.0
+static var FOOD_DRINK_PERIOD := 5.0
 ## The Parry passive, trained at level 8 by Paladins.
-const PARRY_SPELL := 3127
+static var PARRY_SPELL := 3127
 ## Rage lost each tick out of combat.
-const RAGE_DECAY := 3.0
+static var RAGE_DECAY := 3.0
 ## Talent aura types read here.
-const AURA_MOD_PARRY_PERCENT := 47
-const AURA_MOD_MANA_PERCENT := 132
-const AURA_MOD_MANA_REGEN_INTERRUPT := 134
-const AURA_MOD_BASE_RESISTANCE_PCT := 142
-const AURA_MOD_BLOCK_VALUE_PCT := 150
+static var AURA_MOD_PARRY_PERCENT := 47
+static var AURA_MOD_MANA_PERCENT := 132
+static var AURA_MOD_MANA_REGEN_INTERRUPT := 134
+static var AURA_MOD_BASE_RESISTANCE_PCT := 142
+static var AURA_MOD_BLOCK_VALUE_PCT := 150
 ## Spirit's Guidance: spell damage and healing from a percent of Spirit.
-const AURA_MOD_SPELL_DAMAGE_OF_STAT := 174
+static var AURA_MOD_SPELL_DAMAGE_OF_STAT := 174
 
 var race: ClassicData.Race:
 	get:

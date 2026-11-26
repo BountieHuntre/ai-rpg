@@ -10,12 +10,12 @@ extends RefCounted
 ## recipes go in its known_spells like any spell.
 
 ## At most this many primary professions (classic's MaxPrimaryTradeSkill).
-const MAX_PRIMARY := 2
+static var MAX_PRIMARY := 2
 ## CONFIG_UINT32_SKILL_CHANCE_ORANGE, YELLOW, GREEN, GREY: per mille after x10.
-const CHANCE_ORANGE := 100
-const CHANCE_YELLOW := 75
-const CHANCE_GREEN := 25
-const CHANCE_GREY := 0
+static var CHANCE_ORANGE := 100
+static var CHANCE_YELLOW := 75
+static var CHANCE_GREEN := 25
+static var CHANCE_GREY := 0
 ## Racial skill bonuses (classic's Tauren Cultivation is the Hornkin's):
 ## race -> { profession: bonus }, added to the skill used, never to the one
 ## that rises.

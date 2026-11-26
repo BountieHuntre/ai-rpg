@@ -10,11 +10,11 @@ extends StaticBody3D
 ## the camera's clicks find it. Playerbots take from it too (take_for_bot).
 
 const DATA_PATH := "res://data/classic/gameobjects.json"
-const TYPE_QUESTGIVER := 2
-const TYPE_CHEST := 3
+static var TYPE_QUESTGIVER := 2
+static var TYPE_CHEST := 3
 ## Objects to use (classic's goobers): the Kolkar attack plans, taken by
 ## clicking; Maren's Grave, where remains are buried with an item's spell.
-const TYPE_GOOBER := 10
+static var TYPE_GOOBER := 10
 ## Treasure chests (the caves' Weathered Strongboxes): open to anyone while
 ## they hold loot, not just for quests.
 const TREASURE := [2843, 106318]

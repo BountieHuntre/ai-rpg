@@ -17,19 +17,19 @@ signal changed
 
 ## Where it keeps when following: behind and to the left of its owner.
 const FOLLOW_OFFSET := Vector3(-1.6, 0.0, 1.6)
-const RUN_SPEED := 7.0
-const ACCELERATION := 60.0
-const GRAVITY := 19.29
+static var RUN_SPEED := 7.0
+static var ACCELERATION := 60.0
+static var GRAVITY := 19.29
 ## Aggressive: enemies this near its owner are attacked.
 const AGGRESSIVE_RADIUS := 15.0
 ## Too far from its owner (a teleport, a long fall): it comes back to them.
-const LEASH := 60.0
+static var LEASH := 60.0
 ## Health back a second out of combat: a share of its maximum (CMaNGOS
 ## regenerates pets as creatures out of combat).
-const REGEN_SHARE := 0.02
-const THINK := 0.25
+static var REGEN_SHARE := 0.02
+static var THINK := 0.25
 ## The hidden passive whose trigger is Frenzy's attack speed.
-const FRENZY_PASSIVE := 20784
+static var FRENZY_PASSIVE := 20784
 
 var owner_unit: PlayerUnit
 var record: Dictionary = {}

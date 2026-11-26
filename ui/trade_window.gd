@@ -21,15 +21,15 @@ signal message(text: String, is_error: bool)
 signal hovered(item: Dictionary)
 signal closed
 
-const SLOTS := 6
+static var SLOTS := 6
 ## The bot's goods panel, beside the trade window.
-const WARES_WIDTH := 110.0
-const WARES_GAP := 3.0
+static var WARES_WIDTH := 110.0
+static var WARES_GAP := 3.0
 const RANGE := 11.11
-const WIDTH := 200.0
-const COLUMN := 94.0
-const ROW := 13.0
-const FONT_SIZE := 6
+static var WIDTH := 200.0
+static var COLUMN := 94.0
+static var ROW := 13.0
+static var FONT_SIZE := 6
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const SLOT_BACK := Color(0.16, 0.16, 0.2)
 const ACCEPTED := Color(0.15, 0.4, 0.15, 0.5)

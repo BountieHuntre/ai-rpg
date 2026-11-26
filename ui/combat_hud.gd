@@ -4,30 +4,30 @@ extends CanvasLayer
 ## Built in code at full window resolution, and rebuilt when the window resizes.
 ## Layout values are in units of 1/270 of the window height.
 
-const BASE_HEIGHT := 270.0
-const FONT_SIZE := 8
+static var BASE_HEIGHT := 270.0
+static var FONT_SIZE := 8
 const BAR_BACK := Color(0.08, 0.08, 0.1, 0.85)
 const TARGET_HEALTH := Color(0.75, 0.2, 0.2)
 ## The cast bar sits above the action bar and the stance bar.
-const CAST_BAR_Y_FROM_BOTTOM := 68.0
+static var CAST_BAR_Y_FROM_BOTTOM := 68.0
 ## Gap from the cast bar's top to the stance bar's.
-const CAST_BAR_ABOVE_STANCE := 17.0
-const MESSAGE_TIME := 2.0
-const FLOAT_TIME := 1.0
-const FLOAT_SPEED := 18.0
-const FLOAT_HEIGHT := 2.5
+static var CAST_BAR_ABOVE_STANCE := 17.0
+static var MESSAGE_TIME := 2.0
+static var FLOAT_TIME := 1.0
+static var FLOAT_SPEED := 18.0
+static var FLOAT_HEIGHT := 2.5
 ## Numbers cycle through these so ones landing together don't stack.
 const FLOAT_OFFSETS: Array[Vector2] = [Vector2(0, 0), Vector2(-14, 4), Vector2(14, 4)]
-const BAR_FONT_SIZE := 7
-const XP_FONT_SIZE := 5
-const CRIT_FONT_SIZE := 12
-const SHEET_FONT_SIZE := 6
-const BANNER_FONT_SIZE := 18
-const BANNER_TIME := 2.5
+static var BAR_FONT_SIZE := 7
+static var XP_FONT_SIZE := 5
+static var CRIT_FONT_SIZE := 12
+static var SHEET_FONT_SIZE := 6
+static var BANNER_FONT_SIZE := 18
+static var BANNER_TIME := 2.5
 ## Show the worn gear warning at or below this share of durability.
-const DURABILITY_WARNING := 0.2
-const QUEST_MARKER_SIZE := 14
-const TRACKER_WIDTH := 108.0
+static var DURABILITY_WARNING := 0.2
+static var QUEST_MARKER_SIZE := 14
+static var TRACKER_WIDTH := 108.0
 const GREY := Color(0.6, 0.6, 0.6)
 const QUEST_DONE := Color(0.45, 0.9, 0.45)
 ## creature_template CreatureType names.
@@ -35,22 +35,22 @@ const CREATURE_TYPES := {
 	1: "Beast", 2: "Dragonkin", 3: "Demon", 4: "Elemental", 5: "Giant", 6: "Undead",
 	7: "Humanoid", 8: "Critter", 9: "Mechanical",
 }
-const QUEST_NOTE_TIME := 3.0
-const NAMEPLATE_HEIGHT := 2.2
-const NAMEPLATE_RANGE := 40.0
+static var QUEST_NOTE_TIME := 3.0
+static var NAMEPLATE_HEIGHT := 2.2
+static var NAMEPLATE_RANGE := 40.0
 ## Party frames fade for members further away than this, as in classic.
-const PARTY_RANGE := 40.0
+static var PARTY_RANGE := 40.0
 const PARTY_FRAME_SIZE := Vector2(80, 25)
 ## A party Ranger's pet strip under its frame: its height and text size.
-const PARTY_PET_STRIP := 10.0
-const PET_STRIP_FONT := 5
+static var PARTY_PET_STRIP := 10.0
+static var PET_STRIP_FONT := 5
 ## The player and target frames' bar width, and the least gap between a
 ## frame's name and its level; frames widen for longer names.
-const FRAME_INNER := 84.0
+static var FRAME_INNER := 84.0
 ## Portrait squares in the player and target frames, and in party frames.
-const PORTRAIT := 31.0
-const PARTY_PORTRAIT := 21.0
-const NAME_LEVEL_GAP := 4.0
+static var PORTRAIT := 31.0
+static var PARTY_PORTRAIT := 21.0
+static var NAME_LEVEL_GAP := 4.0
 const PARTY_XP := Color(0.55, 0.3, 0.85)
 ## Unit menu entries.
 enum MenuItem { WHISPER, INVITE, REMOVE, FOLLOW, STAY, TRADE, CANCEL }
@@ -71,7 +71,7 @@ var _player_mana: Control
 var _player_mana_text: Label
 ## The Spellsword's Resonance: five gems along the player frame's foot.
 var _resonance: Control
-const RESONANCE_GEM := 4.2
+static var RESONANCE_GEM := 4.2
 var _player_level: Label
 var _player_xp: Control
 var _player_xp_text: Label
@@ -104,8 +104,8 @@ var _target_cast: Control
 var _target_auras: Control
 var _target_auras_key := ""
 var _target_auras_height := 0.0
-const TARGET_AURA := 10.0
-const TARGET_AURAS_PER_ROW := 8
+static var TARGET_AURA := 10.0
+static var TARGET_AURAS_PER_ROW := 8
 var _target_cast_fill: Control
 var _target_cast_name: Label
 var _message: Label
@@ -155,7 +155,7 @@ var _unit_tooltip: ItemTooltip
 var _unit_lines: Array = []
 var _chat: ChatFrame
 ## Show Frame Rate: frames per second, in the top right corner of the screen.
-const FPS_WIDTH := 30.0
+static var FPS_WIDTH := 30.0
 var _fps: Label
 ## Recent loot messages as [text, seconds left].
 ## Party frames: { "bot", "frame", "name", "level", "health", "mana" }.

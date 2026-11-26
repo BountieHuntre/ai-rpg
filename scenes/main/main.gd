@@ -2,9 +2,9 @@ extends Node
 ## Root scene: wires the camera, player and HUD together, keeps the low-res game
 ## view fitted to the window, and handles global input.
 
-const RESTART_DELAY := 3.0
+static var RESTART_DELAY := 3.0
 ## Saves this often, as well as on loot, level-up, quitting and death.
-const AUTOSAVE_INTERVAL := 30.0
+static var AUTOSAVE_INTERVAL := 30.0
 ## Shift+F12 deletes the save and starts a new character.
 const RESET_KEY := KEY_F12
 
@@ -194,7 +194,7 @@ const VIEW_DISTANCE := { "Near": [120.0, 0.0045], "Normal": [200.0, 0.0025], "Fa
 ## about twice Low, and only while the camera is near a room.
 const SHAFT_GRID := { "Low": [128, 64], "High": [192, 96] }
 ## How near a room's dust the camera must be for its shafts to be drawn.
-const SHAFT_REACH := 8.0
+static var SHAFT_REACH := 8.0
 var _shaft_grid: Array = []
 var _shafts_left := 0.0
 
@@ -243,9 +243,9 @@ func _update_shafts(delta: float) -> void:
 
 
 ## The sky's ambient light inside a room, as a share of outdoors'.
-const INDOOR_AMBIENT := 0.25
+static var INDOOR_AMBIENT := 0.25
 ## Seconds the ambient light takes to fade between outdoors and in.
-const AMBIENT_FADE := 0.6
+static var AMBIENT_FADE := 0.6
 var _outdoor_ambient := -1.0
 var _indoors := false
 

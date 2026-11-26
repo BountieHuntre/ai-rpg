@@ -5,7 +5,7 @@ extends RefCounted
 ## Player::CanTakeQuest, CanCompleteQuest and RewardQuest in CMaNGOS classic.
 
 ## MAX_QUEST_LOG_SIZE in classic.
-const MAX_QUESTS := 20
+static var MAX_QUESTS := 20
 const ERR_LOG_FULL := "Your quest log is full."
 const ERR_INCOMPLETE := "You haven't finished that quest."
 const ERR_CHOOSE := "Choose a reward first."
@@ -367,7 +367,7 @@ static func complete(id: int, choice: int, progression: Progression) -> String:
 ## least every CACHE_FRAMES frames (levelling makes new quests available).
 static var _npc_cache: Dictionary = {}
 static var _cache_frame := -1000
-const CACHE_FRAMES := 15
+static var CACHE_FRAMES := 15
 
 
 static func clear_cache() -> void:

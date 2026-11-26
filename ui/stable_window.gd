@@ -8,10 +8,10 @@ extends Control
 
 signal message(text: String, is_error: bool)
 
-const WIDTH := 190.0
-const FONT_SIZE := 6
-const ROW := 13.0
-const MAX_SLOTS := 2
+static var WIDTH := 190.0
+static var FONT_SIZE := 6
+static var ROW := 13.0
+static var MAX_SLOTS := 2
 ## The price of each slot, in copper.
 const SLOT_PRICES := [500, 5000]
 

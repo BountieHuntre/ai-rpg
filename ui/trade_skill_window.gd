@@ -16,12 +16,12 @@ signal spell_hovered(spell_id: int)
 ## An enchant recipe wants the item it goes on picked (the HUD has the bags).
 signal pick_requested(recipe_id: int, times: int)
 
-const WIDTH := 190.0
+static var WIDTH := 190.0
 const LIST_HEIGHT := 96.0
-const ROW := 10.0
-const FONT_SIZE := 6
+static var ROW := 10.0
+static var FONT_SIZE := 6
 const SELECTED := Color(1, 1, 1, 0.12)
-const ICON := 14.0
+static var ICON := 14.0
 const COLORS := CombatHud.DIFFICULTY_COLORS
 
 var profession := ""

@@ -7,16 +7,16 @@ extends RefCounted
 ## agree in chat. Saved in the bot's roster entry.
 
 ## Stacks it keeps; when full, the cheapest goes to a vendor.
-const MAX_STACKS := 12
+static var MAX_STACKS := 12
 ## Item bonding that can't be traded: binds when picked up, quest items.
 const UNTRADEABLE := [1, 4]
 ## What bots pay for items: their own rate over the vendor price, and the
 ## most they'll go to when haggled.
-const BUY_RATE_MIN := 1.1
-const BUY_RATE_MAX := 1.4
-const BUY_CEILING := 1.6
+static var BUY_RATE_MIN := 1.1
+static var BUY_RATE_MAX := 1.4
+static var BUY_CEILING := 1.6
 ## The least they'll sell for, haggled down: times the vendor price.
-const SELL_FLOOR := 1.5
+static var SELL_FLOOR := 1.5
 
 ## { "id", "count" } stacks.
 var stacks: Array[Dictionary] = []

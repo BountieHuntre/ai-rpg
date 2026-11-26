@@ -8,7 +8,7 @@ enum CharClass { WARRIOR = 1, PALADIN = 2, HUNTER = 3, ROGUE = 4, PRIEST = 5, SH
 enum Race { HUMAN = 1, ORC = 2, DWARF = 3, NIGHT_ELF = 4, UNDEAD = 5, TAUREN = 6, GNOME = 7, TROLL = 8 }
 enum Stat { STRENGTH, AGILITY, STAMINA, INTELLECT, SPIRIT }
 
-const MAX_LEVEL := 60
+static var MAX_LEVEL := 60
 const TABLES_PATH := "res://data/classic/player_tables.json"
 const CHARACTERS_PATH := "res://data/classic/characters.json"
 ## The game's own classes' data (tools/class_designs/build_class_data.py), in

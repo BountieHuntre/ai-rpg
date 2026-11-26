@@ -9,8 +9,8 @@ extends StaticBody3D
 ## the camera's clicks find it.
 
 ## Further than this from the camera it isn't drawn.
-const DRAW_RANGE := 110.0
-const HERB_SCALE := 1.8
+static var DRAW_RANGE := 110.0
+static var HERB_SCALE := 1.8
 
 var entry := 0
 ## "herb" or "ore".

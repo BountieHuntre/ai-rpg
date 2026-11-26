@@ -18,8 +18,8 @@ const CLASSES := [[1, "warrior", "man_at_arms"], [2, "paladin", "templar"], [3, 
 	[5, "priest", "cleric"], [10, "spellsword", "spellsword"]]
 ## New spells and talents a design adds take ids from here up (no classic
 ## spell or the Spellsword's uses them).
-const NEW_SPELL_IDS := 950000
-const NEW_TALENT_IDS := 9500
+static var NEW_SPELL_IDS := 950000
+static var NEW_TALENT_IDS := 9500
 ## Side tables of spells.json keyed by spell id, kept in a spell's design.
 const SIDE_TABLES := ["judgement_procs", "holy_shock", "seal_of_righteousness_procs"]
 

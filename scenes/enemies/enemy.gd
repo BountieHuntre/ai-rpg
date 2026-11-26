@@ -10,24 +10,24 @@ extends CharacterBody3D
 enum State { IDLE, CHASE, RETURN, DEAD }
 
 const CREATURES_PATH := "res://data/classic/creatures.json"
-const CREATURE_TYPE_HUMANOID := 7
+static var CREATURE_TYPE_HUMANOID := 7
 ## Dead units move to this physics layer so their corpses can be clicked.
-const CORPSE_LAYER := 4
-const UNIT_LAYER := 2
+static var CORPSE_LAYER := 4
+static var UNIT_LAYER := 2
 ## Creature run speed is its SpeedRun times the base run speed of 7 yards/s,
 ## and walk speed its SpeedWalk times 2.5 yards/s.
-const BASE_RUN_SPEED := 7.0
-const BASE_WALK_SPEED := 2.5
+static var BASE_RUN_SPEED := 7.0
+static var BASE_WALK_SPEED := 2.5
 ## RandomMovementGenerator in CMaNGOS: wait 0.5 to 10 s between wanders.
-const WANDER_PAUSE_MIN := 0.5
-const WANDER_PAUSE_MAX := 10.0
-const CREATURE_TYPE_BEAST := 1
+static var WANDER_PAUSE_MIN := 0.5
+static var WANDER_PAUSE_MAX := 10.0
+static var CREATURE_TYPE_BEAST := 1
 ## ThreatManager in CMaNGOS: a creature changes victim only when another unit
 ## has 110% of the current victim's threat in melee range, 130% beyond it.
-const THREAT_SWITCH_MELEE := 1.1
-const THREAT_SWITCH_RANGED := 1.3
+static var THREAT_SWITCH_MELEE := 1.1
+static var THREAT_SWITCH_RANGED := 1.3
 ## Healing draws half its amount as threat (HostileRefManager::threatAssist).
-const HEAL_THREAT := 0.5
+static var HEAL_THREAT := 0.5
 ## Placeholder looks until there are models: [size, body color]. Beasts lie
 ## along their length.
 const LOOKS := {
@@ -315,7 +315,7 @@ const LOOKS := {
 @export var respawn_override := -1.0
 ## Respawn times are this share of classic's (unlike classic, which with few
 ## players about leaves hunting grounds empty too long).
-const RESPAWN_SCALE := 0.5
+static var RESPAWN_SCALE := 0.5
 @export var wander_override := -1.0
 ## Never attacks on sight, whatever its classic faction: it only fights back.
 @export var passive := false
@@ -373,11 +373,11 @@ var _victim: Combatant
 ## Seconds to the next look around for players to attack (staggered, so
 ## creatures don't all look on the same frame).
 var _aggro_left := randf() * AGGRO_CHECK
-const AGGRO_CHECK := 0.2
+static var AGGRO_CHECK := 0.2
 ## Player units by square of the world, GRID yards on a side, made once a
 ## physics frame, so a creature looking for someone to attack only checks
 ## the squares around it. Classic's widest aggro radius is 45 yards.
-const GRID := 50.0
+static var GRID := 50.0
 static var _grid: Dictionary = {}
 static var _grid_frame := -1
 static var _player_at := Vector3.ZERO
@@ -390,8 +390,8 @@ var far_clock := 0.0
 ## Seconds left fleeing in a panic (flee), or 0.
 var panic_left := 0.0
 ## Call for help on a pull: who it noted, against whom, and when they come.
-const ASSIST_RADIUS := 5.0
-const ASSIST_DELAY := 2.0
+static var ASSIST_RADIUS := 5.0
+static var ASSIST_DELAY := 2.0
 var _assist_left := -1.0
 var _assist_receivers: Array[Enemy] = []
 var _assist_enemy: Combatant
@@ -411,9 +411,9 @@ var _wander_wait := 0.0
 @onready var _feedback: UnitFeedback = $UnitFeedback
 @onready var _sparkle := _build_sparkle()
 
-const SPARKLE_SPIN := 2.0
+static var SPARKLE_SPIN := 2.0
 ## Extra yards around a corpse's body that still count as clicking it.
-const CORPSE_CLICK_MARGIN := 0.2
+static var CORPSE_CLICK_MARGIN := 0.2
 
 
 ## A creature_template entry's data from data/classic/creatures.json.

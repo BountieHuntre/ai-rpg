@@ -9,10 +9,10 @@ extends Control
 
 signal message(text: String, is_error: bool)
 
-const WIDTH := 170.0
+static var WIDTH := 170.0
 const LIST_HEIGHT := 120.0
-const ROW := 11.0
-const FONT_SIZE := 6
+static var ROW := 11.0
+static var FONT_SIZE := 6
 const AVAILABLE := Color(0.25, 1, 0.25)
 const UNAVAILABLE := Color(1, 0.25, 0.25)
 const KNOWN := Color(0.55, 0.55, 0.55)

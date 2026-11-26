@@ -3,14 +3,14 @@ extends Node
 ## little pitch variation so repeats don't sound identical.
 
 const SOUND_DIR := "res://assets/audio/rpg_sfx/"
-const POOL_SIZE := 12
-const PITCH_VARIATION := 0.06
+static var POOL_SIZE := 12
+static var PITCH_VARIATION := 0.06
 ## Every sound's base level: three quarters of the old -6 dB.
 const VOLUME_DB := -6.0 + 20.0 * log(0.75) / log(10.0)
 ## World sounds fade with distance from you: full within NEAR, nothing
 ## beyond HEARING_RANGE, and a smooth falloff between.
-const NEAR := 4.0
-const HEARING_RANGE := 40.0
+static var NEAR := 4.0
+static var HEARING_RANGE := 40.0
 
 const SOUNDS: Dictionary[String, Array] = {
 	"swing": ["blade_01", "blade_02", "blade_03"],

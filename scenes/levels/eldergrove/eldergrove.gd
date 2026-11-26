@@ -16,15 +16,15 @@ extends Zone
 
 const ZONE_NAME := "Eldergrove Isle"
 const CENTER := Vector2(-2000, -4200)
-const SIZE := 1200.0
-const STEP := 2.5
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.4
-const SEED := 5401
+static var SIZE := 1200.0
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.4
+static var SEED := 5401
 
 const TOWN := Vector2(-2080, -4380)
 const TOWN_HEIGHT := 6.0
-const TOWN_FLAT := 42.0
+static var TOWN_FLAT := 42.0
 const GRAVEYARD := Vector3(-2080, TOWN_HEIGHT, -4350)
 const GRAVEYARD_FACING := PI
 const LAKE := Vector2(-1720, -4250)
@@ -56,14 +56,14 @@ const FLATS := [
 	[Vector2(-2560, -4200), 14.0, 8.0],   # the Silverbough Gate
 	[Vector2(-1786, -4250), 8.0, 3.0],    # Denalan's camp on the lake shore
 ]
-const GLOAMROCK := 0
-const STARBREEZE := 1
-const DEN := 2
-const MOONWELLS := 3
-const HOLD := 4
-const GLADE := 5
-const GATE := 6
-const DENALAN := 7
+static var GLOAMROCK := 0
+static var STARBREEZE := 1
+static var DEN := 2
+static var MOONWELLS := 3
+static var HOLD := 4
+static var GLADE := 5
+static var GATE := 6
+static var DENALAN := 7
 const HILLS := [
 	[Vector2(-1945, -4625), 34.0, 18.0],  # the Gloamrock
 	[Vector2(-2440, -4170), 34.0, 14.0],  # the barrow mound

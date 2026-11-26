@@ -16,18 +16,18 @@ extends Zone
 
 const ZONE_NAME := "Harrowfield"
 const CENTER := Vector2(0, 700)
-const SIZE := 1000.0
+static var SIZE := 1000.0
 ## Yards between the ground's vertices (Ashford Vale's are 2; this one is big).
-const STEP := 2.5
-const WATER_LEVEL := 1.4
-const STREAM_BED := 0.2
-const STREAM_WIDTH := 4.0
-const ROAD_WIDTH := 2.6
-const SEED := 2203
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
+static var STREAM_BED := 0.2
+static var STREAM_WIDTH := 4.0
+static var ROAD_WIDTH := 2.6
+static var SEED := 2203
 
 const VILLAGE := Vector2(0, 440)
 const VILLAGE_HEIGHT := 5.0
-const VILLAGE_FLAT := 30.0
+static var VILLAGE_FLAT := 30.0
 ## Wexford's churchyard, where the dead of Harrowfield come back.
 const GRAVEYARD := Vector3(-18, VILLAGE_HEIGHT, 452)
 const GRAVEYARD_FACING := -PI / 2
@@ -77,24 +77,24 @@ const FLATS := [
 	[Vector2(-420, 520), 8.0, 5.5],   # west garrison
 	[Vector2(332, 592), 10.0, 3.0],   # mirefin village
 ]
-const FARM := 0
-const PATCH := 1
-const DELVE := 2
-const FARMSTEAD := 3
-const GNOLL_CAMP := 4
-const SOUTH_WATCH := 5
-const HUT := 6
-const COTTAGE := 7
-const COPPERHOLLOW := 8
-const LUMBER_CAMP := 9
-const TOWER := 10
-const VINEYARD := 11
-const LANDING := 12
-const GARRISON := 13
-const MIREFIN_VILLAGE := 14
+static var FARM := 0
+static var PATCH := 1
+static var DELVE := 2
+static var FARMSTEAD := 3
+static var GNOLL_CAMP := 4
+static var SOUTH_WATCH := 5
+static var HUT := 6
+static var COTTAGE := 7
+static var COPPERHOLLOW := 8
+static var LUMBER_CAMP := 9
+static var TOWER := 10
+static var VINEYARD := 11
+static var LANDING := 12
+static var GARRISON := 13
+static var MIREFIN_VILLAGE := 14
 ## The farm's ploughed fields, round its house: center and radius.
 const FIELDS := Vector2(-190, 482)
-const FIELDS_RADIUS := 52.0
+static var FIELDS_RADIUS := 52.0
 ## Rounded hills: [center, radius, height].
 const HILLS := [
 	[Vector2(-345, 332), 50.0, 28.0],  # the Old Delve's hill
@@ -108,7 +108,7 @@ const HILLS := [
 ]
 const LAKE := Vector2(270, 560)
 const LAKE_RADIUS := 55.0
-const LAKE_BED := -0.6
+static var LAKE_BED := -0.6
 const STREAM := [
 	Vector2(250, 612), Vector2(190, 690), Vector2(90, 745), Vector2(0, 760),
 	Vector2(-120, 755), Vector2(-250, 790), Vector2(-380, 800), Vector2(-510, 830),
@@ -149,10 +149,10 @@ const WOODS := [
 	[Vector2(-60, 1120), 60.0],
 ]
 ## Where the south road crosses the stream.
-const BRIDGE_X := 10.0
-const BRIDGE_START := 748.0
-const BRIDGE_END := 769.0
-const BRIDGE_RAMP := 8.0
+static var BRIDGE_X := 10.0
+static var BRIDGE_START := 748.0
+static var BRIDGE_END := 769.0
+static var BRIDGE_RAMP := 8.0
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
@@ -746,8 +746,8 @@ func _build_mirefin_village() -> void:
 # attempts scale with the zone's area, so it's as wooded as the vale.
 
 ## Placement attempts per 400 by 400 yards (Ashford Vale's size).
-const TREE_ATTEMPTS := 7000
-const ROCK_ATTEMPTS := 1500
+static var TREE_ATTEMPTS := 7000
+static var ROCK_ATTEMPTS := 1500
 
 
 func _area_share() -> float:

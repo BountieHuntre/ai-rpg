@@ -13,17 +13,17 @@ extends Zone
 
 const ZONE_NAME := "The Tallgrass"
 const CENTER := Vector2(-900, 400)
-const SIZE := 1200.0
-const STEP := 2.5
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.6
-const SEED := 4701
+static var SIZE := 1200.0
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.6
+static var SEED := 4701
 
 const TOWN := Vector2(-760, 640)
 const TOWN_HEIGHT := 6.0
-const TOWN_FLAT := 40.0
+static var TOWN_FLAT := 40.0
 const GRAVEYARD := Vector3(-772, TOWN_HEIGHT, 668)
-const GRAVEYARD_FACING := 0.0
+static var GRAVEYARD_FACING := 0.0
 
 const PLACES := [
 	["Coldhoof Well", Vector2(-640, 700), 12.0],
@@ -57,11 +57,11 @@ const SPELL_FOCUSES := [
 	[2911, Vector2(-1080, 560)],
 	[2909, Vector2(-620, 260)],
 ]
-const WELLS := 0
-const STONES := 1
-const DERRICK := 2
-const ASHMANE := 3
-const LIFTS := 4
+static var WELLS := 0
+static var STONES := 1
+static var DERRICK := 2
+static var ASHMANE := 3
+static var LIFTS := 4
 const HILLS := [
 	[Vector2(-1380, 420), 90.0, 24.0],  # the Skyrend cliffs
 	[Vector2(-1310, 860), 40.0, 10.0],
@@ -163,8 +163,8 @@ const ENCLOSURES := [
 	[-739.5, 629.0, -732.5, 643.0, Vector2(-743.5, 636), Vector2(-737.5, 636)],  # the inn, door west
 	[-787.5, 630.0, -780.5, 642.0, Vector2(-776.5, 636), Vector2(-782.5, 636)],  # the trainers', door east
 ]
-const TREE_ATTEMPTS := 9000
-const ROCK_ATTEMPTS := 3000
+static var TREE_ATTEMPTS := 9000
+static var ROCK_ATTEMPTS := 3000
 
 
 func _ready() -> void:
@@ -491,12 +491,8 @@ func _normal_at(point: Vector2, y: float) -> Vector3:
 ## south), with a warm lamp inside.
 func _longhouse(parent: Node3D, at: Vector3, length: float, yaw := 0.0, depth := 7.0) -> void:
 	place_baked(parent, "longhouse", Transform3D(Basis(Vector3.UP, yaw) * Basis().scaled(Vector3(length / 14.0, 1.0, depth / 7.0)), at))
-	var lamp := OmniLight3D.new()
-	lamp.light_color = Color(1.0, 0.75, 0.45)
-	lamp.omni_range = length * 0.7
-	lamp.light_energy = 0.9
-	lamp.position = at + Vector3(0, 2.8, 0)
-	parent.add_child(lamp)
+	# Its lamp, flickering.
+	Fire.make(parent, at + Vector3(0, 2.62, 0), 0.0, length * 0.7, 0.9, Color(1.0, 0.75, 0.45))
 
 
 ## Open ground: not on roads, in the village or on the camps.

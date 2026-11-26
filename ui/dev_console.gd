@@ -4,9 +4,9 @@ extends Control
 ## commands. Items and spells can be given by id or by (part of) their name.
 ## Sizes are in HUD units (1/270 of the window height), times the UI scale.
 
-const FONT_SIZE := 7
-const HEIGHT := 110.0
-const MAX_LINES := 200
+static var FONT_SIZE := 7
+static var HEIGHT := 110.0
+static var MAX_LINES := 200
 const BACK := Color(0.02, 0.02, 0.05, 0.88)
 const ECHO := Color(0.6, 0.8, 1)
 const ERROR := Color(1, 0.4, 0.35)
@@ -125,6 +125,9 @@ func _input(event: InputEvent) -> void:
 	if key and key.pressed and not key.echo and key.physical_keycode == KEY_QUOTELEFT:
 		# No console in release builds.
 		if not Settings.developer_tools():
+			return
+		# Typed into another text box, it's only typing.
+		if Settings.typing() and get_viewport().gui_get_focus_owner() != _entry:
 			return
 		# The Developer options can turn the console off; it can always close.
 		if visible or Settings.get_value("dev_console"):

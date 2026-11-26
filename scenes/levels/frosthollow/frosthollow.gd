@@ -11,15 +11,15 @@ extends Zone
 
 const ZONE_NAME := "Frosthollow"
 const CENTER := Vector2(-900, -1000)
-const SIZE := 400.0
-const STEP := 2.0
-const WATER_LEVEL := 0.4
-const ROAD_WIDTH := 2.4
-const SEED := 5101
+static var SIZE := 400.0
+static var STEP := 2.0
+static var WATER_LEVEL := 0.4
+static var ROAD_WIDTH := 2.4
+static var SEED := 5101
 
 const HUB := Vector2(-890, -1000)
 const HUB_HEIGHT := 6.0
-const HUB_FLAT := 34.0
+static var HUB_FLAT := 34.0
 ## Where Dwarves and Gnomes wake and the dead of Frosthollow come back: before
 ## the hall's doors, facing south.
 const GRAVEYARD := Vector3(-890, HUB_HEIGHT, -980)
@@ -41,10 +41,10 @@ const FLATS := [
 	[Vector2(-1010, -1150), 16.0, 6.0],  # before the Troll Caves
 	[Vector2(-805, -1065), 16.0, 4.5],   # the trogg diggings
 ]
-const TAVIN := 0
-const GERRIN := 1
-const CAVES := 2
-const DIGGINGS := 3
+static var TAVIN := 0
+static var GERRIN := 1
+static var CAVES := 2
+static var DIGGINGS := 3
 const HILLS := [
 	[Vector2(-1030, -1185), 40.0, 20.0],  # the hill the Troll Caves run into
 	[Vector2(-890, -1060), 30.0, 12.0],   # the rise behind the Hollow Hall

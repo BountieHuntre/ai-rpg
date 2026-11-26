@@ -8,11 +8,11 @@ extends RefCounted
 ## the bigger the bag can be.
 
 ## The bags by size: entry 900700 holds 6 slots, each next one 2 more.
-const FIRST_BAG := 900700
-const SMALLEST := 6
+static var FIRST_BAG := 900700
+static var SMALLEST := 6
 ## Normal creatures from this level drop 14-24 slot bags, at this chance (%).
-const BAG_LEVEL := 8
-const BAG_CHANCE := 0.4
+static var BAG_LEVEL := 8
+static var BAG_CHANCE := 0.4
 ## Elites and rares, then bosses: their chance (%) of a 26-48 slot bag.
 const BIG_BAG_CHANCE := { 1: 2.0, 2: 4.0, 4: 4.0, 3: 15.0 }
 

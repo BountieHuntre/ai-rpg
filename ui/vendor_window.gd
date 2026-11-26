@@ -12,10 +12,10 @@ signal hovered(item: Dictionary)
 const VENDORS_PATH := "res://data/classic/vendors.json"
 ## Classic INTERACTION_DISTANCE, in yards.
 const RANGE := 5.0
-const WIDTH := 150.0
-const ROW := 16.0
-const ICON := 13.0
-const FONT_SIZE := 6
+static var WIDTH := 150.0
+static var ROW := 16.0
+static var ICON := 13.0
+static var FONT_SIZE := 6
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const PRICE := Color(1, 0.85, 0.4)
 const TOO_EXPENSIVE := Color(1, 0.3, 0.3)

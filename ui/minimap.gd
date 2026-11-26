@@ -14,16 +14,16 @@ extends Control
 ## Diameter in HUD units, and the gap to the screen's top right corner.
 ## Tracked creatures' dots (the Ranger's Track Beasts...).
 const TRACKED_COLOR := Color(1.0, 0.85, 0.3)
-const SIZE := 72.0
-const MARGIN := 4.0
+static var SIZE := 72.0
+static var MARGIN := 4.0
 ## Room above the map for the zone name.
-const TITLE := 9.0
+static var TITLE := 9.0
 ## Yards from the centre to the rim at each zoom level.
 const ZOOMS := [45.0, 70.0, 110.0]
 ## Pixels across a 400-yard zone's map; bigger zones get more, up to
 ## MAX_MAP_PIXELS, so every map is as sharp.
-const MAP_PIXELS := 1024
-const MAX_MAP_PIXELS := 4096
+static var MAP_PIXELS := 1024
+static var MAX_MAP_PIXELS := 4096
 const AREA_COLOR := Color(1, 0.82, 0.2, 0.28)
 const AREA_EDGE := Color(1, 0.82, 0.2, 0.8)
 const BORDER := Color(0.55, 0.5, 0.38)

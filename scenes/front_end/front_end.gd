@@ -7,13 +7,13 @@ extends Control
 
 const GAME_SCENE := "res://scenes/main/main.tscn"
 ## Classic allows 10 characters per realm.
-const MAX_CHARACTERS := 10
+static var MAX_CHARACTERS := 10
 const REALM := "Greywater"
 ## Patch notes, newest first; the login screen shows the newest.
 const PATCH_NOTES_PATH := "res://data/patch_notes.json"
-const PATCH_NOTES_WIDTH := 140.0
-const FONT_SIZE := 8
-const TITLE_SIZE := 28
+static var PATCH_NOTES_WIDTH := 140.0
+static var FONT_SIZE := 8
+static var TITLE_SIZE := 28
 const GOLD := Color("ffd100")
 const PANEL_COLOR := UiStyle.BACK
 const BORDER_COLOR := UiStyle.GOLD

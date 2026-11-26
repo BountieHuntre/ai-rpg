@@ -23,8 +23,8 @@ signal quest_accepted(id: int)
 signal quest_turned_in(id: int)
 
 ## The classic backpack has 16 slots, plus four bag slots.
-const BACKPACK_SLOTS := 16
-const BAG_SLOTS := 4
+static var BACKPACK_SLOTS := 16
+static var BAG_SLOTS := 4
 const ACTION_SLOTS := 12
 ## The extra action bars after the main one, as their options and key binding
 ## names say them ("bar_" + name, name + "_1"...). Each has ACTION_SLOTS slots,
@@ -34,15 +34,15 @@ const ALL_SLOTS := ACTION_SLOTS * (1 + 4)
 ## Where the single save lived before there were several characters.
 const OLD_SAVE_PATH := "user://character.json"
 ## Classic name rules (ObjectMgr::CheckPlayerName in CMaNGOS): 2 to 12 letters.
-const NAME_MIN := 2
-const NAME_MAX := 12
+static var NAME_MIN := 2
+static var NAME_MAX := 12
 const ERR_NAME_EMPTY := "Enter a name for your character."
 const ERR_NAME_SHORT := "Names must be at least 2 characters long."
 const ERR_NAME_LONG := "Names must be no more than 12 characters long."
 const ERR_NAME_LETTERS := "Names can only contain letters."
 const ERR_NAME_TAKEN := "That name is unavailable."
 ## Bump when the save format changes, and convert older saves in _apply_save.
-const SAVE_VERSION := 1
+static var SAVE_VERSION := 1
 ## What the last unlearning of talents cost, in copper (Talents.reset_cost).
 var talent_reset_cost := 0
 

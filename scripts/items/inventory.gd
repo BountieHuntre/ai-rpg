@@ -19,15 +19,15 @@ const SLOT_LABELS := {
 	Slot.RANGED: "Ranged",
 }
 
-const INVTYPE_BAG := 18
+static var INVTYPE_BAG := 18
 const INVTYPE_TWO_HAND := 17
 const INVTYPE_ONE_HAND := 13
 const INVTYPE_SHIELD := 14
-const INVTYPE_WEAPON := 13
-const DUAL_WIELD_SPELL := 674
-const ARMOR_SUBCLASS_MISC := 0
-const ARMOR_SUBCLASS_PLATE := 4
-const ARMOR_SUBCLASS_SHIELD := 6
+static var INVTYPE_WEAPON := 13
+static var DUAL_WIELD_SPELL := 674
+static var ARMOR_SUBCLASS_MISC := 0
+static var ARMOR_SUBCLASS_PLATE := 4
+static var ARMOR_SUBCLASS_SHIELD := 6
 
 ## Equipment slots for each InventoryType. One-handers (13) also go in the off
 ## hand with Two-Weapon Fighting (classic's Dual Wield, DUAL_WIELD_SPELL).
@@ -383,7 +383,7 @@ static func gear_totals(equipment: Dictionary) -> Dictionary:
 ## (classic's 35 for bows and guns, 30 for thrown weapons and wands; the dead
 ## zone under 8 yards for all but wands).
 const RANGED_REACH := { 2: [35.0, 8.0], 3: [35.0, 8.0], 18: [35.0, 8.0], 16: [30.0, 8.0], 19: [30.0, 0.0] }
-const WEAPON_SUBCLASS_WAND := 19
+static var WEAPON_SUBCLASS_WAND := 19
 
 
 ## A ranged weapon's shot: damage, speed, school (wands deal theirs), its kind
@@ -456,7 +456,7 @@ static func _first_free_slot() -> Dictionary:
 const ERR_NO_MONEY := "You don't have enough money."
 const ERR_CANT_SELL := "Can't sell that item."
 ## Classic keeps the last 12 items sold, for buyback until logout.
-const BUYBACK_SLOTS := 12
+static var BUYBACK_SLOTS := 12
 
 
 ## Takes a whole stack out of its slot (traded away), returning it.
@@ -575,11 +575,11 @@ static func _has_room_for(id: int, count: int) -> bool:
 const DURABILITY_PATH := "res://data/classic/durability.json"
 ## DurabilityLossChance.Damage in the CMaNGOS config: per hit dealt or taken,
 ## one durability point off a random equipment slot.
-const DURABILITY_LOSS_HIT_CHANCE := 0.5
+static var DURABILITY_LOSS_HIT_CHANCE := 0.5
 ## DurabilityLossChance.Parry and .Block: weapon or shield on a parry or block.
-const DURABILITY_LOSS_PARRY_CHANCE := 0.05
+static var DURABILITY_LOSS_PARRY_CHANCE := 0.05
 ## Equipped gear loses 10% of its maximum durability on death.
-const DURABILITY_LOSS_DEATH := 0.10
+static var DURABILITY_LOSS_DEATH := 0.10
 const ERR_NOTHING_TO_REPAIR := "You don't need to repair anything."
 
 static var _durability_tables: Dictionary

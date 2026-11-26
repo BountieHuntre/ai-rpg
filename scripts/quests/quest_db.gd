@@ -20,8 +20,8 @@ static func race_allowed(quest: Dictionary, race: int) -> bool:
 ## SpecialFlags (CMaNGOS QUEST_SPECIAL_FLAGS): taken again and again
 ## (Distracting Jarvik), and finished by an event (a spell's Quest Complete
 ## effect, an escort reaching the end) rather than by its objectives alone.
-const SPECIAL_REPEATABLE := 1
-const SPECIAL_EVENT := 2
+static var SPECIAL_REPEATABLE := 1
+static var SPECIAL_EVENT := 2
 ## Item spell effects that make an item for a quest (Crown of the Earth's
 ## phials filled at a moonwell).
 const EFFECT_CREATE_ITEM := 24

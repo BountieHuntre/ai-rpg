@@ -5,9 +5,9 @@ extends CharacterBody3D
 ## Needs Combatant and Visual children.
 
 ## How squashed the placeholder model looks while sitting.
-const SIT_HEIGHT := 0.55
+static var SIT_HEIGHT := 0.55
 ## Highest falling speed under Featherfall, in yards per second.
-const FEATHER_FALL_SPEED := 3.0
+static var FEATHER_FALL_SPEED := 3.0
 ## Placeholder looks for each race until there are models: size and body color.
 const RACE_LOOKS := {
 	ClassicData.Race.HUMAN: [Vector3(1, 1, 1), Color(0.25, 0.55, 0.85)],
@@ -53,7 +53,7 @@ var model: HumanoidModel
 ## swing draws them). Bots put theirs away a few seconds after a fight, as
 ## a player would (`BOT_SHEATHE_DELAY`).
 var sheath_state := HumanoidModel.Sheath.UNARMED
-const BOT_SHEATHE_DELAY := 5.0
+static var BOT_SHEATHE_DELAY := 5.0
 var _was_attacking := false
 var _was_shooting := false
 var _was_casting := false
@@ -172,10 +172,10 @@ func _draw_for_spell(spell: Dictionary) -> void:
 ## Moving or in the air. Either interrupts casting.
 ## How high a lip or hump a unit walks up without jumping (classic's step),
 ## and how far below it the floor still holds it going down bumps.
-const STEP_HEIGHT := 0.6
-const FLOOR_SNAP := 0.6
+static var STEP_HEIGHT := 0.6
+static var FLOOR_SNAP := 0.6
 ## Steeper than this is a wall to step up (its normal's height).
-const STEP_WALL := 0.7
+static var STEP_WALL := 0.7
 
 
 ## move_and_slide that steps up lips and humps up to STEP_HEIGHT (a cave's

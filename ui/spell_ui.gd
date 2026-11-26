@@ -12,19 +12,19 @@ extends Control
 signal message(text: String, is_error: bool)
 
 const SLOT := 20.0
-const GAP := 2.0
+static var GAP := 2.0
 ## The spellbook: where it sits, its size, a spell's row height, spells per
 ## page (two columns), and the size of a tab.
 const BOOK_AT := Vector2(4, 43)
 const BOOK_SIZE := Vector2(190, 132)
-const BOOK_ENTRY := 17.0
-const BOOK_PER_PAGE := 12
+static var BOOK_ENTRY := 17.0
+static var BOOK_PER_PAGE := 12
 const BOOK_TAB := Vector2(44, 11)
-const BUFF := 14.0
-const STANCE_SLOT := 16.0
+static var BUFF := 14.0
+static var STANCE_SLOT := 16.0
 ## The XP bar sits between the action bar and the stance bar (drawn by the HUD).
-const XP_BAR := 7.0
-const DRAG_THRESHOLD := 6.0
+static var XP_BAR := 7.0
+static var DRAG_THRESHOLD := 6.0
 const BACK := Color(0.08, 0.08, 0.1, 0.92)
 const EMPTY := Color(0.16, 0.16, 0.2, 0.9)
 const TITLE := Color(1, 0.85, 0.4)
@@ -450,7 +450,7 @@ const PET_MODES := [
 	["defensive", "Defensive", "Your pet attacks whatever attacks you or it.", "aegis"],
 	["passive", "Passive", "Your pet won't attack on its own.", "passive"],
 ]
-const PET_ABILITY_SLOTS := 4
+static var PET_ABILITY_SLOTS := 4
 var _pet_bar: Control
 ## Each slot: { "box", "kind" ("command", "ability", "mode"), "key" }.
 var _pet_slots: Array[Dictionary] = []

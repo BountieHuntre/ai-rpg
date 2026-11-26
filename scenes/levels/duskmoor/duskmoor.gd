@@ -14,21 +14,21 @@ extends Zone
 
 const ZONE_NAME := "Duskmoor Glades"
 const CENTER := Vector2(-1700, -4200)
-const SIZE := 1200.0
-const STEP := 2.5
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.6
-const SEED := 4301
+static var SIZE := 1200.0
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.6
+static var SEED := 4301
 
 const TOWN := Vector2(-1760, -4180)
 const TOWN_HEIGHT := 5.0
-const TOWN_FLAT := 40.0
+static var TOWN_FLAT := 40.0
 const GRAVEYARD := Vector3(-1786, TOWN_HEIGHT, -4152)
 const GRAVEYARD_FACING := -PI / 2
 
 const LAKE := Vector2(-1650, -4450)
 const LAKE_RADIUS := 80.0
-const LAKE_BED := -0.8
+static var LAKE_BED := -0.8
 
 const PLACES := [
 	["the Ashworth crypt", Vector2(-2180, -4700), 14.0],
@@ -60,17 +60,17 @@ const FLATS := [
 	[Vector2(-1310, -4380), 18.0, 7.0],   # the Grimhide camp
 	[Vector2(-1190, -3980), 16.0, 5.0],   # the east barricade
 ]
-const MILLS := 0
-const MANOR := 1
-const CRYPT := 2
-const ABBEY := 3
-const EAST_WATCH := 4
-const SUNWARD_WATCH := 5
-const MISSION := 6
-const BRANNICK := 7
-const PLAGUEWOOD := 8
-const GNOLL_CAMP := 9
-const BARRICADE := 10
+static var MILLS := 0
+static var MANOR := 1
+static var CRYPT := 2
+static var ABBEY := 3
+static var EAST_WATCH := 4
+static var SUNWARD_WATCH := 5
+static var MISSION := 6
+static var BRANNICK := 7
+static var PLAGUEWOOD := 8
+static var GNOLL_CAMP := 9
+static var BARRICADE := 10
 const HILLS := [
 	[Vector2(-1250, -4700), 90.0, 14.0],  # the abbey's rise
 	[Vector2(-2150, -4720), 70.0, 16.0],  # the crypt's hill
@@ -214,7 +214,7 @@ const ENCLOSURES := [
 	[-1778.5, -4205.5, -1769.5, -4198.5, Vector2(-1774, -4195), Vector2(-1774, -4200)],
 	[-1785.5, -4169.5, -1778.5, -4162.5, Vector2(-1775, -4166), Vector2(-1780, -4166)],
 ]
-const DEAD_TREE_VARIANTS := 4
+static var DEAD_TREE_VARIANTS := 4
 
 
 func _ready() -> void:

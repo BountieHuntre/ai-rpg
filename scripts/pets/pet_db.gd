@@ -13,18 +13,18 @@ const PATH := "res://data/classic/pets.json"
 const TAMEABLE := 0x1
 ## Training points a level: classic's level x (loyalty - 1) at the top
 ## loyalty, 6.
-const TP_PER_LEVEL := 5
+static var TP_PER_LEVEL := 5
 ## Hunter pets swing every 2 seconds whatever they were (Pet::InitStatsForLevel).
-const ATTACK_TIME := 2.0
+static var ATTACK_TIME := 2.0
 ## Pets' focus: a hundred, coming back 24 every 4 seconds (Pet::Regenerate).
-const MAX_FOCUS := 100
-const FOCUS_PER_SECOND := 6.0
+static var MAX_FOCUS := 100
+static var FOCUS_PER_SECOND := 6.0
 ## Passive abilities (Great Stamina, Natural Armor, the resistances) cost
 ## this many training points a rank; others 1 at their first rank and 3 more
 ## for each rank after (as classic's Bite and Claw). The exact costs were in
 ## 1.12's SkillLineAbility, which the data sources no longer have, so these
 ## are close to classic, not classic's own.
-const PASSIVE_TP_PER_RANK := 5
+static var PASSIVE_TP_PER_RANK := 5
 
 static var _data: Dictionary
 

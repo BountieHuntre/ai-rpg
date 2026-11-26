@@ -13,8 +13,8 @@ const QUALITY_COLORS := {
 	Quality.RARE: Color("0070dd"), Quality.EPIC: Color("a335ee"), Quality.LEGENDARY: Color("ff8000"),
 }
 
-const ITEM_CLASS_WEAPON := 2
-const ITEM_CLASS_ARMOR := 4
+static var ITEM_CLASS_WEAPON := 2
+static var ITEM_CLASS_ARMOR := 4
 
 const SLOT_NAMES := {
 	1: "Head", 2: "Neck", 3: "Shoulder", 4: "Shirt", 5: "Chest", 6: "Waist", 7: "Legs", 8: "Feet",
@@ -32,7 +32,7 @@ const STAT_MODS := { 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "In
 ## Every playable class in an AllowableClass mask. Items allowing all of them
 ## show no "Classes:" line.
 ## Every class, the Spellsword (10) included.
-const ALL_CLASSES_MASK := 2015
+static var ALL_CLASSES_MASK := 2015
 ## Unmet requirements show in this red, as in the classic tooltip.
 const UNMET := Color(1, 0.13, 0.13)
 ## Stat changes when comparing items.
@@ -40,7 +40,7 @@ const UNMET := Color(1, 0.13, 0.13)
 const USE_COLOR := Color(0.12, 1, 0)
 const SPELL_TRIGGERS := { 0: "Use", 1: "Equip", 2: "Chance on hit", 6: "Use" }
 ## spelltrigger_1 for a weapon's spell that may fire on a melee hit.
-const TRIGGER_ON_HIT := 2
+static var TRIGGER_ON_HIT := 2
 
 
 ## A weapon's "Chance on hit:" spell's chance per hit in %: its own
@@ -57,7 +57,7 @@ const BONDING := { 1: "Binds when picked up", 2: "Binds when equipped", 3: "Bind
 static var _items: Dictionary
 ## How many of anything that stacks fit in one bag slot (unlike classic's 5,
 ## 10, 20 or 200 by item). Gear that doesn't stack stays at 1.
-const MAX_STACK := 20
+static var MAX_STACK := 20
 
 
 static var _own: Dictionary

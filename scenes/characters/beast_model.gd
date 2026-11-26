@@ -10,9 +10,9 @@ extends Node3D
 const SHADER := preload("res://shaders/character.gdshader")
 const LOOPS := ["idle", "ready", "walk", "run", "dead"]
 ## Speeds the walk and run cycles were made for, in yards per second.
-const WALK_SPEED := 2.5
-const RUN_SPEED := 7.0
-const BLEND := 0.15
+static var WALK_SPEED := 2.5
+static var RUN_SPEED := 7.0
+static var BLEND := 0.15
 
 static var _scenes: Dictionary = {}
 

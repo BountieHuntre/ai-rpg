@@ -14,9 +14,9 @@ signal main_menu_requested
 
 const WIDTH := SpellUI.SLOT / 2.0
 const HEIGHT := SpellUI.SLOT - 2.0
-const GAP := 1.0
+static var GAP := 1.0
 ## Room between the action bar and the first button.
-const BAR_GAP := 4.0
+static var BAR_GAP := 4.0
 ## [tooltip name, key binding action (empty for Main Menu), picture].
 const BUTTONS := [
 	["Character Info", "character_window", "character"],

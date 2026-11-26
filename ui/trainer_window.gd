@@ -12,10 +12,10 @@ signal hovered(spell_id: int)
 ## Classic INTERACTION_DISTANCE, in yards.
 const RANGE := 5.0
 ## Wide enough for "Sergeant Bram Holloway - Man-at-Arms Trainer".
-const WIDTH := 190.0
+static var WIDTH := 190.0
 const LIST_HEIGHT := 150.0
-const ROW := 12.0
-const FONT_SIZE := 6
+static var ROW := 12.0
+static var FONT_SIZE := 6
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const AVAILABLE := Color(0.25, 1, 0.25)
 const UNAVAILABLE := Color(1, 0.25, 0.25)

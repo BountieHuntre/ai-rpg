@@ -60,7 +60,7 @@ const PROC_MELEE_ABILITY := 0x10
 const PROC_RANGED_AUTO := 0x40
 const PROC_DONE_RANGED := 0x100
 ## The Ranger's Auto Shot (the spell its talents name for shots).
-const AUTO_SHOT := 75
+static var AUTO_SHOT := 75
 const PROC_TAKEN_MELEE_ABILITY := 0x20
 const PROC_POSITIVE_SPELL := 0x4000
 const PROC_TAKEN_POSITIVE_SPELL := 0x8000
@@ -80,19 +80,19 @@ var last_hit_school := 0
 
 ## Leaving combat takes this long without dealing or taking hits, while no
 ## enemy is chasing.
-const COMBAT_TIMEOUT := 5.0
-const CRUSH_MULTIPLIER := 1.5
+static var COMBAT_TIMEOUT := 5.0
+static var CRUSH_MULTIPLIER := 1.5
 ## Rage tops out at 100 (classic's 1000 tenths).
-const MAX_RAGE := 100
+static var MAX_RAGE := 100
 ## Off-hand swings deal half damage (classic, before talents).
-const OFF_HAND_DAMAGE := 0.5
-const AURA_MOD_ROOT := 26
-const AURA_MOD_SKILL := 98
-const SKILL_DEFENSE := 95
-const AURA_MOD_OFFHAND_DAMAGE_PCT := 122
+static var OFF_HAND_DAMAGE := 0.5
+static var AURA_MOD_ROOT := 26
+static var AURA_MOD_SKILL := 98
+static var SKILL_DEFENSE := 95
+static var AURA_MOD_OFFHAND_DAMAGE_PCT := 122
 ## SPELL_AURA_MECHANIC_RESISTANCE (Iron Resolve), and the stun mechanic.
-const AURA_MECHANIC_RESISTANCE := 117
-const MECHANIC_STUN := 12
+static var AURA_MECHANIC_RESISTANCE := 117
+static var MECHANIC_STUN := 12
 ## SPELL_AURA_OBS_MOD_HEALTH: heals a percent of max health each tick (Bloodied Resolve).
 const AURA_OBS_MOD_HEALTH := 20
 
@@ -388,7 +388,7 @@ func is_rooted() -> bool:
 
 
 ## Feared units run from whoever frightened them and can't fight.
-const AURA_MOD_FEIGN_DEATH := 66
+static var AURA_MOD_FEIGN_DEATH := 66
 
 
 ## Still as Death (SPELL_AURA_FEIGN_DEATH): creatures pay no heed.
@@ -914,9 +914,9 @@ func shot_problem(target: Combatant) -> String:
 	return ""
 
 
-const SHOT_DELAY := 0.5
+static var SHOT_DELAY := 0.5
 ## Yards a second arrows, shot and wand bolts fly.
-const SHOT_SPEED := 40.0
+static var SHOT_SPEED := 40.0
 
 
 func _tick_shooting(delta: float) -> void:

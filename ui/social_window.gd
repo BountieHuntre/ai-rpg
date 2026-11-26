@@ -9,10 +9,10 @@ extends Control
 ## Lines for the HUD's message log ("Aldric is already your friend.").
 signal message(text: String, is_error: bool)
 
-const WIDTH := 170.0
+static var WIDTH := 170.0
 const LIST_HEIGHT := 112.0
-const ROW := 10.0
-const FONT_SIZE := 6
+static var ROW := 10.0
+static var FONT_SIZE := 6
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const HEADING := Color(1, 0.85, 0.4)
 const TEXT := Color(0.92, 0.9, 0.84)
@@ -23,7 +23,7 @@ const TAB_OTHER := Color(0.6, 0.6, 0.65)
 const FRIENDS := "Friends"
 const WHO := "Who"
 ## Classic's friends list holds 50.
-const MAX_FRIENDS := 50
+static var MAX_FRIENDS := 50
 
 var _ui_scale := 1.0
 var _tab := FRIENDS

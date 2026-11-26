@@ -5,13 +5,13 @@ extends CanvasLayer
 ## stays on top until the world has drawn a few frames, then fades out.
 ## Sizes are in HUD units (1/270 of the window height).
 
-const FONT_SIZE := 8
+static var FONT_SIZE := 8
 const BAR_SIZE := Vector2(240, 9)
 ## Share of the bar for loading files; building the world fills the rest.
-const LOAD_SHARE := 0.6
+static var LOAD_SHARE := 0.6
 ## Frames to keep covering the new world while it warms up (shaders, first draw).
-const SETTLE_FRAMES := 8
-const FADE_TIME := 0.35
+static var SETTLE_FRAMES := 8
+static var FADE_TIME := 0.35
 const TIPS := [
 	"Right-click a creature to attack it, or a townsperson to speak with them.",
 	"Creatures shown in yellow won't attack unless provoked.",

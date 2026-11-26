@@ -21,14 +21,14 @@ extends Control
 ## The Text Size option, in HUD units.
 const FONT_SIZES := { "Small": 6, "Medium": 7, "Large": 8, "Huge": 10 }
 ## The box's size until it's dragged to another (HUD units).
-const DEFAULT_WIDTH := 180.0
-const DEFAULT_LOG := 72.0
+static var DEFAULT_WIDTH := 180.0
+static var DEFAULT_LOG := 72.0
 ## The backing darkens to at least this while typing or hovered.
-const ACTIVE_BACK := 0.55
-const TAB_HEIGHT := 10.0
-const GRIP := 7.0
-const MIN_WIDTH := 100.0
-const MIN_LOG := 30.0
+static var ACTIVE_BACK := 0.55
+static var TAB_HEIGHT := 10.0
+static var GRIP := 7.0
+static var MIN_WIDTH := 100.0
+static var MIN_LOG := 30.0
 const TAB_ACTIVE := Color(1, 0.82, 0.3)
 const TAB_OTHER := Color(0.65, 0.65, 0.7)
 const TAB_UNREAD := Color(1, 1, 1)
@@ -43,7 +43,7 @@ const CATEGORIES := [
 ## Right-click menu entries.
 enum TabMenu { NEW, EDIT, CLOSE, LOCK }
 ## Previous lines kept for Up and Down.
-const HISTORY := 30
+static var HISTORY := 30
 ## Emotes: [alone, at a target], in the game's own words.
 const EMOTES := {
 	"wave": ["You wave.", "You wave at %s."],

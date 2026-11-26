@@ -210,7 +210,7 @@ static func parallel(count: int, work: Callable) -> void:
 
 ## How far either side of an edge point its slope is measured, the same for
 ## every zone so neighbours agree.
-const EDGE_SLOPE_SPAN := 1.0
+static var EDGE_SLOPE_SPAN := 1.0
 
 
 static func _edge_normal(ground: Callable, x: float, z: float) -> Vector3:

@@ -22,9 +22,9 @@ signal give_requested(ref: Dictionary)
 signal quest_item_used(item_id: int)
 
 const SLOT := 16.0
-const GAP := 2.0
-const FONT_SIZE := 6
-const BAG_COLUMNS := 4
+static var GAP := 2.0
+static var FONT_SIZE := 6
+static var BAG_COLUMNS := 4
 const BACK := Color(0.08, 0.08, 0.1, 0.92)
 const EMPTY_SLOT := Color(0.16, 0.16, 0.2)
 const TITLE := Color(1, 0.85, 0.4)

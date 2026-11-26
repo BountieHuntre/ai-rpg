@@ -7,13 +7,13 @@ extends Control
 ## out-of-reach ones are dimmed. Hover for the current and next rank.
 ## Layout is in HUD units (1/270 of the window height, times UI Scale).
 
-const ICON := 14.0
-const CELL := 19.0
-const TREE_GAP := 8.0
+static var ICON := 14.0
+static var CELL := 19.0
+static var TREE_GAP := 8.0
 const TOP := 26.0
-const SIDE := 6.0
-const TIERS := 7
-const COLUMNS := 4
+static var SIDE := 6.0
+static var TIERS := 7
+static var COLUMNS := 4
 const BACK := Color(0.08, 0.08, 0.1, 0.94)
 const TREE_BACK := Color(0.12, 0.12, 0.16, 0.9)
 const TITLE := Color(1, 0.85, 0.4)

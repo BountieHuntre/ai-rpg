@@ -234,8 +234,8 @@ const CREATURE_PORTRAITS := [
 	["Brigand", "bandana"], ["Collector", "ring_rare"], ["Spider", "limb"], ["Wolf", "tooth"], ["Prowler", "tooth_claw"],
 	["Bear", "tooth_paw"], ["Boar", "tooth_tusk"], ["Hog", "tooth_tusk"], ["Duchess", "tooth_tusk"], ["Rabbit", "tooth_paw"],
 ]
-const CREATURE_TYPE_BEAST := 1
-const CREATURE_TYPE_UNDEAD := 6
+static var CREATURE_TYPE_BEAST := 1
+static var CREATURE_TYPE_UNDEAD := 6
 
 
 ## The portrait key for a unit frame: a class emblem for the player and

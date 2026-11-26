@@ -13,20 +13,20 @@ extends Node
 ## use up their charges here. Also Tooth for a Tooth and Gloomweave.
 ## Child of the SpellCaster.
 
-const AURA_DUMMY := 4
-const AURA_ADD_TARGET_TRIGGER := 109
+static var AURA_DUMMY := 4
+static var AURA_ADD_TARGET_TRIGGER := 109
 const AURA_OBS_MOD_HEALTH := 20
 const EFFECT_ADD_EXTRA_ATTACKS := 19
 ## procEx bits that say what to require (above them are server-internal flags).
 const EX_OUTCOMES := 0xFFFF
 const LANDED := Combatant.PROC_EX_NORMAL | Combatant.PROC_EX_CRIT
 ## Lingering Wounds: a share of the average weapon hit per rank, over 4 ticks.
-const DEEP_WOUNDS_SHARE := 0.2
-const DEEP_WOUNDS_TICKS := 4.0
+static var DEEP_WOUNDS_SHARE := 0.2
+static var DEEP_WOUNDS_TICKS := 4.0
 ## Hallowed Recovery heals this share of the hit per rank (8, 16, 25%).
 const BLESSED_RECOVERY_SHARE := [0.08, 0.16, 0.25]
 ## Tooth for a Tooth: a share of a spell crit taken per rank, back at the caster.
-const EYE_FOR_AN_EYE_SHARE := 0.15
+static var EYE_FOR_AN_EYE_SHARE := 0.15
 
 var _unit: PlayerUnit
 var _combatant: Combatant

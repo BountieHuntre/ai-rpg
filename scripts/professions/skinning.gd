@@ -9,7 +9,7 @@ extends RefCounted
 ## level x 5 (EffectSkinning). A skinned corpse can't be skinned again, and
 ## is gone once emptied.
 
-const REACH := 5.0
+static var REACH := 5.0
 
 
 ## The skill a creature of `level` needs, for someone with `skill`

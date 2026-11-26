@@ -21,13 +21,13 @@ extends RefCounted
 const BAKED_PATH := "res://assets/models/caves/%s_%d.res"
 const VARIANTS := { "den": 8, "lair": 5 }
 ## Yards between the domes along a tunnel.
-const STEP := 3.0
+static var STEP := 3.0
 ## How far the path may turn each step, and how far from its first heading.
-const TURN := 0.3
-const WANDER := 1.1
+static var TURN := 0.3
+static var WANDER := 1.1
 ## How much the floor may rise or fall each step, and in all.
-const FLOOR_STEP := 0.22
-const FLOOR_RANGE := 1.4
+static var FLOOR_STEP := 0.22
+static var FLOOR_RANGE := 1.4
 ## How wide and high the tunnels run (they pinch and bulge between).
 const TUNNEL_WIDTH := Vector2(7.0, 11.0)
 const TUNNEL_HEIGHT := Vector2(5.0, 7.5)

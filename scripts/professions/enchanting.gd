@@ -18,13 +18,13 @@ const TYPE_EQUIP_SPELL := 3
 const TYPE_RESISTANCE := 4
 const TYPE_STAT := 5
 ## SPELL_EFFECT_DISENCHANT.
-const EFFECT_DISENCHANT := 99
+static var EFFECT_DISENCHANT := 99
 ## An item's Equip: spell trigger (ITEM_SPELLTRIGGER_ON_EQUIP).
-const ON_EQUIP := 1
+static var ON_EQUIP := 1
 ## Item quality: uncommon to epic can be disenchanted.
 const DISENCHANT_QUALITIES := [2, 3, 4]
 ## ITEM_CLASS_RECIPE: Formulas that teach a recipe.
-const ITEM_CLASS_RECIPE := 9
+static var ITEM_CLASS_RECIPE := 9
 const ENCHANT_COLOR := Color(0.12, 1.0, 0.0)
 
 

@@ -11,14 +11,14 @@ signal flyout_pressed(slot: int)
 ## air: a jump keeps the direction it started with.
 
 ## Classic base speeds in yards per second.
-const RUN_SPEED := 7.0
-const WALK_SPEED := 2.5
-const BACKPEDAL_SPEED := 4.5
+static var RUN_SPEED := 7.0
+static var WALK_SPEED := 2.5
+static var BACKPEDAL_SPEED := 4.5
 ## Keyboard turning: 180 degrees per second.
 const TURN_RATE := PI
 ## Jump launch speed and gravity, giving classic WoW's jump arc.
-const JUMP_SPEED := 7.96
-const GRAVITY := 19.29
+static var JUMP_SPEED := 7.96
+static var GRAVITY := 19.29
 
 var autorunning := false
 var walking := false

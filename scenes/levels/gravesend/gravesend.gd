@@ -12,15 +12,15 @@ extends Zone
 
 const ZONE_NAME := "Gravesend"
 const CENTER := Vector2(-2500, -4200)
-const SIZE := 400.0
-const STEP := 2.0
-const WATER_LEVEL := -100.0
-const ROAD_WIDTH := 2.4
-const SEED := 4101
+static var SIZE := 400.0
+static var STEP := 2.0
+static var WATER_LEVEL := -100.0
+static var ROAD_WIDTH := 2.4
+static var SEED := 4101
 
 const HUB := Vector2(-2510, -4205)
 const HUB_HEIGHT := 5.0
-const HUB_FLAT := 34.0
+static var HUB_FLAT := 34.0
 ## The chapel yard's broken wall: x -2542..-2478, z -4237..-4173.
 const YARD_MIN := Vector2(-2542, -4237)
 const YARD_MAX := Vector2(-2478, -4173)
@@ -43,9 +43,9 @@ const FLATS := [
 	[Vector2(-2562, -4336), 9.0, 8.0],   # the Webbed Vault's mouth
 	[Vector2(-2400, -4082), 16.0, 4.0],  # the Sunward camp
 ]
-const CRYPTS := 0
-const VAULT := 1
-const CAMP := 2
+static var CRYPTS := 0
+static var VAULT := 1
+static var CAMP := 2
 const HILLS := [
 	[Vector2(-2585, -4365), 48.0, 24.0],  # the Webbed Vault's hill
 	[Vector2(-2640, -4270), 34.0, 12.0],  # the crypts' knoll
@@ -125,7 +125,7 @@ const ENCLOSURES := [
 	[-2542.0, -4237.0, -2478.0, -4173.0, Vector2(-2470, -4205), Vector2(-2486, -4205)],
 	[-2521.0, -4222.5, -2499.0, -4209.5, Vector2(-2494, -4216), Vector2(-2502, -4216)],
 ]
-const DEAD_TREE_VARIANTS := 4
+static var DEAD_TREE_VARIANTS := 4
 
 
 ## The caves dug into this zone's hills (Zone.cave_mouths).

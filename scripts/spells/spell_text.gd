@@ -6,7 +6,7 @@ extends RefCounted
 ## spells, item "Use:" spells, recipes) has one; anything else gets a plain
 ## description from its effects.
 
-const FOOD_DRINK_PERIOD := 5.0
+static var FOOD_DRINK_PERIOD := 5.0
 const RESISTANCE_SCHOOLS := { 4: "Fire", 16: "Frost", 32: "Shadow", 8: "Nature", 64: "Arcane" }
 
 

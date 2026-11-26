@@ -16,19 +16,19 @@ extends Zone
 
 const ZONE_NAME := "Highpeak"
 const CENTER := Vector2(-100, -800)
-const SIZE := 1200.0
-const STEP := 2.5
-const WATER_LEVEL := 1.4
-const ROAD_WIDTH := 2.6
-const SEED := 5201
+static var SIZE := 1200.0
+static var STEP := 2.5
+static var WATER_LEVEL := 1.4
+static var ROAD_WIDTH := 2.6
+static var SEED := 5201
 
 const TOWN := Vector2(-150, -780)
 const TOWN_HEIGHT := 7.0
-const TOWN_FLAT := 42.0
+static var TOWN_FLAT := 42.0
 const GRAVEYARD := Vector3(-150, TOWN_HEIGHT, -748)
-const GRAVEYARD_FACING := 0.0
+static var GRAVEYARD_FACING := 0.0
 const TARN := Vector2(-440, -1200)
-const TARN_RADIUS := 70.0
+static var TARN_RADIUS := 70.0
 
 const PLACES := [
 	["Old Rimebeard's cave", Vector2(-268, -1098), 10.0],
@@ -62,17 +62,17 @@ const FLATS := [
 	[Vector2(452, -900), 14.0, 8.0],     # the Southgate
 	[Vector2(400, -990), 8.0, 7.0],      # the downed pilot's wreck
 ]
-const DEPOT := 0
-const RANCH := 1
-const QUARRY := 2
-const HOLD := 3
-const RIDGE := 4
-const DEN := 5
-const BARLEYHALL := 6
-const COGWORKS := 7
-const GATE := 8
-const SOUTHGATE := 9
-const WRECK := 10
+static var DEPOT := 0
+static var RANCH := 1
+static var QUARRY := 2
+static var HOLD := 3
+static var RIDGE := 4
+static var DEN := 5
+static var BARLEYHALL := 6
+static var COGWORKS := 7
+static var GATE := 8
+static var SOUTHGATE := 9
+static var WRECK := 10
 const HILLS := [
 	[Vector2(-380, -420), 45.0, 10.0],   # Shimmer Ridge
 	[Vector2(-560, -540), 60.0, 16.0],   # the cliffs behind Icemane Hold
@@ -151,7 +151,7 @@ const QUEST_OBJECTS := [
 const BARREL := Vector2(-134, -808)
 const JARVIK_POST := Vector3(-130, 7, -805)
 const JARVIK_DRINKING := Vector3(-146, 7, -797)
-const UNGUARDED_TIME := 90.0
+static var UNGUARDED_TIME := 90.0
 ## Mackellen's Meat Locker in Old Rimebeard's cave, the Shimmerweed Baskets on
 ## Shimmer Ridge and the Ammo Crate in the quarry.
 const CHESTS := [

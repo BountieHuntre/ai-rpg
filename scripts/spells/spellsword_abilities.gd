@@ -21,40 +21,40 @@ const ERR_NO_EDGE := "Your blade has no Edge"
 const FORMS := { 20: "Bladesong Form", 21: "Wardweave Form" }
 const FORM_PASSIVES := ["Bladesong", "Wardweave"]
 const EDGES := ["Flame Edge", "Frost Edge", "Storm Edge", "Warding Edge"]
-const MAX_RESONANCE := 5
+static var MAX_RESONANCE := 5
 ## Seconds out of combat before Resonance fades.
-const RESONANCE_FADE := 10.0
+static var RESONANCE_FADE := 10.0
 ## Share of attack power added to Edge damage, and to Release per Resonance.
-const BLADECRAFT := 0.25
-const RELEASE_PER_RESONANCE_AP := 0.05
+static var BLADECRAFT := 0.25
+static var RELEASE_PER_RESONANCE_AP := 0.05
 ## Wardweave Form: shields are this much stronger, and threat on top of the
 ## form's own multiplier for Warding Edge hits.
-const WARDWEAVE_SHIELDS := 1.2
-const WARDING_THREAT := 0.2
+static var WARDWEAVE_SHIELDS := 1.2
+static var WARDING_THREAT := 0.2
 ## Twin Edge: each of two Edges deals this share.
-const TWIN_SHARE := 0.6
+static var TWIN_SHARE := 0.6
 ## Storm Edge's chance to arc, and how far.
-const STORM_ARC_CHANCE := 20.0
-const ARC_RANGE := 8.0
+static var STORM_ARC_CHANCE := 20.0
+static var ARC_RANGE := 8.0
 ## Flame Burst's and Thunderclap's reach, Bulwark of Runes' threat radius.
-const BURST_RADIUS := 8.0
-const THUNDERCLAP_TARGETS := 3
-const BULWARK_RADIUS := 10.0
+static var BURST_RADIUS := 8.0
+static var THUNDERCLAP_TARGETS := 3
+static var BULWARK_RADIUS := 10.0
 ## Binding Glyph: how close an enemy must come.
-const GLYPH_RADIUS := 2.5
+static var GLYPH_RADIUS := 2.5
 ## Arc Cleave and Arc of Ruin: the cone's half angle (degrees) and targets.
-const CLEAVE_HALF_ANGLE := 60.0
-const CLEAVE_TARGETS := 3
-const RUIN_HALF_ANGLE := 30.0
+static var CLEAVE_HALF_ANGLE := 60.0
+static var CLEAVE_TARGETS := 3
+static var RUIN_HALF_ANGLE := 30.0
 ## Arcane Lance and Arc of Ruin: damage per level (their rows' DmgMultiplier1),
 ## plus a share of attack power, and more for each Resonance spent.
-const LANCE_PER_RESONANCE := 0.2
-const RUIN_PER_RESONANCE := 0.1
+static var LANCE_PER_RESONANCE := 0.2
+static var RUIN_PER_RESONANCE := 0.1
 ## Thousand Cuts and Glyph Storm strike once a second.
-const TICK := 1.0
-const SAP_SHARE := 0.2
+static var TICK := 1.0
+static var SAP_SHARE := 0.2
 ## Bastion of Glyphs: the party's share it takes.
-const BASTION_SHARE := 0.3
+static var BASTION_SHARE := 0.3
 
 var caster: SpellCaster
 var _unit: PlayerUnit

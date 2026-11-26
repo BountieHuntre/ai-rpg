@@ -17,9 +17,9 @@ const EVENT_TIMER_IN_COMBAT := 0
 const EVENT_TIMER_OOC := 1
 ## Health between two percentages (params: max %, min %, repeat min/max).
 const EVENT_HP := 2
-const EVENT_AGGRO := 4
+static var EVENT_AGGRO := 4
 const EVENT_RANGE := 9
-const EVENT_SPAWNED := 11
+static var EVENT_SPAWNED := 11
 const EVENT_FRIENDLY_MISSING_BUFF := 27
 const EVENT_FACING_TARGET := 33
 ## Action types: cast a spell, set ranged mode.
@@ -31,7 +31,7 @@ const ACTION_CHANCED_TEXT := 44
 const ACTION_TEXT_NEW := 54
 const ACTION_SET_RANGED_MODE := 57
 ## How long a creature flees (CreatureFamilyFleeDelay in CMaNGOS).
-const FLEE_TIME := 10.0
+static var FLEE_TIME := 10.0
 ## What creatures say when the data has them speak (classic's lines aren't
 ## used): by the start of their name.
 const SAYINGS := {
@@ -55,7 +55,7 @@ const CAST_AURA_NOT_PRESENT := 0x20
 const CAST_MAIN_SPELL := 0x100
 ## Ranged mode resumes once the target is this far beyond melee range
 ## (CanReachWithMeleeAttack(victim, 3.f)).
-const RANGED_RESUME_MARGIN := 3.0
+static var RANGED_RESUME_MARGIN := 3.0
 ## Spell InterruptFlags: hits push the cast back; interrupt effects cut it.
 const INTERRUPT_FLAG_PUSHBACK := 0x02
 const INTERRUPT_FLAG_INTERRUPT := 0x08
@@ -69,13 +69,13 @@ const PROC_DONE_MELEE := 0x04 | 0x10
 const EFFECT_ADD_EXTRA_ATTACKS := 19
 ## Spell Attributes: damage scales with the creature's level.
 const ATTR_SCALES_WITH_CREATURE_LEVEL := 0x80000
-const DMG_CLASS_MELEE := 2
+static var DMG_CLASS_MELEE := 2
 const CLASS_DAMAGE_PATH := "res://data/classic/creature_class_damage.json"
 ## Creatures have a full 100 energy that refills 20 every 2 s, for abilities
 ## that cost energy (Back Thrust); costs in other powers but mana are free.
-const POWER_ENERGY := 3
-const MAX_ENERGY := 100.0
-const ENERGY_REGEN := 10.0
+static var POWER_ENERGY := 3
+static var MAX_ENERGY := 100.0
+static var ENERGY_REGEN := 10.0
 ## Effects whose amounts scale with a creature's level (Object.cpp).
 const SCALED_EFFECTS := [
 	SpellDB.EFFECT_SCHOOL_DAMAGE, SpellDB.EFFECT_HEAL, SpellDB.EFFECT_WEAPON_DAMAGE_NOSCHOOL,

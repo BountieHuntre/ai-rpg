@@ -10,19 +10,19 @@ extends Zone
 const ENEMY_SCENE := preload("res://scenes/enemies/enemy.tscn")
 
 const ZONE_NAME := "Ashford Vale"
-const SIZE := 400.0
-const STEP := 2.0
+static var SIZE := 400.0
+static var STEP := 2.0
 ## Players can't walk past this, and the mountains rise before it.
-const EDGE := 196.0
-const WATER_LEVEL := 1.4
-const STREAM_BED := 0.2
-const STREAM_WIDTH := 4.0
-const ROAD_WIDTH := 2.6
-const SEED := 1077
+static var EDGE := 196.0
+static var WATER_LEVEL := 1.4
+static var STREAM_BED := 0.2
+static var STREAM_WIDTH := 4.0
+static var ROAD_WIDTH := 2.6
+static var SEED := 1077
 
 const PRIORY := Vector2(0, 0)
 const PRIORY_HEIGHT := 4.5
-const PRIORY_FLAT := 34.0
+static var PRIORY_FLAT := 34.0
 ## Where new characters start, and where the dead come back.
 const SPAWN := Vector3(0, PRIORY_HEIGHT, 12)
 const SPAWN_FACING := PI
@@ -322,10 +322,10 @@ func _build_brigand_camp() -> void:
 # A wooden bridge where the south road crosses the stream, with sloped ends
 # that start at ground level, since walking can't step up a ledge.
 
-const BRIDGE_X := 0.0
-const BRIDGE_START := 76.0
-const BRIDGE_END := 96.0
-const BRIDGE_RAMP := 9.0
+static var BRIDGE_X := 0.0
+static var BRIDGE_START := 76.0
+static var BRIDGE_END := 96.0
+static var BRIDGE_RAMP := 9.0
 
 
 func _build_bridge() -> void:

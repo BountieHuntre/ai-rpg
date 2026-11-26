@@ -111,14 +111,14 @@ static func house(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, lo
 		"height": height, "door": door, "hearth": hearth, "hearth_side": hearth_side }
 
 
-const WALL_THICK := 0.45
+static var WALL_THICK := 0.45
 ## Half the doorway's width, and its height.
-const DOOR_HALF := 0.9
-const DOOR_HEIGHT := 2.6
+static var DOOR_HALF := 0.9
+static var DOOR_HEIGHT := 2.6
 ## A closed door on a solid house: half its width between the jambs, and the
 ## top of its frame.
-const DOOR_SOLID_HALF := 0.62
-const DOOR_SOLID_TOP := 2.45
+static var DOOR_SOLID_HALF := 0.62
+static var DOOR_SOLID_TOP := 2.45
 ## The planks' color (WOOD in the zones), so it's drawn with their texture.
 const FLOOR := Color(0.45, 0.31, 0.2)
 const WARM := Color(1.0, 0.8, 0.55)
@@ -173,8 +173,9 @@ static func wall_torch(kit: BuildingKit, at: Vector3, out: Vector3, reach: float
 	kit.block(at + out * 0.04 - Vector3(0, 0.12, 0), Vector3(0.14, 0.24, 0.14), IRON)
 	var top := at + out * 0.32 + Vector3(0, 0.3, 0)
 	kit.beam(at + out * 0.06 - Vector3(0, 0.2, 0), top, 0.07, Color(0.35, 0.22, 0.12))
-	kit.block(top, Vector3(0.16, 0.26, 0.16), FLAME)
-	kit.light(top + out * 0.2 + Vector3(0, 0.2, 0), WARM, reach, energy)
+	# Its head, and the fire burning on it.
+	kit.block(top - Vector3(0, 0.05, 0), Vector3(0.12, 0.14, 0.12), Color(0.2, 0.13, 0.08))
+	kit.fire(top + Vector3(0, 0.02, 0), 0.25, WARM, reach, energy)
 const FIRE := Color(1.0, 0.55, 0.25)
 
 
@@ -278,7 +279,7 @@ static func _hearth(kit: BuildingKit, length: float, span: float, height: float,
 	kit.block(Vector3(side * (inner - 0.6), 0.1, 0), Vector3(0.25, 0.14, 0.9), Color(0.95, 0.45, 0.12))
 	kit.block(Vector3(side * (inner - 0.45), 1.5, 0), Vector3(0.95, 0.15, 2.4), trim)
 	kit.block(Vector3(side * (inner - 0.2), 1.65, 0), Vector3(0.4, height - 1.65, 1.2), stone)
-	kit.light(Vector3(side * (inner - 1.2), 0.8, 0), FIRE, 7.0, 1.6)
+	kit.fire(Vector3(side * (inner - 0.95), 0.08, 0), 0.5, FIRE, 7.0, 1.6)
 
 
 ## Tie beams across the room under the roof, each with a king post to the
@@ -424,8 +425,8 @@ static func _line_clear_of(holes: Array, from: Vector2, to: Vector2) -> bool:
 ## storeys) and one in each end; not where the door is, nor in the hearth's
 ## end. Each is [middle (on the outer face), outward, half width, half
 ## height].
-const WINDOW_HALF_WIDTH := 0.45
-const WINDOW_HALF_HEIGHT := 0.55
+static var WINDOW_HALF_WIDTH := 0.45
+static var WINDOW_HALF_HEIGHT := 0.55
 
 
 static func _window_places(length: float, span: float, height: float, storeys: int, door: Array, hearth_side := 0.0) -> Array:
@@ -582,7 +583,7 @@ static func chapel(kit: BuildingKit, base: Vector3, size: Vector3, yaw: float, l
 ## with a stone sill and a pointed hood. In a solid wall a dark pane with a
 ## pointed top; in a wall `thick` thick, an opening you see through,
 ## crossed by lead bars, with a sill inside too.
-const LANCET_HALF_WIDTH := 0.35
+static var LANCET_HALF_WIDTH := 0.35
 const LEAD := Color(0.16, 0.16, 0.18)
 
 
@@ -1076,7 +1077,7 @@ static func round_hut(kit: BuildingKit, base: Vector3, radius: float, height: fl
 			var angle := TAU * i / 8.0
 			kit.block(base + Vector3(cos(angle), 0, sin(angle)) * 0.9, Vector3(0.45, 0.3, 0.45), Color(0.42, 0.25, 0.19), angle)
 		kit.block(base, Vector3(0.9, 0.12, 0.9), FIRE)
-		kit.light(base + Vector3.UP * 0.8, WARM, radius * 2.2, 1.2)
+		kit.fire(base + Vector3.UP * 0.1, 0.7, WARM, radius * 2.2, 1.2)
 	else:
 		var lamp := base + Vector3.UP * (height - 0.2)
 		kit.block(lamp, Vector3(0.18, 0.3, 0.18), FLAME)

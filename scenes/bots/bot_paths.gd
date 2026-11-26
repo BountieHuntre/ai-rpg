@@ -12,16 +12,16 @@ extends RefCounted
 
 ## Yards per cell, and the box tested at each: about a bot's width, from just
 ## above the ground (small steps and bumps are fine) to above its head.
-const CELL := 1.0
+static var CELL := 1.0
 const BOX_HALF := Vector3(0.55, 0.65, 0.55)
-const BOX_LIFT := 1.0
+static var BOX_LIFT := 1.0
 ## Yards searched round the bot and its goal, and the furthest goal a detour
 ## goes for (beyond, it heads for a point that far along the way).
-const MARGIN := 14
-const REACH := 56.0
+static var MARGIN := 14
+static var REACH := 56.0
 ## Detours worked out a physics frame at most: a fresh one tests up to a few
 ## thousand cells (several milliseconds), so many stuck at once take turns.
-const PER_FRAME := 2
+static var PER_FRAME := 2
 var _frame := -1
 var _this_frame := 0
 ## Cells known: true blocked, false open.

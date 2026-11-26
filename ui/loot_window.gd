@@ -10,11 +10,11 @@ signal hovered(item: Dictionary, soulbound: bool)
 signal closed
 
 ## Classic INTERACTION_DISTANCE, in yards (one game unit).
-const LOOT_RANGE := 5.0
-const WIDTH := 110.0
-const ROW_HEIGHT := 16.0
-const ICON_SIZE := 13.0
-const FONT_SIZE := 7
+static var LOOT_RANGE := 5.0
+static var WIDTH := 110.0
+static var ROW_HEIGHT := 16.0
+static var ICON_SIZE := 13.0
+static var FONT_SIZE := 7
 const BACK := Color(0.08, 0.08, 0.1, 0.92)
 const ROW_HOVER := Color(1, 1, 1, 0.08)
 const COPPER_COLOR := Color(0.85, 0.55, 0.25)

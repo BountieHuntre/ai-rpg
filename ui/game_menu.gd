@@ -7,8 +7,8 @@ extends Control
 signal log_out_requested
 signal exit_requested
 
-const WIDTH := 90.0
-const FONT_SIZE := 8
+static var WIDTH := 90.0
+static var FONT_SIZE := 8
 
 ## Set before adding to the tree.
 var in_game := true

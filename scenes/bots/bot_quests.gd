@@ -6,7 +6,7 @@ extends RefCounted
 ## don't loot. Saved in the bot's roster entry.
 
 ## Bots keep a short log so they finish what they take.
-const MAX_ACTIVE := 3
+static var MAX_ACTIVE := 3
 
 ## Quest id -> { "kills": [count per kill objective], "items": [count per item objective] }.
 var active: Dictionary = {}

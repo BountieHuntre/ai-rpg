@@ -13,8 +13,8 @@ extends Control
 ## units, times ui_scale.
 
 const WORLD := "World"
-const TITLE_BAR := 13.0
-const BORDER := 4.0
+static var TITLE_BAR := 13.0
+static var BORDER := 4.0
 const BACK := Color(0.08, 0.07, 0.06, 0.97)
 const FRAME := Color(0.55, 0.45, 0.25)
 const DIM := Color(0, 0, 0, 0.55)

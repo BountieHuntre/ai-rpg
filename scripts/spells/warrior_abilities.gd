@@ -16,22 +16,22 @@ const STANCES := { 17: "Vanguard Stance", 18: "Bastion Stance", 19: "Fury Stance
 const STANCE_MASK := (1 << 16) | (1 << 17) | (1 << 18)
 ## Seconds Riposte Strike stays usable after the target dodges, and Retort
 ## after you dodge, parry or block (classic's aura states).
-const REACTIVE_TIME := 5.0
+static var REACTIVE_TIME := 5.0
 ## Rush and Cut Off: yards per second.
-const RUSH_SPEED := 25.0
+static var RUSH_SPEED := 25.0
 ## Abilities that need a shield.
 const SHIELD_ABILITIES := ["Shield Brace", "Shield Smash", "Shield Crush", "Wall of Steel"]
 ## Most enemies an area attack strikes (Cyclone Strike, Ground Slam; classic's
 ## MaxAffectedTargets), and Cowing Roar frightens.
-const MAX_AREA_TARGETS := 4
-const MAX_FEAR_TARGETS := 5
+static var MAX_AREA_TARGETS := 4
+static var MAX_FEAR_TARGETS := 5
 ## Final Stand raises maximum health by this share for its duration.
-const FINAL_STAND_SHARE := 0.3
+static var FINAL_STAND_SHARE := 0.3
 ## Normalized weapon speeds: one-handers, two-handers, daggers.
-const NORMAL_SPEED := 2.4
-const NORMAL_SPEED_TWO_HAND := 3.3
-const NORMAL_SPEED_DAGGER := 1.7
-const WEAPON_SUBCLASS_DAGGER := 15
+static var NORMAL_SPEED := 2.4
+static var NORMAL_SPEED_TWO_HAND := 3.3
+static var NORMAL_SPEED_DAGGER := 1.7
+static var WEAPON_SUBCLASS_DAGGER := 15
 
 var caster: SpellCaster
 ## The spell waiting for the next swing (Mighty Blow, Sweeping Cut), or {}.

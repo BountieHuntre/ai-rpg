@@ -2,21 +2,53 @@ class_name Vfx
 extends RefCounted
 ## Combat effects in the game's pixel look: small sprites painted in code
 ## (sparks, flames, frost shards, leaves, holy rays, shadow wisps, arcane
-## stars, rings, motes; _sprite) on camera-facing particles, cut out rather
-## than see-through (alpha scissor: the outline shader draws over anything
-## transparent), each spell school moving its own way (SCHOOL_STYLES), with a
+## stars, rings, motes; _sprite) on camera-facing particles, with no outline
+## (NO_OUTLINE), each spell school moving its own way (SCHOOL_STYLES), with a
 ## brief light where spells land. Hits, heals, buffs, spell releases, flying
 ## bolts and the glow at a caster's hands all come from here. Effects further
 ## than RANGE yards from the camera aren't made, so crowds of distant bots
 ## and creatures fighting cost nothing.
 
+## Effects have no outline, unlike the world: their materials are blended
+## (kept out of the depth and normals the outline pass traces) and drawn at
+## this render priority, after the outline material's 0, so no outline is
+## drawn over them either. Fire's sprites too.
+static var NO_OUTLINE := 1
+## How solid each kind of effect sprite is (1 solid, 0 unseen), read as each
+## effect is made (the Tuning tab changes them live).
+## Sparks: weapon hits and the physical school's bursts.
+static var SPARK_OPACITY := 1.0
+## Stars: the arcane school, parries and blocks.
+static var STAR_OPACITY := 1.0
+## Motes: glows at casting hands, heals' rising specks.
+static var MOTE_OPACITY := 1.0
+## Flashes: the bright cores of impacts and releases.
+static var FLASH_OPACITY := 1.0
+## Ring sprites (the flat 3D rings are the solid shapes').
+static var RING_OPACITY := 1.0
+## Crosses: heals.
+static var PLUS_OPACITY := 1.0
+## Flames: the fire school's bursts and burning units.
+static var FLAME_OPACITY := 1.0
+## Shards: the frost school.
+static var SHARD_OPACITY := 1.0
+## Leaves: the nature school.
+static var LEAF_OPACITY := 1.0
+## Rays: the holy school.
+static var RAY_OPACITY := 1.0
+## Wisps: the shadow school.
+static var WISP_OPACITY := 1.0
+## The solid shapes: orbs, gems, ice crystals, shockwave and buff rings, bolts.
+static var SOLID_OPACITY := 1.0
+## The mist round an enchanted weapon.
+static var MIST_OPACITY := 1.0
 ## Yards from the camera past which effects are skipped.
 const RANGE := 45.0
 ## The Spell Effects option: "Off" (none), "Low" (nearer, fewer particles, no
 ## lights) or "High".
 static var quality := "High"
-const LOW_RANGE := 25.0
-const LOW_AMOUNT := 0.5
+static var LOW_RANGE := 25.0
+static var LOW_AMOUNT := 0.5
 ## Colours by spell school (physical, holy, fire, nature, frost, shadow, arcane).
 const SCHOOL_COLORS := [
 	Color(1.0, 0.92, 0.65), Color(1.0, 0.92, 0.45), Color(1.0, 0.42, 0.1), Color(0.45, 0.95, 0.3),
@@ -24,7 +56,7 @@ const SCHOOL_COLORS := [
 ]
 const HEAL_COLOR := Color(0.55, 1.0, 0.45)
 ## Yards a second visible bolts fly (creature spells set their own).
-const BOLT_SPEED := 30.0
+static var BOLT_SPEED := 30.0
 ## How each school's particles look and move: the sprite, speed (yards a
 ## second), gravity (up is +), life (seconds), how much they slow (damping),
 ## spin (degrees a second) and whether they swell before fading.
@@ -38,7 +70,7 @@ const SCHOOL_STYLES := [
 	{ "sprite": "star", "speed": 2.6, "gravity": 0.0, "life": 0.55, "damping": 3.0, "spin": 90.0 },
 ]
 ## At most this many effect lights at once (each a few frames long).
-const MAX_LIGHTS := 8
+static var MAX_LIGHTS := 8
 ## Each school's solid body for a bolt: [mesh ("orb", "gem", "crystal"),
 ## size (yards), colour, degrees a second it spins]. The sprites stream
 ## round it.
@@ -485,12 +517,12 @@ static func weapon_mist(anchor: Node3D, color: Color, motion: String, blade: AAB
 
 
 ## How much brighter than its colour an enchanted weapon's mist is drawn.
-const MIST_SHINE := 1.3
+static var MIST_SHINE := 1.3
 ## An enchanted weapon's own light: its reach in yards and strength, shown
 ## only within WEAPON_LIGHT_NEAR yards of the camera, at High effects.
-const WEAPON_LIGHT_RANGE := 2.2
-const WEAPON_LIGHT_ENERGY := 0.9
-const WEAPON_LIGHT_NEAR := 25.0
+static var WEAPON_LIGHT_RANGE := 2.2
+static var WEAPON_LIGHT_ENERGY := 0.9
+static var WEAPON_LIGHT_NEAR := 25.0
 
 
 ## A soft light in an enchanted weapon's colour at the middle of its blade
@@ -527,6 +559,7 @@ static func _mist_quad() -> QuadMesh:
 		material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 		material.no_depth_test = false
+		material.render_priority = NO_OUTLINE
 		var n := SPRITE_SIZE
 		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 		var c := (n - 1) / 2.0
@@ -538,7 +571,9 @@ static func _mist_quad() -> QuadMesh:
 		material.albedo_texture = ImageTexture.create_from_image(img)
 		quad.material = material
 		_quads["mist"] = quad
-	return _quads["mist"]
+	var mist: QuadMesh = _quads["mist"]
+	(mist.material as StandardMaterial3D).albedo_color.a = MIST_OPACITY
+	return mist
 
 
 ## Mist fades in, holds faintly and fades out.
@@ -585,7 +620,14 @@ static func _solid_node(shape: String, size: float, color: Color) -> MeshInstanc
 		var material := StandardMaterial3D.new()
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		material.albedo_color = color
+		# No outline: kept out of the depth and normals the outline pass
+		# traces, drawn after it, writing its own depth so its faces still
+		# hide each other.
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+		material.render_priority = NO_OUTLINE
 		_solids[key] = material
+	(_solids[key] as StandardMaterial3D).albedo_color.a = SOLID_OPACITY
 	node.material_override = _solids[key]
 	return node
 
@@ -722,7 +764,26 @@ static func _sprite_quad(sprite: String, size: float) -> QuadMesh:
 		material.vertex_color_use_as_albedo = true
 		quad.material = material
 		_quads[key] = quad
-	return _quads[key]
+	var quad: QuadMesh = _quads[key]
+	(quad.material as StandardMaterial3D).albedo_color.a = opacity(sprite)
+	return quad
+
+
+## How solid a kind of sprite is (its *_OPACITY).
+static func opacity(sprite: String) -> float:
+	match sprite:
+		"spark": return SPARK_OPACITY
+		"star": return STAR_OPACITY
+		"mote": return MOTE_OPACITY
+		"flash": return FLASH_OPACITY
+		"ring": return RING_OPACITY
+		"plus": return PLUS_OPACITY
+		"flame": return FLAME_OPACITY
+		"shard": return SHARD_OPACITY
+		"leaf": return LEAF_OPACITY
+		"ray": return RAY_OPACITY
+		"wisp": return WISP_OPACITY
+	return 1.0
 
 
 static func _sprite_material(sprite: String) -> StandardMaterial3D:
@@ -730,8 +791,10 @@ static func _sprite_material(sprite: String) -> StandardMaterial3D:
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_texture = _sprite(sprite)
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	material.alpha_scissor_threshold = 0.5
+	# Blended rather than cut out (the sprites are solid or clear, so they
+	# look the same), and drawn after the outline pass: no outline.
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.render_priority = NO_OUTLINE
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
 
@@ -759,11 +822,11 @@ static func _grow_curve(span: Vector2, hold := false) -> Curve:
 
 # ---------------------------------------------------------------- sprites
 
-const SPRITE_SIZE := 16
+static var SPRITE_SIZE := 16
 
 
-## A sprite painted in code: white shapes (lighter in the middle, greyer at
-## the edges) on clear, so a particle's colour tints it.
+## A sprite painted in code: a flat white shape on clear, so a particle's
+## colour is its colour (_shade's lighter middles are only its outline now).
 static func _sprite(sprite: String) -> ImageTexture:
 	if _textures.has(sprite):
 		return _textures[sprite]
@@ -775,9 +838,10 @@ static func _sprite(sprite: String) -> ImageTexture:
 		for x in n:
 			var dx := (x - c) / c
 			var dy := (y - c) / c
-			var shade := _shade(sprite, dx, dy)
-			if shade > 0.0:
-				img.set_pixel(x, y, Color(shade, shade, shade, 1.0))
+			# One flat tone: the shape only, its colour all the particle's
+			# (lighter middles and greyer rims looked muddy once tinted).
+			if _shade(sprite, dx, dy) > 0.0:
+				img.set_pixel(x, y, Color.WHITE)
 	var tex := ImageTexture.create_from_image(img)
 	_textures[sprite] = tex
 	return tex

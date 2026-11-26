@@ -7,7 +7,7 @@ extends Node3D
 ## pass (PASSES) is cut through the mountains on both sides. -Z is north.
 
 ## Mountain noise shared by every zone, in world coordinates.
-const LAND_SEED := 1077
+static var LAND_SEED := 1077
 ## Passes between zones, per continent (the two worlds' coordinates overlap,
 ## so a continent's passes never touch the other's ground): "line", points in
 ## world coordinates, the first end in one zone and the last in the other; and
@@ -36,54 +36,54 @@ const PASSES := {
 	],
 }
 ## Half the width of a pass's flat floor, and how far its sides run up.
-const PASS_FLOOR := 7.0
-const PASS_SIDES := 13.0
+static var PASS_FLOOR := 7.0
+static var PASS_SIDES := 13.0
 ## How high the pass climbs at the border, over the land around it.
-const PASS_CREST := 7.0
+static var PASS_CREST := 7.0
 ## Half the width of the gap in the edge walls where a pass crosses them.
-const PASS_GAP := 10.0
-const MOUNTAIN_HEIGHT := 38.0
-const MOUNTAIN_ROUGHNESS := 14.0
+static var PASS_GAP := 10.0
+static var MOUNTAIN_HEIGHT := 38.0
+static var MOUNTAIN_ROUGHNESS := 14.0
 ## Players can't walk past this far from the center, along each axis, except
 ## through a pass.
-const EDGE_INSET := 4.0
+static var EDGE_INSET := 4.0
 
 ## The edge mountains wind in and out (`edge_ring`): along each side of the
 ## square they start anywhere from EDGE_NEAR yards in to EDGE_FAR (EDGE_FAR_SMALL
 ## on the 400-yard starting zones), by noise every EDGE_STEP yards, but never
 ## nearer than EDGE_CLEAR to anything the zone keeps clear (`edge_keep`).
-const EDGE_NEAR := 25.0
-const EDGE_FAR := 150.0
-const EDGE_FAR_SMALL := 100.0
-const EDGE_STEP := 8.0
-const EDGE_CLEAR := 15.0
-const EDGE_FULL := 6.0
+static var EDGE_NEAR := 25.0
+static var EDGE_FAR := 150.0
+static var EDGE_FAR_SMALL := 100.0
+static var EDGE_STEP := 8.0
+static var EDGE_CLEAR := 15.0
+static var EDGE_FULL := 6.0
 ## The mountains rise to full height over this many yards from where they
 ## start, so a deep spur is a solid ridge, not a long slope.
-const EDGE_RISE := 45.0
+static var EDGE_RISE := 45.0
 ## Within PASS_RIDGE_SPAN yards along an edge of where a pass crosses it, the
 ## mountains start at least PASS_RIDGE yards in, so the pass is cut through a
 ## ridge and climbs gently to its crest.
-const PASS_RIDGE := 60.0
-const PASS_RIDGE_SPAN := 45.0
+static var PASS_RIDGE := 60.0
+static var PASS_RIDGE_SPAN := 45.0
 
 ## Ragged places (`ragged_distance`): a circle's rim wobbles in and out by up
 ## to this share of its radius.
-const RAGGED := 0.3
+static var RAGGED := 0.3
 ## Rolling hills over every zone's open land (hill_height): how high they
 ## rise, how far apart (yards between tops, roughly), and how far they take
 ## to fade out round what's kept level (hill_keep).
-const HILL_HEIGHT := 20.0
+static var HILL_HEIGHT := 20.0
 ## How much the hills differ in size (the smallest a share of HILL_HEIGHT),
 ## how far apart big and small ones lie, and the bumps over their slopes.
-const HILL_LEAST := 0.35
-const HILL_SIZE_SPACING := 420.0
-const HILL_BUMPS := 2.2
-const HILL_BUMP_SPACING := 45.0
-const HILL_SPACING := 170.0
-const HILL_FADE := 30.0
+static var HILL_LEAST := 0.35
+static var HILL_SIZE_SPACING := 420.0
+static var HILL_BUMPS := 2.2
+static var HILL_BUMP_SPACING := 45.0
+static var HILL_SPACING := 170.0
+static var HILL_FADE := 30.0
 ## The hills' level mask: a grid this many yards a cell.
-const HILL_CELL := 4.0
+static var HILL_CELL := 4.0
 
 static var _land: FastNoiseLite
 static var _ragged: FastNoiseLite
@@ -144,11 +144,11 @@ var _caves_off := false
 var _rock_key := "rock"
 ## Yards of ground kept over a cave's ceiling (raised where the hill is thin),
 ## and how far round it the raising eases out.
-const CAVE_COVER := 3.0
-const CAVE_RAMP := 14.0
+static var CAVE_COVER := 3.0
+static var CAVE_RAMP := 14.0
 ## Within this of the mouth (along the way in, the cave's own yards) the
 ## ground isn't raised, so the hillside meets the tunnel there.
-const CAVE_MOUTH := 6.0
+static var CAVE_MOUTH := 6.0
 ## The render layer the caves' rock is drawn on, which the sun doesn't
 ## light (World.build takes it out of the sun's light_cull_mask).
 const CAVE_RENDER_LAYER := 1 << 2
@@ -159,17 +159,17 @@ const CAVE_RENDER_LAYER := 1 << 2
 ## cut by an upright plane MOUTH_DEPTH inside, just within the hillside, so
 ## its own rock makes the mouth; a new rim joins the window's edge to the
 ## cut's edge, sharing both edges' points.
-const MOUTH_HALF := 9.0
-const MOUTH_MARGIN := 1.5
-const MOUTH_BACK := 2.5
-const MOUTH_DEPTH := 1.0
-const MOUTH_FRONT := 1.0
+static var MOUTH_HALF := 9.0
+static var MOUTH_MARGIN := 1.5
+static var MOUTH_BACK := 2.5
+static var MOUTH_DEPTH := 1.0
+static var MOUTH_FRONT := 1.0
 ## Boxes inside the caves (Node3D, their `size` meta): the camera in one is
 ## indoors (main.gd), for the dark.
 const CAVE_AIR_GROUP := &"cave_air"
 ## How many wild caves a zone gets for its size (400 yards: 2).
-const WILD_CAVES_PER_AREA := 2.0
-const WILD_CAVE_SEARCH := 400
+static var WILD_CAVES_PER_AREA := 2.0
+static var WILD_CAVE_SEARCH := 400
 
 
 ## Adds a cave: its mouth at `mouth`, the cave running back the way `facing`
@@ -298,8 +298,8 @@ static func _in_window(cave: Dictionary, local: Vector2) -> bool:
 
 ## How many steps a mouth's rim takes from the ground to the cave, and how
 ## far (yards) the noise pushes its rock in or out between.
-const RIM_STEPS := 4
-const RIM_CRAG := 1.4
+static var RIM_STEPS := 4
+static var RIM_CRAG := 1.4
 
 
 ## How far a cave's tunnel reaches to either side where it's cut (MOUTH_DEPTH
@@ -594,13 +594,20 @@ func wall_torch(parent: Node3D, at: Vector3, out: Vector3, light_range := 8.0) -
 	torch_root.basis = Basis.looking_at(-out)
 	parent.add_child(torch_root)
 	Props.box(torch_root, Vector3(0, -0.24, 0.04), Vector3(0.14, 0.24, 0.12), Color(0.2, 0.2, 0.22), 0.0, false)
-	var stick := Props.box(torch_root, Vector3(0, -0.2, 0.18), Vector3(0.08, 0.6, 0.08), Color(0.35, 0.22, 0.12), 0.0, false)
+	# The stick stands on its foot at the bracket (Props.box places a box by
+	# its bottom) and leans out; its head is a dark wrap at its tip, and the
+	# fire burns from the head's middle.
+	var foot := Vector3(0, -0.2, 0.18)
+	var lean := Basis(Vector3.RIGHT, 0.45)
+	var stick := Props.box(torch_root, foot, Vector3(0.08, 0.6, 0.08), Color(0.35, 0.22, 0.12), 0.0, false)
 	stick.rotation.x = 0.45
-	torch(torch_root, Vector3(0, 0.22, 0.32), light_range)
+	var head := Props.box(torch_root, foot + lean * Vector3(0, 0.5, 0), Vector3(0.12, 0.14, 0.12), Color(0.2, 0.13, 0.08), 0.0, false)
+	head.rotation.x = 0.45
+	Fire.make(torch_root, foot + lean * Vector3(0, 0.57, 0), 0.3, light_range)
 
 
-## A campfire on the ground at `at`: a ring of stones, crossed logs and
-## flames, with a low light.
+## A campfire on the ground at `at`: a ring of stones, crossed logs and a
+## fire burning on them, with a low flickering light.
 func campfire(parent: Node3D, at: Vector3, light_range := 10.0) -> void:
 	var fire := Node3D.new()
 	fire.name = "Campfire"
@@ -612,25 +619,8 @@ func campfire(parent: Node3D, at: Vector3, light_range := 10.0) -> void:
 	for i in 3:
 		var log_box := Props.box(fire, Vector3(0, 0.08, 0), Vector3(1.0, 0.16, 0.16), Color(0.32, 0.2, 0.11), TAU * i / 3.0, false)
 		log_box.rotation.z = 0.25
-	var flame_material := StandardMaterial3D.new()
-	flame_material.albedo_color = Color(1.0, 0.55, 0.15)
-	flame_material.emission_enabled = true
-	flame_material.emission = Color(1.0, 0.45, 0.1)
-	flame_material.emission_energy_multiplier = 2.5
-	for flame_at: Vector3 in [Vector3(0, 0.3, 0), Vector3(0.12, 0.22, 0.08), Vector3(-0.1, 0.2, -0.08)]:
-		var flame := MeshInstance3D.new()
-		flame.mesh = Props.blob(0.22, 5, 3)
-		flame.material_override = flame_material
-		flame.position = flame_at
-		flame.scale = Vector3(1.0, 1.6, 1.0)
-		fire.add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.6, 0.3)
-	light.omni_range = light_range
-	light.light_energy = 1.4
-	light.position = Vector3(0, 0.8, 0)
-	light.light_volumetric_fog_energy = 0.0
-	fire.add_child(light)
+	# Burning on the logs (Fire: flames, embers, smoke and a flickering light).
+	Fire.make(fire, Vector3(0, 0.12, 0), 0.7, light_range, 1.4, Color(1.0, 0.6, 0.3))
 
 
 ## A few boulders on the ground beside a cave's mouth, off the way in and
@@ -1560,7 +1550,7 @@ func add_forge(point: Vector3) -> void:
 
 
 ## Reach of a forge (classic spell focus radius).
-const FORGE_RADIUS := 10.0
+static var FORGE_RADIUS := 10.0
 
 
 ## A small stone forge with its hood, glowing coals and an anvil beside it,
@@ -1816,24 +1806,10 @@ func totem(parent: Node3D, at: Vector2, y: float, height: float, _colors: Array)
 	place_baked(parent, "totem", Transform3D(Basis().scaled(Vector3.ONE * height / 8.0), Vector3(at.x, y, at.y)))
 
 
+## A flame at `at` (a torch's head, a brazier, a lamp on a post): a Fire,
+## its light flickering.
 func torch(parent: Node3D, at: Vector3, light_range := 4.0) -> void:
-	var flame := MeshInstance3D.new()
-	flame.mesh = Props.blob(0.25, 5, 3)
-	var glow := StandardMaterial3D.new()
-	glow.albedo_color = Color(1.0, 0.6, 0.2)
-	glow.emission_enabled = true
-	glow.emission = Color(1.0, 0.5, 0.15)
-	glow.emission_energy_multiplier = 2.0
-	flame.material_override = glow
-	flame.position = at
-	parent.add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.65, 0.35)
-	light.omni_range = light_range
-	light.position = at + Vector3(0, 0.3, 0)
-	# Lights the place, not the dust in it (rooms' and caves' haze).
-	light.light_volumetric_fog_energy = 0.0
-	parent.add_child(light)
+	Fire.make(parent, at - Vector3(0, 0.08, 0), 0.3, light_range)
 
 
 ## Ground clutter for the Environment Detail option: share of the tufts and
@@ -1853,11 +1829,11 @@ func add_clutter(parent: Node3D, mesh: Mesh, color: Color, transforms: Array[Tra
 ## The textured zones' nature (Nature): tree, rock and bush shapes in a few
 ## variants each, grass and flower cards drawn to CARD_RANGE yards (they
 ## shrink away before that), bushes to BUSH_RANGE.
-const TREE_VARIANTS := 4
-const ROCK_VARIANTS := 5
-const BUSH_VARIANTS := 4
-const CARD_RANGE := 62.0
-const BUSH_RANGE := 140.0
+static var TREE_VARIANTS := 4
+static var ROCK_VARIANTS := 5
+static var BUSH_VARIANTS := 4
+static var CARD_RANGE := 62.0
+static var BUSH_RANGE := 140.0
 ## The kinds a zone's grass place function can make (add_nature_clutter).
 const CARD_KINDS := ["grass", "tall", "flowers_yellow", "flowers_white", "flowers_blue", "ferns", "wheat",
 	"frost_grass", "heather", "dry_grass", "dead_blades", "elf_blades", "plains_blades"]

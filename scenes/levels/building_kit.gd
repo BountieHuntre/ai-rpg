@@ -24,11 +24,13 @@ class Surface:
 		normals.append_array([normal, normal, normal])
 var _body := StaticBody3D.new()
 ## How thick a room's dust is (FogMaterial density).
-const DUST_DENSITY := 0.06
+static var DUST_DENSITY := 0.06
 ## Rooms' dust volumes are in this group (main.gd draws the shafts near them).
 const DUST_GROUP := &"room_dust"
-## Lights to add: [position, color, range, energy].
+## Lights to add, each flickering as a fire's: [position, color, range, energy].
 var _lights: Array = []
+## Fires to light (Fire): [base, size, color, range, energy].
+var _fires: Array = []
 ## Dusty air inside rooms: [transform, size]. With the world's volumetric
 ## fog on (the Light Shafts option), sunlight through the windows and doors
 ## shows in it as shafts.
@@ -158,9 +160,16 @@ func wedge(base: Vector3, width: float, height: float, depth: float, color: Colo
 		_body.add_child(collision)
 
 
-## A warm light (a hearth, candles, a room's glow), in `frame`.
+## A warm light (a lantern, candles, a room's glow), in `frame`, flickering
+## as a flame's does.
 func light(at: Vector3, color: Color, light_range: float, energy: float) -> void:
 	_lights.append([frame * at, color, light_range, energy])
+
+
+## A fire burning at `at` (its base, in `frame`) `size` yards across, with its
+## light (Fire: flames, embers, smoke over big ones, a flickering light).
+func fire(at: Vector3, size: float, color: Color, light_range: float, energy: float) -> void:
+	_fires.append([frame * at, size, color, light_range, energy])
 
 
 ## A cylinder (or cone, or frustum) standing on `base`.
@@ -249,17 +258,11 @@ func finish() -> Node3D:
 		air.material = _dust_material
 		air.add_to_group(DUST_GROUP)
 		root.add_child(air)
+	# The default falloff: pools of light under the lanterns, dimmer by the
+	# walls; none in the room's dust (the sun's shafts are the show).
 	for made: Array in _lights:
-		var lamp := OmniLight3D.new()
-		lamp.position = made[0]
-		lamp.light_color = made[1]
-		lamp.omni_range = made[2]
-		lamp.light_energy = made[3]
-		lamp.shadow_enabled = false
-		# The default falloff: pools of light under the lanterns, dimmer by the walls.
-		lamp.omni_attenuation = 1.0
-		# A faint glow in the room's dust; the sun's shafts are the show.
-		lamp.light_volumetric_fog_energy = 0.0
-		root.add_child(lamp)
+		Fire.make(root, (made[0] as Vector3) - Vector3(0, 0.18, 0), 0.0, made[2], made[3], made[1])
+	for made: Array in _fires:
+		Fire.make(root, made[0], made[1], made[3], made[4], made[2])
 	_parent.add_child(root)
 	return root

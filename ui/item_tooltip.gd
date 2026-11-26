@@ -5,8 +5,8 @@ extends PanelContainer
 ## also shows what is equipped in its slots beside it, headed "Currently
 ## Equipped", like the classic shopping tooltips.
 
-const WIDTH := 120.0
-const FONT_SIZE := 7
+static var WIDTH := 120.0
+static var FONT_SIZE := 7
 const OFFSET := Vector2(10, 10)
 ## Gap from the screen's bottom right corner when anchored.
 const ANCHOR_MARGIN := Vector2(4, 4)
@@ -23,7 +23,7 @@ static var hovered_enchant := 0
 
 
 ## Over every window, the bags (InventoryUI, z 1) included.
-const Z_INDEX := 2
+static var Z_INDEX := 2
 
 
 func _init() -> void:

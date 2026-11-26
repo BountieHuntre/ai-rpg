@@ -11,23 +11,23 @@ extends Node3D
 ## pooled spawns move about.
 
 ## Nodes per 400 by 400 yards (a starting zone's size).
-const HERBS_PER_AREA := 20.0
-const ORE_PER_AREA := 8.0
+static var HERBS_PER_AREA := 20.0
+static var ORE_PER_AREA := 8.0
 ## Spots in the pool for each node, so respawns move.
-const POOL := 3
+static var POOL := 3
 ## No spot within this of another, nor of the zone's hub (its town).
-const SPACING := 12.0
-const HUB_CLEAR := 40.0
+static var SPACING := 12.0
+static var HUB_CLEAR := 40.0
 ## Steepest ground a node stands on (its normal's height).
-const HERB_FLAT := 0.8
-const ORE_FLAT := 0.7
+static var HERB_FLAT := 0.8
+static var ORE_FLAT := 0.7
 ## Ore stands at the foot of steep ground: within FOOT_NEAR yards the ground
 ## rises at least FOOT_RISE, and keeps rising to FOOT_HIGH by twice as far.
-const FOOT_NEAR := 2.5
-const FOOT_RISE := 1.4
-const FOOT_HIGH := 2.6
+static var FOOT_NEAR := 2.5
+static var FOOT_RISE := 1.4
+static var FOOT_HIGH := 2.6
 ## How far into the rise a node is set, so it sits in the slope.
-const FOOT_SET := 0.5
+static var FOOT_SET := 0.5
 ## Places whose names say they're mines or rock: ore spots there whatever
 ## the ground shows.
 const MINE_WORDS := ["delve", "mine", "hollow", "quarry", "dig", "cave", "rock", "crag"]
@@ -48,7 +48,7 @@ var _check := 0.0
 ## spots are checked against its bodies first: boulders, trunks, walls).
 var _first: Dictionary = {}
 ## Furthest up the edge mountains a node may stand (Zone.edge_ring).
-const EDGE_LIMIT := 0.12
+static var EDGE_LIMIT := 0.12
 
 
 ## Scatters a zone's nodes (Zone.spawn_creatures calls it, the ground built).

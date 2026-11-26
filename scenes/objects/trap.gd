@@ -8,12 +8,12 @@ extends Node3D
 ## by the Ranger: damage and threat are theirs.
 
 ## Seconds before it can be sprung (classic's trap arming time).
-const ARM_TIME := 2.0
+static var ARM_TIME := 2.0
 ## How long an unsprung trap lasts, at least (classic: one minute).
-const LIFETIME := 60.0
+static var LIFETIME := 60.0
 ## Area effects (a Rime Trap's ice, a Blast Trap's burning ground) last their
 ## spell's duration and hit everything inside each tick.
-const AREA_TICK := 1.0
+static var AREA_TICK := 1.0
 
 var spell: Dictionary = {}
 var radius := 5.0

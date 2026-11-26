@@ -19,11 +19,11 @@ signal message(text: String, is_error: bool)
 signal bag_requested(bot: Bot)
 
 const SLOT := 12.0
-const GAP := 1.0
+static var GAP := 1.0
 ## Room between the menu buttons and the bar, and between its rows.
-const ROW_GAP := 2.0
+static var ROW_GAP := 2.0
 ## Yards from you a vendor or trainer may be for Sell and Train.
-const NEAR := 30.0
+static var NEAR := 30.0
 const MODE_ICONS := { "Assist": "strike", "Defend": "aegis", "Passive": "mind_calm" }
 const MODE_TEXT := {
 	"Assist": "Assist: fights what you fight.",

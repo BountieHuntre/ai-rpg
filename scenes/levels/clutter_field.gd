@@ -32,7 +32,7 @@ var _task_key := Vector2i.ZERO
 var _task_result := {}
 var _check_left := 0.0
 var _started := false
-const CHECK_EVERY := 0.25
+static var CHECK_EVERY := 0.25
 
 
 func _process(delta: float) -> void:

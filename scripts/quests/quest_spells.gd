@@ -10,12 +10,12 @@ extends RefCounted
 ## why one can't be used here and now, and `land` does what it does once its
 ## cast is done.
 
-const EFFECT_DUMMY := 3
+static var EFFECT_DUMMY := 3
 const EFFECT_QUEST_COMPLETE := 16
 const EFFECT_CREATE_ITEM := 24
-const EFFECT_SEND_EVENT := 61
+static var EFFECT_SEND_EVENT := 61
 ## How near the creature or object a spell is used on must be, in yards.
-const REACH := 8.0
+static var REACH := 8.0
 ## Dummy effects' scripts: the creature the spell is used on, and whether it
 ## must be dead. Awaken Peon wakes a sleeping Lazy Peon (an Npc) and counts as
 ## killing it, as its CMaNGOS script gives; Release Wildclaw frees the druid's

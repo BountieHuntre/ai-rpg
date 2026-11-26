@@ -17,7 +17,7 @@ const ALLIANCE := ClassicData.ALLIANCE
 const HORDE := ClassicData.HORDE
 ## Seconds to wait after an option changes, so dragging a slider doesn't
 ## make and remove bots at every step.
-const SYNC_DELAY := 0.4
+static var SYNC_DELAY := 0.4
 ## Options that change which bots are in the world.
 const WORLD_OPTIONS := ["bots_enabled", "bot_count", "bot_min_level", "bot_max_level"]
 
@@ -413,7 +413,7 @@ func _route_in_zone(from: Vector3, to: Vector3) -> Array[Vector3]:
 
 
 ## Yards kept clear of the walls when going round them.
-const WALL_MARGIN := 4.0
+static var WALL_MARGIN := 4.0
 
 
 ## Corners to go round a walled place from a point outside it to its gate,
@@ -466,8 +466,8 @@ func creatures() -> Array:
 ## frame time; with more of them each is ticked less often (its step is
 ## capped at FAR_MAX_STEP seconds, so a crowded world's far side runs slow).
 static var FAR_BUDGET := 3000
-const FAR_RATE := 10.0
-const FAR_MAX_STEP := 0.5
+static var FAR_RATE := 10.0
+static var FAR_MAX_STEP := 0.5
 var _clock := 0.0
 var _far_units: Array[Node] = []
 var _far_cursor := 0
@@ -503,7 +503,7 @@ func _physics_process(delta: float) -> void:
 
 ## Creatures by square of the world, GRID yards on a side, made once a
 ## physics frame, for bots looking for something to fight.
-const GRID := 50.0
+static var GRID := 50.0
 var _creature_grid: Dictionary = {}
 
 

@@ -25,7 +25,7 @@ extends Node
 ## Spells that fit the SpellCaster's own kinds (self buffs, Frighten Beast's
 ## fear, Creature Lore) are left to it.
 
-const AUTO_SHOT := 75
+static var AUTO_SHOT := 75
 const ERR_NEED_RANGED := "You need a ranged weapon equipped."
 const ERR_NOT_NOW := "You can't do that yet"
 const ERR_ALREADY := "That is already active."
@@ -40,7 +40,7 @@ const ERR_TOO_HIGH := "That creature is too high level for you to tame."
 const ERR_NOT_YET := "That isn't in the game yet."
 ## Revive Pet brings it back with this share of its health (its effect's
 ## base points plus one, in percent).
-const REVIVE_SHARE := 0.15
+static var REVIVE_SHARE := 0.15
 
 signal beast_training_requested
 ## The pet came out, went away, or changed (level, health, abilities).
@@ -48,25 +48,25 @@ signal pet_changed
 ## Effects and auras of the Ranger's own (CMaNGOS SpellEffects, SpellAuraNames).
 const EFFECT_WEAPON_DAMAGE := 58
 const EFFECT_THREAT := 63
-const EFFECT_ADD_FARSIGHT := 72
-const EFFECT_SUMMON_OBJECT := 104
-const AURA_MOD_FEIGN_DEATH := 66
-const AURA_TRACK_CREATURES := 44
-const AURA_TRACK_RESOURCES := 45
-const AURA_MOD_RANGED_ATTACK_POWER_ATTACKER_BONUS := 127
+static var EFFECT_ADD_FARSIGHT := 72
+static var EFFECT_SUMMON_OBJECT := 104
+static var AURA_MOD_FEIGN_DEATH := 66
+static var AURA_TRACK_CREATURES := 44
+static var AURA_TRACK_RESOURCES := 45
+static var AURA_MOD_RANGED_ATTACK_POWER_ATTACKER_BONUS := 127
 ## Damage classes (SpellDmgClass): ranged attacks.
-const DMG_CLASS_MELEE := 2
-const DMG_CLASS_RANGED := 3
+static var DMG_CLASS_MELEE := 2
+static var DMG_CLASS_RANGED := 3
 ## Normalised ranged weapon speed (Unit::CalculateDamage, normalized ranged).
-const RANGED_NORMAL_SPEED := 2.8
+static var RANGED_NORMAL_SPEED := 2.8
 ## Spread Shot strikes its target and up to two more near it (its effect's
 ## chain targets in classic).
-const SPREAD_TARGETS := 3
-const SPREAD_RADIUS := 8.0
+static var SPREAD_TARGETS := 3
+static var SPREAD_RADIUS := 8.0
 ## Reactive attacks are usable this long after the dodge or parry.
-const REACTIVE_TIME := 5.0
+static var REACTIVE_TIME := 5.0
 ## Distant Gaze: how far out the camera looks from.
-const FAR_SIGHT_DISTANCE := 60.0
+static var FAR_SIGHT_DISTANCE := 60.0
 
 var caster: SpellCaster
 var _unit: PlayerUnit

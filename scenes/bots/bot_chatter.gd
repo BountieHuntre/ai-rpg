@@ -13,16 +13,16 @@ extends Node
 
 ## Seconds between lines in the channels at Normal; Quiet doubles them,
 ## Chatty halves them.
-const AMBIENT_MIN := 25.0
-const AMBIENT_MAX := 70.0
+static var AMBIENT_MIN := 25.0
+static var AMBIENT_MAX := 70.0
 const PACE := { "Quiet": 2.0, "Normal": 1.0, "Chatty": 0.5 }
 ## Seconds a bot takes to "type" an answer.
-const REPLY_MIN := 1.2
-const REPLY_MAX := 3.5
+static var REPLY_MIN := 1.2
+static var REPLY_MAX := 3.5
 ## A party bot says it's out of mana at most this often.
-const OOM_COOLDOWN := 60.0
+static var OOM_COOLDOWN := 60.0
 ## Seconds a bot keeps talking about something that just happened.
-const RECENT := 120.0
+static var RECENT := 120.0
 ## Yards around a bot that count as "here" for crowds of creatures and bots.
 const NEARBY := 25.0
 
@@ -503,7 +503,7 @@ static func _asks_price(lower: String) -> bool:
 
 
 ## Seconds a trade topic stays live for a whispered price without an item.
-const TOPIC_TIME := 300.0
+static var TOPIC_TIME := 300.0
 
 
 ## What a whispered price is about: the item last talked about or advertised,

@@ -96,7 +96,7 @@ static func card_material(key: String, patches: Texture2D, sway := 0.08) -> Shad
 # built from TREE_SEEDS[kind] + n). Unbaked, a tree is its parts as built.
 
 const TREE_PATH := "res://assets/models/nature/%s_%d.res"
-const TREE_VARIANTS := 6
+static var TREE_VARIANTS := 6
 ## Kinds made just once (buildings, the great tree): one variant.
 const SINGLE_KINDS := ["great_tree", "bower_violet", "bower_teal", "long_bower", "moonwell_ring", "silver_gate",
 	"longhouse", "totem"]
@@ -684,8 +684,8 @@ static func bush_mesh(rng_seed: int, snowy := false, leaves_key := "leaves") -> 
 ## How many cacti there are, baked to CACTUS_PATH by
 ## tools/models/nature/bake_cacti.gd: each one solid, its trunk and arms
 ## joined by CSG (cactus_parts), so it's one mesh with no seams.
-const CACTUS_VARIANTS := 6
-const CACTUS_SEED := 7301
+static var CACTUS_VARIANTS := 6
+static var CACTUS_SEED := 7301
 const CACTUS_PATH := "res://assets/models/nature/cactus_%d.res"
 
 

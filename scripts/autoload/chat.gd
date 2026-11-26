@@ -24,9 +24,9 @@ const COLORS := {
 	"monster_say": Color("ffff9f"), "monster_emote": Color("ffff9f"),
 }
 ## Yards a /say and a /yell carry (classic's listen ranges).
-const SAY_RANGE := 25.0
-const YELL_RANGE := 300.0
-const MAX_LINES := 200
+static var SAY_RANGE := 25.0
+static var YELL_RANGE := 300.0
+static var MAX_LINES := 200
 
 var lines: Array[Dictionary] = []
 ## Who last whispered the player, for /r.

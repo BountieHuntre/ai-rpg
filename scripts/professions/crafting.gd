@@ -9,7 +9,7 @@ extends RefCounted
 
 ## SPELL_EFFECT_TRADE_SKILL: Smelting's and Enchanting's spells open the
 ## trade skill window.
-const EFFECT_TRADE_SKILL := 47
+static var EFFECT_TRADE_SKILL := 47
 
 
 ## How many of a recipe the bags' reagents make.
