@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.25.0",
+		"date": "11-25-2026",
+		"notes": [
+			"Torches, campfires, hearths, fire pits and lamps burn with real fire: licking flames, a bright heart, drifting embers and smoke over the bigger fires.",
+			"Firelight flickers, dipping and guttering as the flames move.",
+			"Wall torches burn from their heads.",
+			"Spell effects and fires no longer have the world's dark outline, and their sprites are drawn in clean, flat colours.",
+			"Typing in a text box no longer moves your character or presses your keys; Esc or a click elsewhere lets go of the box."
+		]
+	},
+	{
 		"version": "0.24.0",
 		"date": "11-25-2026",
 		"notes": [
