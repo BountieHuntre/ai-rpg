@@ -1,5 +1,14 @@
 [
 	{
+		"version": "0.25.2",
+		"date": "11-26-2026",
+		"notes": [
+			"Every cave's mouth is framed by a packed arch of big rocks leaning in toward the opening, each cave its own.",
+			"Every cave can be walked into and out of: dens no longer sit in the edge mountains, on ledges or in pits, and the ground before a mouth ramps gently down to the land.",
+			"Cave walls, ceilings and mouths are smoother, without stray slivers of rock."
+		]
+	},
+	{
 		"version": "0.25.1",
 		"date": "11-25-2026",
 		"notes": [
