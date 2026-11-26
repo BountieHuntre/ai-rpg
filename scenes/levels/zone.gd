@@ -140,6 +140,10 @@ var enclosures: Array = []
 var caves: Array[Dictionary] = []
 ## Set while working out the ground without the caves (their bases).
 var _caves_off := false
+## The zone's hand edits (ZoneEdits: heights, cave vertices, additions,
+## cuts), laid over what the code builds; and, while exporting, off.
+var _edits: ZoneEdits
+var _edits_off := false
 ## The rock texture of this land's ground (build_ground's rock_tex).
 var _rock_key := "rock"
 ## Yards of ground kept over a cave's ceiling (raised where the hill is thin),
@@ -274,6 +278,9 @@ func _ground_for_caves(x: float, z: float, height: float) -> float:
 ## opening where the hillside crosses the way in. Read from the ground's
 ## worker threads once the bases are settled.
 func cave_hole(x: float, z: float, y: float) -> bool:
+	# Inside a hand edit's cut shape.
+	if _edits != null and not _edits.cuts.is_empty() and _edits.cut(Vector3(x, y, z)):
+		return true
 	for cave: Dictionary in caves:
 		if is_nan(cave.base) or not (cave.rect as Rect2).has_point(Vector2(x, z)):
 			continue
@@ -444,6 +451,16 @@ func build_caves() -> void:
 		var clipped := _clip_behind(faces, cave)
 		var kept: PackedVector3Array = clipped[0]
 		var rim: Array = _mouth(cave, clipped[1], noise)
+		# As the code built it (one side of the rim), for the Blender export;
+		# then the hand edits' moved vertices (ZoneEdits).
+		var built := kept.duplicate()
+		var rim_faces: PackedVector3Array = rim[0]
+		for t in range(0, rim_faces.size(), 6):
+			built.append_array([rim_faces[t], rim_faces[t + 1], rim_faces[t + 2]])
+		cave.built_faces = built
+		if _edits != null:
+			kept = _edits.move_cave_faces(cave, kept)
+			rim[0] = _edits.move_cave_faces(cave, rim_faces)
 		_draw_rim(root, rim[0], rim[1], material)
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -623,19 +640,137 @@ func campfire(parent: Node3D, at: Vector3, light_range := 10.0) -> void:
 	Fire.make(fire, Vector3(0, 0.12, 0), 0.7, light_range, 1.4, Color(1.0, 0.6, 0.3))
 
 
-## A few boulders on the ground beside a cave's mouth, off the way in and
-## out of the opening, each resting partly sunk in the ground.
+## The hand edits' added pieces (ZoneEdits.additions): each drawn as rock, or
+## as the ground (its colour and layers there) when its material is named
+## "ground", with collision from its faces.
+func _build_edit_additions() -> void:
+	if _edits == null or _edits.additions.is_empty():
+		return
+	var root := Node3D.new()
+	root.name = "EditAdditions"
+	add_child(root)
+	var rock := ShaderMaterial.new()
+	rock.shader = load("res://shaders/textured_prop.gdshader")
+	rock.set_shader_parameter("albedo_tex", load("res://assets/textures/%s.png" % _rock_key))
+	rock.set_shader_parameter("texture_size", 5.0)
+	rock.set_shader_parameter("tint", Vector3(0.9, 0.9, 0.9))
+	var body := StaticBody3D.new()
+	root.add_child(body)
+	for piece: Dictionary in _edits.additions:
+		var faces: PackedVector3Array = piece.faces
+		if faces.is_empty():
+			continue
+		if "ground" in str(piece.material).to_lower():
+			var shares := PackedFloat32Array()
+			shares.resize(faces.size())
+			_draw_rim(root, faces, shares, rock)
+		else:
+			var surface := SurfaceTool.new()
+			surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+			surface.set_smooth_group(-1)
+			for point in faces:
+				surface.add_vertex(point)
+			surface.generate_normals()
+			var view := MeshInstance3D.new()
+			view.name = str(piece.name)
+			view.mesh = surface.commit()
+			view.material_override = rock
+			root.add_child(view)
+		var shape := ConcavePolygonShape3D.new()
+		shape.set_faces(faces)
+		shape.backface_collision = true
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		body.add_child(collision)
+
+
+## Yards apart the rocks framing a cave's mouth lie along its edge, how big
+## they are (least and most), and how far into the hillside each is sunk (a
+## share of its size).
+static var MOUTH_ROCK_SPACING := 1.7
+static var MOUTH_ROCK_LEAST := 0.45
+static var MOUTH_ROCK_MOST := 2.6
+static var MOUTH_ROCK_SINK := 0.6
+## How the sizes lean small: 1 spreads them evenly, more gives many small
+## rocks and a few big crags.
+static var MOUTH_ROCK_SKEW := 1.8
+## Rocks running on down each side of the mouth onto the ground at its foot.
+static var MOUTH_FOOT_ROCKS := 3
+## The share of places along the edge that get a rock (the rest are gaps).
+static var MOUTH_ROCK_CHANCE := 0.8
+## How far (yards) each rock is pushed out from the opening, a share of its
+## size, so none hangs into the way in.
+static var MOUTH_ROCK_OUT := 0.45
+## Height (yards over the floor) below which the edge across the way in gets
+## no rocks.
+static var MOUTH_ROCK_DOORSTEP := 1.0
+## Boulders on the ground beside the mouth (besides the frame), least and most.
+static var MOUTH_BOULDERS_LEAST := 2
+static var MOUTH_BOULDERS_MOST := 4
+
+
+## Rocks round a cave's mouth: a frame of jagged crags (Caves.crag), many
+## small and a few big, set deep into the hillside along the edge where the
+## rim meets the ground (`rim_edge`, from _mouth), each pushed out from the
+## opening, with gaps, none on the doorstep across the way in, running on
+## down each side onto the ground at its foot; and a few boulders on the
+## ground beside the mouth.
 func _frame_mouth(parent: Node3D, cave: Dictionary, place: Transform3D, material: Material, noise: FastNoiseLite) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = absi(hash(cave.mouth))
 	var body := StaticBody3D.new()
-	for k in rng.randi_range(2, 4):
+	var to_local: Transform3D = cave.to_local
+	var base := float(cave.base)
+	var window: Vector2 = cave.get("window", Vector2(-MOUTH_HALF, MOUTH_HALF))
+	var doorway := maxf(absf(window.x), absf(window.y)) - MOUTH_MARGIN + 0.5
+	var spots: Array = []
+	# Along the edge, every MOUTH_ROCK_SPACING yards.
+	var edge: Array = cave.get("rim_edge", [])
+	var walked := 0.0
+	var next := rng.randf_range(0.0, MOUTH_ROCK_SPACING)
+	for k in edge.size():
+		var a: Vector3 = edge[k]
+		var b: Vector3 = edge[(k + 1) % edge.size()]
+		var length := a.distance_to(b)
+		while next <= walked + length:
+			var at := a.lerp(b, (next - walked) / maxf(length, 0.001))
+			next += MOUTH_ROCK_SPACING * rng.randf_range(0.7, 1.3)
+			if rng.randf() > MOUTH_ROCK_CHANCE:
+				continue
+			var l := to_local * at
+			if l.y - base < MOUTH_ROCK_DOORSTEP and absf(l.x) < doorway:
+				continue
+			var size := lerpf(MOUTH_ROCK_LEAST, MOUTH_ROCK_MOST, pow(rng.randf(), MOUTH_ROCK_SKEW))
+			# Out from the opening's middle, across the hillside.
+			var out := Vector3(l.x, l.y - base - 2.8, 0.0)
+			out = out.normalized() if out.length() > 0.01 else Vector3.UP
+			var local := l + out * size * MOUTH_ROCK_OUT
+			local.y -= size * MOUTH_ROCK_SINK
+			spots.append([to_local.affine_inverse() * local, size, true])
+		walked += length
+	# On down each side to the foot of the mouth and out onto the ground,
+	# clear of the doorway, against the hillside.
+	for side: float in [-1.0, 1.0]:
+		var x := doorway + 0.6
+		for k in MOUTH_FOOT_ROCKS:
+			var size := lerpf(MOUTH_ROCK_LEAST, MOUTH_ROCK_MOST, pow(rng.randf(), MOUTH_ROCK_SKEW))
+			x += size * rng.randf_range(0.5, 0.9)
+			var w := to_local.affine_inverse() * Vector3(side * x, base, rng.randf_range(-1.5, 0.5))
+			w.y = ground_height(w.x, w.z) - size * MOUTH_ROCK_SINK * 0.8
+			spots.append([w, size, true])
+			x += size * rng.randf_range(0.4, 0.8)
+	# Boulders on the ground beside the mouth.
+	for k in rng.randi_range(MOUTH_BOULDERS_LEAST, MOUTH_BOULDERS_MOST):
 		var side := 1.0 if k % 2 == 0 else -1.0
-		var local := Vector3(side * rng.randf_range(5.5, 8.0), 0, rng.randf_range(2.0, 7.0))
-		var w := place * local
+		var w := place * Vector3(side * rng.randf_range(5.5, 8.0), 0, rng.randf_range(2.0, 7.0))
 		var size := rng.randf_range(0.8, 1.6)
 		w.y = ground_height(w.x, w.z) + size * 0.15
-		var lump := Caves.rock(w, Vector3(size * rng.randf_range(0.9, 1.3), size * rng.randf_range(0.6, 0.9), size * rng.randf_range(0.9, 1.3)), rng.randf() * TAU, noise)
+		spots.append([w, size, false])
+	for spot: Array in spots:
+		var size: float = spot[1]
+		var radii := Vector3(size * rng.randf_range(0.8, 1.4), size * rng.randf_range(0.6, 1.1), size * rng.randf_range(0.8, 1.4))
+		# The frame jagged and split (Caves.crag); the boulders worn round.
+		var lump := Caves.crag(spot[0], radii, rng.randf() * TAU, noise) if spot[2] else Caves.rock(spot[0], radii, rng.randf() * TAU, noise)
 		var view := MeshInstance3D.new()
 		view.mesh = lump
 		view.material_override = material
@@ -857,6 +992,8 @@ func _mouth(cave: Dictionary, segments: Array, noise: FastNoiseLite) -> Array:
 			start_inner = k
 	outer = outer.slice(start_outer) + outer.slice(0, start_outer)
 	inner = inner.slice(start_inner) + inner.slice(0, start_inner)
+	# Where the rim meets the hillside, for the rocks framing it (_frame_mouth).
+	cave.rim_edge = outer.duplicate()
 	for loop: Array in [outer, inner]:
 		var ahead := to_local * (loop[mini(2, loop.size() - 1)] as Vector3)
 		var first := to_local * (loop[0] as Vector3)
@@ -1446,6 +1583,10 @@ func carve_passes(x: float, z: float, height: float) -> float:
 		var floor_height := base_height(along.x, along.y) + crest
 		var cut := lerpf(floor_height, height, smoothstep(PASS_FLOOR, PASS_FLOOR + PASS_SIDES, distance))
 		height = minf(height, cut)
+	# Last, the hand edits' raising and lowering (ZoneEdits), nothing at the
+	# border, so whatever the code makes, they lie over it.
+	if _edits != null and not _edits_off:
+		height += _edits.height(x, z)
 	return height
 
 
@@ -1482,6 +1623,8 @@ func ground_point(x: float, z: float) -> Vector3:
 ## `textures` replaces the textured ground's layers (TERRAIN_TEXTURES keys
 ## to painted texture names) for a land of its own, such as snow.
 func build_ground(step: float, color: Callable, weights := Callable(), textures := {}) -> void:
+	# The hand edits first: every height asked for from here on has them.
+	_edits = ZoneEdits.load_for(zone_name)
 	var ground := Terrain.new()
 	ground.name = "Ground"
 	add_child(ground)
@@ -1522,7 +1665,7 @@ func build_ground(step: float, color: Callable, weights := Callable(), textures 
 		var layers := weights
 		weights = func(x: float, z: float, y: float, normal: Vector3) -> Color:
 			return layers.call(x, z, y - hill_estimate(x, z), normal)
-	ground.build(size, step, height_at, color, material, center, weights, _ground_across, cave_hole if not caves.is_empty() else Callable())
+	ground.build(size, step, height_at, color, material, center, weights, _ground_across, cave_hole if not caves.is_empty() or (_edits != null and not _edits.cuts.is_empty()) else Callable())
 	_ground = ground
 	_weights = weights
 	_ground_color = color
@@ -2000,6 +2143,7 @@ func spawn_objects(rng_seed: int, water_level: float) -> void:
 ## `prefix` keeps names apart between zones.
 func spawn_creatures(rng_seed: int, prefix: String, passive_entries: Array, water_level: float) -> void:
 	build_caves()
+	_build_edit_additions()
 	gather_field = GatherNodes.populate(self, rng_seed + 77, water_level)
 	var creatures := Node3D.new()
 	creatures.name = "Creatures"

@@ -28,6 +28,7 @@ const COMMANDS := {
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
 	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, your race's start, or a zone's graveyard (ashford, harrowfield, gravesend, duskmoor, emberhollow, redsand, sunfold, tallgrass); a zone on the other continent reloads the game there."],
 	"pos": ["", "Show your position."],
+	"editzone": ["", "Open the zone you're in in Blender to edit (ZoneEdits); Reload Game after saving there."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
 	"spawn": ["[level] [normal | elite | boss]", "Spawn a random creature ahead of you, just outside its aggro range (your level and normal if left out)."],
@@ -663,6 +664,23 @@ func _cmd_spawn(args: PackedStringArray) -> String:
 	(creatures if creatures else _world).add_child(enemy)
 	var kind := "" if rank == Enemy.RANK_NORMAL else (" boss" if rank == Enemy.RANK_BOSS else " elite")
 	return "Spawned a level %d%s %s %d yards away." % [enemy.level, kind, enemy.combatant.display_name, roundi(_player.global_position.distance_to(at))]
+
+
+## Exports the zone you're in for Blender and opens it there with the zone
+## edit script (tools/zones/zone_edit.py), whose Save Edits writes the zone's
+## edit layers; the game shows them after a reload.
+func _cmd_editzone(_args: PackedStringArray) -> String:
+	var zone := _world.zone_at(_player.global_position)
+	if zone == null:
+		return "You're in no zone."
+	var out := ZoneEdits.export(zone)
+	if not DirAccess.dir_exists_absolute(out):
+		return out
+	if not FileAccess.file_exists(ZoneEdits.BLENDER):
+		return "Exported to %s, but Blender isn't at %s." % [out, ZoneEdits.BLENDER]
+	var script := ProjectSettings.globalize_path("res://tools/zones/zone_edit.py")
+	OS.create_process(ZoneEdits.BLENDER, ["--python", script, "--", out])
+	return "Opening %s in Blender. Save Edits there, then Reload Game." % zone.zone_name
 
 
 func _cmd_pos(_args: PackedStringArray) -> String:

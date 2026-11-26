@@ -405,6 +405,48 @@ static func rock(center: Vector3, radii: Vector3, yaw: float, noise: FastNoiseLi
 	return surface.commit()
 
 
+## Flat cuts across a crag (Caves.crag), and how far each takes off, from the
+## middle out (a share of its size: less is a deeper cut).
+static var CRAG_CUTS := 7
+static var CRAG_CUT_LEAST := 0.45
+static var CRAG_CUT_MOST := 0.85
+## How far a crag leans out of upright (radians, at most).
+static var CRAG_LEAN := 0.5
+
+
+## A jagged, angular rock (the frame round a cave's mouth): a coarse
+## icosahedron stretched to `radii`, pushed in and out by noise, then sliced
+## by CRAG_CUTS flat planes at random angles, each shaving off what lies past
+## it, so it breaks into sharp faces and edges like split stone; leaning a
+## little and turned by `yaw`. Each face flat-shaded.
+static func crag(center: Vector3, radii: Vector3, yaw: float, noise: FastNoiseLite) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(center)
+	var sphere := _icosphere(1)
+	var points: PackedVector3Array = sphere[0]
+	var cuts: Array = []
+	for k in CRAG_CUTS:
+		var normal := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.6, 1), rng.randf_range(-1, 1)).normalized()
+		cuts.append([normal, rng.randf_range(CRAG_CUT_LEAST, CRAG_CUT_MOST)])
+	var lean := Basis(Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized(), rng.randf_range(0.0, CRAG_LEAN))
+	var turn := Basis(Vector3.UP, yaw) * lean
+	for i in points.size():
+		var d: Vector3 = points[i]
+		var p := d * (1.0 + noise.get_noise_3dv(center + d * 3.7) * 0.35)
+		for cut: Array in cuts:
+			var past := p.dot(cut[0]) - float(cut[1])
+			if past > 0.0:
+				p -= (cut[0] as Vector3) * past
+		points[i] = center + turn * (p * radii)
+	var made := _mesh(points, sphere[1])
+	var surface := SurfaceTool.new()
+	surface.create_from(made, 0)
+	surface.deindex()
+	surface.set_smooth_group(-1)
+	surface.generate_normals()
+	return surface.commit()
+
+
 ## A lumpy ball of rock: a subdivided icosahedron stretched to `radii` and
 ## pushed in and out by noise.
 static func _lump(center: Vector3, radii: Vector3, noise: FastNoiseLite) -> ArrayMesh:
