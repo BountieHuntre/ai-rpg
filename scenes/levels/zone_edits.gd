@@ -12,7 +12,10 @@ extends RefCounted
 ##     rim), by where each lies in the cave's own yards;
 ##   - additions.json: pieces of mesh added to the world (overhangs, arches,
 ##     ledges, rocks), drawn as rock or, named "ground", as the ground;
-##   - cuts.json: closed shapes the ground is cut away inside.
+##   - cuts.json: closed shapes the ground is cut away inside;
+##   - rocks.json: the rocks round each cave's mouth moved, turned, scaled
+##     or taken away, by their id (Zone._frame_mouth: the cave's key and the
+##     rock's place in the order they're made).
 ## Zone borders stay as built (the Blender side keeps their height edits at
 ## nothing), so neighbouring zones still meet exactly.
 
@@ -34,6 +37,10 @@ var height_rows := 0
 var heights := PackedFloat32Array()
 ## By cave key: { "x,y,z": Vector3 offset } in the cave's own yards.
 var cave_offsets := {}
+## By rock id: { deleted, faces (its mesh as left in Blender, world yards),
+## or from older saves offset: Vector3 and basis: Basis (turned and scaled
+## about its middle) }.
+var rocks := {}
 ## Added pieces and cut shapes: { name, material, faces: PackedVector3Array }.
 var additions: Array = []
 var cuts: Array = []
@@ -72,6 +79,23 @@ static func load_for(zone_name: String) -> ZoneEdits:
 				var offset: Array = caves[cave_key][spot]
 				moved[spot] = Vector3(offset[0], offset[1], offset[2])
 			edits.cave_offsets[cave_key] = moved
+	var rock_edits = _read_json(dir.path_join("rocks.json"))
+	if rock_edits is Dictionary:
+		for id: String in rock_edits:
+			var edit: Dictionary = rock_edits[id]
+			var b: Array = edit.get("basis", [1, 0, 0, 0, 1, 0, 0, 0, 1])
+			var o: Array = edit.get("offset", [0, 0, 0])
+			edits.rocks[id] = {
+				"deleted": bool(edit.get("deleted", false)), "offset": Vector3(o[0], o[1], o[2]),
+				"basis": Basis(Vector3(b[0], b[1], b[2]), Vector3(b[3], b[4], b[5]), Vector3(b[6], b[7], b[8])),
+			}
+			# Saved as it was left in Blender: its mesh in world yards.
+			if edit.has("faces"):
+				var flat: Array = edit.faces
+				var faces := PackedVector3Array()
+				for i in range(0, flat.size() - 2, 3):
+					faces.append(Vector3(flat[i], flat[i + 1], flat[i + 2]))
+				edits.rocks[id]["faces"] = faces
 	edits.additions = _read_pieces(dir.path_join("additions.json"))
 	edits.cuts = _read_pieces(dir.path_join("cuts.json"))
 	for cut: Dictionary in edits.cuts:
@@ -216,6 +240,20 @@ static func export(zone: Zone) -> String:
 		caves.append({ "key": name, "file": "cave_%s.bin" % name, "to_world": [
 			world.basis.x.x, world.basis.x.y, world.basis.x.z, world.basis.y.x, world.basis.y.y, world.basis.y.z,
 			world.basis.z.x, world.basis.z.y, world.basis.z.z, world.origin.x, world.origin.y, world.origin.z] })
+	# The rocks round the mouths: each one's middle, and its shape about it.
+	var rocks: Array = []
+	for cave: Dictionary in zone.caves:
+		for rock: Dictionary in cave.get("rocks", []):
+			var center: Vector3 = rock.center
+			var faces: PackedVector3Array = (rock.mesh as Mesh).get_faces()
+			var points: Array = []
+			for point in faces:
+				var l := point - center
+				points.append_array([l.x, l.y, l.z])
+			rocks.append({ "id": rock.id, "center": [center.x, center.y, center.z], "triangles": points })
+	var rock_file := FileAccess.open(out.path_join("rocks.json"), FileAccess.WRITE)
+	rock_file.store_string(JSON.stringify(rocks))
+	rock_file.close()
 	var meta := {
 		"zone": zone.zone_name, "key": key, "origin": [origin.x, origin.y], "step": step,
 		"columns": columns, "rows": columns, "edits": ProjectSettings.globalize_path(EDITS_DIR.path_join(key)),

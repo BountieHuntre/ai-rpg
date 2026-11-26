@@ -407,9 +407,9 @@ static func rock(center: Vector3, radii: Vector3, yaw: float, noise: FastNoiseLi
 
 ## Flat cuts across a crag (Caves.crag), and how far each takes off, from the
 ## middle out (a share of its size: less is a deeper cut).
-static var CRAG_CUTS := 7
-static var CRAG_CUT_LEAST := 0.45
-static var CRAG_CUT_MOST := 0.85
+static var CRAG_CUTS := 9
+static var CRAG_CUT_LEAST := 0.3
+static var CRAG_CUT_MOST := 0.6
 ## How far a crag leans out of upright (radians, at most).
 static var CRAG_LEAN := 0.5
 

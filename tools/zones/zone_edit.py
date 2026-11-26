@@ -19,9 +19,13 @@ The scene holds, in the game's world yards (Blender's Z is the game's up):
     "ground" in it.
   - Cuts: closed mesh objects put in this collection cut the ground away
     inside them.
+  - Mouth rocks: the rocks round each cave's mouth, an object each with its
+    origin at its middle. Move, rotate, scale or delete them; a copy
+    (Shift+D) is kept as an added rock.
 
-Press "Save Edits" in the sidebar (N, the AI RPG tab). It writes the edit
-layers to data/zone_edits/<zone>/ (heights, caves, additions, cuts); Reload
+Edits save themselves a couple of seconds after each change (and on
+Ctrl+S); "Save Edits" in the sidebar (N, the AI RPG tab) saves at once. It
+writes the edit layers to data/zone_edits/<zone>/ (heights, caves, additions, cuts); Reload
 Game in the game to see them. Only the differences from the code's zone are
 saved, so the zone's code can change and the edits still lie over it.
 """
@@ -31,6 +35,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from array import array
 
 import bmesh
@@ -163,7 +168,138 @@ def load(folder: str) -> None:
             if name == "Cuts":
                 o.display_type = "WIRE"
             coll.objects.link(o)
-    print(f"Loaded {meta['zone']}: ground {columns}x{rows}, {len(meta['caves'])} caves.")
+
+    # The rocks round the mouths: an object each, its origin at its middle,
+    # placed as saved (moved, turned, scaled), or left out if deleted.
+    rocks = read_json(os.path.join(folder, "rocks.json")) or []
+    rock_edits = read_json(os.path.join(edits, "rocks.json")) or {}
+    coll = bpy.data.collections.new("Mouth rocks")
+    scene.collection.children.link(coll)
+    rock_material = material("Mouth rock", (0.5, 0.48, 0.45, 1.0))
+    shown = 0
+    for rock in rocks:
+        edit = rock_edits.get(rock["id"], {})
+        if edit.get("deleted"):
+            continue
+        if "faces" in edit:
+            # Saved as it was left: its own mesh in world yards, its origin
+            # put back at its middle.
+            world = edit["faces"]
+            n = len(world) // 3
+            mid = [sum(world[i * 3 + a] for i in range(n)) / max(n, 1) for a in range(3)]
+            t = [world[i] - mid[i % 3] for i in range(len(world))]
+            origin = to_blender(*mid)
+            turn = Matrix.Identity(4)
+        else:
+            t = rock["triangles"]
+            origin = None
+        index_of, verts, tris = {}, [], []
+        for k in range(0, len(t), 9):
+            tri = []
+            for j in range(3):
+                p = tuple(round(x, 5) for x in t[k + j * 3:k + j * 3 + 3])
+                if p not in index_of:
+                    index_of[p] = len(verts)
+                    verts.append(to_blender(*p))
+                tri.append(index_of[p])
+            if len(set(tri)) == 3:
+                tris.append(tuple(tri))
+        m = bpy.data.meshes.new(rock["id"])
+        m.from_pydata(verts, [], tris)
+        o = bpy.data.objects.new("Rock " + rock["id"], m)
+        o.data.materials.append(rock_material)
+        o["rock_id"] = rock["id"]
+        o["center"] = rock["center"]
+        o.matrix_world = Matrix.Translation(origin) if origin is not None else rock_matrix(rock["center"], edit)
+        coll.objects.link(o)
+        shown += 1
+    print(f"Loaded {meta['zone']}: ground {columns}x{rows}, {len(meta['caves'])} caves, {shown} mouth rocks.")
+
+
+# The game's axes in Blender's: (x, y, z) -> (x, -z, y).
+AXES = Matrix(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
+
+
+def rock_matrix(center, edit) -> Matrix:
+    """A rock's place in Blender from its middle and its saved edit (the
+    game's turn-and-scale basis about its middle, and how far it moved)."""
+    b = edit.get("basis", [1, 0, 0, 0, 1, 0, 0, 0, 1])
+    basis = Matrix(((b[0], b[3], b[6]), (b[1], b[4], b[7]), (b[2], b[5], b[8])))
+    o = edit.get("offset", [0, 0, 0])
+    linear = AXES @ basis @ AXES.inverted()
+    where = to_blender(center[0] + o[0], center[1] + o[1], center[2] + o[2])
+    return Matrix.Translation(where) @ linear.to_4x4()
+
+
+def world_triangles(obj) -> list:
+    """An object's mesh as it stands (modifiers, edits), as world-yard
+    triangles in the game's axes, wound outward even if it was mirrored."""
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    evaluated = obj.evaluated_get(depsgraph)
+    m = evaluated.to_mesh()
+    bm = bmesh.new()
+    bm.from_mesh(m)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    mirrored = obj.matrix_world.to_3x3().determinant() < 0.0
+    out = []
+    for f in bm.faces:
+        corners = [obj.matrix_world @ v.co for v in f.verts]
+        if mirrored:
+            corners.reverse()
+        for c in corners:
+            out.extend(to_game(c))
+    bm.free()
+    evaluated.to_mesh_clear()
+    return out
+
+
+def same_points(a: list, b: list, near: float = 0.01) -> bool:
+    """Whether two triangle lists have the same points, each within `near`
+    yards of one of the other's (Blender keeps points a little less exactly
+    than the export wrote them)."""
+    pa = {tuple(a[i:i + 3]) for i in range(0, len(a), 3)}
+    pb = {tuple(b[i:i + 3]) for i in range(0, len(b), 3)}
+    for one, other in ((pa, pb), (pb, pa)):
+        for p in one:
+            if not any(abs(p[0] - q[0]) < near and abs(p[1] - q[1]) < near and abs(p[2] - q[2]) < near for q in other):
+                return False
+    return True
+
+
+def rock_edits() -> tuple:
+    """Each rock changed in any way (moved, turned, scaled, mirrored or its
+    mesh reshaped) saved as its mesh as it stands, so the game shows exactly
+    what's here; deleted when its object is gone; and the extra copies of
+    rocks (Shift+D) as added pieces."""
+    rocks = read_json(os.path.join(STATE["folder"], "rocks.json")) or []
+    made = {r["id"]: r for r in rocks}
+    edits = {}
+    copies = []
+    seen = set()
+    for obj in bpy.data.objects:
+        if "rock_id" not in obj.keys() or obj.type != "MESH":
+            continue
+        rid = obj["rock_id"]
+        if rid in seen:
+            # A copy: kept as an added piece, wherever it was put.
+            copies.append(obj)
+            continue
+        seen.add(rid)
+        now = world_triangles(obj)
+        rock = made.get(rid)
+        if rock is not None:
+            c = rock["center"]
+            first = [rock["triangles"][i] + c[i % 3] for i in range(len(rock["triangles"]))]
+            # Its points where the code put them? (The code's flat scraps of
+            # triangles are dropped on loading, so the points are compared,
+            # not the triangles.)
+            if same_points(first, now):
+                continue
+        edits[rid] = {"faces": [round(x, 5) for x in now]}
+    for rock in rocks:
+        if rock["id"] not in seen:
+            edits[rock["id"]] = {"deleted": True}
+    return edits, copies
 
 
 def material(name: str, color) -> bpy.types.Material:
@@ -174,12 +310,18 @@ def material(name: str, color) -> bpy.types.Material:
 
 def mesh_pieces(collection_name: str) -> list:
     """Each mesh in a collection as world-yard triangles (game axes)."""
-    pieces = []
     coll = bpy.data.collections.get(collection_name)
     if coll is None:
-        return pieces
+        return []
+    # A rock dragged in here stays a rock (rock_edits counts it).
+    return objects_as_pieces([o for o in coll.all_objects if "rock_id" not in o.keys()])
+
+
+def objects_as_pieces(objects: list) -> list:
+    """Meshes as world-yard triangles (game axes)."""
+    pieces = []
     depsgraph = bpy.context.evaluated_depsgraph_get()
-    for obj in coll.all_objects:
+    for obj in objects:
         if obj.type != "MESH":
             continue
         evaluated = obj.evaluated_get(depsgraph)
@@ -199,7 +341,16 @@ def mesh_pieces(collection_name: str) -> list:
     return pieces
 
 
+def sync_edit_mode() -> None:
+    """Brings the meshes being edited (Edit Mode) up to date, so what's
+    saved is what's on screen, without leaving the mode."""
+    for obj in bpy.context.view_layer.objects:
+        if obj.type == "MESH" and obj.mode == "EDIT":
+            obj.update_from_editmode()
+
+
 def save() -> str:
+    sync_edit_mode()
     meta = STATE["meta"]
     edits = meta["edits"]
     os.makedirs(edits, exist_ok=True)
@@ -242,6 +393,9 @@ def save() -> str:
         to_world = Matrix(((t[0], t[3], t[6], t[9]), (t[1], t[4], t[7], t[10]), (t[2], t[5], t[8], t[11]), (0, 0, 0, 1)))
         to_local = to_world.inverted()
         attr = obj.data.attributes.get("base_local")
+        if attr is None or len(attr.data) != len(obj.data.vertices):
+            notes.append(f"{obj.name} lost where its points came from (base_local), so its edits weren't saved")
+            continue
         moved = {}
         for v in obj.data.vertices:
             base_local = Vector(attr.data[v.index].vector)
@@ -258,12 +412,18 @@ def save() -> str:
     with open(os.path.join(edits, "caves.json"), "w", encoding="utf-8") as f:
         json.dump(caves, f)
 
-    for name in ("Additions", "Cuts"):
-        with open(os.path.join(edits, name.lower() + ".json"), "w", encoding="utf-8") as f:
-            json.dump({"pieces": mesh_pieces(name)}, f)
+    rocks, copies = rock_edits()
+    with open(os.path.join(edits, "rocks.json"), "w", encoding="utf-8") as f:
+        json.dump(rocks, f)
+    additions = mesh_pieces("Additions") + objects_as_pieces(copies)
+    with open(os.path.join(edits, "additions.json"), "w", encoding="utf-8") as f:
+        json.dump({"pieces": additions}, f)
+    with open(os.path.join(edits, "cuts.json"), "w", encoding="utf-8") as f:
+        json.dump({"pieces": mesh_pieces("Cuts")}, f)
     changed = sum(1 for d in delta if abs(d) > 0.0005)
+    gone = sum(1 for r in rocks.values() if r.get("deleted"))
     message = f"Saved {meta['zone']}: {changed} ground points raised or lowered, {len(caves)} caves reshaped, " \
-              f"{len(mesh_pieces('Additions'))} additions, {len(mesh_pieces('Cuts'))} cuts."
+              f"{len(rocks) - gone} rocks moved, {gone} rocks deleted, {len(additions)} additions, {len(mesh_pieces('Cuts'))} cuts."
     if notes:
         message += " (" + "; ".join(notes) + ")"
     print(message)
@@ -276,7 +436,18 @@ class AIRPG_OT_save_edits(bpy.types.Operator):
     bl_description = "Write the zone's edit layers for the game (then Reload Game there)"
 
     def execute(self, context):
-        self.report({"INFO"}, save())
+        # In Edit Mode the meshes' own data (points, attributes) lags behind
+        # what's being edited: back to Object Mode to write it, then back.
+        mode = context.mode
+        active = context.view_layer.objects.active
+        if mode not in ("OBJECT", "EDIT_MESH") and active is not None:
+            bpy.ops.object.mode_set(mode="OBJECT")
+        try:
+            write_now()
+            self.report({"INFO"}, STATE.get("last_saved", "Saved"))
+        finally:
+            if mode == "SCULPT" and active is not None:
+                bpy.ops.object.mode_set(mode="SCULPT")
         return {"FINISHED"}
 
 
@@ -289,24 +460,83 @@ class AIRPG_PT_zone(bpy.types.Panel):
     def draw(self, context):
         meta = STATE.get("meta") or {}
         self.layout.label(text=meta.get("zone", "No zone loaded"))
+        self.layout.label(text=STATE.get("last_saved", "Edits save themselves."))
         self.layout.operator("airpg.save_edits")
         col = self.layout.column()
         for line in ("Ground: move vertices, no adding.", "Locked group: border, kept.",
-                     "Caves: move vertices.", "Additions: new rock (or 'ground').", "Cuts: shapes cut away."):
+                     "Caves: move vertices.", "Mouth rocks: move, turn, scale,", "  delete; Shift+D adds one.", "Additions: new rock (or 'ground').", "Cuts: shapes cut away."):
             col.label(text=line)
+
+
+# Edits save themselves: a change marks the scene changed, and a few
+# seconds after the last one the edit layers are written (AUTOSAVE_WAIT);
+# Ctrl+S writes them too.
+AUTOSAVE_WAIT = 2.0
+
+
+def on_change(scene, depsgraph) -> None:
+    if not STATE.get("saving"):
+        STATE["dirty"] = True
+        STATE["changed_at"] = time.monotonic()
+
+
+def autosave():
+    if STATE.get("dirty") and time.monotonic() - STATE.get("changed_at", 0.0) >= AUTOSAVE_WAIT:
+        write_now()
+    return 1.0
+
+
+def write_now() -> None:
+    STATE["saving"] = True
+    try:
+        message = save()
+        STATE["last_saved"] = "Saved " + time.strftime("%H:%M:%S")
+    except Exception as error:
+        STATE["last_saved"] = f"Couldn't save: {error}"
+        print(STATE["last_saved"])
+    finally:
+        STATE["dirty"] = False
+        STATE["saving"] = False
+
+
+@bpy.app.handlers.persistent
+def on_blend_saved(*_args) -> None:
+    write_now()
+
+
+def watch() -> None:
+    if on_change not in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.append(on_change)
+    if on_blend_saved not in bpy.app.handlers.save_post:
+        bpy.app.handlers.save_post.append(on_blend_saved)
+    if not bpy.app.timers.is_registered(autosave):
+        bpy.app.timers.register(autosave, first_interval=AUTOSAVE_WAIT, persistent=True)
 
 
 def main() -> None:
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if not args:
-        print("Usage: blender --python tools/zones/zone_edit.py -- <exported zone folder>")
+        print("Usage: blender --python tools/zones/zone_edit.py -- <exported zone folder> [--keep-scene]")
         return
     for cls in (AIRPG_OT_save_edits, AIRPG_PT_zone):
         try:
             bpy.utils.register_class(cls)
         except ValueError:
             pass
-    load(args[0])
+    if "--keep-scene" in args:
+        # A saved .blend of an earlier session: its scene kept as it is, the
+        # zone's export read for saving it.
+        folder = args[0]
+        STATE.update(folder=folder, meta=read_json(os.path.join(folder, "zone.json")),
+                     base=read_floats(os.path.join(folder, "base_heights.bin")))
+        print("Kept the open scene for", STATE["meta"]["zone"])
+        # Saved at once with this script (that's what it was opened for).
+        write_now()
+        print(STATE.get("last_saved"))
+    else:
+        load(args[0])
+    STATE["dirty"] = False
+    watch()
 
 
 main()

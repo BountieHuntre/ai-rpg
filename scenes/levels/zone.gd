@@ -167,7 +167,7 @@ static var MOUTH_HALF := 9.0
 static var MOUTH_MARGIN := 1.5
 static var MOUTH_BACK := 2.5
 static var MOUTH_DEPTH := 1.0
-static var MOUTH_FRONT := 1.0
+static var MOUTH_FRONT := 3.0
 ## Boxes inside the caves (Node3D, their `size` meta): the camera in one is
 ## indoors (main.gd), for the dark.
 const CAVE_AIR_GROUP := &"cave_air"
@@ -266,7 +266,7 @@ func _ground_for_caves(x: float, z: float, height: float) -> float:
 		# mouth across the way in, so the grass is the floor out front and
 		# the hillside rises from the mouth itself.
 		var across := 1.0 - smoothstep(6.0, 10.0, absf(local.x))
-		var before := smoothstep(-1.5, 1.0, local.y) * (1.0 - smoothstep(14.0, 20.0, local.y))
+		var before := smoothstep(-1.5, 1.0, local.y) * (1.0 - smoothstep(14.0, 14.0 + float(cave.get("ramp", APRON_RAMP)), local.y))
 		var apron := maxf(across * before, 1.0 - smoothstep(5.0, 11.0, local.distance_to(Vector2(0, 9))))
 		if apron > 0.0:
 			height = lerpf(height, base, apron)
@@ -306,7 +306,7 @@ static func _in_window(cave: Dictionary, local: Vector2) -> bool:
 ## How many steps a mouth's rim takes from the ground to the cave, and how
 ## far (yards) the noise pushes its rock in or out between.
 static var RIM_STEPS := 4
-static var RIM_CRAG := 1.4
+static var RIM_CRAG := 0.7
 
 
 ## How far a cave's tunnel reaches to either side where it's cut (MOUTH_DEPTH
@@ -349,12 +349,72 @@ func _settle_caves() -> void:
 	for cave: Dictionary in caves:
 		if is_nan(cave.base):
 			cave.base = height_at(cave.mouth.x, cave.mouth.y)
+		var out := Vector2(sin(float(cave.facing)), cos(float(cave.facing)))
+		cave.ramp = apron_ramp(float(cave.base), cave.mouth, out)
+		# The box reaches the ramp's end, across the apron's width.
+		var side := Vector2(out.y, -out.x) * 10.0
+		var end: Vector2 = cave.mouth + out * (14.0 + float(cave.ramp))
+		cave.rect = (cave.rect as Rect2).expand(end + side).expand(end - side)
 		cave.window = _window_of(cave)
 	_caves_off = false
 	# No grass on the apron or in the mouth.
 	for cave: Dictionary in caves:
 		var apron := cave_transform(cave) * Vector3(0, 0, 4.0)
 		clear_ground(Rect2(apron.x - 8.0, apron.z - 8.0, 16.0, 16.0))
+
+
+## The apron before a cave's mouth eases into the land over APRON_RAMP
+## yards (from 14 out); where the land there lies further from the floor
+## than that can be climbed (WILD_CAVE_WALK), the ramp is drawn out so its
+## steepest is APRON_RAMP_SLOPE.
+static var APRON_RAMP := 6.0
+static var APRON_RAMP_SLOPE := 0.6
+
+
+## The apron's ramp for a cave whose floor is `floor_y` at `mouth`, opening
+## along `out` (see APRON_RAMP): measured to the land at its own end, so a
+## drawn-out ramp reaches as far as the land keeps falling away.
+func apron_ramp(floor_y: float, mouth: Vector2, out: Vector2) -> float:
+	var ramp := APRON_RAMP
+	for i in 4:
+		var end := mouth + out * (14.0 + ramp)
+		var drop := absf(floor_y - height_at(end.x, end.y))
+		# A smoothstep's steepest is 1.5 times its average.
+		if 1.5 * drop / ramp <= WILD_CAVE_WALK:
+			break
+		ramp = maxf(ramp, 1.5 * drop / APRON_RAMP_SLOPE)
+	return ramp
+
+
+## A wild den must be one you can walk into and out of: the way out from its
+## mouth (the ground as it will be, the level apron before the mouth that
+## _ground_for_caves makes blended in) clear of the edge mountains
+## (edge_ring under WILD_CAVE_EDGE) and, out to WILD_CAVE_APPROACH yards, no
+## stretch steeper than WILD_CAVE_WALK (rise a yard) either way.
+static var WILD_CAVE_EDGE := 0.1
+static var WILD_CAVE_APPROACH := 45.0
+static var WILD_CAVE_WALK := 0.9
+
+
+## Whether a den with its mouth at `point` (floor `floor_y`), opening along
+## `out`, can be walked up to (see WILD_CAVE_EDGE).
+func _den_reachable(point: Vector2, out: Vector2, floor_y: float) -> bool:
+	var step := 2.0
+	var last := floor_y
+	var s := step
+	var ramp := apron_ramp(floor_y, point, out)
+	while s <= WILD_CAVE_APPROACH:
+		var at := point + out * s
+		if not contains(at) or edge_ring(at) > WILD_CAVE_EDGE:
+			return false
+		# The apron as _ground_for_caves lays it straight out from the mouth.
+		var apron := maxf(1.0 - smoothstep(14.0, 14.0 + ramp, s), 1.0 - smoothstep(5.0, 11.0, absf(s - 9.0)))
+		var h := lerpf(height_at(at.x, at.y), floor_y, apron)
+		if absf(h - last) / step > WILD_CAVE_WALK:
+			return false
+		last = h
+		s += step
+	return true
 
 
 ## Wild caves dug into the zone's slopes: a den with its mouth on a slope
@@ -416,7 +476,12 @@ func _place_wild_caves() -> void:
 				nearest = int(spawn[0])
 		if nearest == 0:
 			continue
-		add_cave(point, facing, "den", variant, { "creature": nearest, "count": rng.randi_range(3, 4), "lit": false })
+		# Drawn before the walk-up check, so a den left out for it takes the
+		# same draws it did and the dens after it land where they did.
+		var count := rng.randi_range(3, 4)
+		if not _den_reachable(point, -uphill, y):
+			continue
+		add_cave(point, facing, "den", variant, { "creature": nearest, "count": count, "lit": false })
 		placed += 1
 
 
@@ -451,6 +516,8 @@ func build_caves() -> void:
 		var clipped := _clip_behind(faces, cave)
 		var kept: PackedVector3Array = clipped[0]
 		var rim: Array = _mouth(cave, clipped[1], noise)
+		_tidy_mouth(cave, kept, rim)
+		kept = cave.tidied_kept
 		# As the code built it (one side of the rim), for the Blender export;
 		# then the hand edits' moved vertices (ZoneEdits).
 		var built := kept.duplicate()
@@ -461,7 +528,10 @@ func build_caves() -> void:
 		if _edits != null:
 			kept = _edits.move_cave_faces(cave, kept)
 			rim[0] = _edits.move_cave_faces(cave, rim_faces)
-		_draw_rim(root, rim[0], rim[1], material)
+		var seam := {}
+		for point: Vector3 in cave.get("rim_edge", []):
+			seam[MeshClean.key_of(point)] = true
+		_draw_rim(root, rim[0], rim[1], material, seam)
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 		# Each face its own normal, so the texture's projection follows it.
@@ -640,6 +710,77 @@ func campfire(parent: Node3D, at: Vector3, light_range := 10.0) -> void:
 	Fire.make(fire, Vector3(0, 0.12, 0), 0.7, light_range, 1.4, Color(1.0, 0.6, 0.3))
 
 
+## How far in (yards, the cave's own) a mouth is tidied (MeshClean): the
+## tunnel cut there and the rim joined to it, where the cutting and zipping
+## leave slivers and scraps.
+static var MOUTH_TIDY_DEPTH := 10.0
+## Points of a mouth lower than this over its floor (yards) stay put as it's
+## tidied, so the floor by the doorstep stays level.
+static var MOUTH_TIDY_FLOOR := 0.4
+
+
+## Tidies a cave's mouth (MeshClean): the tunnel's faces near the mouth and
+## one side of the rim, as one surface, their short edges collapsed. The
+## seam with the ground (the rim's outer edge) and the edge with the rest of
+## the tunnel stay where they are. Leaves the tunnel's faces in
+## `cave.tidied_kept` and the rim (both sides, with its shares) in `rim`.
+func _tidy_mouth(cave: Dictionary, kept: PackedVector3Array, rim: Array) -> void:
+	var to_local: Transform3D = cave.to_local
+	var near := PackedVector3Array()
+	var far := PackedVector3Array()
+	for t in range(0, kept.size(), 3):
+		var by_mouth := false
+		for k in 3:
+			if (to_local * kept[t + k]).z > -MOUTH_TIDY_DEPTH:
+				by_mouth = true
+		(near if by_mouth else far).append_array([kept[t], kept[t + 1], kept[t + 2]])
+	var faces := near.duplicate()
+	var tags := PackedInt32Array()
+	tags.resize(near.size() / 3)
+	tags.fill(0)
+	var values := PackedFloat32Array()
+	values.resize(near.size())
+	values.fill(1.0)
+	var rim_faces: PackedVector3Array = rim[0]
+	var shares: PackedFloat32Array = rim[1]
+	for t in range(0, rim_faces.size(), 6):
+		faces.append_array([rim_faces[t], rim_faces[t + 1], rim_faces[t + 2]])
+		values.append_array([shares[t], shares[t + 1], shares[t + 2]])
+		tags.append(1)
+	# Fixed: the ground's seam, the edge with the tunnel beyond, and the
+	# floor by the doorstep (kept level to walk on).
+	var locked := {}
+	for point: Vector3 in cave.get("rim_edge", []):
+		locked[MeshClean.key_of(point)] = true
+	for point in far:
+		locked[MeshClean.key_of(point)] = true
+	var base := float(cave.base)
+	for point in faces:
+		if (to_local * point).y < base + MOUTH_TIDY_FLOOR:
+			locked[MeshClean.key_of(point)] = true
+	var tidy: Array = MeshClean.clean(faces, tags, values, locked)
+	var out_faces: PackedVector3Array = tidy[0]
+	var out_tags: PackedInt32Array = tidy[1]
+	var out_values: PackedFloat32Array = tidy[2]
+	var rim_out := PackedVector3Array()
+	var shares_out := PackedFloat32Array()
+	for f in out_tags.size():
+		var a := out_faces[f * 3]
+		var b := out_faces[f * 3 + 1]
+		var c := out_faces[f * 3 + 2]
+		if out_tags[f] == 0:
+			far.append_array([a, b, c])
+		else:
+			var sa := out_values[f * 3]
+			var sb := out_values[f * 3 + 1]
+			var sc := out_values[f * 3 + 2]
+			rim_out.append_array([a, b, c, a, c, b])
+			shares_out.append_array([sa, sb, sc, sa, sc, sb])
+	cave.tidied_kept = far
+	rim[0] = rim_out
+	rim[1] = shares_out
+
+
 ## The hand edits' added pieces (ZoneEdits.additions): each drawn as rock, or
 ## as the ground (its colour and layers there) when its material is named
 ## "ground", with collision from its faces.
@@ -687,23 +828,37 @@ func _build_edit_additions() -> void:
 ## Yards apart the rocks framing a cave's mouth lie along its edge, how big
 ## they are (least and most), and how far into the hillside each is sunk (a
 ## share of its size).
-static var MOUTH_ROCK_SPACING := 1.7
-static var MOUTH_ROCK_LEAST := 0.45
-static var MOUTH_ROCK_MOST := 2.6
-static var MOUTH_ROCK_SINK := 0.6
+static var MOUTH_ROCK_SPACING := 4.8
+static var MOUTH_ROCK_LEAST := 3.0
+static var MOUTH_ROCK_MOST := 7.5
+static var MOUTH_ROCK_SINK := 0.5
 ## How the sizes lean small: 1 spreads them evenly, more gives many small
 ## rocks and a few big crags.
-static var MOUTH_ROCK_SKEW := 1.8
+static var MOUTH_ROCK_SKEW := 1.6
 ## Rocks running on down each side of the mouth onto the ground at its foot.
-static var MOUTH_FOOT_ROCKS := 3
+static var MOUTH_FOOT_ROCKS := 2
+## The flanking slabs: how far (yards) the first stands from the doorway's
+## edge, how far forward of the opening at most, and how deep each is set in
+## (a share of its size).
+static var MOUTH_FLANK_GAP := 0.4
+static var MOUTH_FLANK_FORWARD := 2.0
+static var MOUTH_FLANK_SINK := 0.35
 ## The share of places along the edge that get a rock (the rest are gaps).
-static var MOUTH_ROCK_CHANCE := 0.8
+static var MOUTH_ROCK_CHANCE := 0.9
 ## How far (yards) each rock is pushed out from the opening, a share of its
 ## size, so none hangs into the way in.
-static var MOUTH_ROCK_OUT := 0.45
+static var MOUTH_ROCK_OUT := 0.6
 ## Height (yards over the floor) below which the edge across the way in gets
 ## no rocks.
 static var MOUTH_ROCK_DOORSTEP := 1.0
+## How tall the frame's crags beside the opening stand to their width
+## (least, most): upright slabs; those over it (higher than MOUTH_ROCK_TOP
+## over the floor) lie wide, MOUTH_TOP_HEIGHT_LEAST to MOST.
+static var MOUTH_SLAB_HEIGHT_LEAST := 1.1
+static var MOUTH_SLAB_HEIGHT_MOST := 1.6
+static var MOUTH_ROCK_TOP := 3.5
+static var MOUTH_TOP_HEIGHT_LEAST := 0.6
+static var MOUTH_TOP_HEIGHT_MOST := 0.9
 ## Boulders on the ground beside the mouth (besides the frame), least and most.
 static var MOUTH_BOULDERS_LEAST := 2
 static var MOUTH_BOULDERS_MOST := 4
@@ -746,39 +901,75 @@ func _frame_mouth(parent: Node3D, cave: Dictionary, place: Transform3D, material
 			out = out.normalized() if out.length() > 0.01 else Vector3.UP
 			var local := l + out * size * MOUTH_ROCK_OUT
 			local.y -= size * MOUTH_ROCK_SINK
-			spots.append([to_local.affine_inverse() * local, size, true])
+			spots.append([to_local.affine_inverse() * local, size, true, l.y - base > MOUTH_ROCK_TOP])
 		walked += length
-	# On down each side to the foot of the mouth and out onto the ground,
-	# clear of the doorway, against the hillside.
+	# Slabs standing on the ground either side of the doorway, flanking it,
+	# a little forward of the hillside, the biggest first.
 	for side: float in [-1.0, 1.0]:
-		var x := doorway + 0.6
+		var x := doorway + MOUTH_FLANK_GAP
 		for k in MOUTH_FOOT_ROCKS:
-			var size := lerpf(MOUTH_ROCK_LEAST, MOUTH_ROCK_MOST, pow(rng.randf(), MOUTH_ROCK_SKEW))
-			x += size * rng.randf_range(0.5, 0.9)
-			var w := to_local.affine_inverse() * Vector3(side * x, base, rng.randf_range(-1.5, 0.5))
-			w.y = ground_height(w.x, w.z) - size * MOUTH_ROCK_SINK * 0.8
-			spots.append([w, size, true])
-			x += size * rng.randf_range(0.4, 0.8)
+			var size := lerpf(MOUTH_ROCK_MOST, MOUTH_ROCK_LEAST, float(k) / maxf(MOUTH_FOOT_ROCKS, 1.0)) * rng.randf_range(0.85, 1.0)
+			# Its middle a whole width out, so even a big one leaning keeps out of
+			# the doorway.
+			x += size * 0.95
+			var w := to_local.affine_inverse() * Vector3(side * x, base, rng.randf_range(MOUTH_FLANK_FORWARD * 0.4, MOUTH_FLANK_FORWARD))
+			w.y = ground_height(w.x, w.z) + size * (0.45 - MOUTH_FLANK_SINK)
+			spots.append([w, size, true, false])
+			x += size * rng.randf_range(0.45, 0.7)
 	# Boulders on the ground beside the mouth.
 	for k in rng.randi_range(MOUTH_BOULDERS_LEAST, MOUTH_BOULDERS_MOST):
 		var side := 1.0 if k % 2 == 0 else -1.0
 		var w := place * Vector3(side * rng.randf_range(5.5, 8.0), 0, rng.randf_range(2.0, 7.0))
 		var size := rng.randf_range(0.8, 1.6)
 		w.y = ground_height(w.x, w.z) + size * 0.15
-		spots.append([w, size, false])
+		spots.append([w, size, false, false])
+	var rocks: Array = []
 	for spot: Array in spots:
 		var size: float = spot[1]
+		# The frame's crags stand tall, upright slabs and blocks round the
+		# opening (MOUTH_SLAB_HEIGHT their height to their width); the
+		# boulders lie low.
 		var radii := Vector3(size * rng.randf_range(0.8, 1.4), size * rng.randf_range(0.6, 1.1), size * rng.randf_range(0.8, 1.4))
+		if spot[2] and spot[3]:
+			radii = Vector3(size * rng.randf_range(0.9, 1.2), size * rng.randf_range(MOUTH_TOP_HEIGHT_LEAST, MOUTH_TOP_HEIGHT_MOST), size * rng.randf_range(0.7, 1.0))
+		elif spot[2]:
+			radii = Vector3(size * rng.randf_range(0.6, 0.9), size * rng.randf_range(MOUTH_SLAB_HEIGHT_LEAST, MOUTH_SLAB_HEIGHT_MOST), size * rng.randf_range(0.5, 0.8))
 		# The frame jagged and split (Caves.crag); the boulders worn round.
 		var lump := Caves.crag(spot[0], radii, rng.randf() * TAU, noise) if spot[2] else Caves.rock(spot[0], radii, rng.randf() * TAU, noise)
+		# Its id (the cave's key and its place in the order they're made),
+		# for the hand edits (ZoneEdits.rocks: moved, turned, scaled, gone).
+		var id := "%s:%d" % [ZoneEdits.cave_key(cave), rocks.size()]
+		var center: Vector3 = spot[0]
+		rocks.append({ "id": id, "center": center, "mesh": lump })
+		var moved := Transform3D.IDENTITY
+		if _edits != null and _edits.rocks.has(id):
+			var edit: Dictionary = _edits.rocks[id]
+			if edit.get("deleted", false):
+				continue
+			if edit.has("faces"):
+				# Exactly as it was left in Blender: its own mesh, in place.
+				var surface := SurfaceTool.new()
+				surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+				surface.set_smooth_group(-1)
+				for point: Vector3 in edit.faces:
+					surface.add_vertex(point)
+				surface.generate_normals()
+				lump = surface.commit()
+			else:
+				var turn: Basis = edit.basis
+				# Turned and scaled about its middle, then moved.
+				moved = Transform3D(turn, center + (edit.offset as Vector3) - turn * center)
 		var view := MeshInstance3D.new()
 		view.mesh = lump
+		view.transform = moved
 		view.material_override = material
 		view.layers = CAVE_RENDER_LAYER | 1
 		parent.add_child(view)
 		var shape := CollisionShape3D.new()
 		shape.shape = lump.create_convex_shape()
+		shape.transform = moved
 		body.add_child(shape)
+	cave.rocks = rocks
 	parent.add_child(body)
 
 
@@ -787,7 +978,7 @@ func _frame_mouth(parent: Node3D, cave: Dictionary, place: Transform3D, material
 ## ground exactly as the ground's), turning to rock as it goes in (`shares`,
 ## 0 at the ground to 1 at the cave). Without a textured ground, the cave's
 ## rock.
-func _draw_rim(parent: Node3D, faces: PackedVector3Array, shares: PackedFloat32Array, rock: Material) -> void:
+func _draw_rim(parent: Node3D, faces: PackedVector3Array, shares: PackedFloat32Array, rock: Material, seam := {}) -> void:
 	if faces.is_empty():
 		return
 	var ground_material: Material = null
@@ -803,7 +994,16 @@ func _draw_rim(parent: Node3D, faces: PackedVector3Array, shares: PackedFloat32A
 	for k in faces.size():
 		var p := faces[k]
 		if textured:
+			# On the seam, the ground's own slope, so the join matches it
+			# exactly; elsewhere the face's own (the ground's slope before a
+			# mouth is the hill rising behind it, which would paint the flat
+			# doorstep as rock).
 			var normal := Vector3(height_at(p.x - step, p.z) - height_at(p.x + step, p.z), 2.0 * step, height_at(p.x, p.z - step) - height_at(p.x, p.z + step)).normalized()
+			if not seam.is_empty() and not seam.has(MeshClean.key_of(p)):
+				var t := k - k % 3
+				normal = (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t]).normalized()
+				if normal.y < 0.0:
+					normal = -normal
 			var share := smoothstep(0.0, 0.7, shares[k])
 			var layers: Color = _weights.call(p.x, p.z, p.y, normal)
 			layers.b = lerpf(layers.b, 1.0, share)
@@ -1053,9 +1253,27 @@ func _mouth(cave: Dictionary, segments: Array, noise: FastNoiseLite) -> Array:
 				var p2: Vector3 = tri[2]
 				if p0.distance_squared_to(p1) < 1e-8 or p1.distance_squared_to(p2) < 1e-8 or p0.distance_squared_to(p2) < 1e-8:
 					continue
+				var sa := _rim_share(to_local * p0, base, tri[3])
+				var sb := _rim_share(to_local * p1, base, tri[4])
+				var sc := _rim_share(to_local * p2, base, tri[5])
 				surface.append_array([p0, p1, p2, p0, p2, p1])
-				shares.append_array([tri[3], tri[4], tri[5], tri[3], tri[5], tri[4]])
+				shares.append_array([sa, sb, sc, sa, sc, sb])
 	return [surface, shares]
+
+
+## How far round to rock (0 the ground, 1 the cave) a rim point goes: its
+## share of the way from the ground's edge to the cave's; but on the flat by
+## the doorstep (lower than RIM_GROUND_FLOOR over the floor) it stays ground
+## until RIM_GROUND_UNTIL of the way in, so the floor before a mouth looks
+## like the ground round it, not a stone skirt.
+static var RIM_GROUND_FLOOR := 0.5
+static var RIM_GROUND_UNTIL := 0.7
+
+
+static func _rim_share(local: Vector3, base: float, along: float) -> float:
+	if local.y - base < RIM_GROUND_FLOOR:
+		return smoothstep(RIM_GROUND_UNTIL, 1.0, along)
+	return along
 
 
 ## Trees, boulders and cacti the zone scattered in a cave's mouth or on its
