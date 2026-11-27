@@ -407,6 +407,10 @@ var _wander_wait := 0.0
 
 @onready var combatant: Combatant = $Combatant
 @onready var _visual: Node3D = $Visual
+## Beastshape's sheep, while the creature is one (_update_sheep).
+var _sheep: BeastModel
+## The sheep's wool.
+static var SHEEP_WOOL := Color(0.9, 0.88, 0.82)
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 ## The standing shape, put back on respawn.
 @onready var _standing_shape: Shape3D = _collision.shape
@@ -463,6 +467,8 @@ func _ready() -> void:
 	c.took_damage.connect(func(amount: int, source: Combatant, _crit: bool) -> void: _on_attacked(source, amount))
 	c.avoided.connect(func(_text: String, source: Combatant) -> void: _on_attacked(source, 0))
 	c.died.connect(_on_died)
+	# Beastshape (the Magus's Polymorph) shows it as a sheep while it lasts.
+	c.auras_changed.connect(_update_sheep)
 	if not _data.get("Events", []).is_empty():
 		ai = CreatureAI.new()
 		ai.name = "CreatureAI"
@@ -1375,6 +1381,28 @@ func _scale_to_level(new_level: int) -> void:
 	c.attack_power = roundi(float(row[3]) * damage_mod)
 	c.armor = int(row[4])
 	c.reset()
+
+
+## Beastshape: the creature's own look hidden and a sheep shown in its place
+## while it's transformed (Combatant.is_transformed).
+func _update_sheep() -> void:
+	var transformed := combatant.is_transformed() and combatant.is_alive()
+	if transformed == (_sheep != null):
+		return
+	if transformed:
+		_sheep = BeastModel.new()
+		_sheep.species = "sheep"
+		_sheep.colors = BeastModel.coat_colors(SHEEP_WOOL, "sheep")
+		_sheep.name = "Sheep"
+		add_child(_sheep)
+		_sheep.attach_creature(self, combatant)
+		Targeting.mark_unit(_sheep)
+		Vfx.release(self, SpellDB.School.ARCANE)
+	else:
+		_sheep.queue_free()
+		_sheep = null
+		Vfx.release(self, SpellDB.School.ARCANE)
+	_visual.visible = not transformed
 
 
 func _on_died() -> void:

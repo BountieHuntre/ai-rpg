@@ -46,6 +46,7 @@ const NAME_ICONS := [
 	["healing potion", "potion_red"], ["mana potion", "potion_blue"], ["potion", "potion_green"], ["liquor", "bottle"],
 	["scroll of strength", "scroll_strength"], ["scroll of agility", "scroll_agility"], ["scroll of intellect", "scroll_intellect"],
 	["scroll of spirit", "scroll_spirit"], ["scroll of stamina", "scroll_stamina"], ["scroll of protection", "scroll_protection"],
+	["mana pearl", "gem_pearl"], ["mana amber", "gem_amber"], ["mana topaz", "gem_topaz"], ["mana garnet", "gem_garnet"],
 	["milk", "flask_milk"], ["juice", "flask_juice"], ["nectar", "flask_juice"], ["water", "flask_water"], ["dew", "flask_water"],
 	["cheese", "cheese"], ["brie", "cheese"], ["cheddar", "cheese"], ["swiss", "cheese"], ["sharp", "cheese"], ["mild", "cheese"],
 	["pie", "pie"], ["loaf", "bread"], ["bread", "bread"], ["apple", "fruit_apple"], ["melon", "fruit_melon"], ["pumpkin", "fruit_pumpkin"],
@@ -151,6 +152,19 @@ const CLASS_SPELLS := {
 	"Chilled": "frost", "Thrash": "rage", "Prying Strike": "bleed", "Head Butt": "stun", "Low Jab": "stun",
 	"Back Thrust": "strike", "Snap Kick": "hilt", "Headlong Charge": "charge", "Food": "bread", "Drink": "flask_water",
 	"Healing Potion": "potion_red", "Restore Mana": "potion_blue",
+	# The Magus's.
+	"Arcane Wisdom": "scroll_intellect", "Conjure Draught": "flask_water", "Conjure Rations": "bread",
+	"Conjure Mana Pearl": "gem_pearl", "Conjure Mana Amber": "gem_amber", "Conjure Mana Topaz": "gem_topaz",
+	"Conjure Mana Garnet": "gem_garnet", "Replenish Mana": "gem_pearl", "Flame Jet": "flame_orange",
+	"Searing Touch": "flame_gold", "Blazing Orb": "fire", "Pillar of Flame": "pillar", "Searing Wave": "nova_fire",
+	"Kindling": "flame_gold", "Beastshape": "sheep", "Arcane Darts": "missiles", "Arcane Dart": "missiles",
+	"Arcane Nova": "nova_arcane", "Rime Burst": "nova_frost", "Frost Fan": "nova_frost", "Hailstorm": "hail",
+	"Hoarfrost Shroud": "frost", "Magus Armor": "orb", "Featherdrift": "feather", "Muffle Magic": "ward",
+	"Magnify Magic": "orb", "Sense Magic": "eye", "Lift Lesser Curse": "cleanse", "Ember Ward": "presence_emberward",
+	"Rime Ward": "presence_frostward", "Mana Barrier": "ward", "Ice Bulwark": "ward", "Flicker": "blink",
+	"Arcane Renewal": "mind_calm", "Spellbreak": "hex", "Spellbreak - Silenced": "hex", "Frozen Vigil": "iceblock",
+	"Rime Renewal": "frost", "Swift Mind": "stars", "Arcane Ascendance": "stars", "Lucid Mind": "mind_calm",
+	"Searing Weakness": "burn", "Deepening Chill": "frost", "Frostgrip": "iceblock",
 }
 const WEAPON_SKILLS := {
 	"One-Handed Axes": "axe_common", "Two-Handed Axes": "greataxe_common", "One-Handed Maces": "mace_common",

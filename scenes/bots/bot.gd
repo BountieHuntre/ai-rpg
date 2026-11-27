@@ -71,6 +71,7 @@ const BUFF_CATEGORIES := {
 	ClassicData.CharClass.WARRIOR: ["Stance", "Shout"],
 	ClassicData.CharClass.SPELLSWORD: ["Edge", "Form"],
 	ClassicData.CharClass.HUNTER: ["Spirits"],
+	ClassicData.CharClass.MAGE: ["Armor", "Intellect"],
 }
 const CATEGORY_SPELLS := {
 	"Presence": ["Bulwark Presence", "Thorned Presence", "Focused Presence", "Hallowed Presence",
@@ -88,6 +89,8 @@ const CATEGORY_SPELLS := {
 	"Edge": ["Flame Edge", "Frost Edge", "Storm Edge", "Warding Edge"],
 	"Form": ["Bladesong Form", "Wardweave Form"],
 	"Spirits": ["Hawk Spirit", "Monkey Spirit", "Cheetah Spirit", "Pack Spirit", "Beast Spirit", "Wild Spirit"],
+	"Armor": ["Hoarfrost Shroud", "Rime Shroud", "Magus Armor"],
+	"Intellect": ["Arcane Wisdom"],
 }
 ## The Ranger's pet spells, from the taming quests, which bots skip: they
 ## know them from level 10 (unlike classic).
@@ -103,6 +106,13 @@ static var TAME_EVERY := 5.0
 const PRESENCES := ["Bulwark Presence", "Thorned Presence", "Focused Presence"]
 ## Oaths a Templar bot fights with, best first.
 const OATHS := ["Oath of Dominion", "Oath of Valor"]
+## A Magus bot's main spell by its main talent tree (Arcana, Pyromancy,
+## Rime), and what it falls back on.
+const MAGUS_NUKES := [["Arcane Darts", "Rime Bolt"], ["Flame Bolt", "Rime Bolt"], ["Rime Bolt", "Flame Bolt"]]
+## A Magus bot freezes and backs off from a creature this close, walking away
+## for this long before it turns to cast.
+static var MAGUS_TOO_CLOSE := 6.0
+static var MAGUS_BACK_OFF_TIME := 2.5
 ## How far from its enemy a Cleric bot with mana stands to cast.
 static var CASTER_RANGE := 25.0
 ## A Cleric bot fights from range while it has this share of its mana.
@@ -156,6 +166,8 @@ var manager: BotManager
 ## last death, { "title", "time" } of the last quest it handed in, and the
 ## creature entry it last killed.
 var last_death := {}
+## A Magus walking away from what it froze: until when (_back_off_from).
+var _backing_off_until := 0.0
 var last_quest_done := {}
 var last_kill := 0
 ## Kills of its own so far (BotProfessions looks for a corpse to skin after each).
@@ -543,7 +555,9 @@ func _think() -> void:
 			combatant.stop_shooting()
 			combatant.attack_target = _enemy
 		var reach := CASTER_RANGE if wanding or _casts_from_range() else RANGER_RANGE if shooting else combatant.melee_range * 0.8
-		if combatant.distance_to(_enemy) > reach:
+		if Time.get_ticks_msec() / 1000.0 < _backing_off_until:
+			pass
+		elif combatant.distance_to(_enemy) > reach:
 			_go_to(_enemy.body.global_position)
 		else:
 			_has_destination = false
@@ -1182,13 +1196,17 @@ func _rest(delta: float) -> void:
 ## Clerics with mana stand back and cast; out of mana they close in and swing.
 ## A Cleric holding a wand: it fights with the wand, not in melee.
 func _shoots_wand() -> bool:
-	return profile.char_class == ClassicData.CharClass.PRIEST 		and int(combatant.ranged_weapon.get("kind", 0)) == Inventory.WEAPON_SUBCLASS_WAND
+	return profile.char_class in [ClassicData.CharClass.PRIEST, ClassicData.CharClass.MAGE] \
+		and int(combatant.ranged_weapon.get("kind", 0)) == Inventory.WEAPON_SUBCLASS_WAND
 
 
 func _casts_from_range() -> bool:
 	var c := combatant
 	# A damage Cleric casts down to its last few drops.
 	var keep := 0.05 if current_role() == "Damage" else CASTER_MANA
+	# A Magus casts to its last drops too.
+	if profile.char_class == ClassicData.CharClass.MAGE:
+		return c.max_mana > 0 and c.mana >= c.max_mana * 0.05
 	return profile.char_class == ClassicData.CharClass.PRIEST and c.max_mana > 0 and c.mana >= c.max_mana * keep \
 		and profile.best_rank("Chastise") != 0
 
@@ -1205,6 +1223,86 @@ func _use_spells() -> void:
 			_use_spellsword_spells()
 		ClassicData.CharClass.HUNTER:
 			_use_ranger_spells()
+		ClassicData.CharClass.MAGE:
+			_use_magus_spells()
+
+
+# Magus spells: its armor and Arcane Insight on the group out of a fight;
+# in one, Frozen Vigil, Ice Bulwark and Mana Barrier when hurt, Spellbreak on
+# casters, Rime Burst on what reaches it (then it steps back to cast),
+# Arcane Nova when crowded, Arcane Renewal when out of mana, its talents'
+# cooldowns, and then its main spell from range: Arcane Darts, Flame Bolt or
+# Rime Bolt by its talents, Flame Jet between them.
+
+func _use_magus_spells() -> void:
+	var me := combatant
+	var fighting := me.is_in_combat()
+	if not fighting and not _resting:
+		var armor := buff_choice("Armor")
+		var armors: Array = CATEGORY_SPELLS["Armor"] if armor == "Auto" else [] if armor == "None" else [armor]
+		for name: String in armors:
+			if profile.best_rank(name) != 0:
+				if _lacks(me, name) and _try(name, me):
+					return
+				break
+		if buff_choice("Intellect") != "None":
+			for unit in _group_units():
+				var target := unit.combatant
+				if target.is_alive() and me.distance_to(target) <= 30.0 and target.max_mana > 0 \
+						and _lacks(target, "Arcane Wisdom") and _try("Arcane Wisdom", target):
+					return
+	if _enemy == null:
+		return
+	if fighting and me.health < me.max_health * 0.2 and _try("Frozen Vigil", me):
+		return
+	if fighting and me.health < me.max_health * 0.5:
+		if _lacks(me, "Ice Bulwark") and _try("Ice Bulwark", me):
+			return
+		if _lacks(me, "Mana Barrier") and me.mana > me.max_mana * 0.3 and _try("Mana Barrier", me):
+			return
+	if _enemy.is_casting and _try("Spellbreak", _enemy):
+		return
+	var distance := me.distance_to(_enemy)
+	if fighting and distance <= MAGUS_TOO_CLOSE:
+		if not _enemy.is_rooted() and _try("Rime Burst", me):
+			_back_off_from(_enemy)
+			return
+		# Already frozen: walk away from it before casting again.
+		if _enemy.is_rooted() and Time.get_ticks_msec() / 1000.0 >= _backing_off_until:
+			_back_off_from(_enemy)
+			return
+	var crowd := 0
+	for node in _creatures_near(10.0):
+		var enemy := node as Enemy
+		if enemy.combatant.is_alive() and enemy.state == Enemy.State.CHASE and global_position.distance_to(enemy.global_position) <= 10.0:
+			crowd += 1
+	if crowd >= 3 and _try("Arcane Nova", me):
+		return
+	if fighting and me.mana < me.max_mana * 0.12 and distance > MAGUS_TOO_CLOSE * 2.0 and _try("Arcane Renewal", me):
+		return
+	if fighting and _enemy.health > _enemy.max_health * 0.5:
+		for name in ["Arcane Ascendance", "Kindling", "Swift Mind"]:
+			if _lacks(me, name) and _try(name, me):
+				return
+	var main_tree: int = Talents.bot_trees(profile.char_class, current_role())[0]
+	var nukes: Array = MAGUS_NUKES[clampi(main_tree, 0, MAGUS_NUKES.size() - 1)]
+	if not fighting and _try("Blazing Orb", _enemy):
+		return
+	if _try("Flame Jet", _enemy):
+		return
+	for name: String in nukes:
+		if _try(name, _enemy):
+			return
+
+
+## Steps back from a creature it has just frozen, to cast from range.
+func _back_off_from(target: Combatant) -> void:
+	var away := global_position - target.body.global_position
+	away.y = 0.0
+	if away.length() < 0.1:
+		return
+	_go_to(global_position + away.normalized() * (CASTER_RANGE - MAGUS_TOO_CLOSE))
+	_backing_off_until = Time.get_ticks_msec() / 1000.0 + MAGUS_BACK_OFF_TIME
 
 
 # Ranger abilities: a Spirit kept up (Hawk, else Monkey), its pet called,

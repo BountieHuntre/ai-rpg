@@ -244,3 +244,14 @@ appearance = {
 "body": 0
 }
 race = "troll"
+
+[node name="Jinzala" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2491.72, 6.05, -1673.76)
+rotation = Vector3(0, -0.9098, 0)
+npc_name = "Jinzala"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 1
+}
+race = "troll"

@@ -287,3 +287,14 @@ npc_name = "Vel'kazi"
 subname = "Enchanting Supplies"
 vendor = 15419
 race = "troll"
+
+[node name="Tazmo" parent="." instance=ExtResource("2_npc")]
+position = Vector3(2061.90, 5.1, -1812.80)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Tazmo"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 0
+}
+race = "troll"

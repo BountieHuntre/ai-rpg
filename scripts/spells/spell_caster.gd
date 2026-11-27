@@ -92,6 +92,8 @@ var _warrior := WarriorAbilities.new()
 var _spellsword := SpellswordAbilities.new()
 ## The Ranger's: shots, Spirits, traps, Still as Death, tracking.
 var _ranger := RangerAbilities.new()
+## The Magus's spells (scripts/spells/magus_abilities.gd).
+var _magus := MagusAbilities.new()
 
 @onready var _unit: PlayerUnit = get_parent()
 
@@ -113,6 +115,8 @@ func _ready() -> void:
 	add_child(_spellsword)
 	_ranger.name = "RangerAbilities"
 	add_child(_ranger)
+	_magus.name = "MagusAbilities"
+	add_child(_magus)
 	var talent_procs := TalentProcs.new()
 	talent_procs.name = "TalentProcs"
 	add_child(talent_procs)
@@ -432,6 +436,9 @@ func _find_problem(spell: Dictionary, target: Combatant, starting: bool) -> Stri
 	var ranger_problem: String = _ranger.problem(spell, target)
 	if not ranger_problem.is_empty():
 		return ranger_problem
+	var magus_problem := _magus.problem(spell, target)
+	if not magus_problem.is_empty():
+		return magus_problem
 	# Shroud of Shadow shuts out Holy spells (Shadowform in classic).
 	if int(spell.get("School", 0)) == SpellDB.School.HOLY and _in_shroud():
 		return ERR_SHAPESHIFTED
@@ -546,6 +553,9 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 	var cooldown := SpellDB.cooldown(spell, _unit.combatant)
 	if cooldown > 0.0:
 		_cooldowns[int(spell.Id)] = cooldown
+	# Buffs this spell's own procs bring (Clear Mind from Steady Mind) are for
+	# the next spell, not this one.
+	var had_before := me.auras.map(func(aura: Dictionary) -> int: return int(aura.spell.Id))
 	# Spells that travel (a Speed in yards a second; the Ranger's shots fly by
 	# their own Projectile) reach an enemy after the flight, as in CMaNGOS,
 	# shown as a bolt; the rest land now.
@@ -561,27 +571,30 @@ func _finish(spell: Dictionary, target: Combatant) -> void:
 		_land(spell, target, extra_crit)
 	# Helpful spells that aren't heals (heals report their own) are events for
 	# procs too (Improved Last Rite, Improved Unbridled Rage).
-	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY and not SpellDB.has_effect(spell, SpellDB.EFFECT_HEAL) and target:
+	# (Not area damage aimed at enemies round you: Arcane Nova, Hailstorm.)
+	if SpellDB.target_type(spell) != SpellDB.TARGET_ENEMY and not SpellDB.has_effect(spell, SpellDB.EFFECT_HEAL) and target 			and not SpellDB.has_effect(spell, SpellDB.EFFECT_SCHOOL_DAMAGE) and not SpellDB.has_effect(spell, SpellDB.EFFECT_PERSISTENT_AREA_AURA):
 		me.proc_event.emit(Combatant.PROC_POSITIVE_SPELL, Combatant.PROC_EX_NORMAL, target, spell, 0)
 		if target != me:
 			target.proc_event.emit(Combatant.PROC_TAKEN_POSITIVE_SPELL, Combatant.PROC_EX_NORMAL, me, spell, 0)
 	if uses_stillness:
 		me.remove_aura(int(stillness.spell.Id))
-	_use_modifier_charges(spell)
+	_use_modifier_charges(spell, had_before)
 
 
 ## A spell's effects reaching its target, by class.
 func _land(spell: Dictionary, target: Combatant, extra_crit: float) -> void:
-	if not _spellsword.cast(spell, target) and not _ranger.cast(spell, target) and not _warrior.cast(spell, target):
+	if not _spellsword.cast(spell, target) and not _ranger.cast(spell, target) and not _magus.cast(spell, target) 			and not _warrior.cast(spell, target):
 		_cleric_spell(spell, target, extra_crit)
 
 
 ## Buffs that change your next few spells (Heaven's Favor: the next heal is
 ## a critical one) lose a charge when a spell they change is cast.
-func _use_modifier_charges(spell: Dictionary) -> void:
+func _use_modifier_charges(spell: Dictionary, had_before: Array) -> void:
 	var me := _unit.combatant
 	for aura in me.auras.duplicate():
 		if aura.get("talent", false) or not aura.has("charges") or aura.spell.SpellName == "Stillness":
+			continue
+		if not int(aura.spell.Id) in had_before:
 			continue
 		var buff: Dictionary = aura.spell
 		var changes := false
@@ -966,6 +979,13 @@ func use_item(ref: Dictionary) -> String:
 		_item_cooldowns[category] = int(item.spellcategorycooldown_1) / 1000.0
 	if int(item.spellcharges_1) < 0:
 		Inventory.remove_one(ref)
+	# Mana stones restore mana at once (Energize).
+	if int(spell.Effect1) == SpellDB.EFFECT_ENERGIZE:
+		var before := me.mana
+		me.mana = minf(me.mana + SpellDB.effect_value(spell, 0, _unit.profile.level), me.max_mana)
+		me.energized.emit(roundi(me.mana - before), 0, str(spell.SpellName))
+		Sfx.play_at("buff", _unit.global_position)
+		return ""
 	me.add_aura(spell, me)
 	# Food and drink are taken sitting down.
 	if int(spell.AuraInterruptFlags) & SpellDB.AURA_INTERRUPT_NOT_SEATED:
@@ -1039,6 +1059,10 @@ func start_category_cooldown(spell: Dictionary) -> void:
 
 
 ## The Ranger's: their pet's record, and opening Beast Training.
+func magus() -> MagusAbilities:
+	return _magus
+
+
 func ranger() -> RangerAbilities:
 	return _ranger
 
@@ -1204,9 +1228,17 @@ func _spell_damage(spell: Dictionary, target: Combatant, multiplier := 1.0, can_
 		target.avoid("Resist", me)
 		me.proc_event.emit(Combatant.PROC_NEGATIVE_SPELL, Combatant.PROC_EX_RESIST, target, spell, 0)
 		return false
-	var amount := SpellDB.effect_value(spell, 0, _unit.profile.level, _unit.combatant) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
+	# The damage is the spell's first School Damage effect (Rime Bolt's chill
+	# comes first).
+	var index := 0
+	for i in 3:
+		if int(spell.get("Effect%d" % (i + 1), 0)) == SpellDB.EFFECT_SCHOOL_DAMAGE:
+			index = i
+			break
+	var amount := SpellDB.effect_value(spell, index, _unit.profile.level, _unit.combatant) + _spell_power() * SpellDB.direct_coefficient(int(spell.Id))
 	# Damage talents for the spell (Scorching Light, Deepening Gloom).
 	amount = SpellMods.apply(me, spell, SpellMods.DAMAGE, amount)
+	extra_crit += _magus.extra_crit(spell, target)
 	var crit := not SpellDB.has_attribute_ex2(spell, SpellDB.ATTR_EX2_CANT_CRIT) and CombatRules.roll_heal(me, extra_crit + _talent_crit(spell)) == CombatRules.Outcome.CRIT
 	Sfx.play_at("bolt_hit", _unit.global_position)
 	var dealt := roundi(amount * multiplier * (CombatRules.SPELL_CRIT_MULTIPLIER if crit else 1.0))

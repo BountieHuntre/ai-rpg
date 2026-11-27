@@ -162,3 +162,13 @@ rotation = Vector3(0, -2.4871, 0)
 npc_name = "Ilse Varrow"
 subname = "Enchanting Supplies"
 vendor = 15419
+
+[node name="ElspethHollin" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-3.10, 5.0, 426.50)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Elspeth Hollin"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 1
+}

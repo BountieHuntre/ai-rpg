@@ -188,3 +188,14 @@ npc_name = "Ottilie Wane"
 subname = "Enchanting Supplies"
 vendor = 15419
 race = "undead"
+
+[node name="SeleneMarrow" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-1736.00, 5.0, -4181.60)
+rotation = Vector3(0, 1.5708, 0)
+npc_name = "Selene Marrow"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 1
+}
+race = "undead"

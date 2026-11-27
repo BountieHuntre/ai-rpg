@@ -11,7 +11,7 @@ const WEAPONS := {
 	"one-handed": "with one-handed melee weapons", "wand": "with wands",
 }
 ## What each school mask means for talents that name schools.
-const SCHOOLS := { 2: "Holy", 32: "Shadow", 98: "Holy, Shadow and Arcane", 126: "spell", 127: "all" }
+const SCHOOLS := { 2: "Holy", 4: "Fire", 16: "Frost", 32: "Shadow", 64: "Arcane", 98: "Holy, Shadow and Arcane", 126: "spell", 127: "all" }
 
 static var _player_spells: Dictionary = {}
 static var _talent_ranks: Dictionary = {}
@@ -97,7 +97,38 @@ static func _special(spell: Dictionary, level: int) -> String:
 		"Gloomweave":
 			return "Gives your Shadow spells a %s%% chance to leave the target taking 3%% more Shadow damage for 15 sec, stacking up to 5 times." % t.call(spell, 0)
 		"Wandwork":
-			return "Increases the damage you deal with wands by %s%%. (There are no wands in the game yet.)" % t.call(spell, 0)
+			return "Increases the damage you deal with wands by %s%%." % t.call(spell, 0)
+		# The Magus's talents that fire from combat or have rules of their own
+		# (MagusAbilities).
+		"Magic Siphon":
+			return "Raises your resistance to all magic by %s, and when you resist a spell you regain %d%% of your maximum mana." % [t.call(spell, 1), rank]
+		"Unwavering Focus":
+			return "Gives your damage spells a %d%% chance to clear your mind, making your next damage or healing spell cost no mana." % chance
+		"Warded Mind":
+			return "Raises your armor by %s%% of your Intellect." % _num(SpellDB.effect_value(spell, 0, level))
+		"Improved Mana Barrier":
+			return "Your Mana Barrier costs %s%% less mana a point of damage it absorbs." % t.call(spell, 0)
+		"Improved Spellbreak":
+			return "Your Spellbreak also silences the target for %s." % lasts.call(trigger)
+		"Jarring Impact":
+			return "Gives your Fire spells a %d%% chance to stun the target for %s." % [chance, lasts.call(trigger)]
+		"Smoulder":
+			return "Your Fire critical hits make the target burn for %d%% more of the damage over %s sec." % [roundi(MagusAbilities.SMOULDER_PER_RANK * rank), _num(MagusAbilities.SMOULDER_TIME)]
+		"Improved Searing Touch":
+			return "Gives your Searing Touch a %s%% chance to leave the target taking 3%% more Fire damage for 30 sec, stacking up to 5 times." % t.call(spell, 0)
+		"Improved Ember Ward":
+			return "Gives your Ember Ward a %s%% chance to turn Fire spells back on their caster while it lasts. (Not in the game yet.)" % t.call(spell, 0)
+		"Elemental Thrift":
+			return "Your Fire and Frost critical hits give back %s%% of the spell's mana cost." % t.call(spell, 0)
+		"Frostgrip":
+			return "Gives your chilling spells a %s%% chance to freeze the target in place for %s." % [t.call(spell, 0), lasts.call(SpellDB.get_spell(int(spell.get("EffectTriggerSpell1", 0))))]
+		"Improved Hailstorm":
+			var chill := SpellDB.get_spell(SpellDB.linked_spell(int(spell.Id)))
+			return "Your Hailstorm also chills its targets, slowing their movement by %s%% for %s." % [t.call(chill, 0), lasts.call(chill)]
+		"Shattering Cold":
+			return "Raises your chance to crit frozen targets by %d%%." % roundi(MagusAbilities.SHATTER_PER_RANK * rank)
+		"Deepening Chill":
+			return "Gives your Frost spells a %d%% chance to make the target %s%% more likely to be crit by Frost spells for %s, stacking up to 5 times." % [chance, t.call(trigger, 0), lasts.call(trigger)]
 		"Lingering Spirit":
 			return "On death you become a spirit that can cast for 10 sec. (Not in the game yet.)"
 		"Steadfast Guard":

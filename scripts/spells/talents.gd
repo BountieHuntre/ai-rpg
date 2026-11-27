@@ -289,6 +289,9 @@ static func bot_trees(char_class: int, role: String) -> Array[int]:
 			order.assign([2, 0, 1] if role == "Damage" else [1, 0, 2])
 		ClassicData.CharClass.SPELLSWORD:
 			order.assign([1, 2, 0] if role == "Tank" else [0, 2, 1])
+		# A Magus bot goes Rime first (it freezes and kites), then Pyromancy.
+		ClassicData.CharClass.MAGE:
+			order.assign([2, 1, 0])
 	return order
 
 

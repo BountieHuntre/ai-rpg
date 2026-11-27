@@ -773,7 +773,8 @@ func _d_stone(v: String) -> void:
 
 
 func _d_gem(v: String) -> void:
-	var c: Color = { "malachite": Color("2ab86a"), "tigerseye": Color("d89a2a"), "shadowgem": Color("6a3a9a"), "pearl": Color("f0ecf8") }.get(v, Color("3a8aff"))
+	var c: Color = { "malachite": Color("2ab86a"), "tigerseye": Color("d89a2a"), "shadowgem": Color("6a3a9a"), "pearl": Color("f0ecf8"),
+		"amber": Color("e8a030"), "topaz": Color("f0d040"), "garnet": Color("c02a3a") }.get(v, Color("3a8aff"))
 	_bg("dark")
 	_glow(C, 110, c, 1.2)
 	if v == "pearl":
@@ -1425,3 +1426,82 @@ func _d_attack(v: String) -> void:
 func _d_passive(v: String) -> void:
 	_bg("grey")
 	_d_book("")
+
+
+# The Magus's spells.
+
+## Beastshape: a sheep's woolly head and body.
+func _d_sheep(v: String) -> void:
+	_bg("purple")
+	_glow(C, 120, Color("d0a0ff"), 1.2)
+	for p in [Vector2(108, 150), Vector2(150, 146), Vector2(126, 122), Vector2(164, 120), Vector2(92, 124), Vector2(132, 170)]:
+		_ball(p, 30, Color("ffffff"), Color("c8c0d8"))
+	_fill(_ellipse(Vector2(70, 132), Vector2(22, 28)), [Color("4a4048"), Color("1a1418")], 90)
+	draw_circle(Vector2(62, 124), 4, Color("f0e8c0"))
+	_fill(_ellipse(Vector2(56, 108), Vector2(14, 7)), [Color("3a3038")], 0)
+	for x in [104, 140, 160]:
+		_line(Vector2(x, 186), Vector2(x, 214), Color("2a2428"), 8)
+
+
+## Flicker: an arcane figure's trail of afterimages and a burst where it lands.
+func _d_blink(v: String) -> void:
+	_bg("purple")
+	for i in 4:
+		var at := Vector2(70 + i * 28, 150 - i * 6)
+		draw_circle(at, 22 + i * 3, Color(0.75, 0.55, 1.0, 0.15 + i * 0.12))
+	_glow(Vector2(180, 128), 70, Color("e0c0ff"), 1.6)
+	_star(Vector2(180, 128), 44, 14, 8, Color("ffffff"))
+	_line(Vector2(48, 168), Vector2(150, 140), Color(1, 1, 1, 0.5), 5)
+
+
+## Frozen Vigil: a block of ice.
+func _d_iceblock(v: String) -> void:
+	_bg("sky")
+	_glow(C, 120, Color("c8f0ff"), 1.4)
+	var top := _pts([128, 52, 204, 86, 128, 120, 52, 86])
+	var left := _pts([52, 86, 128, 120, 128, 210, 52, 176])
+	var right := _pts([128, 120, 204, 86, 204, 176, 128, 210])
+	_fill(top, [Color("ffffff"), Color("bfe8ff")], 90)
+	_fill(left, [Color("a8dcff"), Color("4a90d0")], 90)
+	_fill(right, [Color("8ac8f0"), Color("2a6ab0")], 90)
+	_line(Vector2(84, 110), Vector2(100, 160), Color(1, 1, 1, 0.6), 4)
+
+
+## Arcane Darts: three darts streaking at a target.
+func _d_missiles(v: String) -> void:
+	_bg("purple")
+	for i in 3:
+		var tip := Vector2(196 - i * 22, 70 + i * 52)
+		for k in 5:
+			draw_circle(tip - Vector2(30 + k * 18, -10 - k * 6), 12 - k * 2, Color(0.8, 0.6, 1, 0.35 - k * 0.06))
+		_glow(tip, 34, Color("e0c0ff"), 1.2)
+		_ball(tip, 16, Color("ffffff"), Color("b070ff"), false)
+
+
+## Novas: a ring bursting out from the middle (arcane, frost, fire).
+func _d_nova(v: String) -> void:
+	var c: Array = _school({ "arcane": "purple", "frost": "cyan", "fire": "orange" }.get(v, "purple"))
+	_bg(c[2])
+	_glow(C, 120, c[1], 1.6)
+	_rays(C, 30, 108, 14, Color(c[0], 0.85), 8)
+	draw_arc(C, 74, 0, TAU, 48, Color(c[0], 0.95), 12)
+	draw_circle(C, 22, Color.WHITE)
+
+
+## Hailstorm: shards of ice falling from a dark sky.
+func _d_hail(v: String) -> void:
+	_bg("sky")
+	_fill(_ellipse(Vector2(128, 54), Vector2(110, 34)), [Color("5a6a80"), Color("2a3240")], 90)
+	for i in 9:
+		var p := Vector2(44 + (i * 47) % 170, 104 + (i * 31) % 110)
+		_line(p - Vector2(-12, 30), p, Color(0.85, 0.95, 1, 0.5), 5)
+		_fill(_pts([p.x, p.y - 12, p.x + 8, p.y, p.x, p.y + 12, p.x - 8, p.y]), [Color("ffffff"), Color("8ac8f0")], 90, false)
+
+
+## Pillar of Flame: a column of fire striking the ground.
+func _d_pillar(v: String) -> void:
+	_bg("orange")
+	_glow(Vector2(128, 140), 120, Color("ff8a20"), 1.6)
+	_fill(_pts([100, 30, 156, 30, 172, 210, 84, 210]), [Color("fff4c0"), Color("ffa030"), Color("c03a0a")], 0)
+	_fill(_ellipse(Vector2(128, 214), Vector2(92, 22)), [Color("ffd060"), Color("a02a08")], 90)
+	_drop(Vector2(128, 150), 30, [Color.WHITE, Color("fff0a0")])

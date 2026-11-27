@@ -87,6 +87,16 @@ static var MAX_RAGE := 100
 ## Off-hand swings deal half damage (classic, before talents).
 static var OFF_HAND_DAMAGE := 0.5
 static var AURA_MOD_ROOT := 26
+## The Magus's Beastshape: SPELL_AURA_MOD_CONFUSE holds the creature (it can't
+## act), SPELL_AURA_TRANSFORM shows it as a sheep, and it heals itself
+## this share of its health a second while it lasts (classic's polymorphed
+## creatures regenerate quickly; the rate is a close guess).
+static var AURA_MOD_CONFUSE := 5
+static var AURA_TRANSFORM := 56
+static var TRANSFORMED_REGEN := 0.1
+## Mana Barrier: SPELL_AURA_MANA_SHIELD soaks damage, paid from mana at
+## EffectMultipleValue mana a point.
+static var AURA_MANA_SHIELD := 97
 static var AURA_MOD_SKILL := 98
 static var SKILL_DEFENSE := 95
 static var AURA_MOD_OFFHAND_DAMAGE_PCT := 122
@@ -171,6 +181,8 @@ var faces_point: Callable
 var auras: Array[Dictionary] = []
 
 var _stun_left := 0.0
+## Beastshape's healing, carried between frames.
+var _transform_regen := 0.0
 var _swing_left := 0.0
 var _off_swing_left := 0.0
 var _combat_left := 0.0
@@ -200,7 +212,26 @@ func is_alive() -> bool:
 
 
 func is_stunned() -> bool:
-	return _stun_left > 0.0
+	return _stun_left > 0.0 or (not auras.is_empty() and (_frozen_self() or is_transformed()))
+
+
+## Frozen Vigil (the Magus's Ice Block): a stun the unit put on itself holds
+## it while the aura lasts (cancelled from the buff bar, it lets go).
+func _frozen_self() -> bool:
+	for aura in auras:
+		if aura.caster == self and SpellDB.has_effect(aura.spell, SpellDB.AURA_MOD_STUN, true):
+			return true
+	return false
+
+
+## Beastshape: held as a sheep until it wears off or is hurt.
+func is_transformed() -> bool:
+	return has_aura_type(AURA_TRANSFORM)
+
+
+## Ends a stun at once (Flicker breaks free of stuns and roots).
+func clear_stun() -> void:
+	_stun_left = 0.0
 
 
 ## Units that are stunned or dead can't dodge, parry or block.
@@ -745,11 +776,28 @@ func take_damage(amount: int, source: Combatant, crit := false, school := 0) -> 
 			source.proc_event.emit(PROC_KILL, PROC_EX_NORMAL, self, {}, amount)
 
 
-## Absorb shields (Sanctified Ward) soak damage of their schools until used up.
+## Absorb shields (Sanctified Ward) soak damage of their schools until used up;
+## Mana Barrier pays for what it soaks with mana, ending when that runs out.
 func _absorb(amount: int, school: int, source: Combatant) -> int:
 	for aura in auras.duplicate():
 		var spell: Dictionary = aura.spell
 		for i in 3:
+			if amount > 0 and int(spell["EffectApplyAuraName%d" % (i + 1)]) == AURA_MANA_SHIELD \
+					and int(spell["EffectMiscValue%d" % (i + 1)]) & (1 << school) != 0:
+				var per_point := float(spell.get("EffectMultipleValue%d" % (i + 1), 2.0))
+				# Improved Mana Barrier lowers it (the caster's spell modifiers).
+				per_point = maxf(SpellMods.apply(self, spell, SpellMods.MULTIPLE_VALUE, per_point), 0.01)
+				var shielded := mini(mini(amount, int(aura.amounts[i])), int(mana / per_point))
+				if shielded > 0:
+					aura.amounts[i] -= shielded
+					mana -= shielded * per_point
+					amount -= shielded
+					absorbed.emit(shielded, source)
+					if amount <= 0:
+						avoid("Absorb", source)
+				if aura.amounts[i] <= 0 or mana < per_point:
+					remove_aura(int(spell.Id))
+				continue
 			if amount <= 0 or int(spell["EffectApplyAuraName%d" % (i + 1)]) != SpellDB.AURA_SCHOOL_ABSORB:
 				continue
 			if int(spell["EffectMiscValue%d" % (i + 1)]) & (1 << school) == 0:
@@ -780,7 +828,7 @@ func _break_on_damage(amount: int) -> void:
 			breaks = true
 		if breaks:
 			remove_aura(int(spell.Id))
-			if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true):
+			if SpellDB.has_effect(spell, SpellDB.AURA_MOD_STUN, true) or SpellDB.has_effect(spell, AURA_MOD_CONFUSE, true):
 				_stun_left = 0.0
 
 
@@ -850,6 +898,11 @@ func _physics_process(delta: float) -> void:
 	_off_swing_left = maxf(_off_swing_left - delta, 0.0)
 	_since_mana_spent += delta
 	_tick_auras(delta)
+	if is_transformed() and health < max_health:
+		_transform_regen += max_health * TRANSFORMED_REGEN * delta
+		var regained := int(_transform_regen)
+		_transform_regen -= regained
+		health = mini(health + regained, max_health)
 
 	if attack_target and (not is_instance_valid(attack_target) or not attack_target.is_alive()):
 		attack_target = null

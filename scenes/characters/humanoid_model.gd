@@ -1192,6 +1192,12 @@ static func outfit_for(trade: String, seed_value: int) -> Dictionary:
 		"spellsword":
 			body = Color(0.25, 0.3, 0.55)
 			body_pattern = Pattern.QUILTED
+		"mage":
+			# A Magus's robe: deep blue, violet or crimson, down to the feet.
+			body = [Color(0.2, 0.25, 0.55), Color(0.35, 0.2, 0.5), Color(0.5, 0.15, 0.18)][rng.randi_range(0, 2)]
+			legs = body
+			body_pattern = Pattern.STRIPES
+			legs_pattern = body_pattern
 		# Profession trainers: a miner's leather, a herbalist's greens, a
 		# skinner's hides and an enchanter's violet robe.
 		"mining":

@@ -69,3 +69,13 @@ position = Vector3(7, 4.5, 30)
 rotation = Vector3(0, 1.5708, 0)
 npc_name = "Wat Cobbe"
 subname = "Huntsman"
+
+[node name="AldwinCrane" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-7.50, 4.5, -12.90)
+rotation = Vector3(0, -1.5708, 0)
+npc_name = "Magus Aldwin Crane"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 0
+}

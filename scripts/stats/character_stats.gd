@@ -25,6 +25,7 @@ static var RAGE_DECAY := 3.0
 ## Talent aura types read here.
 static var AURA_MOD_PARRY_PERCENT := 47
 static var AURA_MOD_MANA_PERCENT := 132
+static var AURA_MOD_RESISTANCE_OF_STAT_PERCENT := 182
 static var AURA_MOD_MANA_REGEN_INTERRUPT := 134
 static var AURA_MOD_BASE_RESISTANCE_PCT := 142
 static var AURA_MOD_BLOCK_VALUE_PCT := 150
@@ -113,6 +114,9 @@ func refresh() -> void:
 	# Toughness raises armor from items (SPELL_AURA_MOD_BASE_RESISTANCE_PCT).
 	var item_armor := int(gear.armor * (1.0 + c.aura_total(AURA_MOD_BASE_RESISTANCE_PCT, 1) / 100.0))
 	c.armor = item_armor + agility * 2 + int(c.aura_total(SpellDB.AURA_MOD_RESISTANCE, 1))
+	# Warded Mind (the Magus's Arcane Resilience): armor from Intellect
+	# (SPELL_AURA_MOD_RESISTANCE_OF_STAT_PERCENT).
+	c.armor += int(intellect * c.aura_total(AURA_MOD_RESISTANCE_OF_STAT_PERCENT, 1) / 100.0)
 	# The Spellsword's Wardweave Form: 2 armor a point of Intellect, more with
 	# Steady Mind.
 	if form == 21:
@@ -196,9 +200,12 @@ func _talent_amount(talent_name: String) -> float:
 ## except the share Contemplation and Spirit Harvest keep going
 ## (SPELL_AURA_MOD_MANA_REGEN_INTERRUPT).
 func current_mana_per_tick() -> float:
+	# Arcane Renewal (classic's Evocation) multiplies it
+	# (SPELL_AURA_MOD_POWER_REGEN_PERCENT on mana).
+	var boosted := mana_per_tick * (1.0 + _combatant.aura_total_exact(SpellDB.AURA_MOD_POWER_REGEN_PERCENT, 0) / 100.0)
 	if _combatant.seconds_since_mana_spent() < MANA_REGEN_DELAY:
-		return mana_per_tick * minf(_combatant.aura_total(AURA_MOD_MANA_REGEN_INTERRUPT), 100.0) / 100.0
-	return mana_per_tick
+		return boosted * minf(_combatant.aura_total(AURA_MOD_MANA_REGEN_INTERRUPT), 100.0) / 100.0
+	return boosted
 
 
 func _physics_process(delta: float) -> void:

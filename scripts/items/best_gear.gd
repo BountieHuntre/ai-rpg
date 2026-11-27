@@ -44,6 +44,13 @@ const SPECS := {
 		{ "stats": [0.2, 2.4, 0.8, 0.5, 0.1], "armor": 0.02, "health": 0.08, "mana": 0.05, "dps": 2.0, "ranged_dps": 16.0, "block": 0.0, "hands": "two_hand" },
 		{ "stats": [0.6, 2.4, 1.0, 0.4, 0.1], "armor": 0.03, "health": 0.1, "mana": 0.04, "dps": 5.0, "ranged_dps": 13.0, "block": 0.0, "hands": "two_hand" },
 	],
+	# Magus: Intellect for mana and crits, then Stamina and Spirit; a staff,
+	# or a one-hander with an off-hand item.
+	ClassicData.CharClass.MAGE: [
+		{ "stats": [0.0, 0.0, 1.1, 2.4, 1.0], "armor": 0.02, "health": 0.08, "mana": 0.14, "dps": 0.5, "block": 0.0, "hands": "any" },
+		{ "stats": [0.0, 0.0, 1.1, 2.4, 0.8], "armor": 0.02, "health": 0.08, "mana": 0.14, "dps": 0.5, "block": 0.0, "hands": "any" },
+		{ "stats": [0.0, 0.0, 1.2, 2.2, 0.9], "armor": 0.02, "health": 0.09, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "any" },
+	],
 	ClassicData.CharClass.PRIEST: [
 		{ "stats": [0.0, 0.0, 1.0, 2.0, 1.6], "armor": 0.02, "health": 0.08, "mana": 0.13, "dps": 0.5, "block": 0.0, "hands": "off_hand" },
 		{ "stats": [0.0, 0.0, 0.8, 2.0, 2.0], "armor": 0.02, "health": 0.07, "mana": 0.15, "dps": 0.5, "block": 0.0, "hands": "off_hand" },

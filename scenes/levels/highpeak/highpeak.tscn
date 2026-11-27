@@ -375,3 +375,14 @@ npc_name = "Nissa Cogspindle"
 subname = "Enchanting Supplies"
 vendor = 15419
 race = "gnome"
+
+[node name="WizzleCoppertop" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-122.10, 7.1, -789.70)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Wizzle Coppertop"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 1
+}
+race = "gnome"

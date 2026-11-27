@@ -78,6 +78,15 @@ static func coat_colors(coat: Color, species_name: String) -> Dictionary:
 			HumanoidModel.EYES: Color(0.85, 0.15, 0.1),
 			HumanoidModel.TRIM: Color(0.92, 0.88, 0.76),
 		}
+	if species_name == "sheep":
+		# White fleece, dark face and legs (Beastshape's sheep).
+		return {
+			HumanoidModel.SKIN: coat,
+			HumanoidModel.HAIR: Color(0.2, 0.18, 0.17),
+			HumanoidModel.CHEST: coat.darkened(0.08),
+			HumanoidModel.EYES: Color(0.06, 0.05, 0.04),
+			HumanoidModel.TRIM: Color(0.25, 0.22, 0.2),
+		}
 	if species_name in BIRDS:
 		# Birds: yellow beak, legs and claws; an owl's great eyes yellow too.
 		return {

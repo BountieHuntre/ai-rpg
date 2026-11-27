@@ -29,6 +29,9 @@ const RESIST_MISS_CHANCE := 16
 ## A proc's chance (Improved Hawk Spirit, Frenzy).
 static var CHANCE_OF_SUCCESS := 18
 const DOT := 22
+## SPELLMOD_MULTIPLE_VALUE: an effect's multiplier (Improved Mana Barrier
+## lowers the mana a point of damage costs).
+static var MULTIPLE_VALUE := 27
 
 const AURA_FLAT := 107
 const AURA_PCT := 108

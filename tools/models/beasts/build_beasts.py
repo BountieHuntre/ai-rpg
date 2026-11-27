@@ -42,6 +42,9 @@ SPECIES = {
 	"tiger": {"legs": 0.95, "length": 1.18, "width": 1.08, "head": 1.05},
 	# Low-slung and long, its tail three bones (LIZARD_BONES).
 	"thunder_lizard": {"legs": 0.55, "length": 1.3, "width": 1.15, "head": 1.1},
+	# The sheep a creature becomes under the Magus's Beastshape: a round
+	# fleece on thin dark legs, a dark face and drooping ears.
+	"sheep": {"legs": 0.72, "length": 0.85, "width": 1.15, "head": 0.9},
 }
 SHAPE = SPECIES["wolf"]
 BODY_Z = 0.62
@@ -456,12 +459,19 @@ def bat_body():
 
 def quad_body(species):
 	b = bh.Builder("Body")
-	w = {"wolf": 1.0, "boar": 1.25, "bear": 1.3, "tiger": 1.1, "thunder_lizard": 1.15}[species]
+	w = {"wolf": 1.0, "boar": 1.25, "bear": 1.3, "tiger": 1.1, "thunder_lizard": 1.15, "sheep": 1.55}[species]
 	rings = [((0, -0.42, 0.62), 0.07 * w, 0.08 * w, "Pelvis"), ((0, -0.32, 0.62), 0.13 * w, 0.15 * w, "Pelvis"),
 			 ((0, -0.08, 0.63), 0.14 * w, 0.16 * w, "Pelvis"), ((0, 0.12, 0.65), 0.15 * w, 0.18 * w, "Chest"),
 			 ((0, 0.3, 0.67), 0.12 * w, 0.15 * w, "Chest")]
 	b.loft(rings, ["skin"] * 4, sides=8)
 	b.box((0, 0.1, 0.5), (0.18 * w, 0.32, 0.06), "Chest", "chest")
+	if species == "sheep":
+		# Lumps of fleece over the back and haunches.
+		for y, z, size, bone in ((-0.3, 0.8, 0.2, "Pelvis"), (-0.08, 0.84, 0.24, "Pelvis"), (0.14, 0.83, 0.22, "Chest"),
+								 (0.3, 0.79, 0.17, "Chest")):
+			b.loft([((0, y, z - size * 0.45), size * 0.6, size * 0.55, bone), ((0, y, z), size * 0.75, size * 0.7, bone),
+					((0, y, z + size * 0.3), size * 0.4, size * 0.4, bone)], ["skin", "skin"], sides=6,
+				   cap_slots=("skin", "skin"))
 	if species == "boar":
 		b.box((0, -0.05, 0.82), (0.05, 0.6, 0.06), "Chest", "hair", top=(0.5, 0.9))
 	if species == "wolf":
@@ -494,6 +504,11 @@ def quad_body(species):
 		head = [((0, 0.42, 0.8), 0.1, 0.1, "Head"), ((0, 0.52, 0.82), 0.11, 0.1, "Head"),
 				((0, 0.61, 0.78), 0.075, 0.065, "Head"), ((0, 0.67, 0.76), 0.05, 0.045, "Head")]
 		ears = ((0.07, 0.45, 0.92), (0.045, 0.03, 0.05), (0.7, 0.8))
+	elif species == "sheep":
+		# A narrow dark face under a woolly cap, ears drooping out sideways.
+		head = [((0, 0.4, 0.84), 0.075, 0.08, "Head"), ((0, 0.5, 0.84), 0.07, 0.075, "Head"),
+				((0, 0.6, 0.78), 0.05, 0.055, "Head"), ((0, 0.66, 0.75), 0.04, 0.04, "Head")]
+		ears = None
 	elif species == "thunder_lizard":
 		# Long and flat, wide at the jaw, a crest on the brow.
 		head = [((0, 0.42, 0.74), 0.08, 0.075, "Head"), ((0, 0.54, 0.76), 0.1, 0.075, "Head"),
@@ -503,7 +518,13 @@ def quad_body(species):
 		head = [((0, 0.4, 0.82), 0.11, 0.11, "Head"), ((0, 0.52, 0.84), 0.12, 0.11, "Head"),
 				((0, 0.62, 0.8), 0.07, 0.065, "Head"), ((0, 0.68, 0.78), 0.05, 0.045, "Head")]
 		ears = ((0.08, 0.44, 0.95), (0.05, 0.03, 0.05), (1.2, 1.0))
-	b.loft(head, ["skin", "skin", "skin"], sides=8, cap_slots=("skin", "eyes"))
+	face = "hair" if species == "sheep" else "skin"
+	b.loft(head, [face, face, face], sides=8, cap_slots=(face, "eyes" if species != "sheep" else face))
+	if species == "sheep":
+		b.loft([((0, 0.38, 0.86), 0.09, 0.09, "Head"), ((0, 0.45, 0.92), 0.08, 0.08, "Head"),
+				((0, 0.47, 0.96), 0.04, 0.04, "Head")], ["skin", "skin"], sides=6, cap_slots=("skin", "skin"))
+		for x in (-1, 1):
+			b.beam((0.06 * x, 0.44, 0.86), (0.13 * x, 0.43, 0.8), 0.05, 0.02, "Head", "hair", taper=0.6, up=(0, 1, 0))
 	tip = Vector(head[-1][0])
 	for x in (-1, 1):
 		if ears:
@@ -529,15 +550,16 @@ def quad_body(species):
 	if species == "thunder_lizard":
 		b.box((0, 0.6, 0.82), (0.03, 0.2, 0.06), "Head", "hair", top=(1.0, 0.5))
 		b.box((0, 0.56, 0.69), (0.16, 0.2, 0.025), "Head", "chest", top=(0.7, 0.8))
-	leg = {"wolf": 0.045, "boar": 0.055, "bear": 0.085, "tiger": 0.06, "thunder_lizard": 0.075}[species]
+	leg = {"wolf": 0.045, "boar": 0.055, "bear": 0.085, "tiger": 0.06, "thunder_lizard": 0.075, "sheep": 0.035}[species]
+	leg_slot = "hair" if species == "sheep" else "skin"
 	for side, x in (("Right", 1), ("Left", -1)):
 		for end in ("Front", "Back"):
 			up = [bb for bb in QUAD_BONES if bb[0] == side + end + "Upper"][0]
 			low = [bb for bb in QUAD_BONES if bb[0] == side + end + "Lower"][0]
 			paw = [bb for bb in QUAD_BONES if bb[0] == side + end + "Paw"][0]
-			b.tube(Vector(up[1]) + Vector((0, 0, 0.06)), up[2], leg * 1.4, leg, up[0], "skin")
-			b.tube(low[1], low[2], leg, leg * 0.8, low[0], "skin")
-			b.box(Vector(paw[1]) + Vector((0, 0.03, -0.03)), (leg * 2.2, leg * 2.6, 0.05), paw[0], "skin", shade=0.8)
+			b.tube(Vector(up[1]) + Vector((0, 0, 0.06)), up[2], leg * 1.4, leg, up[0], "skin" if species != "sheep" else "skin")
+			b.tube(low[1], low[2], leg, leg * 0.8, low[0], leg_slot)
+			b.box(Vector(paw[1]) + Vector((0, 0.03, -0.03)), (leg * 2.2, leg * 2.6, 0.05), paw[0], leg_slot, shade=0.8)
 			for c in (-1, 1):
 				b.box(Vector(paw[1]) + Vector((c * leg * 0.6, 0.03 + leg * 1.4, -0.035)), (0.012, 0.025, 0.012), paw[0], "trim")
 	# Tail.
@@ -561,6 +583,8 @@ def quad_body(species):
 			b.beam((0, y, z - 0.04), (0, y - 0.04, z + h), 0.07, 0.025, bone, "hair", taper=0.2, up=(0, 1, 0))
 	elif species == "boar":
 		b.beam((0, -0.42, 0.66), (0, -0.52, 0.6), 0.02, 0.02, "Tail", "skin", taper=0.5)
+	elif species == "sheep":
+		b.beam((0, -0.44, 0.66), (0, -0.52, 0.56), 0.06, 0.05, "Tail", "skin", taper=0.6)
 	else:
 		b.box((0, -0.45, 0.68), (0.07, 0.06, 0.07), "Tail", "skin")
 	return b
@@ -727,24 +751,6 @@ def quad_animations():
 				Tail=(0, 0, 20), Root=(0, 90, 0), loc={"Root": (0, 0, 0.16)})
 	a["death"] = [(0, ready), (6, slump), (14, pose(dead, Root=(0, 70, 0))), (18, dead), (21, pose(dead, Root=(0, 84, 0))), (24, dead)]
 	a["dead"] = [(0, dead), (10, dead)]
-	if arms:
-		# A raptor holds its arms in, lunges jaws first and lashes its tail.
-		ready = pose(stand, both("WingUpper", (35, 0, 0)), both("WingLower", (-30, 0, 0)), both("Thigh", (14, 0, 0)),
-					 both("Shin", (-20, 0, 0)), Neck=(-8, 0, 0), Head=(6, 0, 0), Tail=(8, 0, 0), loc={"Root": (0, 0, -h * 0.1)})
-		a["ready"] = [(0, ready), (12, pose(ready, Tail=(8, 0, 12))), (24, ready), (36, pose(ready, Tail=(8, 0, -12))), (48, ready)]
-		wind = pose(ready, both("WingUpper", (60, 0, 0)), Neck=(22, 0, 0), Head=(-15, 0, 0), Tail=(14, 0, 0),
-					loc={"Root": (0, -0.08, 0)})
-		bite = pose(ready, both("WingUpper", (75, 0, 0)), both("WingLower", (-10, 0, 0)), Neck=(-6, 0, 0), Head=(12, 0, 0),
-					Pelvis=(-4, 0, 0), Tail=(-6, 0, 0), loc={"Root": (0, 0.3, -h * 0.02)})
-		a["attack"] = [(0, ready), (5, wind), (8, bite), (11, bite), (20, ready)]
-		flinch = pose(ready, Neck=(28, 0, 0), Head=(10, 0, 0), Tail=(20, 0, 0), loc={"Root": (0, -0.1, 0)})
-		a["hit"] = [(0, ready), (3, flinch), (10, ready)]
-		dead = pose(dead, both("WingUpper", (60, 0, 0)), RightWingUpper=(40, 0, 20))
-		a["death"] = [(0, ready), (5, pose(fall, both("WingUpper", (60, 0, 0)))), (13, pose(dead, Root=(0, 75, 0))), (17, dead),
-					  (20, pose(dead, Root=(0, 84, 0))), (23, dead)]
-		a["dead"] = [(0, dead), (10, dead)]
-		ruffle = pose(stand, Tail=(0, 0, 15), Head=(10, 0, 0))
-		a["idle"] = [(0, stand), (14, look_left), (28, stand), (40, ruffle), (46, stand), (58, look_right), (72, stand)]
 	return a
 
 
@@ -949,6 +955,24 @@ def bird_animations(species):
 				loc={"Root": (-(h + r) * 0.75, 0, r * 0.75)})
 	a["death"] = [(0, ready), (5, fall), (13, pose(dead, Root=(0, 75, 0))), (17, dead), (20, pose(dead, Root=(0, 84, 0))), (23, dead)]
 	a["dead"] = [(0, dead), (10, dead)]
+	if arms:
+		# A raptor holds its arms in, lunges jaws first and lashes its tail.
+		ready = pose(stand, both("WingUpper", (35, 0, 0)), both("WingLower", (-30, 0, 0)), both("Thigh", (14, 0, 0)),
+					 both("Shin", (-20, 0, 0)), Neck=(-8, 0, 0), Head=(6, 0, 0), Tail=(8, 0, 0), loc={"Root": (0, 0, -h * 0.1)})
+		a["ready"] = [(0, ready), (12, pose(ready, Tail=(8, 0, 12))), (24, ready), (36, pose(ready, Tail=(8, 0, -12))), (48, ready)]
+		wind = pose(ready, both("WingUpper", (60, 0, 0)), Neck=(22, 0, 0), Head=(-15, 0, 0), Tail=(14, 0, 0),
+					loc={"Root": (0, -0.08, 0)})
+		bite = pose(ready, both("WingUpper", (75, 0, 0)), both("WingLower", (-10, 0, 0)), Neck=(-6, 0, 0), Head=(12, 0, 0),
+					Pelvis=(-4, 0, 0), Tail=(-6, 0, 0), loc={"Root": (0, 0.3, -h * 0.02)})
+		a["attack"] = [(0, ready), (5, wind), (8, bite), (11, bite), (20, ready)]
+		flinch = pose(ready, Neck=(28, 0, 0), Head=(10, 0, 0), Tail=(20, 0, 0), loc={"Root": (0, -0.1, 0)})
+		a["hit"] = [(0, ready), (3, flinch), (10, ready)]
+		dead = pose(dead, both("WingUpper", (60, 0, 0)), RightWingUpper=(40, 0, 20))
+		a["death"] = [(0, ready), (5, pose(fall, both("WingUpper", (60, 0, 0)))), (13, pose(dead, Root=(0, 75, 0))), (17, dead),
+					  (20, pose(dead, Root=(0, 84, 0))), (23, dead)]
+		a["dead"] = [(0, dead), (10, dead)]
+		ruffle = pose(stand, Tail=(0, 0, 15), Head=(10, 0, 0))
+		a["idle"] = [(0, stand), (14, look_left), (28, stand), (40, ruffle), (46, stand), (58, look_right), (72, stand)]
 	return a
 
 

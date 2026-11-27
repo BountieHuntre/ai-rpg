@@ -303,7 +303,7 @@ SPELL_EFFECT_SUMMON_OBJECT = 104
 # 913 is Lyria Du Lac, Warrior Trainer. 3039 is Holt Thunderhorn, Hunter
 # Trainer (the Ranger's), whose list has every rank.
 CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046, 8: 3706}, "warrior": 913,
-                  "hunter": 3039}
+                  "hunter": 3039, "mage": 328}
 # Classic's weapon masters, whose lists the game's one Weapon Master joins
 # ("weapons"): Buliwyf Stonehand, Ilyenia Moonfire, Woo Ping, Sayoc,
 # Ansekhwa, Archibald, Bixi Wobblebonk and Hanashi. Each entry's "classes" is
@@ -311,12 +311,12 @@ CLASS_TRAINERS = {"paladin": 927, "priest": {1: 5489, 3: 1226, 4: 4090, 5: 3046,
 WEAPON_MASTERS = [11865, 11866, 11867, 11868, 11869, 11870, 13084, 2704]
 # Each class's skill lines in the order of its talent trees (SkillLine ids):
 # Arms, Fury, Protection; Holy, Protection, Retribution; Beast Mastery,
-# Marksmanship, Survival; Discipline, Holy, Shadow Magic.
-CLASS_SKILL_LINES = {1: [26, 256, 257], 2: [594, 267, 184], 3: [50, 163, 51], 5: [613, 56, 78]}
+# Marksmanship, Survival; Discipline, Holy, Shadow Magic; Arcane, Fire, Frost.
+CLASS_SKILL_LINES = {1: [26, 256, 257], 2: [594, 267, 184], 3: [50, 163, 51], 5: [613, 56, 78], 8: [237, 8, 6]}
 # Classes whose starting spells are exported: the ones with spell code in the game.
-SPELL_CLASSES = {1, 2, 3, 5}  # Warrior, Paladin, Hunter, Priest
+SPELL_CLASSES = {1, 2, 3, 5, 8}  # Warrior, Paladin, Hunter, Priest, Mage
 # Each class's SpellFamilyName: start spells of other families (racials) are left out.
-CLASS_SPELL_FAMILIES = {1: 4, 2: 10, 3: 9, 5: 6}
+CLASS_SPELL_FAMILIES = {1: 4, 2: 10, 3: 9, 5: 6, 8: 3}
 # Spells left out of the game: Feed Pet (pets have no happiness here).
 LEFT_OUT_SPELLS = {6991}
 # Spells the pet trainer's list still names that classic 1.12 pets never
@@ -397,6 +397,9 @@ RACIAL_FIRST_RANKS = {"priest": [
 # scripts): Holy Nova's heal per rank, Touch of Weakness's and Shadowguard's
 # damage per rank, Power Word: Shield's Weakened Soul and Vampiric Embrace's heal.
 SPELL_LINKS = {
+    # Magus: Improved Hailstorm's chill per rank (classic's Improved Blizzard,
+    # set off by Blizzard's damage in Spell.cpp's class scripts).
+    11185: 12484, 12487: 12485, 12488: 12486,
     15237: 23455, 15430: 23458, 15431: 23459, 27799: 27803, 27800: 27804, 27801: 27805,
     2652: 2943, 19261: 19249, 19262: 19251, 19264: 19252, 19265: 19253, 19266: 19254,
     18137: 28377, 19308: 28378, 19309: 28379, 19310: 28380, 19311: 28381, 19312: 28382,
@@ -724,6 +727,20 @@ def main(path):
     item_ids.update(int(r["entry"]) for r in db["item_template"] if int(r["startquest"]) in QUESTS)
     write("quests.json", quests)
 
+    # Items the class trainers' spells make (Create Item, 24): the Magus's
+    # conjured food, water and mana stones.
+    spell_rows = {r["Id"]: r for r in db["spell_template"]}
+    trainer_entries = {e for t in CLASS_TRAINERS.values() for e in (t.values() if isinstance(t, dict) else [t])}
+    for r in db["npc_trainer"]:
+        if int(r["entry"]) not in trainer_entries:
+            continue
+        teach = spell_rows[r["spell"]]
+        learned = [teach[f"EffectTriggerSpell{i}"] for i in (1, 2, 3) if int(teach[f"Effect{i}"]) == SPELL_EFFECT_LEARN]
+        for spell_id in learned or [r["spell"]]:
+            spell = spell_rows.get(str(spell_id))
+            for i in (1, 2, 3):
+                if spell and int(spell[f"Effect{i}"]) == SPELL_EFFECT_CREATE_ITEM:
+                    item_ids.add(int(spell[f"EffectItemType{i}"]))
     items = {r["entry"]: pick(r, ITEM_FIELDS) for r in db["item_template"]
              if int(r["entry"]) in item_ids and int(r["entry"]) not in ammo}
     for item in items.values():

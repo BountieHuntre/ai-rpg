@@ -15,7 +15,7 @@ const DESIGN_DIR := "res://data/designs/"
 const NAMES_PATH := "res://data/designs/names.json"
 ## Each design file's class: [class id, its trainer list's key, file name].
 const CLASSES := [[1, "warrior", "man_at_arms"], [2, "paladin", "templar"], [3, "hunter", "ranger"],
-	[5, "priest", "cleric"], [10, "spellsword", "spellsword"]]
+	[5, "priest", "cleric"], [8, "mage", "magus"], [10, "spellsword", "spellsword"]]
 ## New spells and talents a design adds take ids from here up (no classic
 ## spell or the Spellsword's uses them).
 static var NEW_SPELL_IDS := 950000

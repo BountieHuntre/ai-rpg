@@ -193,3 +193,14 @@ appearance = {
 "body": 0
 }
 race = "dwarf"
+
+[node name="NibbinSparkwhistle" parent="." instance=ExtResource("2_npc")]
+position = Vector3(-882.60, 6.1, -1030.00)
+rotation = Vector3(0, 3.14159, 0)
+npc_name = "Nibbin Sparkwhistle"
+subname = "Magus Trainer"
+trainer = "mage"
+appearance = {
+"body": 0
+}
+race = "gnome"

@@ -84,6 +84,9 @@ static func _describe(spell: Dictionary, level: int, caster: Node) -> String:
 	var ranger := _ranger(name, spell, t, level)
 	if not ranger.is_empty():
 		return ranger
+	var magus := _magus(name, spell, t, level)
+	if not magus.is_empty():
+		return magus
 	match name:
 		"Attack":
 			return "Toggles melee attack on your target."
@@ -654,6 +657,111 @@ static func _man_at_arms(name: String, spell: Dictionary, t: _Values) -> String:
 
 static func _number(value: float) -> String:
 	return str(int(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value
+
+
+## The Magus's spells (MagusAbilities), and the effects they leave.
+static func _magus(name: String, spell: Dictionary, t: _Values, level: int) -> String:
+	var radius := func(effect: int) -> String: return _number(SpellDB.effect_radius(spell, effect, _who))
+	if name.begins_with("Conjure "):
+		var item_id := int(spell.get("EffectItemType1", 0))
+		var item_name := str(ItemDB.get_item(item_id).get("name", "something"))
+		if MagusAbilities._is_mana_stone(item_id):
+			return "Conjures a %s, which restores mana when used. You can carry only one." % item_name
+		if name == "Conjure Draught":
+			return "Conjures %s %s to drink." % [t.amount(0), item_name]
+		return "Conjures %s %s to eat." % [t.amount(0), item_name]
+	if not MagusAbilities.is_magus_spell(spell) and not name in ["Lucid Mind", "Searing Weakness", "Deepening Chill", "Frostgrip", "Spellbreak - Silenced"]:
+		return ""
+	match name:
+		"Arcane Wisdom":
+			return "Raises a friendly target's Intellect by %s for %s." % [t.amount(0), t.duration()]
+		"Rime Bolt":
+			if not SpellDB.has_effect(spell, SpellDB.EFFECT_SCHOOL_DAMAGE):
+				return ""
+			return "Launches a bolt of frost at an enemy, dealing %s Frost damage and slowing its movement by %s%% for %s." % [t.amount(1), t.magnitude(0), t.duration()]
+		"Flame Bolt", "Blazing Orb":
+			if not SpellDB.has_effect(spell, SpellDB.AURA_PERIODIC_DAMAGE, true):
+				return "Hurls a bolt of fire at an enemy for %s Fire damage." % t.amount(0)
+			var what := "a fiery bolt" if name == "Flame Bolt" else "a great orb of fire"
+			return "Hurls %s at an enemy, dealing %s Fire damage and %s more over %s." % [what, t.amount(0), t.over_time(1), t.duration()]
+		"Flame Jet":
+			return "Blasts an enemy with flame for %s Fire damage." % t.amount(0)
+		"Searing Touch":
+			return "Scorches an enemy for %s Fire damage." % t.amount(0)
+		"Beastshape":
+			return "Turns an enemy beast or humanoid into a sheep for up to %s. A sheep can't attack or cast, and heals quickly. Any damage breaks the effect. Only one enemy can be your sheep at a time." % t.duration()
+		"Arcane Darts":
+			var dart := _Values.new(SpellDB.get_spell(int(spell.get("EffectTriggerSpell1", 0))), level)
+			var darts := floori(t.seconds() / t.period(0) + 0.001)
+			return "Looses %d darts of arcane power at an enemy over %s, each dealing %s Arcane damage. Moving ends it." % [darts, t.duration(), dart.amount(0)]
+		"Arcane Dart":
+			return "Deals %s Arcane damage." % t.amount(0)
+		"Rime Burst":
+			return "Blasts enemies within %s yards with frost for %s Frost damage, freezing them in place for up to %s. Damage may break the ice." % [radius.call(0), t.amount(0), t.duration()]
+		"Arcane Nova":
+			return "Releases a nova of arcane power, dealing %s Arcane damage to enemies within %s yards." % [t.amount(0), radius.call(0)]
+		"Frost Fan":
+			return "Blasts enemies in a cone in front of you with frost for %s Frost damage, slowing them by %s%% for %s." % [t.amount(1), t.magnitude(0), t.duration()]
+		"Searing Wave":
+			return "A wave of flame bursts out from you, dealing %s Fire damage to enemies within %s yards and slowing them by %s%% for %s." % [t.amount(0), radius.call(0), t.magnitude(1), t.duration()]
+		"Pillar of Flame":
+			return "Calls a pillar of flame down where your enemy target stands, dealing %s Fire damage to enemies within %s yards, and %s more over %s to those that stay in the flames." % [t.amount(0), radius.call(0), t.over_time(1), t.duration()]
+		"Hailstorm":
+			return "Calls down hail where your enemy target stands, dealing %s Frost damage over %s to enemies within %s yards while you channel." % [t.over_time(0), t.duration(), radius.call(0)]
+		"Rime Shroud", "Hoarfrost Shroud":
+			return "Raises your armor by %s for %s. Enemies that strike you in melee may be chilled, slowing their movement and attacks." % [t.amount(0), t.duration()]
+		"Magus Armor":
+			return "Raises your resistance to all magic by %s for %s, and lets %s%% of your mana regeneration go on while you cast." % [t.amount(0), t.duration(), t.amount(1)]
+		"Featherdrift":
+			return "You fall slowly for %s, and take no damage from falling." % t.duration()
+		"Muffle Magic":
+			return "Lowers the damage a friendly target takes from spells by %s, and the healing it gets from them by %s, for %s." % [t.magnitude(0), t.magnitude(1), t.duration()]
+		"Magnify Magic":
+			return "Raises the damage a friendly target takes from spells by %s, and the healing it gets from them by %s, for %s." % [t.amount(0), t.amount(1), t.duration()]
+		"Sense Magic":
+			return "Reveals the magic on an enemy for %s." % t.duration()
+		"Lift Lesser Curse":
+			return "Lifts one curse from a friendly target."
+		"Ember Ward":
+			return "Wards you against fire, absorbing %s Fire damage. Lasts %s." % [t.amount(0), t.duration()]
+		"Rime Ward":
+			return "Wards you against frost, absorbing %s Frost damage. Lasts %s." % [t.amount(0), t.duration()]
+		"Mana Barrier":
+			var per_point := _number(float(spell.get("EffectMultipleValue1", 2.0)))
+			return "Shields you, absorbing %s damage for %s. Each point absorbed costs %s mana; it ends when your mana runs out." % [t.amount(0), t.duration(), per_point]
+		"Ice Bulwark":
+			return "Shields you in ice, absorbing %s damage. Lasts %s." % [t.amount(0), t.duration()]
+		"Flicker":
+			return "Teleports you up to %s yards forward, freeing you from stuns and roots." % radius.call(0)
+		"Arcane Renewal":
+			return "Channels for %s, regaining mana %s times as fast, and even while casting. Moving ends it." % [t.duration(), _number(1.0 + t.low(0) / 100.0)]
+		"Spellbreak":
+			return "Interrupts an enemy's spell, keeping it from casting spells of that school for %s." % t.duration()
+		"Spellbreak - Silenced":
+			return "Silenced: can't cast spells."
+		"Frozen Vigil":
+			return "Encases you in ice for %s: you're immune to all damage, but can't move or act. Cast it again, or cancel it, to break free." % t.duration()
+		"Rime Renewal":
+			return "Your Rime spells are ready to cast again."
+		"Swift Mind":
+			return "Your next spell with a cast time is cast instantly."
+		"Arcane Ascendance":
+			return "Your spells deal %s%% more damage and cost %s%% more mana for %s." % [t.amount(0), t.amount(1), t.duration()]
+		"Kindling":
+			return "Each fire spell you cast that doesn't crit raises the next one's chance to crit by %s%%, until %d have crit." % [_number(MagusAbilities.KINDLING_STEP), MagusAbilities.KINDLING_CRITS]
+		"Lucid Mind":
+			return "Your next damage or healing spell costs no mana."
+		"Searing Weakness":
+			return "Fire damage taken raised by %s%%." % t.amount(0)
+		"Deepening Chill":
+			if SpellDB.has_effect(spell, SpellDB.AURA_PROC_TRIGGER_SPELL, true):
+				return ""
+			return "Frost spells are %s%% more likely to crit it." % t.amount(0)
+		"Frostgrip":
+			if SpellDB.has_effect(spell, MagusAbilities.AURA_ADD_TARGET_TRIGGER, true):
+				return ""
+			return "Frozen in place."
+	return ""
 
 
 ## For spells with no written description: what their effects do.
