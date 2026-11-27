@@ -377,8 +377,29 @@ static func global_cooldown(spell: Dictionary) -> float:
 	return int(spell.get("StartRecoveryTime", 0)) / 1000.0
 
 
+## Spells cast at a place the player picks with the mouse (classic's area
+## targets: Hailstorm, Pillar of Flame, Arrow Rain, Flare), by their effects'
+## targets (TARGET_ALL_ENEMY_IN_AREA_INSTANT and _CHANNELED).
+const GROUND_TARGETS := [16, 28]
+
+
+static func is_ground_targeted(spell: Dictionary) -> bool:
+	for i in 3:
+		if int(spell.get("EffectImplicitTargetA%d" % (i + 1), 0)) in GROUND_TARGETS:
+			return true
+	return false
+
+
 static func target_type(spell: Dictionary) -> int:
-	return int(spell.get("EffectImplicitTargetA1", TARGET_SELF))
+	var first := int(spell.get("EffectImplicitTargetA1", TARGET_SELF))
+	# A channel on the caster that strikes an enemy (Arcane Darts: its first
+	# effect is the periodic trigger on the caster, its second the enemy) is
+	# cast at the enemy.
+	if first == TARGET_SELF:
+		for i in [2, 3]:
+			if int(spell.get("EffectImplicitTargetA%d" % i, 0)) == TARGET_ENEMY:
+				return TARGET_ENEMY
+	return first
 
 
 static func is_seal(spell: Dictionary) -> bool:

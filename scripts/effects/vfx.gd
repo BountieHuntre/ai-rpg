@@ -909,3 +909,382 @@ static func _shade(sprite: String, x: float, y: float) -> float:
 				return 0.7
 			return 0.0
 	return 0.0
+
+
+# Area spells on the ground: rain falling (arrows, hail), a pillar of fire and
+# the flames it leaves.
+
+## Rain: projectiles fall from this high over the area, this fast (yards a
+## second), and splash where they land this often (seconds).
+static var RAIN_HEIGHT := 12.0
+static var RAIN_SPEED := 22.0
+static var RAIN_SPLASH_EVERY := 0.12
+## How many projectiles are in the air at once, per 10 yards of radius.
+static var RAIN_DENSITY := 80
+## An arrow's and a hailstone's length, in yards.
+static var ARROW_LENGTH := 1.2
+static var HAIL_SIZE := 0.6
+## Hailstorm's stones: each its own, falling this fast (yards a second) with a
+## frosty trail, so many a second per 10 yards of radius, bursting where it
+## hits the ground.
+static var HAIL_SPEED := 10.0
+static var HAIL_PER_SECOND := 9.0
+## The ground under an area: frost under Hailstorm, a scorched glow under
+## Pillar of Flame (a decal), fading in and out over this long.
+static var PATCH_FADE := 0.6
+static var PATCH_TEXTURE_SIZE := 128
+## Pillar of Flame: how tall the column rises and how long it roars.
+static var PILLAR_HEIGHT := 9.0
+static var PILLAR_TIME := 0.7
+static var _rain_materials: Dictionary = {}
+
+
+## Projectiles raining down on a circle of the ground (`kind` "arrows" or
+## "hail") until stop_rain: each turned along its fall, a burst where they
+## land. Returns the effect's node (null when it wouldn't be seen).
+static func rain(anchor: Node3D, center: Vector3, radius: float, kind: String) -> Node3D:
+	if not near(anchor, center):
+		return null
+	var root := Node3D.new()
+	root.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	_place(anchor, root, center)
+	if kind == "hail":
+		_hailstorm(root, center, radius)
+		return root
+	var fall := CPUParticles3D.new()
+	fall.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	fall.emitting = false
+	fall.mesh = _rain_mesh(kind)
+	fall.material_override = _rain_material()
+	fall.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fall.local_coords = false
+	fall.amount = count(maxi(roundi(RAIN_DENSITY * radius / 10.0), 6))
+	fall.lifetime = RAIN_HEIGHT / RAIN_SPEED
+	fall.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+	fall.emission_ring_axis = Vector3.UP
+	fall.emission_ring_radius = radius
+	fall.emission_ring_inner_radius = 0.0
+	fall.emission_ring_height = 0.5
+	fall.direction = Vector3(0.12, -1.0, 0.05) if kind == "arrows" else Vector3.DOWN
+	fall.spread = 4.0
+	fall.initial_velocity_min = RAIN_SPEED * 0.9
+	fall.initial_velocity_max = RAIN_SPEED * 1.1
+	fall.gravity = Vector3.ZERO
+	fall.particle_flag_align_y = true
+	root.add_child(fall)
+	fall.position = Vector3.UP * RAIN_HEIGHT
+	fall.emitting = true
+	# Splashes where they land, at random points of the circle.
+	var splash := func() -> void:
+		if not is_instance_valid(root) or root.get_meta("stopping", false):
+			return
+		var a := randf() * TAU
+		var spot := center + Vector3(cos(a), 0.0, sin(a)) * radius * sqrt(randf()) + Vector3.UP * 0.15
+		burst(root, spot, Color(0.62, 0.55, 0.42), 4, 1.6, 0.07, 0.3, -9.0, 50.0, Vector3.UP, 0.05, "spark")
+	var timer := Timer.new()
+	timer.wait_time = RAIN_SPLASH_EVERY
+	timer.autostart = true
+	timer.timeout.connect(splash)
+	root.add_child(timer)
+	return root
+
+
+## Ends a rain (or burning ground): nothing more falls or flares, and what's
+## in the air lands first.
+static func stop_rain(effect: Node3D) -> void:
+	if effect == null or not is_instance_valid(effect) or effect.get_meta("stopping", false):
+		return
+	effect.set_meta("stopping", true)
+	for child in effect.get_children():
+		if child is CPUParticles3D:
+			(child as CPUParticles3D).emitting = false
+		elif child is Timer:
+			(child as Timer).stop()
+		elif child is Decal:
+			child.create_tween().tween_property(child, "modulate:a", 0.0, PATCH_FADE)
+	var tween := effect.create_tween()
+	tween.tween_interval(maxf(1.2, PATCH_FADE + 0.1))
+	tween.tween_callback(effect.queue_free)
+
+
+## A projectile for rain, lengthwise along +Y (the way it falls once turned
+## along its velocity), its parts in their own colours: an arrow (steel head,
+## wooden shaft, white fletching) or a hailstone (an ice crystal).
+static func _rain_mesh(kind: String) -> Mesh:
+	var key := "rain_" + kind
+	if _meshes.has(key):
+		return _meshes[key]
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	if kind == "arrows":
+		var half := ARROW_LENGTH / 2.0
+		_rain_box(st, Vector3(0, -half * 0.2, 0), Vector3(0.05, half * 1.6, 0.05), Color(0.5, 0.36, 0.2))
+		_rain_spike(st, Vector3(0, half * 0.6, 0), half * 0.4, 0.08, Color(0.78, 0.8, 0.85))
+		_rain_box(st, Vector3(0, -half * 0.85, 0), Vector3(0.16, half * 0.35, 0.012), Color(0.92, 0.9, 0.85))
+		_rain_box(st, Vector3(0, -half * 0.85, 0), Vector3(0.012, half * 0.35, 0.16), Color(0.92, 0.9, 0.85))
+	else:
+		_rain_spike(st, Vector3.ZERO, HAIL_SIZE, HAIL_SIZE * 0.45, Color(0.72, 0.9, 1.0))
+		_rain_spike(st, Vector3.ZERO, -HAIL_SIZE, HAIL_SIZE * 0.45, Color(0.42, 0.68, 0.95))
+	st.generate_normals()
+	var mesh := st.commit()
+	_meshes[key] = mesh
+	return mesh
+
+
+## A box centred at `at`, `size` its full extents, in one colour.
+static func _rain_box(st: SurfaceTool, at: Vector3, size: Vector3, color: Color) -> void:
+	var h := size / 2.0
+	var corners := []
+	for i in 8:
+		corners.append(at + Vector3(h.x * (1 if i & 1 else -1), h.y * (1 if i & 2 else -1), h.z * (1 if i & 4 else -1)))
+	for quad in [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]:
+		for tri in [[quad[0], quad[1], quad[2]], [quad[0], quad[2], quad[3]]]:
+			for index: int in tri:
+				st.set_color(color)
+				st.add_vertex(corners[index])
+
+
+## A four-sided spike from a base at `at` to a point `length` along Y.
+static func _rain_spike(st: SurfaceTool, at: Vector3, length: float, width: float, color: Color) -> void:
+	var tip := at + Vector3(0, length, 0)
+	for i in 4:
+		var a := at + Vector3(cos(TAU * i / 4.0), 0, sin(TAU * i / 4.0)) * width
+		var b := at + Vector3(cos(TAU * (i + 1) / 4.0), 0, sin(TAU * (i + 1) / 4.0)) * width
+		for v: Vector3 in ([tip, b, a] if length > 0.0 else [tip, a, b]):
+			st.set_color(color)
+			st.add_vertex(v)
+		for v: Vector3 in ([at, a, b] if length > 0.0 else [at, b, a]):
+			st.set_color(color.darkened(0.2))
+			st.add_vertex(v)
+
+
+## Unshaded and coloured by the mesh's own colours, with no outline (as the
+## other solid shapes).
+static func _rain_material() -> StandardMaterial3D:
+	if _rain_materials.has("solid"):
+		return _rain_materials.solid
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.vertex_color_use_as_albedo = true
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	material.render_priority = NO_OUTLINE
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_rain_materials.solid = material
+	return material
+
+
+## Pillar of Flame striking: a column of fire roaring up from the ground, a
+## flash where it lands and a burst of light.
+static func pillar(anchor: Node3D, center: Vector3, radius: float) -> void:
+	if not near(anchor, center):
+		return
+	var fire := school_color(SpellDB.School.FIRE)
+	var column := _particles("flame", fire, 1.1, PILLAR_TIME, false)
+	column.amount = count(140)
+	column.local_coords = false
+	column.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+	column.emission_ring_axis = Vector3.UP
+	column.emission_ring_radius = radius * 0.3
+	column.emission_ring_inner_radius = 0.0
+	column.emission_ring_height = 0.3
+	column.direction = Vector3.UP
+	column.spread = 6.0
+	column.initial_velocity_min = PILLAR_HEIGHT / PILLAR_TIME * 0.7
+	column.initial_velocity_max = PILLAR_HEIGHT / PILLAR_TIME
+	column.gravity = Vector3.ZERO
+	column.color_ramp = _flame_ramp()
+	_place(anchor, column, center)
+	column.emitting = true
+	var tween := column.create_tween()
+	tween.tween_interval(PILLAR_TIME)
+	tween.tween_callback(func() -> void: column.emitting = false)
+	tween.tween_interval(PILLAR_TIME + 0.2)
+	tween.tween_callback(column.queue_free)
+	_flash(anchor, center + Vector3.UP * 0.6, "flash", fire.lerp(Color.WHITE, 0.4), radius * 0.3, 0.2, Vector2(0.6, 1.0))
+	school_burst(anchor, center + Vector3.UP * 0.5, SpellDB.School.FIRE, 24, radius * 0.5)
+	light(anchor, center + Vector3.UP * 2.0, fire, 4.0, 0.6)
+
+
+## The flames Pillar of Flame leaves burning on the ground until stop_rain:
+## tongues of fire and embers rising across the circle.
+static func burning_ground(anchor: Node3D, center: Vector3, radius: float) -> Node3D:
+	if not near(anchor, center):
+		return null
+	var root := Node3D.new()
+	root.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	_place(anchor, root, center)
+	var fire := school_color(SpellDB.School.FIRE)
+	_ground_patch(root, center, radius, "scorch")
+	for layer in [["flame", 0.6, 0.7, 2.6, 60], ["mote", 0.12, 1.4, 1.8, 24]]:
+		var p := _particles(layer[0], fire.lightened(0.2) if layer[0] == "mote" else fire, layer[1], layer[2], false)
+		p.amount = count(maxi(roundi(float(layer[4]) * radius / 5.0), 6))
+		p.local_coords = false
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+		p.emission_ring_axis = Vector3.UP
+		p.emission_ring_radius = radius
+		p.emission_ring_inner_radius = 0.0
+		p.emission_ring_height = 0.1
+		p.direction = Vector3.UP
+		p.spread = 15.0
+		p.initial_velocity_min = float(layer[3]) * 0.5
+		p.initial_velocity_max = float(layer[3])
+		p.gravity = Vector3(0, 0.5, 0)
+		if layer[0] == "flame":
+			p.color_ramp = _flame_ramp()
+		root.add_child(p)
+		p.position = Vector3.UP * 0.1
+		p.emitting = true
+	return root
+
+
+## White-yellow at the heart, going orange and red as flames rise.
+static func _flame_ramp() -> Gradient:
+	if _rain_materials.has("flame_ramp"):
+		return _rain_materials.flame_ramp
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1.0, 0.95, 0.7))
+	ramp.set_color(1, Color(0.8, 0.15, 0.05, 0.0))
+	ramp.add_point(0.4, Color(1.0, 0.6, 0.15))
+	_rain_materials.flame_ramp = ramp
+	return ramp
+
+
+## Hailstorm: frost spreading on the ground and a cold mist over it, and
+## stones falling one by one (HAIL_PER_SECOND), each with a frosty trail,
+## bursting into ice where it lands.
+static func _hailstorm(root: Node3D, center: Vector3, radius: float) -> void:
+	_ground_patch(root, center, radius, "frost")
+	var frost := school_color(SpellDB.School.FROST)
+	var mist := _particles("wisp", frost.lightened(0.4), 1.2, 2.2, true)
+	mist.amount = count(maxi(roundi(radius * 2.0), 6))
+	mist.local_coords = false
+	mist.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+	mist.emission_ring_axis = Vector3.UP
+	mist.emission_ring_radius = radius
+	mist.emission_ring_inner_radius = 0.0
+	mist.emission_ring_height = 0.3
+	mist.direction = Vector3.UP
+	mist.spread = 60.0
+	mist.initial_velocity_min = 0.1
+	mist.initial_velocity_max = 0.4
+	mist.gravity = Vector3.ZERO
+	mist.color = Color(frost.lightened(0.4), 0.5)
+	root.add_child(mist)
+	mist.position = Vector3.UP * 0.5
+	mist.emitting = true
+	var timer := Timer.new()
+	timer.wait_time = 1.0 / maxf(HAIL_PER_SECOND * radius / 10.0 * (LOW_AMOUNT if quality == "Low" else 1.0), 1.0)
+	timer.autostart = true
+	timer.timeout.connect(func() -> void:
+		if is_instance_valid(root) and not root.get_meta("stopping", false):
+			_hailstone(root, center, radius))
+	root.add_child(timer)
+
+
+## One hailstone: a big ice crystal falling at HAIL_SPEED from RAIN_HEIGHT to
+## a random point of the circle, trailing frost, then bursting there.
+static func _hailstone(root: Node3D, center: Vector3, radius: float) -> void:
+	var a := randf() * TAU
+	var land := center + Vector3(cos(a), 0.0, sin(a)) * radius * sqrt(randf())
+	# Where the ground is there (a ray down), so it bursts on it.
+	var space := root.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(land + Vector3.UP * 4.0, land + Vector3.DOWN * 6.0, 1))
+	if not hit.is_empty():
+		land = hit.position
+	var start := land + Vector3(randf_range(-1.5, 1.5), RAIN_HEIGHT, randf_range(-1.5, 1.5))
+	var frost := school_color(SpellDB.School.FROST)
+	var stone := Node3D.new()
+	stone.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	var body := MeshInstance3D.new()
+	body.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	body.mesh = _rain_mesh("hail")
+	body.material_override = _rain_material()
+	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	body.scale = Vector3.ONE * randf_range(0.8, 1.25)
+	stone.add_child(body)
+	var trail := _particles("shard", frost.lightened(0.2), 0.16, 0.45, false)
+	trail.amount = count(14)
+	trail.local_coords = false
+	trail.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	trail.emission_sphere_radius = HAIL_SIZE * 0.3
+	trail.initial_velocity_max = 0.3
+	trail.gravity = Vector3(0, 1.0, 0)
+	stone.add_child(trail)
+	root.add_child(stone)
+	stone.global_position = start
+	# Pointing along its fall, turning as it comes.
+	stone.look_at(land, Vector3.FORWARD if absf((land - start).normalized().y) > 0.99 else Vector3.UP)
+	body.rotation = Vector3(-PI / 2.0, 0.0, 0.0)
+	trail.emitting = true
+	var time := start.distance_to(land) / HAIL_SPEED
+	var tween := stone.create_tween()
+	tween.tween_property(stone, "global_position", land, time).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(body, "rotation:y", TAU * 2.0, time)
+	tween.tween_callback(func() -> void:
+		body.queue_free()
+		trail.emitting = false
+		burst(root, land + Vector3.UP * 0.2, frost.lightened(0.3), 10, 3.2, 0.11, 0.45, -9.0, 70.0, Vector3.UP, 0.1, "shard")
+		_flash(root, land + Vector3.UP * 0.3, "flash", frost.lerp(Color.WHITE, 0.5), 0.7, 0.15, Vector2(0.4, 1.0)))
+	tween.tween_interval(0.5)
+	tween.tween_callback(stone.queue_free)
+
+
+## A patch on the ground under an area (a decal, units left out), fading in:
+## "frost" (pale blue crystals spreading) or "scorch" (blackened ground with
+## glowing embers).
+static func _ground_patch(root: Node3D, center: Vector3, radius: float, kind: String) -> Decal:
+	var decal := Decal.new()
+	decal.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	decal.texture_albedo = _patch_texture(kind, false)
+	decal.texture_emission = _patch_texture(kind, true)
+	decal.emission_energy = 1.4 if kind == "scorch" else 0.5
+	decal.size = Vector3(radius * 2.0, 6.0, radius * 2.0)
+	decal.cull_mask = ~Targeting.UNIT_RENDER_LAYER & 0xFFFFF
+	decal.normal_fade = 0.5
+	decal.upper_fade = 0.2
+	decal.lower_fade = 0.2
+	decal.modulate = Color(1, 1, 1, 0)
+	root.add_child(decal)
+	decal.global_position = center
+	decal.create_tween().tween_property(decal, "modulate:a", 1.0, PATCH_FADE)
+	return decal
+
+
+## The patches' textures, painted once: the colour (albedo, its alpha the
+## patch's shape: ragged at the edge) and the glow (emission, black where
+## nothing glows; it ignores alpha).
+static func _patch_texture(kind: String, glow: bool) -> ImageTexture:
+	var key := "patch_%s_%s" % [kind, glow]
+	if _textures.has(key):
+		return _textures[key]
+	var size := PATCH_TEXTURE_SIZE
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var noise := FastNoiseLite.new()
+	noise.seed = 7 if kind == "frost" else 11
+	noise.frequency = 0.09
+	var half := size / 2.0
+	for y in size:
+		for x in size:
+			var r := Vector2(x + 0.5 - half, y + 0.5 - half).length() / half
+			var n := noise.get_noise_2d(x, y) * 0.5 + 0.5
+			# Ragged at the edge: the noise eats into it.
+			var cover := clampf((1.0 - r) * 3.5 + (n - 0.5) * 1.2, 0.0, 1.0)
+			var color := Color(0, 0, 0, 0)
+			if kind == "frost":
+				var crystal := n > 0.62
+				if glow:
+					color = Color(0.25, 0.4, 0.55) * cover if crystal else Color(0, 0, 0)
+				else:
+					color = Color(0.82, 0.92, 1.0, cover * (0.85 if crystal else 0.55))
+			else:
+				var ember := n > 0.68 and r < 0.9
+				if glow:
+					color = Color(1.0, 0.45, 0.1) * cover * ((n - 0.68) / 0.32 * 1.5 + 0.3) if ember else Color(0, 0, 0)
+				else:
+					color = Color(0.08, 0.05, 0.03, cover * 0.85) if not ember else Color(0.9, 0.35, 0.08, cover)
+			color.a = 1.0 if glow else color.a
+			image.set_pixel(x, y, color)
+	var texture := ImageTexture.create_from_image(image)
+	_textures[key] = texture
+	return texture

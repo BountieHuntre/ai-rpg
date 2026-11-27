@@ -75,7 +75,7 @@ var _combatant: Combatant
 var _dodged_by: Dictionary = {}
 ## Counterattack: usable until this time (after you parry).
 var _counter_until := 0.0
-## Arrow Rain on the ground: { "spell", "at", "left", "tick" }, while channelled.
+## Arrow Rain on the ground: { "spell", "at", "tick", "period", "vfx" (the arrows falling) }, while channelled.
 var _rain: Dictionary = {}
 ## Tame Beast underway: { "target", "until" }.
 var _taming: Dictionary = {}
@@ -164,14 +164,8 @@ func tracked_resources() -> Array[int]:
 func problem(spell: Dictionary, target: Combatant) -> String:
 	if is_shot(spell) and _combatant.ranged_weapon.is_empty():
 		return ERR_NEED_RANGED
-	# Arrow Rain falls round your enemy target (its target is a place, so
-	# the SpellCaster's own target checks don't cover it).
-	if is_shot(spell) and SpellDB.has_effect(spell, SpellDB.EFFECT_PERSISTENT_AREA_AURA):
-		var enemy := _unit.enemy_target()
-		if enemy == null or not enemy.is_alive():
-			return SpellCaster.ERR_NO_TARGET
-		if _combatant.distance_to(enemy) > SpellDB.spell_range(spell, _combatant):
-			return SpellCaster.ERR_RANGE
+	# Arrow Rain falls where it's put (the SpellCaster asks the player for the
+	# place, and aims a bot's at its enemy, checking the range).
 	var record := pet_record()
 	var out := _unit.pet != null and is_instance_valid(_unit.pet)
 	match str(spell.SpellName):
@@ -309,17 +303,24 @@ func cast(spell: Dictionary, target: Combatant) -> bool:
 			_far_sight(spell)
 			return true
 		"Flare":
-			# Nothing hides from sight in the game yet: a flash, no more.
-			Vfx.release(_unit, SpellDB.School.FIRE)
+			# Nothing hides from sight in the game yet: a flash where it lands.
+			var at := caster.landing_point()
+			if at != Vector3.INF:
+				Vfx.impact(_unit, at + Vector3.UP * 0.5, SpellDB.School.FIRE, true)
+			else:
+				Vfx.release(_unit, SpellDB.School.FIRE)
 			return true
 	if not is_shot(spell):
 		return false
 	if target and target != me:
 		_unit.combatant.shot.emit(target)
 	if SpellDB.has_effect(spell, SpellDB.EFFECT_PERSISTENT_AREA_AURA):
+		var at := caster.landing_point()
 		var enemy := _unit.enemy_target()
-		if enemy:
-			_start_rain(spell, enemy)
+		if at == Vector3.INF and enemy:
+			at = enemy.body.global_position
+		if at != Vector3.INF:
+			_start_rain(spell, at)
 		return true
 	if SpellDB.has_effect(spell, EFFECT_THREAT):
 		# Taunting Shot: a shot that only draws threat.
@@ -544,14 +545,16 @@ func _set_trap(spell: Dictionary) -> void:
 	Sfx.play_at("buff", _unit.global_position)
 
 
-## Arrow Rain: arrows fall on the target's ground, every tick hurting enemies
-## there, while you channel.
-func _start_rain(spell: Dictionary, target: Combatant) -> void:
+## Arrow Rain: arrows fall on the ground where it was put, every tick hurting
+## enemies there, while you channel.
+func _start_rain(spell: Dictionary, at: Vector3) -> void:
 	var period := 1.0
 	for i in 3:
 		if int(spell.get("EffectApplyAuraName%d" % (i + 1), 0)) == SpellDB.AURA_PERIODIC_DAMAGE:
 			period = maxf(int(spell.get("EffectAmplitude%d" % (i + 1), 1000)) / 1000.0, 0.1)
-	_rain = { "spell": spell, "at": target.body.global_position, "tick": period, "period": period }
+	# Arrows rain down on it while it lasts.
+	var look := Vfx.rain(_unit, at, SpellDB.effect_radius(spell, 0, _combatant), "arrows")
+	_rain = { "spell": spell, "at": at, "tick": period, "period": period, "vfx": look }
 	caster._start_channel(spell, _combatant)
 
 
@@ -668,11 +671,12 @@ func _physics_process(delta: float) -> void:
 	if _unit.is_moving():
 		var feign := _combatant.find_aura(func(spell: Dictionary) -> bool: return SpellDB.has_effect(spell, AURA_MOD_FEIGN_DEATH, true))
 		if not feign.is_empty():
-			_combatant.remove_aura(int(feign.Id))
+			_combatant.remove_aura(int(feign.spell.Id))
 	if _rain.is_empty():
 		return
 	var spell: Dictionary = _rain.spell
 	if not caster.channeling or int(caster.casting.get("Id", 0)) != int(spell.Id):
+		Vfx.stop_rain(_rain.get("vfx"))
 		_rain = {}
 		return
 	_rain.tick -= delta
@@ -689,7 +693,6 @@ func _physics_process(delta: float) -> void:
 		if enemy.combatant.is_alive() and enemy.global_position.distance_to(_rain.at) <= radius:
 			enemy.combatant.take_damage(roundi(damage), _combatant, false, int(spell.get("School", 0)))
 			enemy.provoke(_combatant)
-	Vfx.school_burst(_unit, _rain.at + Vector3.UP * 0.5, int(spell.get("School", 0)), 12, 1.5)
 
 
 ## Cheetah and Pack Spirit: being hit Dazes you (their proc spell), which

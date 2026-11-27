@@ -60,6 +60,40 @@ var target: Node3D
 var _ring := Decal.new()
 static var _ring_texture: ImageTexture
 var _flash_time := 0.0
+## Ground targeting: the spell waiting for a place (SpellCaster.ground_target_requested),
+## its area ring under the mouse, and the place it's over (Vector3.INF off the
+## ground).
+var _placing := 0
+var _area := Decal.new()
+var _area_point := Vector3.INF
+var _area_turn := 0.0
+## The game view's pixel scale (main.gd's _fit_game_view): window pixels to
+## the game view's, for the mouse, as clicks are.
+var view_shrink := 1
+## The area ring's look: a thin outline (its width a share of the radius),
+## spokes from the rim to near the middle, tapering to points, notches along
+## the rim between them, arcs between the spokes partway in, a small ring round
+## the middle and a faint fill; it
+## turns slowly while it's being placed.
+static var AREA_TEXTURE_SIZE := 160
+static var AREA_OUTLINE := 0.035
+static var AREA_SPOKES := 8
+static var AREA_SPOKE_WIDTH := 0.12
+static var AREA_SPOKE_INNER := 0.28
+static var AREA_NOTCH_DEPTH := 0.14
+## A broken ring of arcs between the spokes, this far out, each this long.
+static var AREA_ARCS := 0.6
+static var AREA_ARC_LENGTH := 0.16
+static var AREA_HUB := 0.16
+static var AREA_FILL := 0.14
+static var AREA_TURN_SPEED := 18.0
+static var _area_texture: ImageTexture
+## How far from the camera the mouse finds the ground to put a spell on
+## (beyond any spell's range).
+static var GROUND_PICK_REACH := 200.0
+## The area ring's colours: in the spell's range, and out of it.
+const AREA_COLOR := Color(0.45, 0.75, 1.0)
+const AREA_OUT_OF_RANGE_COLOR := Color(1.0, 0.3, 0.25)
 
 
 ## The target's Combatant if it's a creature, or null.
@@ -146,6 +180,14 @@ func unit_at(screen_position: Vector2) -> Node3D:
 ## Right click also acts on it: attacks a creature, talks to an NPC, loots a
 ## corpse.
 func on_camera_clicked(screen_position: Vector2, button: MouseButton) -> void:
+	# Placing a ground spell: left click casts it there, right click lets go.
+	if _placing != 0:
+		var id := _placing
+		var point := _ground_at(screen_position)
+		cancel_ground()
+		if button == MOUSE_BUTTON_LEFT and point != Vector3.INF:
+			_player.spells.cast_at(id, point)
+		return
 	var collider := unit_at(screen_position)
 	if collider is Npc:
 		set_target(collider)
@@ -216,6 +258,76 @@ func _ready() -> void:
 	_ring.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_ring.visible = false
 	add_child(_ring)
+	for setting in ["texture_albedo", "texture_emission", "emission_energy", "cull_mask", "upper_fade", "lower_fade", "normal_fade",
+			"top_level", "physics_interpolation_mode"]:
+		_area.set(setting, _ring.get(setting))
+	if not _area_texture:
+		_area_texture = _make_area_texture()
+	_area.texture_albedo = _area_texture
+	_area.texture_emission = _area_texture
+	_area.visible = false
+	add_child(_area)
+	(_player.get_node("SpellCaster") as SpellCaster).ground_target_requested.connect(begin_ground)
+
+
+## Starts placing a ground-targeted spell: its area follows the mouse until a
+## click puts it down (on_camera_clicked) or it's let go (cancel_ground).
+func begin_ground(id: int) -> void:
+	_placing = id
+	_area_point = Vector3.INF
+
+
+## Lets go of a spell being placed. Returns whether one was (Esc lets go of
+## it before anything else).
+func cancel_ground() -> bool:
+	var was := _placing != 0
+	_placing = 0
+	_area.visible = false
+	return was
+
+
+func is_placing() -> bool:
+	return _placing != 0
+
+
+## The ground under a point of the game view (physics layer 1), or Vector3.INF.
+func _ground_at(screen_position: Vector2) -> Vector3:
+	var camera := _player.get_viewport().get_camera_3d()
+	if camera == null:
+		return Vector3.INF
+	var from := camera.project_ray_origin(screen_position)
+	var way := camera.project_ray_normal(screen_position) * GROUND_PICK_REACH
+	# A ray running exactly along an edge between the ground's triangles can
+	# slip through it, so a second one a hair aside: the nearer hit counts.
+	var space := _player.get_world_3d().direct_space_state
+	var best := Vector3.INF
+	for nudge: Vector3 in [Vector3.ZERO, camera.global_basis.x * 0.01 + camera.global_basis.y * 0.01]:
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from + nudge, from + nudge + way, WORLD_LAYER))
+		if not hit.is_empty() and (best == Vector3.INF or from.distance_to(hit.position) < from.distance_to(best)):
+			best = hit.position
+	return best
+
+
+func _update_area() -> void:
+	if not _player.combatant.is_alive():
+		cancel_ground()
+		return
+	_area_point = _ground_at(get_tree().root.get_mouse_position() / float(maxi(view_shrink, 1)))
+	_area.visible = _area_point != Vector3.INF
+	if not _area.visible:
+		return
+	var spell := SpellDB.get_spell(_placing)
+	var radius := 0.0
+	for i in 3:
+		radius = maxf(radius, SpellDB.effect_radius(spell, i, _player.combatant))
+	radius = maxf(radius, 1.0)
+	# The ring's band is the outer part of its texture: scaled so its outer
+	# edge is the spell's radius.
+	_place_ring(_area_point, radius, _area)
+	_area_turn = fposmod(_area_turn + deg_to_rad(AREA_TURN_SPEED) * get_process_delta_time(), TAU)
+	_area.global_rotation = Vector3(0.0, _area_turn, 0.0)
+	var in_range := _player.global_position.distance_to(_area_point) <= SpellDB.spell_range(spell, _player.combatant)
+	_area.modulate = AREA_COLOR if in_range else AREA_OUT_OF_RANGE_COLOR
 
 
 ## Puts every mesh under a unit on UNIT_RENDER_LAYER, out of the ring's way.
@@ -243,6 +355,48 @@ static func _make_ring_texture() -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
+## The area ring's texture: white on clear (tinted by the decal's modulate),
+## its edges hard (pixel art). Each pixel's colour is scaled by its alpha, as
+## the glow (emission) ignores alpha.
+static func _make_area_texture() -> ImageTexture:
+	var size := AREA_TEXTURE_SIZE
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var half := size / 2.0
+	var sector := TAU / AREA_SPOKES
+	for y in size:
+		for x in size:
+			var offset := Vector2(x + 0.5 - half, y + 0.5 - half) / half
+			var r := offset.length()
+			var alpha := 0.0
+			if r <= 1.0:
+				alpha = AREA_FILL
+				# How far round from the nearest spoke, as a share of half a sector.
+				var angle := fposmod(offset.angle(), sector)
+				var from_spoke := minf(angle, sector - angle)
+				var between := absf(from_spoke - sector / 2.0)
+				# The outline, with a dark line inside it so it shows on bright ground.
+				if r >= 1.0 - AREA_OUTLINE:
+					alpha = 1.0
+				elif r >= 1.0 - AREA_OUTLINE * 1.8:
+					alpha = 0.0
+				# Spokes: widest at the rim, narrowing to a point at AREA_SPOKE_INNER.
+				elif r >= AREA_SPOKE_INNER:
+					var t := (r - AREA_SPOKE_INNER) / (1.0 - AREA_SPOKE_INNER)
+					if from_spoke * r <= AREA_SPOKE_WIDTH * 0.5 * t:
+						alpha = 0.85
+					# Notches between the spokes: small wedges pointing in from the rim.
+					elif r >= 1.0 - AREA_OUTLINE * 1.8 - AREA_NOTCH_DEPTH and between * r <= (r - (1.0 - AREA_OUTLINE * 1.8 - AREA_NOTCH_DEPTH)) * 0.6:
+						alpha = 0.85
+					# Arcs between the spokes, partway in.
+					elif absf(r - AREA_ARCS) <= AREA_OUTLINE * 0.6 and between * r <= AREA_ARC_LENGTH * 0.5:
+						alpha = 0.75
+				# The hub: a small ring round the middle.
+				elif absf(r - AREA_HUB) <= AREA_OUTLINE * 0.8:
+					alpha = 0.9
+			image.set_pixel(x, y, Color(alpha, alpha, alpha, alpha))
+	return ImageTexture.create_from_image(image)
+
+
 func _set_ring_color(color: Color) -> void:
 	_ring.modulate = color
 
@@ -260,6 +414,8 @@ var _picked_corpse: Enemy
 
 
 func _process(delta: float) -> void:
+	if _placing != 0:
+		_update_area()
 	# A target removed from the world (a deleted bot, a spawned creature gone).
 	if target != null and not is_instance_valid(target):
 		target = null
@@ -294,7 +450,9 @@ func _process(delta: float) -> void:
 ## the target stands on (found straight down from its feet), only as deep as
 ## the ground's slope needs across the ring, so nothing above the ground (a
 ## counter it stands behind, a roof over it) is painted.
-func _place_ring(feet: Vector3, radius: float) -> void:
+func _place_ring(feet: Vector3, radius: float, decal: Decal = null) -> void:
+	if decal == null:
+		decal = _ring
 	var ground := feet
 	var rise := 0.0
 	var space := _player.get_world_3d().direct_space_state
@@ -306,5 +464,5 @@ func _place_ring(feet: Vector3, radius: float) -> void:
 		var normal: Vector3 = hit.normal
 		rise = radius * tan(acos(clampf(normal.y, 0.05, 1.0)))
 	var reach := RING_GROUND_SLACK + minf(rise, RING_REACH)
-	_ring.global_position = ground
-	_ring.size = Vector3(radius * 2.0, reach * 2.0, radius * 2.0)
+	decal.global_position = ground
+	decal.size = Vector3(radius * 2.0, reach * 2.0, radius * 2.0)

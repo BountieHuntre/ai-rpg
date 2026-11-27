@@ -16,6 +16,9 @@ signal trade_skill_requested(profession: String)
 signal item_pick_requested(spell_id: int)
 ## A spell was cast (its cast time done, or an instant), before its effects.
 signal spell_finished(spell: Dictionary)
+## A spell cast at a place (SpellDB.is_ground_targeted) is waiting for the
+## player to pick it with the mouse (Targeting.begin_ground); cast_at casts it.
+signal ground_target_requested(id: int)
 ## A channel held to its end (Tame Beast tames on it).
 signal channel_completed(spell: Dictionary)
 
@@ -99,6 +102,11 @@ var _magus := MagusAbilities.new()
 
 
 ## A quest item's spell being cast (QuestSpells), and what it's used on.
+## Where the ground-targeted spell being cast lands (Vector3.INF for none):
+## the point picked for it (cast_at), held through its cast time.
+var _ground_point := Vector3.INF
+var _cast_ground := Vector3.INF
+var _landing := Vector3.INF
 var _quest_spell := 0
 var _quest_target: Node3D
 
@@ -178,8 +186,25 @@ func cast(id: int) -> void:
 	var target := _pick_target(spell)
 	var problem := _find_problem(spell, target, true)
 	if not problem.is_empty():
+		_ground_point = Vector3.INF
 		failed.emit(problem)
 		return
+	# A spell cast at a place: the player picks it with the mouse first; a bot
+	# aims at its enemy.
+	var point := _ground_point
+	_ground_point = Vector3.INF
+	if SpellDB.is_ground_targeted(spell) and point == Vector3.INF:
+		if _unit is Player:
+			ground_target_requested.emit(id)
+			return
+		var enemy := _unit.enemy_target()
+		if enemy == null or not enemy.is_alive():
+			failed.emit(ERR_NO_TARGET)
+			return
+		point = enemy.body.global_position
+		if _unit.global_position.distance_to(point) > SpellDB.spell_range(spell, me):
+			failed.emit(ERR_RANGE)
+			return
 	# A new spell ends a channel.
 	if channeling:
 		_stop_channel()
@@ -198,8 +223,27 @@ func cast(id: int) -> void:
 		_cast_left = time
 		_cast_total = time
 		_cast_target = target
+		_cast_ground = point
 	else:
+		_landing = point
 		_finish(spell, target)
+		_landing = Vector3.INF
+
+
+## Casts a ground-targeted spell at a place, if it's within the spell's range.
+func cast_at(id: int, point: Vector3) -> void:
+	var spell := SpellDB.get_spell(id)
+	if _unit.global_position.distance_to(point) > SpellDB.spell_range(spell, _unit.combatant):
+		failed.emit(ERR_RANGE)
+		return
+	_ground_point = point
+	cast(id)
+	_ground_point = Vector3.INF
+
+
+## Where the ground-targeted spell now landing was aimed, or Vector3.INF.
+func landing_point() -> Vector3:
+	return _landing
 
 
 ## Why a known spell can't be cast at its target right now, or "" if it can.
@@ -328,7 +372,9 @@ func _physics_process(delta: float) -> void:
 		# grave QuestSpells found, not the caster the cast was held on).
 		var problem: String = QuestSpells.problem(_unit, spell) if _quest_spell == int(spell.Id) else _find_problem(spell, _cast_target, false)
 		if problem.is_empty():
+			_landing = _cast_ground
 			_finish(spell, _cast_target)
+			_landing = Vector3.INF
 			_use_up_item()
 		else:
 			failed.emit(problem)

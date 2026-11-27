@@ -346,6 +346,8 @@ func _fit_game_view() -> void:
 	var window := get_viewport().get_visible_rect().size
 	var pixel_scale := maxi(floori(window.y / min_game_height), 1)
 	_game_view.stretch_shrink = pixel_scale
+	if _player:
+		_player.targeting.view_shrink = pixel_scale
 	_game_view.size = (window / pixel_scale).ceil() * pixel_scale
 
 
@@ -453,6 +455,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		# the target, and only then opens the game menu.
 		if _menu.visible:
 			_menu.toggle()
+		elif _player.targeting.cancel_ground():
+			pass
 		elif _hud.is_looting():
 			_hud.close_loot()
 		elif _hud.close_world_map() or _hud.close_trade() or _hud.close_bot_bag() or _hud.close_quests() or _hud.close_social() or _hud.close_vendor() or _hud.close_trainer() or _hud.close_party_window():

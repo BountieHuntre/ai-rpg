@@ -6,9 +6,8 @@ extends Node
 ##   Orb's burn) put it on when the damage lands.
 ##   Areas: Arcane Nova, Rime Burst and Searing Wave round the caster; Frost
 ##   Fan in a cone in front; Pillar of Flame and Hailstorm on the ground
-##   where the enemy target stands (the game has no ground targeting), the
-##   Pillar's flames burning on after it and Hailstorm falling while you
-##   channel it.
+##   where you put them with the mouse (Targeting.begin_ground), the Pillar's
+##   flames burning on after it and Hailstorm falling while you channel it.
 ##   Arcane Darts: a channel loosing a dart at the target every tick.
 ##   Arcane Renewal (Evocation): a channel that speeds mana regeneration.
 ##   Beastshape (Polymorph): the creature becomes a sheep, held until it
@@ -202,8 +201,8 @@ func _nova(spell: Dictionary) -> void:
 	for enemy in _enemies_within(_unit.global_position, radius):
 		_strike(spell, enemy)
 	var color := Vfx.school_color(int(spell.get("School", 0)))
-	Vfx.shockwave(_unit, Vector3.UP * 0.3, color, radius, 0.5)
-	Vfx.school_burst(_unit, Vector3.UP * 0.8, int(spell.get("School", 0)), 16, radius * 0.5)
+	Vfx.shockwave(_unit, _unit.global_position + Vector3.UP * 0.3, color, radius, 0.5)
+	Vfx.school_burst(_unit, _unit.global_position + Vector3.UP * 0.8, int(spell.get("School", 0)), 16, radius * 0.5)
 
 
 ## Frost Fan: everything in a cone in front.
@@ -217,16 +216,18 @@ func _cone(spell: Dictionary) -> void:
 		way.y = 0.0
 		if way.length() < 0.5 or way.normalized().dot(forward) >= limit:
 			_strike(spell, enemy)
-	Vfx.school_burst(_unit, forward * radius * 0.5 + Vector3.UP * 0.8, int(spell.get("School", 0)), 20, radius * 0.4)
+	Vfx.school_burst(_unit, _unit.global_position + forward * radius * 0.5 + Vector3.UP * 0.8, int(spell.get("School", 0)), 20, radius * 0.4)
 
 
-## Pillar of Flame and Hailstorm: on the ground where the enemy target stands
-## (or ahead of you with none). The Pillar strikes at once, then burns on;
-## Hailstorm falls while channelled.
+## Pillar of Flame and Hailstorm: on the ground where the player put them
+## with the mouse (a bot's at its enemy; SpellCaster.landing_point). The
+## Pillar strikes at once, then burns on; Hailstorm falls while channelled.
 func _ground(spell: Dictionary, target: Combatant) -> void:
-	var at := _unit.global_position + Basis(Vector3.UP, _unit.facing) * Vector3.FORWARD * 10.0
-	if target and target != _combatant and is_instance_valid(target):
-		at = target.body.global_position
+	var at := caster.landing_point()
+	if at == Vector3.INF:
+		at = _unit.global_position + Basis(Vector3.UP, _unit.facing) * Vector3.FORWARD * 10.0
+		if target and target != _combatant and is_instance_valid(target):
+			at = target.body.global_position
 	_combatant.enter_combat()
 	var area_effect := -1
 	for i in 3:
@@ -235,15 +236,18 @@ func _ground(spell: Dictionary, target: Combatant) -> void:
 	if SpellDB.has_effect(spell, SpellDB.EFFECT_SCHOOL_DAMAGE):
 		for enemy in _enemies_within(at, SpellDB.effect_radius(spell, 0, _combatant)):
 			_strike(spell, enemy)
-		Vfx.impact(_unit, at - _unit.global_position + Vector3.UP * 0.5, int(spell.get("School", 0)), true)
+		Vfx.pillar(_unit, at, SpellDB.effect_radius(spell, 0, _combatant))
 	if area_effect < 0:
 		return
 	var period := int(spell.get("EffectAmplitude%d" % (area_effect + 1), 0)) / 1000.0
 	if period <= 0.0:
 		period = DEFAULT_PERIOD
 	var channel := SpellDB.is_channeled(spell)
+	# What's seen there while it lasts: hail falling, or flames burning.
+	var radius := SpellDB.effect_radius(spell, area_effect, _combatant)
+	var look: Node3D = Vfx.rain(_unit, at, radius, "hail") if int(spell.get("School", 0)) == SpellDB.School.FROST 		else Vfx.burning_ground(_unit, at, radius)
 	_areas.append({ "spell": spell, "effect": area_effect, "at": at, "left": SpellDB.duration(spell, _combatant),
-		"tick": period, "period": period, "channel": channel })
+		"tick": period, "period": period, "channel": channel, "vfx": look })
 	if channel:
 		caster._start_channel(spell, _combatant)
 
@@ -254,6 +258,7 @@ func _tick_areas(delta: float) -> void:
 		var held: bool = not area.channel or (caster.channeling and int(caster.casting.get("Id", 0)) == int(spell.Id))
 		area.left -= delta
 		if not held or area.left <= -0.01:
+			Vfx.stop_rain(area.vfx)
 			_areas.erase(area)
 			continue
 		area.tick -= delta
@@ -269,7 +274,6 @@ func _tick_areas(delta: float) -> void:
 			(enemy.body as Enemy).provoke(_combatant)
 			if spell.SpellName == "Hailstorm":
 				_improved_hailstorm(enemy)
-		Vfx.school_burst(_unit, area.at - _unit.global_position + Vector3.UP * 1.5, school, 14, radius * 0.4)
 
 
 ## Improved Hailstorm: Hailstorm chills what it hits (the talent's linked
