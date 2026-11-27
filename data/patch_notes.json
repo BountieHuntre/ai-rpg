@@ -1,5 +1,16 @@
 [
 	{
+		"version": "0.26.0",
+		"date": "11-26-2026",
+		"notes": [
+			"Every creature now has a model of its own: no more capsules.",
+			"Tallbirds, swoops and owls stride and peck on two legs, and gloombats hover on beating wings.",
+			"Harpies spread feathered wings from their arms, barklings walk as stumps crowned with leaves, and Redclaw raptors lunge jaws first.",
+			"The Dunestride centaurs trot on four legs, with Warlord Hask at their head.",
+			"Wildclaw is one of the bearfolk, and Samuel Pell rises as an undead farmer."
+		]
+	},
+	{
 		"version": "0.25.2",
 		"date": "11-26-2026",
 		"notes": [
