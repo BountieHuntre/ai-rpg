@@ -84,6 +84,21 @@ RACES = {
 				 "species": "tuskfolk"},
 	"imp": {"legs": 0.52, "torso": 0.5, "width": 0.68, "head": 1.45, "hands": 1.15, "props": 0.6, "limbs": 0.62,
 			"species": "imp"},
+	# A woman's body with wings of feathers down her arms, a bird's scaly
+	# shins and talons, and a fan of tail feathers (harpy_parts).
+	"harpy": {"legs": 1.02, "torso": 0.96, "width": 0.88, "head": 1.0, "hands": 1.05, "props": 0.9, "limbs": 0.72,
+			  "species": "harpy", "female": True},
+	# A walking stump: a thick bark body, branch arms with twig fingers,
+	# roots for feet, a stump of a head with glowing eyes and a crown of
+	# leaves, moss on the shoulders (barkling_parts).
+	# A man's body from the waist up on a horse's: his legs are its forelegs,
+	# with hooves, and a barrel runs back from his hips to hind legs of their
+	# own (CENTAUR_BONES), which follow the forelegs a step behind
+	# (centaur_animations), and a tail.
+	"centaur": {"legs": 1.3, "torso": 1.0, "width": 1.08, "head": 1.0, "hands": 1.1, "props": 1.05, "limbs": 1.15,
+				"species": "centaur"},
+	"barkling": {"legs": 0.62, "torso": 0.92, "width": 1.35, "head": 1.1, "hands": 1.25, "props": 0.9, "limbs": 1.12,
+				 "species": "barkling"},
 }
 RACE = RACES["human"]
 HIP_Z = 0.96
@@ -458,8 +473,9 @@ def body(name, female):
 		((0, 0, 1.51), 0.1, 0.08, "Chest"),
 	]
 	b.loft(rings, ["legs", "waist", "waist", "chest", "chest", "chest", "chest", "chest", "chest"], sides=10)
-	# Belt buckle.
-	b.box((0, 0.125, 1.0), (0.06, 0.02, 0.05), "Hips", "trim")
+	# Belt buckle (none on the creatures that wear no belt).
+	if RACE.get("species") not in ("harpy", "barkling"):
+		b.box((0, 0.125, 1.0), (0.06, 0.02, 0.05), "Hips", "trim")
 	# Neck and head.
 	b.tube((0, 0, 1.46), (0, 0.01, 1.6), 0.062 if f else 0.08, 0.056 if f else 0.072, "Neck", "skin")
 	if RACE.get("species"):
@@ -638,6 +654,9 @@ def _limbs(b, f):
 	# Arms and legs eight-sided (the radii a little less than the six-sided
 	# limbs', so they're as thick).
 	arm_r = (1.0 if f else 1.3) * RACE.get("limbs", 1.0) * 0.96
+	harpy = RACE.get("species") == "harpy"
+	barkling = RACE.get("species") == "barkling"
+	centaur = RACE.get("species") == "centaur"
 	for side, x in (("Right", 1), ("Left", -1)):
 		sh = Vector(_side(x, (0.28, 0, 1.42)))
 		el = Vector(_side(x, (0.32, 0, 1.14)))
@@ -671,10 +690,166 @@ def _limbs(b, f):
 				(shin, 0.058 * limb, 0.058 * limb, side + "LowerLeg"),
 				(Vector(_side(x, (0.12, -0.01, 0.345))), 0.075 * limb, 0.078 * limb, side + "LowerLeg"),
 				(Vector(_side(x, (0.12, -0.02, 0.1))), 0.064 * limb, 0.066 * limb, side + "LowerLeg")],
-			   ["legs"] * 5 + ["feet", "feet"], sides=8)
+			   (["legs"] * 4 + ["feet"] * 3) if harpy else ["legs"] * 7 if centaur else (["legs"] * 5 + ["feet", "feet"]), sides=8)
+		if harpy:
+			harpy_parts(b, x, side, sh, el, wr)
+			continue
+		if barkling:
+			barkling_parts(b, x, side, sh, el, wr)
+			continue
+		if centaur:
+			centaur_leg(b, x, side + "Foot", Vector(_side(x, (0.12, -0.02, 0.1))), 1.0)
+			continue
 		b.box(_side(x, (0.12, 0.04, 0.055)), (0.12 * leg, 0.26, 0.11), side + "Foot", "feet", top=(0.9, 0.62), shift=(0, -0.04))
 		b.box(_side(x, (0.12, 0.04, 0.008)), (0.125 * leg, 0.265, 0.016), side + "Foot", "feet", shade=0.55)
+	if harpy:
+		# A fan of tail feathers from the small of the back.
+		for k in (-2, -1, 0, 1, 2):
+			b.beam((0.03 * k, -0.08, 0.98), (0.12 * k, -0.48 + 0.04 * abs(k), 0.7 + 0.03 * abs(k)), 0.11, 0.03,
+				   "Hips", "hair", taper=0.45, up=(1, 0, 0), shade=1.0 - 0.06 * abs(k))
+	if centaur:
+		centaur_body(b)
+	if barkling:
+		# Ridges of bark down the trunk, front and back, moss over the
+		# shoulders and a broken branch out of the back.
+		for k in (-2, -1, 0, 1, 2):
+			for y in (1, -1):
+				b.beam((0.07 * k, 0.12 * y - 0.004 * k * k * y, 0.9), (0.08 * k, 0.135 * y - 0.006 * k * k * y, 1.42),
+					   0.035, 0.035, "Chest" if k % 2 else "Spine", "skin", taper=0.7, up=(0, y, 0), shade=0.75)
+		for x in (-1, 1):
+			b.box((0.17 * x, 0.0, 1.47), (0.16, 0.2, 0.06), "Chest", "hair", top=(0.7, 0.7), shade=0.9)
+		b.box((0, 0.07, 1.5), (0.18, 0.1, 0.05), "Chest", "hair", top=(0.6, 0.6), shade=0.85)
+		b.beam((0.06, -0.12, 1.3), (0.16, -0.32, 1.48), 0.06, 0.06, "Chest", "skin", taper=0.5, shade=0.85)
+		b.beam((0.13, -0.26, 1.43), (0.1, -0.3, 1.56), 0.035, 0.035, "Chest", "skin", taper=0.4, shade=0.85)
+		leaf_clump(b, (0.1, -0.3, 1.6), 0.12, "Chest")
 	return b
+
+
+# A centaur's hind legs, under the back of its barrel, hanging from the hips.
+CENTAUR_BONES = []
+for _side_name, _x in (("Right", 1), ("Left", -1)):
+	CENTAUR_BONES += [
+		(_side_name + "HindUpperLeg", (_x * 0.14, -0.86, 0.94), (_x * 0.14, -0.9, 0.52), "Hips"),
+		(_side_name + "HindLowerLeg", (_x * 0.14, -0.9, 0.52), (_x * 0.14, -0.86, 0.1), _side_name + "HindUpperLeg"),
+		(_side_name + "HindFoot", (_x * 0.14, -0.86, 0.1), (_x * 0.14, -0.8, 0.0), _side_name + "HindLowerLeg"),
+	]
+
+
+def centaur_leg(b, x, foot_bone, fetlock, k):
+	"""A hoof under a fetlock: a dark, flared block."""
+	b.loft([(fetlock + Vector((0, 0.01, -0.02)), 0.06 * k, 0.065 * k, foot_bone),
+			(Vector((fetlock.x, fetlock.y + 0.02, 0.07)), 0.075 * k, 0.08 * k, foot_bone),
+			(Vector((fetlock.x, fetlock.y + 0.025, 0.0)), 0.085 * k, 0.095 * k, foot_bone)],
+		   ["feet", "feet"], sides=8, cap_slots=("feet", "feet"))
+
+
+def centaur_body(b):
+	"""The horse's barrel from the man's hips back, its hind legs and tail."""
+	b.loft([((0, 0.13, 0.84), 0.15, 0.17, "Hips"), ((0, -0.04, 0.86), 0.24, 0.27, "Hips"),
+			((0, -0.45, 0.88), 0.26, 0.28, "Hips"), ((0, -0.8, 0.9), 0.24, 0.26, "Hips"),
+			((0, -1.0, 0.93), 0.16, 0.17, "Hips"), ((0, -1.06, 0.95), 0.07, 0.08, "Hips")],
+		   ["legs"] * 5, sides=10, cap_slots=("legs", "legs"))
+	# The tail, falling from the croup.
+	b.beam((0, -1.04, 0.95), (0, -1.2, 0.74), 0.1, 0.07, "Hips", "hair", taper=0.8)
+	b.beam((0, -1.2, 0.74), (0, -1.24, 0.4), 0.09, 0.06, "Hips", "hair", taper=0.4)
+	for x in (-1, 1):
+		hip = Vector((x * 0.14, -0.86, 0.94))
+		hock = Vector((x * 0.14, -0.9, 0.52))
+		fet = Vector((x * 0.14, -0.86, 0.1))
+		side = "Right" if x > 0 else "Left"
+		# A heavy haunch tapering to the hock, a slim cannon, the hoof.
+		b.loft([(hip + Vector((0, 0.05, 0.04)), 0.12, 0.16, side + "HindUpperLeg"),
+				(hip.lerp(hock, 0.5), 0.09, 0.12, side + "HindUpperLeg"),
+				(hock, 0.06, 0.07, side + "HindUpperLeg")], ["legs", "legs"], sides=8)
+		b.loft(_joint_ball(hock, fet, 0.06, side + "HindLowerLeg") + [(fet, 0.045, 0.05, side + "HindLowerLeg")],
+			   ["legs"] * 5, sides=8)
+		centaur_leg(b, x, side + "HindFoot", fet, 1.0)
+
+
+def centaur_animations(anims):
+	"""The humanoid animations with the hind legs keyed: each follows the
+	opposite foreleg (a trot's diagonal pairs), and a death of its own,
+	rolling onto its side, as the humanoid one falls flat on its back."""
+	pairs = (("RightHind", "Left"), ("LeftHind", "Right"))
+	for name, keys in anims.items():
+		for _frame, p in keys:
+			for hind, fore in pairs:
+				for part in ("UpperLeg", "LowerLeg"):
+					if fore + part in p:
+						p[hind + part] = p[fore + part]
+	legs = {"RightHindUpperLeg": (10, 0, 0), "LeftHindUpperLeg": (-15, 0, 0), "RightUpperLeg": (20, 0, 0),
+			"LeftUpperLeg": (-10, 0, 0), "RightLowerLeg": (-20, 0, 0), "RightHindLowerLeg": (-25, 0, 0)}
+	dead = pose(both("UpperArm", (10, -55, 0)), both("LowerArm", (20, 0, 0)), legs, Root=(0, 90, 0),
+				Spine=(0, -10, 0), Head=(-6, 0, 20), loc={"Root": (-0.95, 0, 0.3)})
+	ready = anims["ready"][0][1]
+	falling = pose(dead, Root=(0, 55, 0), loc={"Root": (-0.4, 0, 0.15)})
+	anims["death"] = [(0, ready), (4, pose(ready, Spine=(14, 0, 0), Head=(16, 0, 0))), (12, falling), (18, dead),
+					  (21, pose(dead, Root=(0, 84, 0))), (24, dead)]
+	anims["dead"] = [(0, dead), (10, dead)]
+	return anims
+
+
+def leaf_clump(b, at, size, bone):
+	"""A lumpy clump of leaves: a round six-sided blob and a smaller one
+	off to the side."""
+	at = Vector(at)
+	for off, k in ((Vector((0, 0, 0)), 1.0), (Vector((size * 0.45, -size * 0.2, -size * 0.15)), 0.65)):
+		c = at + off
+		r = size * 0.5 * k
+		b.loft([(c + Vector((0, 0, -r * 0.8)), r * 0.45, r * 0.45, bone), (c + Vector((0, 0, -r * 0.2)), r, r * 0.9, bone),
+				(c + Vector((0, 0, r * 0.45)), r * 0.85, r * 0.8, bone), (c + Vector((0, 0, r * 0.85)), r * 0.35, r * 0.35, bone)],
+			   ["hair"] * 3, sides=6, cap_slots=("hair", "hair"))
+
+
+def barkling_parts(b, x, side, sh, el, wr):
+	"""A barkling's branch arm and root foot: twigs for fingers, a sprig
+	with leaves off each forearm, and roots spreading from the ankle."""
+	for dx, dy in ((-0.035, 0.05), (0.0, 0.07), (0.035, 0.05)):
+		b.beam(_side(x, (0.345 + dx, 0.04, 0.8)), _side(x, (0.36 + dx * 1.6, 0.04 + dy, 0.66)), 0.03, 0.03,
+			   side + "Hand", "hands", taper=0.35)
+	b.beam(_side(x, (0.35, -0.02, 0.84)), _side(x, (0.4, -0.08, 0.74)), 0.026, 0.026, side + "Hand", "hands", taper=0.3)
+	mid = el.lerp(wr, 0.45)
+	tip = mid + Vector((0.14 * x, -0.06, 0.12))
+	b.beam(mid, tip, 0.04, 0.04, side + "LowerArm", "hands", taper=0.45)
+	leaf_clump(b, tip + Vector((0.02 * x, 0, 0.03)), 0.11, side + "LowerArm")
+	knot = sh.lerp(el, 0.5) + Vector((0.07 * x, 0.0, 0.0))
+	b.box(knot, (0.05, 0.08, 0.07), side + "UpperArm", "skin", shade=0.7)
+	ankle = Vector(_side(x, (0.12, -0.01, 0.09)))
+	for dx, dy in ((-0.09, 0.15), (0.0, 0.19), (0.09, 0.14), (0.07, -0.12), (-0.06, -0.12)):
+		tip = ankle + Vector((dx * x, dy, -0.085))
+		b.beam(ankle, tip, 0.06, 0.05, side + "Foot", "feet", taper=0.4, shade=0.9)
+
+
+def harpy_parts(b, x, side, sh, el, wr):
+	"""A harpy's wing down one arm (feathers hanging behind the upper arm and
+	forearm, the longest from the hand, reaching her knees, so they spread as
+	she lifts her arms), claws on her fingers, and her foot: three scaly toes
+	forward and one back, each tipped with a claw."""
+	back = Vector((0.025 * x, -0.04, 0.0))
+	# Coverts along the upper arm, then the long secondaries from the
+	# forearm, overlapping into one sheet down to her knees.
+	for t in (0.15, 0.4, 0.65, 0.9):
+		p = sh.lerp(el, t) + back
+		b.beam(p, p + Vector((0.03 * x, -0.13, -0.2 - 0.06 * t)), 0.15, 0.03, side + "UpperArm", "hair",
+			   taper=0.55, up=(0, 1, 0), shade=0.88)
+	for t in (0.0, 0.25, 0.5, 0.75, 1.0):
+		p = el.lerp(wr, t) + back
+		b.beam(p, p + Vector((0.04 * x, -0.16 - 0.05 * t, -0.34 - 0.12 * t)), 0.15, 0.03, side + "LowerArm", "hair",
+			   taper=0.45, up=(0, 1, 0), shade=0.94 + 0.06 * t)
+	# The primaries from the hand, longest of all.
+	for dy, dz in ((-0.09, -0.46), (-0.02, -0.52), (0.05, -0.48)):
+		p = Vector(_side(x, (0.35, -0.01, 0.86)))
+		b.beam(p, p + Vector((0.03 * x, dy - 0.1, dz)), 0.11, 0.028, side + "Hand", "hair", taper=0.35,
+			   up=(0, 1, 0))
+	for dx in (-0.02, 0.02):
+		b.beam(_side(x, (0.34 + dx, 0.06, 0.8)), _side(x, (0.34 + dx, 0.1, 0.75)), 0.018, 0.018, side + "Hand", "trim",
+			   taper=0.3)
+	ankle = Vector(_side(x, (0.12, -0.01, 0.07)))
+	for dx, dy in ((-0.055, 0.17), (0.0, 0.2), (0.055, 0.17), (0.0, -0.11)):
+		tip = ankle + Vector((dx * x, dy, -0.055))
+		b.beam(ankle, tip, 0.035, 0.035, side + "Foot", "feet", taper=0.7)
+		b.beam(tip, tip + Vector((dx * x * 0.3, 0.05 if dy > 0 else -0.05, -0.012)), 0.025, 0.022, side + "Foot",
+			   "trim", taper=0.2)
 
 
 def species_parts(species):
@@ -756,6 +931,72 @@ def species_parts(species):
 		tail.beam((0, -0.26, 0.82), (0, -0.4, 0.55), 0.02, 0.02, "Hips", "skin", taper=0.8)
 		tail.beam((0, -0.4, 0.55), (0, -0.44, 0.38), 0.016, 0.016, "Hips", "skin", taper=0.9)
 		tail.beam((0, -0.43, 0.42), (0, -0.46, 0.3), 0.07, 0.02, "Hips", "skin", taper=0.1, up=(1, 0, 0))
+	elif species == "harpy":
+		# A woman's face with great golden eyes, a hooked nose, swept-back
+		# pointed ears, and a crest of feathers rising from her brow and
+		# falling down her neck for hair.
+		head.loft([((0, 0.072, 1.555), 0.044, 0.05, "Head"), ((0, 0.043, 1.615), 0.084, 0.104, "Head"),
+				   ((0, 0.01, 1.69), 0.12, 0.128, "Head"), ((0, 0.0, 1.78), 0.105, 0.123, "Head"),
+				   ((0, -0.005, 1.835), 0.066, 0.08, "Head")], ["skin"] * 4, sides=12)
+		for x in (-1, 1):
+			head.box((0.046 * x, 0.122, 1.705), (0.04, 0.02, 0.024), "Head", "sclera")
+			head.box((0.045 * x, 0.128, 1.705), (0.022, 0.02, 0.022), "Head", "eyes")
+			head.beam((0.025 * x, 0.128, 1.74), (0.08 * x, 0.11, 1.75), 0.016, 0.02, "Head", "hair", up=(0, 0, 1))
+			head.beam((0.105 * x, -0.01, 1.71), (0.2 * x, -0.08, 1.79), 0.055, 0.018, "Head", "skin", taper=0.15,
+					  up=(0, 0, 1), shade=0.9)
+		head.beam((0, 0.13, 1.695), (0, 0.155, 1.65), 0.035, 0.03, "Head", "skin", taper=0.4, shade=0.95)
+		head.box((0, 0.118, 1.615), (0.045, 0.015, 0.01), "Head", "skin", shade=0.6)
+		# The crest: feathers from the brow sweeping up and back over the skull.
+		for i, (y, z) in enumerate(((0.09, 1.79), (0.04, 1.83), (-0.03, 1.84), (-0.09, 1.81))):
+			for x in ((0,) if i % 2 else (-1, 1)):
+				head.beam((0.035 * x, y, z), (0.08 * x, y - 0.2, z + 0.13 - 0.03 * i), 0.07, 0.022, "Head", "hair",
+						  taper=0.3, up=(1, 0, 0) if x == 0 else (0, 0, 1), shade=1.0 - 0.04 * i)
+		# The mane down the back of her neck.
+		for x in (-1, 0, 1):
+			head.beam((0.06 * x, -0.07, 1.78), (0.1 * x, -0.19, 1.43), 0.09, 0.03, "Head", "hair", taper=0.4,
+					  up=(1, 0, 0), shade=0.9)
+	elif species == "centaur":
+		# A man's head with a heavy brow, pointed ears, a long mane down his
+		# back, a beard, and a topknot bound up.
+		head.loft([((0, 0.075, 1.555), 0.05, 0.056, "Head"), ((0, 0.045, 1.615), 0.1, 0.11, "Head"),
+				   ((0, 0.01, 1.69), 0.132, 0.13, "Head"), ((0, 0.0, 1.78), 0.115, 0.125, "Head"),
+				   ((0, -0.005, 1.835), 0.072, 0.082, "Head")], ["skin"] * 4, sides=12)
+		for x in (-1, 1):
+			head.box((0.045 * x, 0.122, 1.705), (0.034, 0.02, 0.018), "Head", "sclera")
+			head.box((0.044 * x, 0.128, 1.705), (0.017, 0.02, 0.018), "Head", "eyes")
+			head.box((0.045 * x, 0.125, 1.735), (0.06, 0.03, 0.02), "Head", "skin", shade=0.75)
+			head.beam((0.115 * x, -0.01, 1.71), (0.19 * x, -0.06, 1.77), 0.05, 0.02, "Head", "skin", taper=0.2,
+					  up=(0, 0, 1), shade=0.9)
+		head.box((0, 0.14, 1.668), (0.04, 0.05, 0.065), "Head", "skin", top=(0.8, 0.6), shift=(0, -0.01), shade=0.95)
+		head.box((0, 0.128, 1.625), (0.05, 0.015, 0.012), "Head", "skin", shade=0.6)
+		head.loft([((0, -0.01, 1.8), 0.128, 0.138, "Head"), ((0, -0.015, 1.86), 0.09, 0.1, "Head"),
+				   ((0, -0.02, 1.9), 0.03, 0.035, "Head")], ["hair", "hair"], sides=12)
+		head.box((0, -0.02, 1.94), (0.06, 0.06, 0.08), "Head", "hair", top=(0.6, 0.6))
+		for x in (-1, 0, 1):
+			head.beam((0.07 * x, -0.09, 1.82), (0.1 * x, -0.17, 1.4), 0.09, 0.04, "Head", "hair", taper=0.5,
+					  up=(1, 0, 0), shade=0.9)
+		head.beam((0, 0.09, 1.6), (0, 0.11, 1.45), 0.1, 0.05, "Head", "hair", taper=0.4, up=(1, 0, 0))
+		for x in (-1, 1):
+			head.beam((0.07 * x, 0.07, 1.65), (0.06 * x, 0.1, 1.55), 0.05, 0.05, "Head", "hair", taper=0.6)
+	elif species == "barkling":
+		# A stump for a head, wider at its jagged top, a deep brow over two
+		# glowing eyes, a dark gash of a mouth, and a crown of leafy twigs.
+		head.loft([((0, 0.0, 1.52), 0.11, 0.1, "Head"), ((0, 0.01, 1.62), 0.13, 0.12, "Head"),
+				   ((0, 0.0, 1.74), 0.15, 0.13, "Head"), ((0, 0.0, 1.82), 0.16, 0.14, "Head")],
+				  ["skin"] * 3, sides=8, cap_slots=("skin", "skin"))
+		for i, a in enumerate(range(0, 360, 45)):
+			r = math.radians(a)
+			head.beam((0.13 * math.cos(r), 0.12 * math.sin(r), 1.8), (0.15 * math.cos(r), 0.13 * math.sin(r),
+					  1.86 + 0.04 * (i % 3)), 0.06, 0.05, "Head", "skin", taper=0.4, shade=0.8)
+		head.box((0, 0.125, 1.745), (0.24, 0.05, 0.04), "Head", "skin", shade=0.7)
+		for x in (-1, 1):
+			head.box((0.055 * x, 0.12, 1.705), (0.045, 0.03, 0.03), "Head", "sclera")
+		head.box((0, 0.11, 1.61), (0.12, 0.03, 0.03), "Head", "skin", shade=0.25)
+		head.box((0, 0.13, 1.66), (0.04, 0.04, 0.05), "Head", "skin", shade=0.85)
+		for (x, y, z, h) in ((0.07, 0.04, 1.9, 0.12), (-0.08, -0.02, 1.92, 0.1), (0.0, -0.07, 1.94, 0.14),
+							 (0.11, -0.06, 1.88, 0.09), (-0.1, 0.07, 1.88, 0.09)):
+			head.beam((x * 0.8, y * 0.8, 1.8), (x * 1.4, y * 1.4, z + h * 0.5), 0.03, 0.03, "Head", "skin", taper=0.5)
+			leaf_clump(head, (x * 1.45, y * 1.45, z + h * 0.6), 0.15, "Head")
 	return [head] + ([tail] if tail.faces else [])
 
 
@@ -2624,22 +2865,30 @@ def build(race):
 	bpy.ops.wm.read_factory_settings(use_empty=True)
 	scene = bpy.context.scene
 	scene.render.fps = FPS
+	global BONES
+	base_bones = BONES
+	if RACE.get("species") == "centaur":
+		BONES = BONES + CENTAUR_BONES
 	arm = build_armature()
+	BONES = base_bones
 	material = bpy.data.materials.new("Character")
 	if RACE.get("species"):
-		parts = [body("BodyMale", False)] + species_parts(RACE["species"]) + held_props()
+		parts = [body("BodyMale", RACE.get("female", False))] + species_parts(RACE["species"]) + held_props()
 	else:
 		bodies = [body("BodyMale", False), body("BodyFemale", True)]
 		parts = bodies + [part for b in bodies for part in b.parts if part.faces] + shoulders() + race_parts() + hairs() + props()
 	tris = {}
 	for builder in parts:
 		obj = builder.build(arm, material)
-		if builder.name.startswith(ONE_PIECE):
+		if builder.name.startswith(ONE_PIECE) or (race in ("harpy", "barkling", "centaur") and builder.name == "Species_head"):
 			_join_solid(obj)
 		elif race in ONE_PIECE_RACES and builder.name.startswith(ONE_PIECE_BODY):
 			_join_by_region(obj)
 		tris[builder.name] = sum(len(f) - 2 for f in builder.faces)
-	key_animations(arm, all_animations())
+	anims = all_animations()
+	if RACE.get("species") == "centaur":
+		anims = centaur_animations(anims)
+	key_animations(arm, anims)
 	two_hand_ik(arm, TWO_HAND_ANIMS)
 	hilt_ik(arm)
 	cast_ik(arm)

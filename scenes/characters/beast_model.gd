@@ -1,6 +1,6 @@
 class_name BeastModel
 extends Node3D
-## A beast's model: wolf, boar, bear or spider (assets/models/<species>/<species>.glb,
+## A beast's model: wolf, boar, bear, spider, the birds, the raptor... (assets/models/<species>/<species>.glb,
 ## built by tools/models/beasts/build_beasts.py), coloured from slot colours by
 ## shaders/character.gdshader like HumanoidModel, and animated from the
 ## creature it stands for: idle, ready, walk, run, attack, hit, death, dead.
@@ -9,6 +9,8 @@ extends Node3D
 
 const SHADER := preload("res://shaders/character.gdshader")
 const LOOPS := ["idle", "ready", "walk", "run", "dead"]
+## The two-legged ones (tools/models/beasts/build_beasts.py's BIRDS).
+const BIRDS := ["tallbird", "swoop", "owl"]
 ## Speeds the walk and run cycles were made for, in yards per second.
 static var WALK_SPEED := 2.5
 static var RUN_SPEED := 7.0
@@ -67,11 +69,29 @@ func _ready() -> void:
 
 ## The coat, markings, belly, eyes and teeth/tusks from one coat colour.
 static func coat_colors(coat: Color, species_name: String) -> Dictionary:
+	if species_name == "bat":
+		# Dark membranes, pale inner ears and face, glinting red eyes.
+		return {
+			HumanoidModel.SKIN: coat.lightened(0.1),
+			HumanoidModel.HAIR: coat.lerp(Color(0.5, 0.36, 0.34), 0.45),
+			HumanoidModel.CHEST: coat.lightened(0.35).lerp(Color(0.78, 0.52, 0.5), 0.35),
+			HumanoidModel.EYES: Color(0.85, 0.15, 0.1),
+			HumanoidModel.TRIM: Color(0.92, 0.88, 0.76),
+		}
+	if species_name in BIRDS:
+		# Birds: yellow beak, legs and claws; an owl's great eyes yellow too.
+		return {
+			HumanoidModel.SKIN: coat,
+			HumanoidModel.HAIR: coat.darkened(0.4),
+			HumanoidModel.CHEST: coat.lightened(0.35),
+			HumanoidModel.EYES: Color(0.95, 0.75, 0.15) if species_name == "owl" else Color(0.08, 0.06, 0.05),
+			HumanoidModel.TRIM: Color(0.85, 0.65, 0.25),
+		}
 	return {
 		HumanoidModel.SKIN: coat,
 		HumanoidModel.HAIR: coat.darkened(0.45),
 		HumanoidModel.CHEST: coat.lightened(0.3) if species_name != "spider" else coat.darkened(0.2),
-		HumanoidModel.EYES: Color(0.9, 0.2, 0.1) if species_name == "spider" else Color(0.08, 0.06, 0.05),
+		HumanoidModel.EYES: Color(0.9, 0.2, 0.1) if species_name == "spider" else Color(0.95, 0.75, 0.15) if species_name == "raptor" 			else Color(0.08, 0.06, 0.05),
 		HumanoidModel.TRIM: Color(0.92, 0.88, 0.76),
 	}
 

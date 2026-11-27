@@ -109,7 +109,8 @@ const RACE_HAIRS := {
 	"hornkin": [Color(0.2, 0.13, 0.08), Color(0.35, 0.22, 0.12), Color(0.1, 0.08, 0.07), Color(0.6, 0.45, 0.28),
 		Color(0.85, 0.82, 0.75), Color(0.5, 0.48, 0.45), Color(0.5, 0.25, 0.1)],
 }
-const RACE_EYES := { "undead": Color(1.0, 0.85, 0.35), "wood_elf": Color(0.85, 0.95, 1.0), "orc": Color(0.5, 0.1, 0.08) }
+const RACE_EYES := { "undead": Color(1.0, 0.85, 0.35), "wood_elf": Color(0.85, 0.95, 1.0), "orc": Color(0.5, 0.1, 0.08),
+	"harpy": Color(0.9, 0.7, 0.15), "barkling": Color(0.75, 1.0, 0.35) }
 const TUSK_COLORS := { "undead": Color(0.8, 0.78, 0.68) }
 const TUSK_COLOR := Color(0.9, 0.86, 0.72)
 ## The races' own choices at character creation, beyond skin and hair: their
@@ -623,7 +624,7 @@ func _apply_appearance() -> void:
 	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
 	_colors[EYES] = RACE_EYES.get(race, EYE_COLOR)
 	# The whites of the eyes; races whose eyes glow glow all over.
-	_colors[SCLERA] = RACE_EYES[race] if race in ["undead", "wood_elf"] else Color(0.92, 0.9, 0.86)
+	_colors[SCLERA] = RACE_EYES[race] if race in ["undead", "wood_elf", "barkling"] else Color(0.92, 0.9, 0.86)
 	_colors[TRIM] = TRIM_COLOR
 	# Women are a little smaller.
 	_model.scale = Vector3.ONE * (0.95 if body == 1 else 1.0)
@@ -688,6 +689,10 @@ func _apply_equipment() -> void:
 	if int(_item(Inventory.Slot.CHEST).get("InventoryType", 0)) == INVTYPE_ROBE:
 		_colors[LEGS] = chest
 	_colors[FEET] = _armor_color(Inventory.Slot.FEET, outfit.get(FEET, skin))
+	# A creature's hair slot (a harpy's feathers, a barkling's leaves) in a
+	# colour of its own.
+	if outfit.has("hair_slot"):
+		_colors[HAIR] = outfit.hair_slot
 	_colors[WAIST] = _armor_color(Inventory.Slot.WAIST, outfit.get(WAIST, _colors[LEGS].darkened(0.25)))
 	_colors[SHOULDERS] = _armor_color(Inventory.Slot.SHOULDER, chest)
 	var shoulder := _item(Inventory.Slot.SHOULDER)

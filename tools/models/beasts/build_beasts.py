@@ -2,7 +2,8 @@
 tiger and thunder lizard (whose long tail adds two bones, LIZARD_BONES), and
 the eight-legged spider, scorpion and crab (the spider's legs, `eight_legs`,
 with pincer arms, `claw_bones`, and the scorpion's tail of five segments),
-each with its animations, exported to assets/models/<species>/<species>.glb
+the two-legged birds (`BIRDS`: tallbird, swoop, owl and the raptor, one rig proportioned
+per species) and the hovering bat, each with its animations, exported to assets/models/<species>/<species>.glb
 (a .blend of each saved beside this script).
 
 Run headless (`-- tiger crab` after it builds only those):
@@ -152,7 +153,306 @@ CRAB_BONES = [
 	(0.2, 0.14, 0.3), (0.34, 0.32, 0.4), (0.26, 0.56, 0.44), (0.22, 0.76, 0.44))
 
 
+# The birds: two legs bending back at the ankle, a neck and beaked head, a
+# fanned tail, and wings folded back along the body (spread about Z, raised
+# about X). Each species is the same rig with its own proportions: hip height,
+# body length and girth, how upright it stands, neck, head, beak and wing.
+BIRDS = {
+	# A tall flightless strider: long legs, long neck, stubby wings, a crest.
+	"tallbird": {"hip": 0.62, "length": 0.5, "girth": 0.2, "upright": 0.08, "neck": (0.08, 0.36), "head": 0.08,
+				 "beak": 0.15, "hook": 0.0, "wing": 0.28, "tail": 0.14, "leg": 0.03},
+	# A big hunting bird walking the plains: hooked beak, long wings, a ruff.
+	"swoop": {"hip": 0.3, "length": 0.52, "girth": 0.17, "upright": 0.1, "neck": (0.1, 0.12), "head": 0.09,
+			  "beak": 0.09, "hook": 0.05, "wing": 0.6, "tail": 0.26, "leg": 0.03},
+	# An owl, standing upright: a round body, a big flat-faced head with ear
+	# tufts and great eyes, a short hooked beak.
+	"owl": {"hip": 0.22, "length": 0.2, "girth": 0.19, "upright": 0.42, "neck": (0.02, 0.06), "head": 0.14,
+			"beak": 0.04, "hook": 0.03, "wing": 0.4, "tail": 0.12, "leg": 0.03},
+	# A raptor on the same rig (`arms`): a level body, a long stiff tail, a
+	# toothed snout for the beak, small clawed arms on the wing bones, a quill
+	# crest, stripes down its back and a sickle claw on each foot (raptor_body).
+	"raptor": {"hip": 0.52, "length": 0.72, "girth": 0.19, "upright": 0.04, "neck": (0.2, 0.12), "head": 0.11,
+			   "beak": 0.17, "hook": 0.0, "wing": 0.2, "tail": 0.85, "leg": 0.045, "arms": True},
+}
+
+
+# The bat: a small furry body hovering at BAT_HOVER, big ears, and membrane
+# wings on two bones a side, held out (the rest pose is spread; flapping is
+# about Y), feet hanging behind.
+BAT_HOVER = 0.95
+BAT_BONES = [
+	("Root", (0, 0, 0), (0, 0, 0.2), None),
+	("Body", (0, -0.1, BAT_HOVER), (0, 0.08, BAT_HOVER + 0.02), "Root"),
+	("Head", (0, 0.08, BAT_HOVER + 0.02), (0, 0.2, BAT_HOVER + 0.03), "Body"),
+	("Tail", (0, -0.1, BAT_HOVER), (0, -0.2, BAT_HOVER - 0.03), "Body"),
+]
+for _side_name, _x in (("Right", 1), ("Left", -1)):
+	BAT_BONES += [
+		(_side_name + "WingUpper", (_x * 0.05, 0.04, BAT_HOVER + 0.03), (_x * 0.26, 0.06, BAT_HOVER + 0.07), "Body"),
+		(_side_name + "WingLower", (_x * 0.26, 0.06, BAT_HOVER + 0.07), (_x * 0.58, -0.02, BAT_HOVER + 0.02), _side_name + "WingUpper"),
+		(_side_name + "Foot", (_x * 0.04, -0.08, BAT_HOVER - 0.03), (_x * 0.05, -0.16, BAT_HOVER - 0.1), "Body"),
+	]
+
+
+def bird_bones(p):
+	h, l, r, up = p["hip"], p["length"], p["girth"], p["upright"]
+	back = (0, -l * 0.4, h + r * 0.55)
+	mid = (0, 0.0, h + r * 0.65 + up * 0.5)
+	front = (0, l * 0.4, h + r * 0.75 + up)
+	nf, nu = p["neck"]
+	neck_top = (0, front[1] + nf, front[2] + nu + r * 0.2)
+	head_tip = (0, neck_top[1] + p["head"] * 1.3, neck_top[2] + p["head"] * 0.2)
+	bones = [
+		("Root", (0, 0, 0), (0, 0, 0.2), None),
+		("Pelvis", back, mid, "Root"),
+		("Chest", mid, front, "Pelvis"),
+		("Neck", front, neck_top, "Chest"),
+		("Head", neck_top, head_tip, "Neck"),
+		("Tail", back, (0, back[1] - p["tail"], back[2] + p["tail"] * (0.05 if p.get("arms") else 0.15)), "Pelvis"),
+	]
+	for side, x in (("Right", 1), ("Left", -1)):
+		hip = (x * r * 0.45, -l * 0.08, h + r * 0.2)
+		knee = (x * r * 0.5, l * 0.06, h * 0.55)
+		ankle = (x * r * 0.45, -l * 0.04, h * 0.1)
+		toe = (x * r * 0.45, l * 0.18, 0.0)
+		shoulder = (x * r * 0.8, l * 0.3, h + r * 1.05 + up * 0.85)
+		elbow = (x * r * 0.92, l * 0.3 - p["wing"] * 0.45, h + r * 1.0 + up * 0.5)
+		tip = (x * r * 0.8, l * 0.3 - p["wing"], h + r * 0.85 + up * 0.15)
+		if p.get("arms"):
+			# Arms, not wings: down and forward from the front of the chest.
+			shoulder = (x * r * 0.6, l * 0.36, h + r * 0.55 + up)
+			elbow = (x * r * 0.78, l * 0.36 + p["wing"] * 0.3, h + r * 0.55 + up - p["wing"] * 0.55)
+			tip = (x * r * 0.7, l * 0.36 + p["wing"] * 0.85, h + r * 0.55 + up - p["wing"] * 0.75)
+		bones += [
+			(side + "Thigh", hip, knee, "Pelvis"),
+			(side + "Shin", knee, ankle, side + "Thigh"),
+			(side + "Foot", ankle, toe, side + "Shin"),
+			(side + "WingUpper", shoulder, elbow, "Chest"),
+			(side + "WingLower", elbow, tip, side + "WingUpper"),
+		]
+	return bones
+
+
 # ---------------------------------------------------------------- meshes
+
+def bird_body(species):
+	"""Plumage is "skin", the darker wings, tail and markings "hair", the
+	breast and face "chest", the beak, legs and claws "trim"."""
+	p = BIRDS[species]
+	at = {name: (Vector(head), Vector(tail)) for name, head, tail, _parent in bird_bones(p)}
+	r = p["girth"]
+	if p.get("arms"):
+		return raptor_body(p, at)
+	b = bh.Builder("Body")
+	back0, mid = at["Pelvis"]
+	_m, front = at["Chest"]
+	# The body: narrow at the tail, round in the middle, up to the neck.
+	b.loft([(back0 + (back0 - mid) * 0.35, r * 0.35, r * 0.3, "Pelvis"), (back0, r * 0.8, r * 0.75, "Pelvis"),
+			(mid, r, r * 0.95, "Pelvis"), (mid + (front - mid) * 0.6, r * 0.95, r * 0.9, "Chest"),
+			(front, r * 0.6, r * 0.6, "Chest")], ["skin"] * 4, sides=8)
+	# The breast, paler.
+	b.loft([(mid + Vector((0, 0.02, -r * 0.25)), r * 0.7, r * 0.6, "Chest"),
+			(mid + (front - mid) * 0.7 + Vector((0, 0.03, -r * 0.15)), r * 0.65, r * 0.55, "Chest")], ["chest"], sides=8)
+	# Neck and head.
+	n0, n1 = at["Neck"]
+	neck_r = r * (0.32 if species == "tallbird" else 0.5)
+	b.loft([(n0, neck_r * 1.2, neck_r * 1.2, "Neck"), (n0 + (n1 - n0) * 0.5, neck_r, neck_r, "Neck"),
+			(n1, neck_r * 1.05, neck_r * 1.05, "Neck")], ["skin", "skin"], sides=6)
+	h0, h1 = at["Head"]
+	hs = p["head"]
+	face = "chest" if species == "owl" else "skin"
+	b.loft([(h0 - (h1 - h0) * 0.15, hs * 0.85, hs * 0.85, "Head"), (h0 + (h1 - h0) * 0.3, hs * 1.05, hs * 1.0, "Head"),
+			(h0 + (h1 - h0) * 0.75, hs * 0.85, hs * 0.85, "Head"), (h1, hs * 0.45, hs * 0.5, "Head")],
+		   ["skin", "skin", face], sides=8)
+	# The beak, from the face forward, hooking down for the hunters.
+	tip = h1 + Vector((0, p["beak"], -p["beak"] * 0.25))
+	b.beam(h1 - Vector((0, hs * 0.1, hs * 0.05)), tip, hs * 0.55, hs * 0.5, "Head", "trim", taper=0.2, up=(1, 0, 0))
+	if p["hook"]:
+		b.beam(tip - Vector((0, p["hook"] * 0.4, 0)), tip + Vector((0, p["hook"] * 0.15, -p["hook"])), hs * 0.25, hs * 0.22,
+			   "Head", "trim", taper=0.3, up=(1, 0, 0))
+	eye_size = hs * (0.42 if species == "owl" else 0.22)
+	for x in (-1, 1):
+		ey = h0 + (h1 - h0) * (0.62 if species == "owl" else 0.5)
+		ex = hs * (0.48 if species == "owl" else 0.85)
+		b.box((x * ex, ey.y + (hs * 0.25 if species == "owl" else 0), ey.z + hs * 0.25), (eye_size, eye_size * 0.6, eye_size),
+			  "Head", "eyes")
+		if species == "owl":
+			# Ear tufts, and the facial disc's dark rim.
+			b.beam((x * hs * 0.55, h0.y + hs * 0.2, h0.z + hs * 0.75), (x * hs * 0.8, h0.y - hs * 0.05, h0.z + hs * 1.45),
+				   hs * 0.35, hs * 0.12, "Head", "hair", taper=0.2)
+			b.box((x * hs * 0.5, ey.y + hs * 0.2, ey.z + hs * 0.25), (eye_size * 1.5, eye_size * 0.3, eye_size * 1.5),
+				  "Head", "hair")
+	if species == "tallbird":
+		# A crest swept back from the brow.
+		for k in range(3):
+			b.beam(h0 + Vector((0, hs * 0.3 - k * hs * 0.25, hs * 0.75)), h0 + Vector((0, -hs * 0.6 - k * hs * 0.3, hs * 1.4 - k * hs * 0.2)),
+				   hs * 0.3, hs * 0.12, "Head", "hair", taper=0.2, up=(1, 0, 0))
+	if species == "swoop":
+		# A ruff of pale feathers round the base of the neck.
+		b.loft([(n0 + Vector((0, -0.02, -0.02)), neck_r * 1.9, neck_r * 1.7, "Neck"), (n0 + (n1 - n0) * 0.45, neck_r * 1.5, neck_r * 1.4, "Neck")],
+			   ["chest"], sides=8)
+	# Wings: each a flat sheet in two parts, the long flight feathers ending
+	# in points at the tip.
+	for side, x in (("Right", 1), ("Left", -1)):
+		s0, e = at[side + "WingUpper"]
+		_e, t = at[side + "WingLower"]
+		wide = r * (1.1 if species != "tallbird" else 0.8)
+		b.beam(s0, e, wide, r * 0.14, side + "WingUpper", "hair", taper=0.95, up=(1, 0, -0.35 * x))
+		b.beam(e, t, wide * 0.95, r * 0.1, side + "WingLower", "hair", taper=0.45, up=(1, 0, -0.35 * x))
+		b.beam(s0 + Vector((0, -0.01, 0.01)), s0 + (e - s0) * 0.7, wide * 0.8, r * 0.16, side + "WingUpper", "skin", taper=0.8,
+			   up=(1, 0, -0.35 * x))
+		for k, off in enumerate((-0.35, 0.0, 0.35)):
+			edge = Vector((x * wide * off, 0, 0))
+			b.beam(e + (t - e) * 0.5 + edge, t + edge + (t - e) * (0.25 - 0.08 * abs(k - 1)), wide * 0.3, r * 0.06,
+				   side + "WingLower", "hair", taper=0.3, up=(1, 0, -0.35 * x), shade=0.85)
+	# The tail fan.
+	t0, t1 = at["Tail"]
+	for k, spread in enumerate((-1, 0, 1)):
+		b.beam(t0 + Vector((spread * r * 0.15, 0, 0)), t1 + Vector((spread * r * 0.45, 0, 0)), r * 0.45, r * 0.08, "Tail", "hair",
+			   taper=0.75, up=(1, 0, 0), shade=0.9 + 0.05 * k)
+	# Legs: a feathered thigh, a bare shin and foot, three toes and a spur.
+	leg = p["leg"]
+	for side, x in (("Right", 1), ("Left", -1)):
+		k0, k1 = at[side + "Thigh"]
+		s1 = at[side + "Shin"][1]
+		f1 = at[side + "Foot"][1]
+		if species == "tallbird":
+			# Feathered only near the body, bare down to the knee.
+			feathered = k0 + (k1 - k0) * 0.4
+			b.tube(k0, feathered, leg * 2.4, leg * 1.5, side + "Thigh", "skin")
+			b.tube(feathered - (k1 - k0) * 0.05, k1, leg * 1.15, leg * 1.0, side + "Thigh", "trim")
+		else:
+			b.tube(k0, k1, leg * 2.6, leg * 1.6, side + "Thigh", "skin")
+		b.tube(k1, s1, leg, leg * 0.85, side + "Shin", "trim")
+		for toe in (-1, 0, 1):
+			end = Vector((f1.x + toe * leg * 2.2, f1.y - (0.02 if toe else 0.0), 0.012))
+			b.beam(s1, end, leg * 0.8, leg * 0.8, side + "Foot", "trim", taper=0.4)
+		b.beam(s1, s1 + Vector((0, -leg * 3, -s1.z + 0.012)), leg * 0.6, leg * 0.6, side + "Foot", "trim", taper=0.4)
+	return b
+
+
+def raptor_body(p, at):
+	"""A raptor: scales are "skin", stripes and quills "hair", the belly and
+	throat "chest", teeth and claws "trim"."""
+	r = p["girth"]
+	b = bh.Builder("Body")
+	back0, mid = at["Pelvis"]
+	_m, front = at["Chest"]
+	t0, t1 = at["Tail"]
+	# One line of body from the tail's tip to the neck: the tail tapering to a
+	# point, the haunches deep, the chest narrower.
+	along = t1 - t0
+	b.loft([(t1, r * 0.08, r * 0.08, "Tail"), (t0 + along * 0.7, r * 0.25, r * 0.28, "Tail"),
+			(t0 + along * 0.35, r * 0.5, r * 0.55, "Tail"), (back0, r * 0.85, r * 0.9, "Pelvis"),
+			(mid, r, r * 1.0, "Pelvis"), (mid + (front - mid) * 0.6, r * 0.85, r * 0.9, "Chest"),
+			(front, r * 0.62, r * 0.66, "Chest")], ["skin"] * 6, sides=8)
+	b.loft([(back0 + Vector((0, 0.02, -r * 0.35)), r * 0.6, r * 0.5, "Pelvis"),
+			(mid + (front - mid) * 0.8 + Vector((0, 0, -r * 0.3)), r * 0.55, r * 0.45, "Chest")], ["chest"], sides=8)
+	# Stripes across the back and down the tail.
+	for k in range(6):
+		c = back0 + (front - back0) * (k / 5.0) + Vector((0, 0, r * 0.8))
+		b.box(c, (r * 1.15, r * 0.16, r * 0.1), "Pelvis" if k < 3 else "Chest", "hair", top=(0.7, 1.0))
+	for k in range(4):
+		c = t0 + along * (0.15 + 0.18 * k) + Vector((0, 0, r * (0.44 - 0.1 * k)))
+		b.box(c, (r * (0.85 - 0.15 * k), r * 0.14, r * 0.08), "Tail", "hair", top=(0.7, 1.0))
+	# Neck, a long head with a toothed snout and a lower jaw, a quill crest.
+	n0, n1 = at["Neck"]
+	nr = r * 0.48
+	b.loft([(n0, nr * 1.25, nr * 1.3, "Neck"), (n0 + (n1 - n0) * 0.5, nr, nr * 1.05, "Neck"),
+			(n1, nr * 0.95, nr, "Neck")], ["skin", "skin"], sides=6)
+	b.loft([(n0 + Vector((0, 0.02, -nr * 0.5)), nr * 0.8, nr * 0.7, "Neck"),
+			(n1 + Vector((0, 0.0, -nr * 0.45)), nr * 0.6, nr * 0.5, "Neck")], ["chest"], sides=6)
+	h0, h1 = at["Head"]
+	hs = p["head"]
+	snout = h1 + Vector((0, p["beak"], -hs * 0.2))
+	b.loft([(h0 - (h1 - h0) * 0.2, hs * 0.8, hs * 0.8, "Head"), (h0 + (h1 - h0) * 0.35, hs * 0.95, hs * 0.95, "Head"),
+			(h1, hs * 0.72, hs * 0.7, "Head"), (snout, hs * 0.42, hs * 0.4, "Head")], ["skin"] * 3, sides=8,
+		   cap_slots=("skin", "skin"))
+	jaw0 = h0 + Vector((0, hs * 0.2, -hs * 0.55))
+	jaw1 = snout + Vector((0, -hs * 0.15, -hs * 0.35))
+	b.beam(jaw0, jaw1, hs * 0.75, hs * 0.3, "Head", "chest", taper=0.55)
+	for k in range(5):
+		f = 0.25 + k * 0.17
+		top = h1 + (snout - h1) * f
+		for x in (-1, 1):
+			tooth = Vector((x * hs * (0.42 - 0.12 * f), top.y - hs * 0.4 * (1 - f), top.z - hs * 0.42))
+			b.beam(tooth, tooth + Vector((0, 0.008, -hs * 0.2)), hs * 0.09, hs * 0.09, "Head", "trim", taper=0.2)
+	for x in (-1, 1):
+		ey = h0 + (h1 - h0) * 0.45
+		b.box((x * hs * 0.82, ey.y, ey.z + hs * 0.22), (hs * 0.22, hs * 0.14, hs * 0.18), "Head", "eyes")
+		b.box((x * hs * 0.7, ey.y + hs * 0.05, ey.z + hs * 0.42), (hs * 0.35, hs * 0.5, hs * 0.1), "Head", "skin", shade=0.8)
+	for k in range(4):
+		base = h0 + (h1 - h0) * (0.3 - 0.3 * k) + Vector((0, 0, hs * (0.8 - 0.05 * k)))
+		b.beam(base, base + Vector((0, -hs * (0.9 + 0.2 * k), hs * (0.55 - 0.1 * k))), hs * 0.28, hs * 0.1, "Head", "hair",
+			   taper=0.2, up=(1, 0, 0))
+	# Small arms ending in three hooked claws.
+	for side, x in (("Right", 1), ("Left", -1)):
+		s0, e = at[side + "WingUpper"]
+		_e, t = at[side + "WingLower"]
+		b.tube(s0, e, r * 0.22, r * 0.17, side + "WingUpper", "skin")
+		b.tube(e, t, r * 0.16, r * 0.12, side + "WingLower", "skin")
+		for k in (-1, 0, 1):
+			b.beam(t, t + Vector((x * k * r * 0.12, r * 0.15, -r * 0.3)), r * 0.07, r * 0.07, side + "WingLower", "trim",
+				   taper=0.2)
+	# Legs: heavy thighs, scaled shins, three toes, the inner one raising a
+	# sickle claw.
+	leg = p["leg"]
+	for side, x in (("Right", 1), ("Left", -1)):
+		k0, k1 = at[side + "Thigh"]
+		s1 = at[side + "Shin"][1]
+		f1 = at[side + "Foot"][1]
+		b.loft([(k0, leg * 3.2, leg * 3.8, side + "Thigh"), (k0 + (k1 - k0) * 0.55, leg * 2.6, leg * 2.9, side + "Thigh"),
+				(k1, leg * 1.5, leg * 1.5, side + "Thigh")], ["skin", "skin"], sides=8)
+		b.tube(k1, s1, leg * 1.2, leg * 0.9, side + "Shin", "skin")
+		for toe in (-1, 0, 1):
+			end = Vector((f1.x + toe * leg * 1.8, f1.y + 0.04 - (0.03 if toe else 0.0), 0.015))
+			b.beam(s1, end, leg * 0.9, leg * 0.9, side + "Foot", "skin", taper=0.5)
+			b.beam(end, end + Vector((0, leg * 1.2, -0.01)), leg * 0.5, leg * 0.5, side + "Foot", "trim", taper=0.2)
+		sickle = s1 + Vector((-x * leg * 0.8, leg * 2.2, -s1.z + leg * 1.2))
+		b.beam(s1 + Vector((0, leg * 0.5, -s1.z * 0.4)), sickle, leg * 0.6, leg * 0.6, side + "Foot", "skin", taper=0.7)
+		b.beam(sickle, sickle + Vector((0, leg * 1.6, leg * 0.9)), leg * 0.55, leg * 0.45, side + "Foot", "trim", taper=0.15)
+	return b
+
+
+def bat_body():
+	"""Fur is "skin", the wing membranes "hair", the ears' insides and face
+	"chest", the fangs and claws "trim"."""
+	b = bh.Builder("Body")
+	at = {name: (Vector(head), Vector(tail)) for name, head, tail, _parent in BAT_BONES}
+	z = BAT_HOVER
+	b.loft([((0, -0.15, z - 0.01), 0.03, 0.03, "Body"), ((0, -0.08, z), 0.07, 0.065, "Body"),
+			((0, 0.02, z + 0.01), 0.085, 0.08, "Body"), ((0, 0.09, z + 0.02), 0.06, 0.06, "Body")], ["skin"] * 3, sides=8)
+	# The head: round, a short snout, fangs, and the great ears.
+	b.loft([((0, 0.08, z + 0.03), 0.055, 0.055, "Head"), ((0, 0.13, z + 0.035), 0.065, 0.06, "Head"),
+			((0, 0.18, z + 0.025), 0.04, 0.035, "Head"), ((0, 0.21, z + 0.015), 0.02, 0.02, "Head")],
+		   ["skin", "skin", "chest"], sides=8)
+	for x in (-1, 1):
+		b.beam((x * 0.035, 0.12, z + 0.07), (x * 0.07, 0.1, z + 0.18), 0.06, 0.012, "Head", "skin", taper=0.25, up=(0, 1, 0))
+		b.beam((x * 0.035, 0.125, z + 0.075), (x * 0.066, 0.108, z + 0.16), 0.035, 0.014, "Head", "chest", taper=0.25, up=(0, 1, 0))
+		b.box((x * 0.03, 0.175, z + 0.05), (0.016, 0.012, 0.016), "Head", "eyes")
+		b.beam((x * 0.012, 0.2, z + 0.005), (x * 0.012, 0.205, z - 0.025), 0.01, 0.01, "Head", "trim", taper=0.3)
+		# The wing: a membrane from the body out along both bones, finger
+		# ribs fanning from the wrist to the trailing edge, a thumb claw.
+		side = "Right" if x > 0 else "Left"
+		s0, e = at[side + "WingUpper"]
+		_e, t = at[side + "WingLower"]
+		b.beam(s0 + Vector((0, -0.07, -0.01)), e + Vector((0, -0.08, -0.005)), 0.2, 0.012, side + "WingUpper", "hair", taper=0.95,
+			   up=(0, 1, 0))
+		b.beam(e + Vector((0, -0.08, -0.005)), t + Vector((0, -0.05, 0)), 0.2, 0.01, side + "WingLower", "hair", taper=0.35,
+			   up=(0, 1, 0))
+		b.tube(s0, e, 0.018, 0.014, side + "WingUpper", "skin")
+		b.tube(e, t, 0.012, 0.006, side + "WingLower", "skin")
+		for k, back in enumerate((0.1, 0.18, 0.24)):
+			out = 0.3 - 0.08 * k
+			b.beam(e, e + Vector((x * out, -back, -0.01)), 0.012, 0.012, side + "WingLower", "skin", taper=0.4)
+		b.beam(e, e + Vector((0, 0.03, 0.03)), 0.012, 0.012, side + "WingLower", "trim", taper=0.3)
+		f0, f1 = at[side + "Foot"]
+		b.tube(f0, f1, 0.012, 0.009, side + "Foot", "skin")
+		b.box(f1, (0.02, 0.03, 0.012), side + "Foot", "trim")
+	# The tail membrane between the feet.
+	b.beam((0, -0.12, z - 0.02), (0, -0.22, z - 0.07), 0.12, 0.01, "Tail", "hair", taper=0.5, up=(1, 0, 0))
+	return b
+
 
 def quad_body(species):
 	b = bh.Builder("Body")
@@ -427,6 +727,24 @@ def quad_animations():
 				Tail=(0, 0, 20), Root=(0, 90, 0), loc={"Root": (0, 0, 0.16)})
 	a["death"] = [(0, ready), (6, slump), (14, pose(dead, Root=(0, 70, 0))), (18, dead), (21, pose(dead, Root=(0, 84, 0))), (24, dead)]
 	a["dead"] = [(0, dead), (10, dead)]
+	if arms:
+		# A raptor holds its arms in, lunges jaws first and lashes its tail.
+		ready = pose(stand, both("WingUpper", (35, 0, 0)), both("WingLower", (-30, 0, 0)), both("Thigh", (14, 0, 0)),
+					 both("Shin", (-20, 0, 0)), Neck=(-8, 0, 0), Head=(6, 0, 0), Tail=(8, 0, 0), loc={"Root": (0, 0, -h * 0.1)})
+		a["ready"] = [(0, ready), (12, pose(ready, Tail=(8, 0, 12))), (24, ready), (36, pose(ready, Tail=(8, 0, -12))), (48, ready)]
+		wind = pose(ready, both("WingUpper", (60, 0, 0)), Neck=(22, 0, 0), Head=(-15, 0, 0), Tail=(14, 0, 0),
+					loc={"Root": (0, -0.08, 0)})
+		bite = pose(ready, both("WingUpper", (75, 0, 0)), both("WingLower", (-10, 0, 0)), Neck=(-6, 0, 0), Head=(12, 0, 0),
+					Pelvis=(-4, 0, 0), Tail=(-6, 0, 0), loc={"Root": (0, 0.3, -h * 0.02)})
+		a["attack"] = [(0, ready), (5, wind), (8, bite), (11, bite), (20, ready)]
+		flinch = pose(ready, Neck=(28, 0, 0), Head=(10, 0, 0), Tail=(20, 0, 0), loc={"Root": (0, -0.1, 0)})
+		a["hit"] = [(0, ready), (3, flinch), (10, ready)]
+		dead = pose(dead, both("WingUpper", (60, 0, 0)), RightWingUpper=(40, 0, 20))
+		a["death"] = [(0, ready), (5, pose(fall, both("WingUpper", (60, 0, 0)))), (13, pose(dead, Root=(0, 75, 0))), (17, dead),
+					  (20, pose(dead, Root=(0, 84, 0))), (23, dead)]
+		a["dead"] = [(0, dead), (10, dead)]
+		ruffle = pose(stand, Tail=(0, 0, 15), Head=(10, 0, 0))
+		a["idle"] = [(0, stand), (14, look_left), (28, stand), (40, ruffle), (46, stand), (58, look_right), (72, stand)]
 	return a
 
 
@@ -527,6 +845,113 @@ def arthropod_animations(kind):
 	return a
 
 
+def bat_flap(frames, beat, lean=0.0, bob=0.05, head=None):
+	"""Wings beating: the upper wing down and up about Y, the outer part
+	lagging behind it; the body bobbing against the beat."""
+	keys = []
+	for f in range(0, frames + 1, 2):
+		t = f / frames
+		w = math.sin(math.tau * t)
+		lag = math.sin(math.tau * t - 0.9)
+		p = {}
+		p.update(both("WingUpper", (0, beat * w, 0)))
+		p.update(both("WingLower", (0, beat * 0.6 * lag, -6 * lag)))
+		p.update(both("Foot", (-10 - 6 * w, 0, 0)))
+		p["Body"] = (lean, 0, 0)
+		p["Head"] = head if head else (-lean * 0.7 + 4 * w, 0, 0)
+		p["Tail"] = (8 * w, 0, 0)
+		p["loc"] = {"Root": (0, 0, -bob * w)}
+		keys.append((f, p))
+	return keys
+
+
+def bat_animations():
+	a = {}
+	a["idle"] = bat_flap(16, 38)
+	a["ready"] = bat_flap(14, 42, head=(-6, 0, 0))
+	a["walk"] = bat_flap(12, 45, lean=-14, bob=0.04)
+	a["run"] = bat_flap(10, 52, lean=-24, bob=0.04)
+	# The bite: a beat up, then a dive forward at the target, fangs first.
+	ready0 = a["ready"][0][1]
+	up = pose(ready0, both("WingUpper", (0, -55, 0)), both("WingLower", (0, -20, 0)), Body=(12, 0, 0), Head=(10, 0, 0),
+			  loc={"Root": (0, -0.08, 0.1)})
+	dive = pose(ready0, both("WingUpper", (0, 45, 0)), both("WingLower", (0, 25, 0)), Body=(-25, 0, 0), Head=(-15, 0, 0),
+				loc={"Root": (0, 0.22, -0.12)})
+	a["attack"] = [(0, ready0), (4, up), (8, dive), (11, dive), (18, ready0)]
+	knocked = pose(ready0, both("WingUpper", (0, -40, 0)), Body=(20, 0, 0), loc={"Root": (0, -0.1, 0.05)})
+	a["hit"] = [(0, ready0), (3, knocked), (10, ready0)]
+	# Death: wings crumple and it drops to the ground, lying spread on its
+	# back.
+	crumple = pose(both("WingUpper", (0, -60, 25)), both("WingLower", (0, -50, 0)), Body=(30, 0, 0), loc={"Root": (0, 0, -0.3)})
+	dead = pose(both("WingUpper", (0, 8, 8)), both("WingLower", (0, 5, 0)), both("Foot", (30, 0, 0)), Head=(0, 0, 25),
+				Body=(0, 170, 0), loc={"Root": (0, 0, -BAT_HOVER + 0.07)})
+	a["death"] = [(0, ready0), (4, crumple), (12, pose(dead, Body=(0, 150, 0), loc={"Root": (0, 0, -BAT_HOVER + 0.15)})),
+				  (15, dead), (18, pose(dead, loc={"Root": (0, 0, -BAT_HOVER + 0.11)})), (20, dead)]
+	a["dead"] = [(0, dead), (10, dead)]
+	return a
+
+
+def bird_gait(frames, swing, lift, nod, bob, wings=0.0):
+	"""Two legs in turn: the thigh swings about X, the shin folds back to lift
+	the foot while it comes forward; the head nods with each step."""
+	keys = []
+	for f in range(0, frames + 1, 2):
+		t = f / frames
+		p = {}
+		for side, phase in (("Right", 0.0), ("Left", 0.5)):
+			a = math.sin(math.tau * (t + phase))
+			fwd = max(0.0, math.cos(math.tau * (t + phase)))
+			p[side + "Thigh"] = (swing * a, 0, 0)
+			p[side + "Shin"] = (-lift * fwd, 0, 0)
+			p[side + "Foot"] = (lift * 0.6 * fwd, 0, 0)
+		step = math.sin(math.tau * t * 2)
+		p["Neck"] = (-nod * max(0.0, step), 0, 0)
+		p["Head"] = (nod * 0.6 * max(0.0, step), 0, 0)
+		p["Tail"] = (0, 0, 6 * math.sin(math.tau * t))
+		p["Pelvis"] = (0, 3 * math.sin(math.tau * t), 0)
+		if wings:
+			p.update(both("WingUpper", (-wings * 0.5, 0, wings)))
+		p["loc"] = {"Root": (0, 0, bob * abs(step))}
+		keys.append((f, p))
+	return keys
+
+
+def bird_animations(species):
+	p = BIRDS[species]
+	h, r = p["hip"], p["girth"]
+	tall = species == "tallbird"
+	arms = p.get("arms", False)
+	a = {}
+	stand = {}
+	look_left = pose(stand, Head=(0, 0, 25), Neck=(0, 0, 10))
+	look_right = pose(stand, Head=(0, 0, -25), Neck=(0, 0, -10))
+	ruffle = pose(stand, both("WingUpper", (-8, 0, 12)), Tail=(-10, 0, 0))
+	a["idle"] = [(0, stand), (14, look_left), (28, stand), (40, ruffle), (46, stand), (58, look_right), (72, stand)]
+	a["walk"] = bird_gait(28, 26 if tall else 30, 40, 12 if tall else 6, 0.03)
+	a["run"] = bird_gait(14, 40 if tall else 44, 70, 10, 0.07, wings=0 if tall or arms else 25)
+	# Ready: crouched, wings half open, the head low and forward.
+	ready = pose(stand, both("WingUpper", (-25, 0, 55)), both("WingLower", (0, 0, 15)), both("Thigh", (12, 0, 0)),
+				 both("Shin", (-16, 0, 0)), Neck=(-18 if tall else -10, 0, 0), Head=(10, 0, 0), Tail=(-8, 0, 0),
+				 loc={"Root": (0, 0, -h * 0.08)})
+	a["ready"] = [(0, ready), (20, pose(ready, both("WingUpper", (-35, 0, 60)))), (40, ready)]
+	# Attack: the wings thrown up, then the peck down and forward.
+	wind = pose(ready, both("WingUpper", (-70, 0, 75)), both("WingLower", (-10, 0, 20)), Neck=(18, 0, 0), Head=(10, 0, 0),
+				loc={"Root": (0, -0.04, 0)})
+	peck = pose(ready, both("WingUpper", (-10, 0, 80)), Neck=(-50 if tall else -30, 0, 0), Head=(-25, 0, 0), Pelvis=(-10, 0, 0),
+				loc={"Root": (0, 0.14, -h * 0.05)})
+	a["attack"] = [(0, ready), (5, wind), (9, peck), (12, peck), (20, ready)]
+	flinch = pose(ready, both("WingUpper", (-60, 0, 70)), Neck=(25, 0, 0), Head=(10, 0, 0), loc={"Root": (0, -0.08, 0)})
+	a["hit"] = [(0, ready), (3, flinch), (10, ready)]
+	# Death: wings flung up, then over onto its side, legs drawn up.
+	fall = pose(ready, both("WingUpper", (-80, 0, 85)), Neck=(30, 0, 0), loc={"Root": (0, 0, -h * 0.3)})
+	dead = pose(both("Thigh", (50, 0, 0)), both("Shin", (-70, 0, 0)), both("Foot", (40, 0, 0)), both("WingUpper", (10, 0, 40)),
+				RightWingUpper=(-40, 0, 70), Neck=(40, 0, 25), Head=(-20, 0, 0), Tail=(0, 0, 15), Root=(0, 90, 0),
+				loc={"Root": (-(h + r) * 0.75, 0, r * 0.75)})
+	a["death"] = [(0, ready), (5, fall), (13, pose(dead, Root=(0, 75, 0))), (17, dead), (20, pose(dead, Root=(0, 84, 0))), (23, dead)]
+	a["dead"] = [(0, dead), (10, dead)]
+	return a
+
+
 # ---------------------------------------------------------------- main
 
 def build(species, bones, parts_fn, anims):
@@ -570,6 +995,11 @@ def main():
 										("crab", CRAB_BONES, crab_body, lambda: arthropod_animations("crab"))):
 		if not only or species in only:
 			build(species, bones, body, anims())
+	if not only or "bat" in only:
+		build("bat", BAT_BONES, bat_body, bat_animations())
+	for species in BIRDS:
+		if not only or species in only:
+			build(species, bird_bones(BIRDS[species]), lambda: bird_body(species), bird_animations(species))
 
 
 if __name__ == "__main__":

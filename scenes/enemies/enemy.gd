@@ -122,6 +122,7 @@ const LOOKS := {
 	1501: [Vector3(1.0, 1.0, 1.0), Color(0.45, 0.5, 0.42)],
 	1502: [Vector3(1.0, 1.0, 1.0), Color(0.42, 0.45, 0.4)],
 	1890: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.72)],
+	1919: [Vector3(1.0, 1.0, 1.0), Color(0.42, 0.46, 0.4)],
 	1508: [Vector3(0.8, 0.8, 0.8), Color(0.5, 0.42, 0.32)],
 	1509: [Vector3(0.9, 0.9, 0.9), Color(0.45, 0.38, 0.3)],
 	1512: [Vector3(0.6, 0.6, 0.6), Color(0.3, 0.25, 0.28)],
@@ -299,6 +300,8 @@ const LOOKS := {
 	2029: [Vector3(1.15, 1.15, 1.15), Color(0.3, 0.34, 0.24)],
 	2030: [Vector3(1.25, 1.25, 1.25), Color(0.34, 0.28, 0.22)],
 	2166: [Vector3(1.45, 1.45, 1.45), Color(0.3, 0.36, 0.24)],
+	3535: [Vector3(1.5, 1.5, 1.5), Color(0.26, 0.32, 0.2)],
+	7318: [Vector3(1.15, 1.15, 1.15), Color(0.5, 0.36, 0.22)],
 	2015: [Vector3(0.95, 0.95, 0.95), Color(0.6, 0.3, 0.3)],
 	2017: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.28, 0.28)],
 	2018: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.3, 0.4)],
@@ -656,6 +659,8 @@ const HUMAN_CREATURES := {
 	1501: { "main": "" },
 	1502: { "main": "" },
 	1890: { "main": "sword" },
+	# Samuel Pell, a farmer risen in the ruined hamlet.
+	1919: { "main": "", "helm": "Helm_cap" },
 	1520: { "main": "sword", "off": "Shield_round" },
 	1522: { "main": "staff" },
 	1523: { "main": "axe" },
@@ -717,6 +722,7 @@ const CREATURE_RACES := {
 	1501: ["undead", Color(0.3, 0.28, 0.26), false],
 	1502: ["undead", Color(0.3, 0.28, 0.26), false],
 	1890: ["undead", Color(0.3, 0.28, 0.26), false],
+	1919: ["undead", Color(0.4, 0.33, 0.22), false],
 	1520: ["undead", Color(0.3, 0.28, 0.26), false],
 	1522: ["undead", Color(0.3, 0.28, 0.26), false],
 	1523: ["undead", Color(0.3, 0.28, 0.26), false],
@@ -791,6 +797,27 @@ const CREATURE_MODELS := {
 	3113: ["tuskfolk", { "main": "staff" }], 3114: ["tuskfolk", { "main": "axe", "off": "Shield_round" }],
 	5826: ["tuskfolk", { "main": "staff" }], 5824: ["tuskfolk", { "main": "axe2h" }],
 	3101: ["imp", { "main": "" }],
+	# The birds: the tallbirds (and the Thunderstrider), the swoops and the owls.
+	2955: ["tallbird", {}], 2956: ["tallbird", {}], 2957: ["tallbird", {}], 3068: ["tallbird", {}],
+	2969: ["swoop", {}], 2970: ["swoop", {}], 2971: ["swoop", {}],
+	1995: ["owl", {}], 1996: ["owl", {}], 1997: ["owl", {}],
+	# The harpies: the Galecry, Skyrend and Crimsonwing (and Fury Selka).
+	3115: ["harpy", { "main": "" }], 3116: ["harpy", { "main": "" }], 3117: ["harpy", { "main": "" }],
+	3118: ["harpy", { "main": "" }], 2962: ["harpy", { "main": "" }], 2963: ["harpy", { "main": "" }],
+	2015: ["harpy", { "main": "" }], 2017: ["harpy", { "main": "" }], 2018: ["harpy", { "main": "" }],
+	2019: ["harpy", { "main": "" }], 2020: ["harpy", { "main": "" }], 2021: ["harpy", { "main": "" }],
+	14431: ["harpy", { "main": "" }],
+	# The barklings (and Mossbrow and Mossrot the Fetid); Wildclaw is bearfolk.
+	2022: ["barkling", { "main": "" }], 2025: ["barkling", { "main": "" }], 2027: ["barkling", { "main": "" }],
+	2029: ["barkling", { "main": "" }], 2030: ["barkling", { "main": "" }], 2166: ["barkling", { "main": "" }],
+	3535: ["barkling", { "main": "" }], 7318: ["ditchjaw", { "main": "" }],
+	# The Dunestride centaurs and Warlord Hask.
+	3119: ["centaur", { "main": "axe" }], 3120: ["centaur", { "main": "polearm" }],
+	5808: ["centaur", { "main": "axe2h" }],
+	# The Redclaw raptors.
+	3122: ["raptor", {}], 3123: ["raptor", {}],
+	# The gloombats (and Old Needlewing).
+	1512: ["bat", {}], 1513: ["bat", {}], 1553: ["bat", {}], 1554: ["bat", {}], 10357: ["bat", {}],
 	# Aldmark's north and Kareth's west.
 	1508: ["wolf", {}],
 	1509: ["wolf", {}],
@@ -906,9 +933,10 @@ const CREATURE_MODELS := {
 ## How big each model is at scale 1, in LOOKS' terms, so a creature's model
 ## is scaled by its LOOKS size over this.
 const MODEL_BASE_SIZE := { "wolf": 0.9, "boar": 1.0, "bear": 1.15, "spider": 0.75, "burrowling": 0.75, "mirefin": 0.9, "ditchjaw": 1.0,
-	"scorpion": 0.8, "crab": 0.75, "tiger": 1.0, "thunder_lizard": 1.2, "tuskfolk": 0.95, "imp": 0.6,
+	"scorpion": 0.8, "crab": 0.75, "tiger": 1.0, "thunder_lizard": 1.2, "tuskfolk": 0.95, "imp": 0.6, "tallbird": 1.0, "swoop": 0.9, "owl": 0.75, "bat": 0.65,
+	"harpy": 0.95, "barkling": 0.9, "raptor": 1.0, "centaur": 1.2,
 	"dwarf": 0.9, "gnome": 0.65 }
-const BEASTS := ["wolf", "boar", "bear", "spider", "scorpion", "crab", "tiger", "thunder_lizard"]
+const BEASTS := ["wolf", "boar", "bear", "spider", "scorpion", "crab", "tiger", "thunder_lizard", "tallbird", "swoop", "owl", "bat", "raptor"]
 const BRIGAND_RED := Color(0.55, 0.12, 0.1)
 ## The creature's model (HumanoidModel or BeastModel), for HUMAN_CREATURES
 ## and CREATURE_MODELS.
@@ -964,6 +992,45 @@ func _apply_creature_model() -> void:
 	creature.skin_override = color
 	creature.creature_gear = CREATURE_MODELS[creature_entry][1]
 	# Rags: a dark loincloth and, on the furred ones, a vest.
+	if kind == "harpy":
+		# Pale skin, her feathers (wings, crest, thighs, tail) the creature's
+		# colour, yellow shins and talons.
+		creature.skin_override = Color(0.78, 0.7, 0.66).lerp(color, 0.2)
+		creature.outfit = { HumanoidModel.CHEST: creature.skin_override, HumanoidModel.LEGS: color.darkened(0.1),
+			HumanoidModel.FEET: Color(0.8, 0.62, 0.28), HumanoidModel.HANDS: creature.skin_override,
+			HumanoidModel.WAIST: color.darkened(0.3), "hair_slot": color,
+			"patterns": { HumanoidModel.LEGS: HumanoidModel.Pattern.NONE } }
+		model = creature
+		_visual.add_child(creature)
+		creature.attach_creature(self, combatant)
+		return
+	if kind == "centaur":
+		# Weathered skin over a horse's coat in the creature's colour, dark
+		# hooves, a black mane and tail.
+		creature.skin_override = color.lerp(Color(0.62, 0.45, 0.32), 0.5)
+		creature.outfit = { HumanoidModel.CHEST: creature.skin_override, HumanoidModel.HANDS: creature.skin_override,
+			HumanoidModel.LEGS: color.darkened(0.15), HumanoidModel.FEET: Color(0.28, 0.24, 0.2),
+			HumanoidModel.WAIST: color.darkened(0.45), "hair_slot": Color(0.12, 0.1, 0.08),
+			"patterns": { HumanoidModel.LEGS: HumanoidModel.Pattern.NONE } }
+		model = creature
+		_visual.add_child(creature)
+		creature.attach_creature(self, combatant)
+		return
+	if kind == "barkling":
+		# Bark all over in the creature's colour, darker roots, and leaves and
+		# moss green, greener on the mire's.
+		color = color.lightened(0.3)
+		creature.skin_override = color
+		creature.outfit = { HumanoidModel.CHEST: color, HumanoidModel.LEGS: color.darkened(0.08),
+			HumanoidModel.FEET: color.darkened(0.25), HumanoidModel.HANDS: color.lightened(0.05),
+			HumanoidModel.WAIST: color.darkened(0.12), "hair_slot": Color(0.3, 0.5, 0.18).lerp(color, 0.25) }
+		var wood := HumanoidModel.Pattern.WOOD
+		creature.outfit.patterns = { HumanoidModel.CHEST: wood, HumanoidModel.WRISTS: wood, HumanoidModel.LEGS: wood,
+			HumanoidModel.HANDS: wood, HumanoidModel.FEET: wood, HumanoidModel.WAIST: wood }
+		model = creature
+		_visual.add_child(creature)
+		creature.attach_creature(self, combatant)
+		return
 	var rag := color.darkened(0.55)
 	creature.outfit = { HumanoidModel.CHEST: color if kind == "mirefin" else rag.lightened(0.15), HumanoidModel.LEGS: rag,
 		HumanoidModel.FEET: color, HumanoidModel.HANDS: color, HumanoidModel.WAIST: rag.darkened(0.2),
