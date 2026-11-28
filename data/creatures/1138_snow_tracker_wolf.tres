@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_44vm7"]
+
+[resource]
+script = ExtResource("1_44vm7")
+entry = 1138
+creature_name = "Snow Tracker Wolf"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.55, 0.55, 0.58, 1)
+model = "wolf"

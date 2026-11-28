@@ -30,57 +30,18 @@ const GRAVEYARD_FACING := PI
 const POND := Vector2(-2130, -5000)
 const POND_RADIUS := 12.0
 
-const PLACES := [
-	["the moonwell", Vector2(-2200, -4990), 6.0],
-	["the lily pool", POND, 16.0],
-	["Thalindra's grove", Vector2(-2290, -5020), 12.0],
-	["the Silkhollow", Vector2(-2090, -4900), 28.0],
-	["the Shadowrock", Vector2(-2320, -4945), 28.0],
-	["the Elderbough", HUB, 36.0],
-	["the pass", Vector2(-2205, -4810), 30.0],
-	["the northern glades", Vector2(-2160, -5120), 60.0],
-	["the eastern glades", Vector2(-2090, -5040), 50.0],
-	["the western glades", Vector2(-2280, -5080), 50.0],
-]
-const FLATS := [
-	[Vector2(-2090, -4900), 12.0, 8.0],   # before the Silkhollow
-	[Vector2(-2320, -4945), 12.0, 7.0],   # before the Shadowrock
-	[Vector2(-2290, -5020), 8.0, 5.0],    # Thalindra's grove
-]
-static var SILKHOLLOW := 0
-static var SHADOWROCK := 1
-static var GROVE := 2
-const HILLS := [
-	[Vector2(-2070, -4880), 36.0, 18.0],  # the Silkhollow's hill
-	[Vector2(-2345, -4925), 34.0, 16.0],  # the Shadowrock
-	[Vector2(-2120, -5120), 40.0, 8.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var SILKHOLLOW := 0
+var SHADOWROCK := 1
+var GROVE := 2
+var HILLS: Array = []
 const PASS_END := Vector2(-2200, -4870)
-const ROADS := [
-	[Vector2(-2186, -5040), Vector2(-2170, -5080), Vector2(-2160, -5120)],
-	[Vector2(-2204, -4974), Vector2(-2200, -4930), PASS_END],
-	[Vector2(-2180, -4980), Vector2(-2130, -4940), Vector2(-2098, -4908)],
-	[Vector2(-2220, -4985), Vector2(-2270, -4965), Vector2(-2312, -4950)],
-	[Vector2(-2230, -5012), Vector2(-2282, -5020)],
-]
-const SPAWNS := [
-	[2031, Vector2(-2140, -5070), 55.0, 10],  # Young Shadecat (1-2)
-	[1984, Vector2(-2260, -5080), 45.0, 9],   # Young Thistle Boar (1-2)
-	[2032, Vector2(-2090, -5120), 45.0, 9],   # Mangy Shadecat (2-3)
-	[1985, Vector2(-2200, -5140), 45.0, 9],   # Thistle Boar (2-3)
-	[1985, Vector2(-2300, -5130), 30.0, 4],
-	[1989, Vector2(-2300, -4980), 35.0, 10],  # Fenkin, round the Shadowrock (3-4)
-	[1988, Vector2(-2320, -4935), 18.0, 6],   # Fenling (2-3)
-	[1986, Vector2(-2090, -4900), 22.0, 12],  # Silkwood Spider, the Silkhollow (3-4)
-	[1994, Vector2(-2078, -4888), 1.0, 1],    # Sissith the Vile (5)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Silkwood Eggs in the Silkhollow, Hyacinth Mushrooms round the Shadowrock,
 ## Moonpetal Lilies at the lily pool.
-const CHESTS := [
-	[4406, Vector2(-2086, -4893), 8.0, 3],
-	[152094, Vector2(-2300, -4975), 30.0, 6],
-	[152095, POND, POND_RADIUS + 3.0, 5],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.36, 0.36, 0.44)
 const PALE_WOOD := Color(0.6, 0.52, 0.48)
@@ -90,6 +51,7 @@ var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	continent = "kareth"

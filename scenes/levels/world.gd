@@ -50,6 +50,9 @@ const START_ZONES := {
 const FALLBACK_START := "Ashford Vale"
 
 var zones: Array[Zone] = []
+## A zone was built again in place (rebuild_zone): what kept its parts (the
+## minimap's picture, bots' path cells) works them out again.
+signal zone_rebuilt(zone: Zone)
 ## The continent built here (CONTINENTS).
 var continent := DEFAULT_CONTINENT
 ## The world in play, for what needs the ground's height without a path to it.
@@ -75,6 +78,87 @@ func build(which: String, around := "") -> void:
 		var path: String = CONTINENTS[continent][zone_name]
 		if ResourceLoader.exists(path) and (continent_of(around) != continent or zone_name in wanted):
 			add_child(load(path).instantiate())
+
+
+## Builds a zone again in place from its scene, script and layout as they are
+## on disk now (ContentWatch, when its layout is saved; the `rebuildzone`
+## command), while the game goes on: the old zone is taken out, the new one
+## put in its place, its corpses kept by name, and nothing outside it left
+## holding its creatures, NPCs or nodes (targets, auras its creatures cast).
+## Anyone standing in it is lifted onto the new ground where it's higher.
+## Returns the new zone, or null if it isn't one of this world's.
+func rebuild_zone(old: Zone) -> Zone:
+	var path: String = CONTINENTS.get(continent, {}).get(old.zone_name, "")
+	if path == "" or not zones.has(old):
+		return null
+	var started := Time.get_ticks_msec()
+	var corpses := {}
+	for enemy in old.find_children("*", "Enemy", true, false):
+		var corpse: Dictionary = (enemy as Enemy).corpse_state()
+		if not corpse.is_empty():
+			corpses[String(enemy.name)] = corpse
+	var units := get_tree().get_nodes_in_group("player_units") + get_tree().get_nodes_in_group("pets")
+	for unit: Node in units:
+		if not old.is_ancestor_of(unit):
+			_forget_nodes_of(unit, old)
+	var index := zones.find(old)
+	var child_index := old.get_index()
+	zones.erase(old)
+	remove_child(old)
+	old.queue_free()
+	_regions.clear()
+	var fresh: Zone = load(path).instantiate()
+	add_child(fresh)
+	move_child(fresh, child_index)
+	zones.erase(fresh)
+	zones.insert(index, fresh)
+	for enemy in fresh.find_children("*", "Enemy", true, false):
+		if corpses.has(String(enemy.name)):
+			(enemy as Enemy).restore_corpse(corpses[String(enemy.name)])
+	for unit: Node in units:
+		var body := unit as Node3D
+		if body and fresh.contains(Vector2(body.global_position.x, body.global_position.z)):
+			var ground := fresh.ground_height(body.global_position.x, body.global_position.z, body.global_position.y)
+			if body.global_position.y < ground:
+				body.global_position.y = ground
+	zone_rebuilt.emit(fresh)
+	print("Rebuilt %s in %d ms" % [fresh.zone_name, Time.get_ticks_msec() - started])
+	return fresh
+
+
+## Clears what a unit (the player, a bot, a pet, and their parts and helpers)
+## holds of a zone about to go: properties pointing at its nodes, such nodes
+## in arrays, and auras its creatures cast.
+static func _forget_nodes_of(unit: Node, zone: Node) -> void:
+	var objects: Array[Object] = [unit]
+	objects.append_array(unit.find_children("*", "", true, false))
+	var seen := {}
+	while not objects.is_empty():
+		var object: Object = objects.pop_back()
+		if seen.has(object):
+			continue
+		seen[object] = true
+		if object is Combatant:
+			var combatant := object as Combatant
+			for i in range(combatant.auras.size() - 1, -1, -1):
+				var caster = combatant.auras[i].get("caster")
+				if is_instance_valid(caster) and caster is Node and zone.is_ancestor_of(caster):
+					combatant.auras.remove_at(i)
+		for property in object.get_property_list():
+			if not property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
+				continue
+			var value = object.get(property.name)
+			if typeof(value) == TYPE_OBJECT and is_instance_valid(value):
+				if value is Node and zone.is_ancestor_of(value):
+					object.set(property.name, null)
+				elif value is RefCounted and not value is Resource:
+					objects.append(value)
+			elif value is Array and not (value as Array).is_read_only():
+				var list := value as Array
+				for i in range(list.size() - 1, -1, -1):
+					var item = list[i]
+					if typeof(item) == TYPE_OBJECT and is_instance_valid(item) and item is Node and zone.is_ancestor_of(item):
+						list.remove_at(i)
 
 
 ## The zones joined to a zone by passes (LINKS), itself included.

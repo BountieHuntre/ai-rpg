@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_3dkws"]
+
+[resource]
+script = ExtResource("1_3dkws")
+entry = 2015
+creature_name = "Crimsonwing Harpy"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.6, 0.3, 0.3, 1)
+model = "harpy"

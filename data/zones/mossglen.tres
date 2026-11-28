@@ -1,0 +1,268 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_k4ipk"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_habqm"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_57ckl"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_3foqw"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_2yj5u"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_bisfw"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_tf6yn"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_6v3lt"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_q4c47"]
+
+[sub_resource type="Resource" id="Resource_ibdk0"]
+script = ExtResource("1_k4ipk")
+entry = 4406
+center = Vector2(-2086, -4893)
+radius = 8.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_ifud5"]
+script = ExtResource("1_k4ipk")
+entry = 152094
+center = Vector2(-2300, -4975)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_6shge"]
+script = ExtResource("1_k4ipk")
+entry = 152095
+center = Vector2(-2130, -5000)
+radius = 15.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_jcsj6"]
+resource_name = "before the Silkhollow"
+script = ExtResource("3_57ckl")
+name = "before the Silkhollow"
+key = "SILKHOLLOW"
+center = Vector2(-2090, -4900)
+radius = 12.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_j114b"]
+resource_name = "before the Shadowrock"
+script = ExtResource("3_57ckl")
+name = "before the Shadowrock"
+key = "SHADOWROCK"
+center = Vector2(-2320, -4945)
+radius = 12.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_iuu34"]
+resource_name = "Thalindra's grove"
+script = ExtResource("3_57ckl")
+name = "Thalindra's grove"
+key = "GROVE"
+center = Vector2(-2290, -5020)
+radius = 8.0
+
+[sub_resource type="Resource" id="Resource_huo7n"]
+resource_name = "the Silkhollow's hill"
+script = ExtResource("3_57ckl")
+name = "the Silkhollow's hill"
+center = Vector2(-2070, -4880)
+radius = 36.0
+height = 18.0
+
+[sub_resource type="Resource" id="Resource_aec3a"]
+resource_name = "the Shadowrock"
+script = ExtResource("3_57ckl")
+name = "the Shadowrock"
+center = Vector2(-2345, -4925)
+radius = 34.0
+height = 16.0
+
+[sub_resource type="Resource" id="Resource_q6sh1"]
+script = ExtResource("3_57ckl")
+center = Vector2(-2120, -5120)
+radius = 40.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_3ln47"]
+resource_name = "the moonwell"
+script = ExtResource("4_3foqw")
+name = "the moonwell"
+center = Vector2(-2200, -4990)
+radius = 6.0
+
+[sub_resource type="Resource" id="Resource_3yb65"]
+resource_name = "the lily pool"
+script = ExtResource("4_3foqw")
+name = "the lily pool"
+center = Vector2(-2130, -5000)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_2t2tq"]
+resource_name = "Thalindra's grove"
+script = ExtResource("4_3foqw")
+name = "Thalindra's grove"
+center = Vector2(-2290, -5020)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_ggobj"]
+resource_name = "the Silkhollow"
+script = ExtResource("4_3foqw")
+name = "the Silkhollow"
+center = Vector2(-2090, -4900)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_cva3v"]
+resource_name = "the Shadowrock"
+script = ExtResource("4_3foqw")
+name = "the Shadowrock"
+center = Vector2(-2320, -4945)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_dnal6"]
+resource_name = "the Elderbough"
+script = ExtResource("4_3foqw")
+name = "the Elderbough"
+center = Vector2(-2200, -5010)
+radius = 36.0
+
+[sub_resource type="Resource" id="Resource_eyxmh"]
+resource_name = "the pass"
+script = ExtResource("4_3foqw")
+name = "the pass"
+center = Vector2(-2205, -4810)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_ixgs8"]
+resource_name = "the northern glades"
+script = ExtResource("4_3foqw")
+name = "the northern glades"
+center = Vector2(-2160, -5120)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_1ffwb"]
+resource_name = "the eastern glades"
+script = ExtResource("4_3foqw")
+name = "the eastern glades"
+center = Vector2(-2090, -5040)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_jt5nb"]
+resource_name = "the western glades"
+script = ExtResource("4_3foqw")
+name = "the western glades"
+center = Vector2(-2280, -5080)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_y065v"]
+script = ExtResource("6_bisfw")
+points = PackedVector2Array(-2186, -5040, -2170, -5080, -2160, -5120)
+
+[sub_resource type="Resource" id="Resource_khh3n"]
+script = ExtResource("6_bisfw")
+points = PackedVector2Array(-2204, -4974, -2200, -4930, -2200, -4870)
+
+[sub_resource type="Resource" id="Resource_40t5f"]
+script = ExtResource("6_bisfw")
+points = PackedVector2Array(-2180, -4980, -2130, -4940, -2098, -4908)
+
+[sub_resource type="Resource" id="Resource_3yw2h"]
+script = ExtResource("6_bisfw")
+points = PackedVector2Array(-2220, -4985, -2270, -4965, -2312, -4950)
+
+[sub_resource type="Resource" id="Resource_qxqvr"]
+script = ExtResource("6_bisfw")
+points = PackedVector2Array(-2230, -5012, -2282, -5020)
+
+[sub_resource type="Resource" id="Resource_u7c2i"]
+resource_name = "Young Shadecat (1-2)"
+script = ExtResource("8_6v3lt")
+name = "Young Shadecat (1-2)"
+entry = 2031
+creature = "Young Shadecat"
+center = Vector2(-2140, -5070)
+radius = 55.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_4btrc"]
+resource_name = "Young Thistle Boar (1-2)"
+script = ExtResource("8_6v3lt")
+name = "Young Thistle Boar (1-2)"
+entry = 1984
+creature = "Young Thistle Boar"
+center = Vector2(-2260, -5080)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_0m58x"]
+resource_name = "Mangy Shadecat (2-3)"
+script = ExtResource("8_6v3lt")
+name = "Mangy Shadecat (2-3)"
+entry = 2032
+creature = "Mangy Shadecat"
+center = Vector2(-2090, -5120)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_82s6f"]
+resource_name = "Thistle Boar (2-3)"
+script = ExtResource("8_6v3lt")
+name = "Thistle Boar (2-3)"
+entry = 1985
+creature = "Thistle Boar"
+center = Vector2(-2200, -5140)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_k1l3x"]
+script = ExtResource("8_6v3lt")
+entry = 1985
+creature = "Thistle Boar"
+center = Vector2(-2300, -5130)
+radius = 30.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_tar18"]
+resource_name = "Fenkin, round the Shadowrock (3-4)"
+script = ExtResource("8_6v3lt")
+name = "Fenkin, round the Shadowrock (3-4)"
+entry = 1989
+creature = "Fenkin"
+center = Vector2(-2300, -4980)
+radius = 35.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_mgh3n"]
+resource_name = "Fenling (2-3)"
+script = ExtResource("8_6v3lt")
+name = "Fenling (2-3)"
+entry = 1988
+creature = "Fenling"
+center = Vector2(-2320, -4935)
+radius = 18.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_xw61c"]
+resource_name = "Silkwood Spider, the Silkhollow (3-4)"
+script = ExtResource("8_6v3lt")
+name = "Silkwood Spider, the Silkhollow (3-4)"
+entry = 1986
+creature = "Silkwood Spider"
+center = Vector2(-2090, -4900)
+radius = 22.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_uh3ku"]
+resource_name = "Sissith the Vile (5)"
+script = ExtResource("8_6v3lt")
+name = "Sissith the Vile (5)"
+entry = 1994
+creature = "Sissith the Vile"
+center = Vector2(-2078, -4888)
+radius = 1.0
+
+[resource]
+script = ExtResource("7_tf6yn")
+zone_name = "Mossglen"
+places = Array[ExtResource("4_3foqw")]([SubResource("Resource_3ln47"), SubResource("Resource_3yb65"), SubResource("Resource_2t2tq"), SubResource("Resource_ggobj"), SubResource("Resource_cva3v"), SubResource("Resource_dnal6"), SubResource("Resource_eyxmh"), SubResource("Resource_ixgs8"), SubResource("Resource_1ffwb"), SubResource("Resource_jt5nb")])
+flats = Array[ExtResource("3_57ckl")]([SubResource("Resource_jcsj6"), SubResource("Resource_j114b"), SubResource("Resource_iuu34")])
+hills = Array[ExtResource("3_57ckl")]([SubResource("Resource_huo7n"), SubResource("Resource_aec3a"), SubResource("Resource_q6sh1")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_bisfw")]([SubResource("Resource_y065v"), SubResource("Resource_khh3n"), SubResource("Resource_40t5f"), SubResource("Resource_3yw2h"), SubResource("Resource_qxqvr")])
+spawns = Array[ExtResource("8_6v3lt")]([SubResource("Resource_u7c2i"), SubResource("Resource_4btrc"), SubResource("Resource_0m58x"), SubResource("Resource_82s6f"), SubResource("Resource_k1l3x"), SubResource("Resource_tar18"), SubResource("Resource_mgh3n"), SubResource("Resource_xw61c"), SubResource("Resource_uh3ku")])
+chests = Array[ExtResource("1_k4ipk")]([SubResource("Resource_ibdk0"), SubResource("Resource_ifud5"), SubResource("Resource_6shge")])

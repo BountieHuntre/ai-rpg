@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_1475q"]
+
+[resource]
+script = ExtResource("1_1475q")
+entry = 5822
+creature_name = "Hexweaver Skarn"
+color = Color(0.3, 0.08, 0.08, 1)
+model = "orc"
+dressed = true
+band = Color(0.3, 0.08, 0.08, 1)
+main = "staff"
+helm = "Helm_hood"

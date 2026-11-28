@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_bdpng"]
+
+[resource]
+script = ExtResource("1_bdpng")
+entry = 116
+creature_name = "Brigand Cutthroat"
+color = Color(0.55, 0.12, 0.12, 1)
+model = "human"
+dressed = true
+main = "dagger"
+off = "Off_dagger"
+helm = "Helm_hood"

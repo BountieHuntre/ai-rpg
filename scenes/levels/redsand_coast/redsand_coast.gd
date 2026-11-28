@@ -40,157 +40,38 @@ const COAST := [
 ]
 
 ## Named places: [name, center, radius], smallest first.
-const PLACES := [
-	["Old Breka's hut", Vector2(1850, -1612), 10.0],
-	["Old Ruzga's hut", Vector2(2020, -2020), 10.0],
-	["Rezzik's wagon", Vector2(1620, -2060), 10.0],
-	["the gate of Ironmaw Hold", Vector2(2235, -2325), 18.0],
-	["the Stranded Keep", Vector2(2185, -1630), 22.0],
-	["the Tidebone village", Vector2(1470, -1625), 26.0],
-	["the Skull Rock cave", Vector2(2110, -2245), 28.0],
-	["the Dunestride camp", Vector2(1400, -1880), 28.0],
-	["the wreck", Vector2(2145, -1585), 30.0],
-	["the Redwater mouth", Vector2(1885, -1585), 30.0],
-	["Spikewall", Vector2(2060, -1790), 42.0],
-	["the dry gulch", Vector2(1560, -1760), 45.0],
-	["the pass", Vector2(2265, -1745), 40.0],
-	["the Tidebone Isles", Vector2(1545, -1505), 70.0],
-	["the tigers' hills", Vector2(1830, -2010), 80.0],
-	["Stormcrag Ridge", Vector2(1730, -2240), 95.0],
-	["the harpies' cliffs", Vector2(1430, -2200), 95.0],
-	["the eastern shore", Vector2(2050, -1610), 120.0],
-	["the western shore", Vector2(1650, -1590), 140.0],
-]
+var PLACES: Array = []
 
 ## Level areas: [center, radius, height].
-const FLATS := [
-	[Vector2(1470, -1625), 20.0, 2.8],   # Tidebone village
-	[Vector2(2185, -1632), 16.0, 3.0],   # the Stranded Keep
-	[Vector2(2092, -2236), 10.0, 9.0],   # the Skull Rock cave mouth
-	[Vector2(1400, -1880), 18.0, 5.0],   # the Dunestride camp
-	[Vector2(1560, -1760), 22.0, 2.5],   # the dry gulch
-	[Vector2(2020, -2020), 8.0, 9.0],    # Old Ruzga's hut
-	[Vector2(1620, -2060), 7.0, 6.0],    # Rezzik's wagon
-	[Vector2(1850, -1612), 6.0, 2.6],    # Old Breka's hut
-	[Vector2(1720, -2262), 12.0, 21.0],  # the Ember Cult's ridge camp
-	[Vector2(1508, -1508), 9.0, 3.2],    # Vazzar's hut on the isle
-	[Vector2(2235, -2318), 14.0, 12.0],  # before the gate of Ironmaw Hold
-]
-static var VILLAGE := 0
-static var KEEP := 1
-static var SKULL_ROCK := 2
-static var CENTAUR_CAMP := 3
-static var GULCH := 4
-static var RUZGA := 5
-static var WAGON := 6
-static var BREKA := 7
-static var RIDGE_CAMP := 8
-static var ISLE_HUT := 9
-static var IRONMAW_GATE := 10
+var FLATS: Array = []
+var VILLAGE := 0
+var KEEP := 1
+var SKULL_ROCK := 2
+var CENTAUR_CAMP := 3
+var GULCH := 4
+var RUZGA := 5
+var WAGON := 6
+var BREKA := 7
+var RIDGE_CAMP := 8
+var ISLE_HUT := 9
+var IRONMAW_GATE := 10
 ## Rounded hills: [center, radius, height]. The isles are hills in the sea.
-const HILLS := [
-	[Vector2(1730, -2240), 95.0, 22.0],  # Stormcrag Ridge
-	[Vector2(2130, -2260), 55.0, 26.0],  # Skull Rock's hill
-	[Vector2(1430, -2200), 85.0, 26.0],  # the harpies' cliffs
-	[Vector2(2020, -2030), 30.0, 6.0],   # Old Ruzga's knoll
-	[Vector2(1830, -2010), 70.0, 8.0],   # the tigers' hills
-	[Vector2(1508, -1508), 32.0, 4.6],   # Tidebone Isle
-	[Vector2(1600, -1490), 22.0, 3.8],   # the little isle
-	[Vector2(1350, -1700), 50.0, 9.0],
-]
-const STREAM := [
-	Vector2(1880, -2330), Vector2(1900, -2200), Vector2(1880, -2080), Vector2(1900, -1960),
-	Vector2(1880, -1840), Vector2(1890, -1720), Vector2(1880, -1600), Vector2(1885, -1540),
-]
+var HILLS: Array = []
+var STREAM: Array = []
 ## The pass east to Emberhollow (Zone.PASSES["kareth"]) starts here.
 const PASS_START := Vector2(2235, -1745)
-const ROADS := [
-	# The pass down into Spikewall.
-	[PASS_START, Vector2(2160, -1765), Vector2(2098, -1788)],
-	# West from Spikewall over the Redwater to the gulch and on to the Tidebone village.
-	[Vector2(2022, -1792), Vector2(1950, -1760), Vector2(1890, -1745), Vector2(1800, -1735), Vector2(1680, -1700), Vector2(1580, -1660), Vector2(1492, -1630)],
-	# South to the Stranded Keep, and the track down to the Redwater mouth.
-	[Vector2(2070, -1752), Vector2(2120, -1700), Vector2(2172, -1648)],
-	[Vector2(1890, -1745), Vector2(1870, -1660), Vector2(1856, -1620)],
-	# North to Old Ruzga's hut and Skull Rock, and the gate of Ironmaw Hold.
-	[Vector2(2060, -1828), Vector2(2050, -1920), Vector2(2025, -2012)],
-	[Vector2(2050, -1920), Vector2(2080, -2050), Vector2(2090, -2150), Vector2(2092, -2226)],
-	[Vector2(2090, -2150), Vector2(2170, -2230), Vector2(2232, -2305)],
-	# The Ridge road west: the tigers' hills, Rezzik's wagon and the centaurs.
-	[Vector2(1890, -1745), Vector2(1860, -1880), Vector2(1760, -1990), Vector2(1628, -2056)],
-	[Vector2(1612, -2058), Vector2(1520, -1990), Vector2(1440, -1920), Vector2(1408, -1890)],
-]
+var ROADS: Array = []
 ## Where the Spikewall road crosses the Redwater.
 static var BRIDGE_X := 1890.0
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
-const SPAWNS := [
-	[3099, Vector2(1990, -1700), 55.0, 8],   # Dire Dustback Boar, round Spikewall (6-7)
-	[3099, Vector2(1720, -1800), 70.0, 10],
-	[3100, Vector2(1650, -1960), 70.0, 9],   # Elder Dustback Boar, inland (8-9)
-	[3125, Vector2(1960, -1690), 45.0, 7],   # Clattering Scorpion (5-6)
-	[3126, Vector2(1760, -1910), 60.0, 8],   # Armored Scorpion (7-8)
-	[3127, Vector2(1610, -1660), 45.0, 9],   # Venomtail Scorpion, by the Tidebone village (9-10)
-	[3106, Vector2(1640, -1570), 50.0, 8],   # Small Shore Crab, the western shore (5)
-	[3107, Vector2(1980, -1590), 45.0, 8],   # Shore Crab, the eastern shore (7)
-	[3108, Vector2(1360, -1590), 35.0, 6],   # Barnacled Shore Crab (9)
-	[3103, Vector2(2010, -1575), 30.0, 6],   # Clawfolk Clacker (6)
-	[3104, Vector2(1720, -1560), 30.0, 6],   # Clawfolk Shellback (6-7)
-	[3105, Vector2(1420, -1575), 25.0, 5],   # Clawfolk Snapper (8)
-	[3141, Vector2(1720, -1550), 10.0, 2],   # Clawfolk Elder (8-9)
-	[3122, Vector2(1700, -1600), 55.0, 9],   # Redclaw Lasher, the raptors' beaches (6-7)
-	[3123, Vector2(1360, -1640), 40.0, 7],   # Redclaw Reaver (8-9)
-	[3121, Vector2(1830, -2010), 65.0, 9],   # Redsand Tiger, the tigers' hills (7-8)
-	[3111, Vector2(1560, -1760), 20.0, 6],   # Thornhide Tuskfolk, the dry gulch (6-7)
-	[3112, Vector2(1540, -1745), 18.0, 5],   # Thornhide Scout (7-8)
-	[3113, Vector2(1580, -1775), 16.0, 5],   # Thornhide Dustrunner (8-9)
-	[3114, Vector2(1565, -1765), 12.0, 5],   # Thornhide Warguard (9-10)
-	[5826, Vector2(1555, -1770), 1.0, 1],    # Earthspeaker Grubb (9, rare)
-	[5824, Vector2(1570, -1752), 1.0, 1],    # Captain Brokentusk (11, rare)
-	[3115, Vector2(1440, -2180), 50.0, 6],   # Galecry Harpy, the harpies' cliffs (7-8)
-	[3116, Vector2(1480, -2140), 40.0, 6],   # Galecry Raider (7-8)
-	[3117, Vector2(1400, -2230), 45.0, 9],   # Galecry Savage (9-10)
-	[3118, Vector2(1440, -2260), 35.0, 7],   # Galecry Stormcaller (10-11)
-	[3119, Vector2(1400, -1880), 22.0, 7],   # Dunestride Drudge, the centaurs' camp (6-7)
-	[3120, Vector2(1420, -1860), 30.0, 6],   # Dunestride Outrider (7-8)
-	[5808, Vector2(1398, -1884), 1.0, 1],    # Warlord Hask (9, rare)
-	[3128, Vector2(2165, -1655), 40.0, 10],  # Saltmarch Sailor, the Stranded Keep (5-6)
-	[3129, Vector2(2187, -1630), 14.0, 8],   # Saltmarch Marine, inside its walls (6-7)
-	[3192, Vector2(2190, -1628), 1.0, 1],    # Lieutenant Harwick (8)
-	[5809, Vector2(2150, -1660), 1.0, 1],    # Watch Commander Pellam (9, rare)
-	[3130, Vector2(1760, -2210), 60.0, 7],   # Stormback Lizard, Stormcrag Ridge (9-10)
-	[3131, Vector2(1690, -2190), 45.0, 6],   # Sparkhide Lizard (10-11)
-	[3196, Vector2(1720, -2262), 12.0, 4],   # Ember Cult Neophyte, the ridge camp (9-10)
-	[3198, Vector2(1726, -2268), 10.0, 3],   # Ember Cult Acolyte (10-11)
-	[3203, Vector2(1718, -2266), 1.0, 1],    # Grizzle Ashtongue (12)
-	[3195, Vector2(2105, -2210), 22.0, 6],   # Ember Cult Thug, before Skull Rock (8-9)
-	[3197, Vector2(2085, -2240), 14.0, 6],   # Ember Cult Zealot (9-10)
-	[3199, Vector2(2096, -2236), 9.0, 5],    # Ember Cult Pyromancer (10-11)
-	[3198, Vector2(2120, -2225), 14.0, 4],   # Ember Cult Acolyte
-	[3204, Vector2(2093, -2237), 1.0, 1],    # Vozgul, in the cave mouth (14)
-	[5822, Vector2(2110, -2205), 1.0, 1],    # Hexweaver Skarn (11, rare)
-	[3206, Vector2(1520, -1500), 22.0, 8],   # Cursecaller Troll, the Tidebone Isles (8-9)
-	[3207, Vector2(1560, -1515), 30.0, 8],   # Thralled Troll (8-9)
-	[3206, Vector2(1600, -1490), 14.0, 4],   # the little isle
-	[3205, Vector2(1509, -1509), 1.0, 1],    # Vazzar, at his hut (10)
-	[3110, Vector2(1890, -1580), 22.0, 6],   # Mudjaw Crocodile, the Redwater mouth (9-10)
-	[5823, Vector2(1620, -1670), 1.0, 1],    # Deathsting (11, rare)
-]
+var SPAWNS: Array = []
 ## Chests to loot: [object entry, center, radius, count]. Tinker's Toolboxes
 ## on the wreck's beach, Lasher Eggs on the raptors' beaches, the harpies'
 ## Stolen Supply Sacks, and the Imprisoned Tidebone Troll's cage (Old Mother
 ## Wazi's Skull) by Vazzar's hut.
-const CHESTS := [
-	# The Kolkar attack plans (Thwarting Kolkar Aggression), in the Dunestride camp.
-	[3189, Vector2(1400, -1880), 14.0, 1],
-	[3190, Vector2(1400, -1880), 14.0, 1],
-	[3192, Vector2(1400, -1880), 14.0, 1],
-	[3236, Vector2(2140, -1590), 35.0, 8],
-	[3240, Vector2(1700, -1600), 55.0, 8],
-	[3290, Vector2(1440, -2190), 60.0, 8],
-	[3237, Vector2(1500, -1513), 1.0, 1],
-]
+var CHESTS: Array = []
 
 const RED_ROCK := Color(0.58, 0.32, 0.22)
 const DARK_ROCK := Color(0.42, 0.25, 0.19)
@@ -211,6 +92,7 @@ var _road_segments: Array = []
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	for line: Array in ROADS:
@@ -239,15 +121,7 @@ const GROUND_TEXTURES := {
 }
 ## Walled places bots go in and out of by the door (Zone.enclosures):
 ## Spikewall's longhouse and inn, and its round huts.
-const ENCLOSURES := [
-	[2052.0, -1814.0, 2068.0, -1806.0, Vector2(2060, -1802), Vector2(2060, -1807.5)],  # the longhouse, door south
-	[2077.5, -1801.0, 2086.5, -1787.0, Vector2(2074, -1794), Vector2(2079.5, -1794)],  # the inn, door west
-	[2034.0, -1808.0, 2042.0, -1800.0, Vector2(2043.1, -1800.8), Vector2(2040.2, -1802.6)],
-	[2032.0, -1788.0, 2040.0, -1780.0, Vector2(2041.8, -1785.5), Vector2(2038.5, -1784.6)],
-	[2046.0, -1774.0, 2054.0, -1766.0, Vector2(2052.7, -1775.4), Vector2(2051.2, -1772.3)],
-	[2070.0, -1774.0, 2078.0, -1766.0, Vector2(2070.6, -1774.9), Vector2(2072.5, -1772.1)],
-	[2076.0, -1814.0, 2084.0, -1806.0, Vector2(2075.8, -1805.8), Vector2(2078.2, -1808.2)],
-]
+var ENCLOSURES: Array = []
 ## Spikewall's round huts, as offsets from the town's middle.
 const HUTS := [Vector2(-22, -14), Vector2(-24, 6), Vector2(-10, 20), Vector2(14, 20), Vector2(20, -20)]
 static var CACTUS_VARIANTS := 4

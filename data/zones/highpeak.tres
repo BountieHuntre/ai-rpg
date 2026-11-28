@@ -1,0 +1,750 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_6q6xh"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_4pyax"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_0mpv2"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_u4b1g"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_ijy1v"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_gvii3"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_3iaob"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_7qcb8"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_vhi0t"]
+
+[sub_resource type="Resource" id="Resource_tpx8s"]
+script = ExtResource("1_6q6xh")
+entry = 272
+center = Vector2(-262, -1092)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_t1woj"]
+script = ExtResource("1_6q6xh")
+entry = 276
+center = Vector2(-380, -420)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_at2er"]
+script = ExtResource("1_6q6xh")
+entry = 176785
+center = Vector2(362, -334)
+radius = 2.0
+
+[sub_resource type="Resource" id="Resource_y8lpd"]
+resource_name = "the Thornbrew inn"
+script = ExtResource("2_4pyax")
+name = "the Thornbrew inn"
+least = Vector2(-161, -812)
+most = Vector2(-139, -800)
+outside = Vector2(-150, -796)
+inside = Vector2(-150, -802.5)
+
+[sub_resource type="Resource" id="Resource_v2naf"]
+resource_name = "the west house"
+script = ExtResource("2_4pyax")
+name = "the west house"
+least = Vector2(-182.5, -792)
+most = Vector2(-173.5, -780)
+outside = Vector2(-170.5, -786)
+inside = Vector2(-175.5, -786)
+
+[sub_resource type="Resource" id="Resource_t1ieh"]
+resource_name = "the east house"
+script = ExtResource("2_4pyax")
+name = "the east house"
+least = Vector2(-126, -793)
+most = Vector2(-118, -783)
+outside = Vector2(-129, -788)
+inside = Vector2(-124.5, -788)
+
+[sub_resource type="Resource" id="Resource_vyler"]
+resource_name = "the south-west house"
+script = ExtResource("2_4pyax")
+name = "the south-west house"
+least = Vector2(-181, -762)
+most = Vector2(-171, -754)
+outside = Vector2(-168, -758)
+inside = Vector2(-173, -758)
+
+[sub_resource type="Resource" id="Resource_dnm4w"]
+resource_name = "Steelgrip's Depot"
+script = ExtResource("3_0mpv2")
+name = "Steelgrip's Depot"
+key = "DEPOT"
+center = Vector2(60, -830)
+radius = 18.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_vq3gt"]
+resource_name = "Amberfield Ranch"
+script = ExtResource("3_0mpv2")
+name = "Amberfield Ranch"
+key = "RANCH"
+center = Vector2(230, -650)
+radius = 22.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_n8k7a"]
+resource_name = "the Grey Quarry, dug down"
+script = ExtResource("3_0mpv2")
+name = "the Grey Quarry, dug down"
+key = "QUARRY"
+center = Vector2(330, -360)
+radius = 30.0
+height = 4.0
+
+[sub_resource type="Resource" id="Resource_aq1vb"]
+resource_name = "Icemane Hold"
+script = ExtResource("3_0mpv2")
+name = "Icemane Hold"
+key = "HOLD"
+center = Vector2(-530, -570)
+radius = 24.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_xjbfb"]
+resource_name = "Shimmer Ridge, on its ridge"
+script = ExtResource("3_0mpv2")
+name = "Shimmer Ridge, on its ridge"
+key = "RIDGE"
+center = Vector2(-380, -420)
+radius = 14.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_85qi8"]
+resource_name = "the Grizzled Den"
+script = ExtResource("3_0mpv2")
+name = "the Grizzled Den"
+key = "DEN"
+center = Vector2(-290, -1080)
+radius = 18.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_vx2gn"]
+resource_name = "Barleyhall, on the tarn's shore"
+script = ExtResource("3_0mpv2")
+name = "Barleyhall, on the tarn's shore"
+key = "BARLEYHALL"
+center = Vector2(-330, -1215)
+radius = 18.0
+height = 4.0
+
+[sub_resource type="Resource" id="Resource_xu2qq"]
+resource_name = "the Cogworks"
+script = ExtResource("3_0mpv2")
+name = "the Cogworks"
+key = "COGWORKS"
+center = Vector2(-600, -1300)
+radius = 26.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_y8bx1"]
+resource_name = "the Anvilhold Gate"
+script = ExtResource("3_0mpv2")
+name = "the Anvilhold Gate"
+key = "GATE"
+center = Vector2(-330, -1360)
+radius = 16.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_jq3bw"]
+resource_name = "the Southgate"
+script = ExtResource("3_0mpv2")
+name = "the Southgate"
+key = "SOUTHGATE"
+center = Vector2(452, -900)
+radius = 14.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_85rmr"]
+resource_name = "the downed pilot's wreck"
+script = ExtResource("3_0mpv2")
+name = "the downed pilot's wreck"
+key = "WRECK"
+center = Vector2(400, -990)
+radius = 8.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_jo5h7"]
+resource_name = "Shimmer Ridge"
+script = ExtResource("3_0mpv2")
+name = "Shimmer Ridge"
+center = Vector2(-380, -420)
+radius = 45.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_t3ds1"]
+resource_name = "the cliffs behind Icemane Hold"
+script = ExtResource("3_0mpv2")
+name = "the cliffs behind Icemane Hold"
+center = Vector2(-560, -540)
+radius = 60.0
+height = 16.0
+
+[sub_resource type="Resource" id="Resource_7iioy"]
+resource_name = "Old Rimebeard's knoll"
+script = ExtResource("3_0mpv2")
+name = "Old Rimebeard's knoll"
+center = Vector2(-268, -1120)
+radius = 26.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_vsuvv"]
+script = ExtResource("3_0mpv2")
+center = Vector2(-640, -1340)
+radius = 60.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_gk7g7"]
+resource_name = "the quarry's rim"
+script = ExtResource("3_0mpv2")
+name = "the quarry's rim"
+center = Vector2(380, -330)
+radius = 60.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_m8l4y"]
+script = ExtResource("3_0mpv2")
+center = Vector2(100, -1150)
+radius = 90.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_4mm4g"]
+script = ExtResource("3_0mpv2")
+center = Vector2(-60, -500)
+radius = 80.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_1mbu8"]
+resource_name = "Old Rimebeard's cave"
+script = ExtResource("4_u4b1g")
+name = "Old Rimebeard's cave"
+center = Vector2(-268, -1098)
+
+[sub_resource type="Resource" id="Resource_gi2g2"]
+resource_name = "the Southgate"
+script = ExtResource("4_u4b1g")
+name = "the Southgate"
+center = Vector2(452, -900)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_dccqi"]
+resource_name = "the Anvilhold Gate"
+script = ExtResource("4_u4b1g")
+name = "the Anvilhold Gate"
+center = Vector2(-330, -1360)
+radius = 24.0
+
+[sub_resource type="Resource" id="Resource_2b44d"]
+resource_name = "Steelgrip's Depot"
+script = ExtResource("4_u4b1g")
+name = "Steelgrip's Depot"
+center = Vector2(60, -830)
+radius = 24.0
+
+[sub_resource type="Resource" id="Resource_dhxyu"]
+resource_name = "Barleyhall"
+script = ExtResource("4_u4b1g")
+name = "Barleyhall"
+center = Vector2(-330, -1215)
+radius = 24.0
+
+[sub_resource type="Resource" id="Resource_pib0v"]
+resource_name = "the Grizzled Den"
+script = ExtResource("4_u4b1g")
+name = "the Grizzled Den"
+center = Vector2(-290, -1080)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_jvpum"]
+resource_name = "Amberfield Ranch"
+script = ExtResource("4_u4b1g")
+name = "Amberfield Ranch"
+center = Vector2(230, -650)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_rtd41"]
+resource_name = "Shimmer Ridge"
+script = ExtResource("4_u4b1g")
+name = "Shimmer Ridge"
+center = Vector2(-380, -420)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_fvoyl"]
+resource_name = "Icemane Hold"
+script = ExtResource("4_u4b1g")
+name = "Icemane Hold"
+center = Vector2(-530, -570)
+radius = 34.0
+
+[sub_resource type="Resource" id="Resource_lsdsa"]
+resource_name = "the Cogworks"
+script = ExtResource("4_u4b1g")
+name = "the Cogworks"
+center = Vector2(-600, -1300)
+radius = 36.0
+
+[sub_resource type="Resource" id="Resource_1sojj"]
+resource_name = "the Grey Quarry"
+script = ExtResource("4_u4b1g")
+name = "the Grey Quarry"
+center = Vector2(330, -360)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_0ffo7"]
+resource_name = "Kettlefold"
+script = ExtResource("4_u4b1g")
+name = "Kettlefold"
+center = Vector2(-150, -780)
+radius = 44.0
+
+[sub_resource type="Resource" id="Resource_5d6yd"]
+resource_name = "the Frozen Stair"
+script = ExtResource("4_u4b1g")
+name = "the Frozen Stair"
+center = Vector2(-660, -965)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_kr4u6"]
+resource_name = "the Icewater Tarn"
+script = ExtResource("4_u4b1g")
+name = "the Icewater Tarn"
+center = Vector2(-440, -1200)
+radius = 80.0
+
+[sub_resource type="Resource" id="Resource_pe1q2"]
+resource_name = "the eastern pines"
+script = ExtResource("4_u4b1g")
+name = "the eastern pines"
+center = Vector2(250, -1050)
+radius = 180.0
+
+[sub_resource type="Resource" id="Resource_4ogou"]
+resource_name = "the southern vales"
+script = ExtResource("4_u4b1g")
+name = "the southern vales"
+center = Vector2(-50, -400)
+radius = 180.0
+
+[sub_resource type="Resource" id="Resource_c7uql"]
+resource_name = "the western snows"
+script = ExtResource("4_u4b1g")
+name = "the western snows"
+center = Vector2(-400, -850)
+radius = 160.0
+
+[sub_resource type="Resource" id="Resource_gh4kx"]
+script = ExtResource("5_ijy1v")
+entry = 2059
+node_name = "HildrasCorpse"
+at = Vector2(404, -986)
+facing = 0.6
+
+[sub_resource type="Resource" id="Resource_oxvdd"]
+script = ExtResource("5_ijy1v")
+entry = 269
+node_name = "GuardedBarrel"
+at = Vector2(-134, -808)
+
+[sub_resource type="Resource" id="Resource_3lpwn"]
+script = ExtResource("5_ijy1v")
+entry = 270
+node_name = "UnguardedBarrel"
+at = Vector2(-134, -808)
+
+[sub_resource type="Resource" id="Resource_hx72c"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-630, -970, -500, -930, -330, -850, -190, -790)
+
+[sub_resource type="Resource" id="Resource_mpqyy"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-110, -790, -10, -815, 44, -828)
+
+[sub_resource type="Resource" id="Resource_3owux"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-170, -820, -240, -980, -310, -1196)
+
+[sub_resource type="Resource" id="Resource_xbl6p"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-240, -980, -300, -1180, -330, -1344)
+
+[sub_resource type="Resource" id="Resource_4x5oj"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-330, -1300, -450, -1310, -574, -1300)
+
+[sub_resource type="Resource" id="Resource_2lysk"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(76, -830, 220, -860, 360, -890, 438, -900)
+
+[sub_resource type="Resource" id="Resource_0df8f"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-120, -750, 60, -700, 210, -660)
+
+[sub_resource type="Resource" id="Resource_mwx20"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(240, -630, 300, -500, 320, -390)
+
+[sub_resource type="Resource" id="Resource_ji08j"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-180, -750, -350, -650, -506, -580)
+
+[sub_resource type="Resource" id="Resource_hx2ng"]
+script = ExtResource("6_gvii3")
+points = PackedVector2Array(-350, -650, -380, -434)
+
+[sub_resource type="Resource" id="Resource_ggby7"]
+resource_name = "Crag Boar (5-6)"
+script = ExtResource("8_7qcb8")
+name = "Crag Boar (5-6)"
+entry = 1125
+creature = "Crag Boar"
+center = Vector2(-260, -690)
+radius = 80.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_oqnh8"]
+script = ExtResource("8_7qcb8")
+entry = 1125
+creature = "Crag Boar"
+center = Vector2(-40, -950)
+radius = 70.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_ojl2k"]
+resource_name = "Young Black Bear (5-6)"
+script = ExtResource("8_7qcb8")
+name = "Young Black Bear (5-6)"
+entry = 1128
+creature = "Young Black Bear"
+center = Vector2(-200, -1000)
+radius = 70.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_c16dn"]
+resource_name = "Juvenile Snow Leopard (5-6)"
+script = ExtResource("8_7qcb8")
+name = "Juvenile Snow Leopard (5-6)"
+entry = 1199
+creature = "Juvenile Snow Leopard"
+center = Vector2(-460, -850)
+radius = 60.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_q3nem"]
+resource_name = "Large Crag Boar (6-7)"
+script = ExtResource("8_7qcb8")
+name = "Large Crag Boar (6-7)"
+entry = 1126
+creature = "Large Crag Boar"
+center = Vector2(110, -1000)
+radius = 90.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_e5tnf"]
+resource_name = "Snow Tracker Wolf (6-7)"
+script = ExtResource("8_7qcb8")
+name = "Snow Tracker Wolf (6-7)"
+entry = 1138
+creature = "Snow Tracker Wolf"
+center = Vector2(-400, -700)
+radius = 60.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_cggev"]
+resource_name = "Winter Wolf (7-8)"
+script = ExtResource("8_7qcb8")
+name = "Winter Wolf (7-8)"
+entry = 1131
+creature = "Winter Wolf"
+center = Vector2(-80, -1160)
+radius = 90.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_u622x"]
+resource_name = "Elder Crag Boar (7-8)"
+script = ExtResource("8_7qcb8")
+name = "Elder Crag Boar (7-8)"
+entry = 1127
+creature = "Elder Crag Boar"
+center = Vector2(150, -560)
+radius = 100.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_8kdw3"]
+script = ExtResource("8_7qcb8")
+entry = 1127
+creature = "Elder Crag Boar"
+center = Vector2(380, -760)
+radius = 70.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_qdeng"]
+resource_name = "Ice Claw Bear (7-8)"
+script = ExtResource("8_7qcb8")
+name = "Ice Claw Bear (7-8)"
+entry = 1196
+creature = "Ice Claw Bear"
+center = Vector2(260, -1100)
+radius = 100.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_kobn6"]
+resource_name = "Snow Leopard (7-8)"
+script = ExtResource("8_7qcb8")
+name = "Snow Leopard (7-8)"
+entry = 1201
+creature = "Snow Leopard"
+center = Vector2(-20, -480)
+radius = 100.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_svm1n"]
+script = ExtResource("8_7qcb8")
+entry = 1201
+creature = "Snow Leopard"
+center = Vector2(-520, -1000)
+radius = 60.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_kfdkc"]
+resource_name = "Starving Winter Wolf (8)"
+script = ExtResource("8_7qcb8")
+name = "Starving Winter Wolf (8)"
+entry = 1133
+creature = "Starving Winter Wolf"
+center = Vector2(-40, -1260)
+radius = 40.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_7ckui"]
+resource_name = "Old Greyfang (10, rare)"
+script = ExtResource("8_7qcb8")
+name = "Old Greyfang (10, rare)"
+entry = 1132
+creature = "Old Greyfang"
+center = Vector2(10, -1250)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_5a6nr"]
+resource_name = "Young Wendigo, the Grizzled Den (5-6)"
+script = ExtResource("8_7qcb8")
+name = "Young Wendigo, the Grizzled Den (5-6)"
+entry = 1134
+creature = "Young Wendigo"
+center = Vector2(-310, -1060)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_lhena"]
+resource_name = "Wendigo (6-7)"
+script = ExtResource("8_7qcb8")
+name = "Wendigo (6-7)"
+entry = 1135
+creature = "Wendigo"
+center = Vector2(-285, -1080)
+radius = 30.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_28p57"]
+resource_name = "Ulfar the Howler (9, rare)"
+script = ExtResource("8_7qcb8")
+name = "Ulfar the Howler (9, rare)"
+entry = 1137
+creature = "Ulfar the Howler"
+center = Vector2(-276, -1092)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_lhr8l"]
+resource_name = "Old Rimebeard, at his cave (11)"
+script = ExtResource("8_7qcb8")
+name = "Old Rimebeard, at his cave (11)"
+entry = 1271
+creature = "Old Rimebeard"
+center = Vector2(-268, -1094)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_5rgen"]
+resource_name = "Icemane Troll, Icemane Hold (7-8)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Troll, Icemane Hold (7-8)"
+entry = 1120
+creature = "Icemane Troll"
+center = Vector2(-500, -590)
+radius = 36.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_4tc5x"]
+resource_name = "Icemane Headhunter (8-9)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Headhunter (8-9)"
+entry = 1123
+creature = "Icemane Headhunter"
+center = Vector2(-530, -560)
+radius = 30.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_3idha"]
+resource_name = "Icemane Hideskinner (9-10)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Hideskinner (9-10)"
+entry = 1122
+creature = "Icemane Hideskinner"
+center = Vector2(-552, -545)
+radius = 20.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_hagjv"]
+resource_name = "Icemane Shadowcaster (9-10)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Shadowcaster (9-10)"
+entry = 1124
+creature = "Icemane Shadowcaster"
+center = Vector2(-540, -600)
+radius = 26.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_u0xyf"]
+resource_name = "Icemane Snowstrider (8-9)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Snowstrider (8-9)"
+entry = 1121
+creature = "Icemane Snowstrider"
+center = Vector2(-420, -660)
+radius = 60.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_55yf1"]
+resource_name = "Great Father Hrimnar (11, rare)"
+script = ExtResource("8_7qcb8")
+name = "Great Father Hrimnar (11, rare)"
+entry = 1260
+creature = "Great Father Hrimnar"
+center = Vector2(-560, -535)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_tx10y"]
+resource_name = "Icemane Seer, Shimmer Ridge (8-9)"
+script = ExtResource("8_7qcb8")
+name = "Icemane Seer, Shimmer Ridge (8-9)"
+entry = 1397
+creature = "Icemane Seer"
+center = Vector2(-380, -420)
+radius = 26.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_n8hcf"]
+resource_name = "Blighted Gnome, the Cogworks (8-9)"
+script = ExtResource("8_7qcb8")
+name = "Blighted Gnome, the Cogworks (8-9)"
+entry = 1211
+creature = "Blighted Gnome"
+center = Vector2(-595, -1290)
+radius = 36.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_1d6uk"]
+resource_name = "Gibbletock (11, rare)"
+script = ExtResource("8_7qcb8")
+name = "Gibbletock (11, rare)"
+entry = 8503
+creature = "Gibbletock"
+center = Vector2(-612, -1312)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_ehv2h"]
+resource_name = "Stonejaw Skullthumper, the Grey Quarry (8-9)"
+script = ExtResource("8_7qcb8")
+name = "Stonejaw Skullthumper, the Grey Quarry (8-9)"
+entry = 1115
+creature = "Stonejaw Skullthumper"
+center = Vector2(300, -400)
+radius = 36.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_e5b12"]
+resource_name = "Stonejaw Bonesnapper (9-10)"
+script = ExtResource("8_7qcb8")
+name = "Stonejaw Bonesnapper (9-10)"
+entry = 1117
+creature = "Stonejaw Bonesnapper"
+center = Vector2(350, -350)
+radius = 36.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_uoh4s"]
+resource_name = "Stonejaw Ambusher (9-10)"
+script = ExtResource("8_7qcb8")
+name = "Stonejaw Ambusher (9-10)"
+entry = 1116
+creature = "Stonejaw Ambusher"
+center = Vector2(310, -330)
+radius = 26.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_wcbvw"]
+resource_name = "Stonejaw Backbreaker (11)"
+script = ExtResource("8_7qcb8")
+name = "Stonejaw Backbreaker (11)"
+entry = 1118
+creature = "Stonejaw Backbreaker"
+center = Vector2(360, -320)
+radius = 18.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_c863h"]
+resource_name = "Skullgrinder (12, rare)"
+script = ExtResource("8_7qcb8")
+name = "Skullgrinder (12, rare)"
+entry = 1119
+creature = "Skullgrinder"
+center = Vector2(372, -312)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_hncev"]
+resource_name = "Scarred Crag Boar (9-10)"
+script = ExtResource("8_7qcb8")
+name = "Scarred Crag Boar (9-10)"
+entry = 1689
+creature = "Scarred Crag Boar"
+center = Vector2(300, -520)
+radius = 60.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_np0mn"]
+resource_name = "Vaskar, by the ranch (11)"
+script = ExtResource("8_7qcb8")
+name = "Vaskar, by the ranch (11)"
+entry = 1388
+creature = "Vaskar"
+center = Vector2(262, -612)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_khd8t"]
+resource_name = "Scabclaw, by the wreck (11)"
+script = ExtResource("8_7qcb8")
+name = "Scabclaw, by the wreck (11)"
+entry = 1961
+creature = "Scabclaw"
+center = Vector2(425, -1010)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_5ylkv"]
+resource_name = "Rimeclaw (12, rare)"
+script = ExtResource("8_7qcb8")
+name = "Rimeclaw (12, rare)"
+entry = 1130
+creature = "Rimeclaw"
+center = Vector2(120, -1220)
+radius = 60.0
+
+[resource]
+script = ExtResource("7_3iaob")
+zone_name = "Highpeak"
+places = Array[ExtResource("4_u4b1g")]([SubResource("Resource_1mbu8"), SubResource("Resource_gi2g2"), SubResource("Resource_dccqi"), SubResource("Resource_2b44d"), SubResource("Resource_dhxyu"), SubResource("Resource_pib0v"), SubResource("Resource_jvpum"), SubResource("Resource_rtd41"), SubResource("Resource_fvoyl"), SubResource("Resource_lsdsa"), SubResource("Resource_1sojj"), SubResource("Resource_0ffo7"), SubResource("Resource_5d6yd"), SubResource("Resource_kr4u6"), SubResource("Resource_pe1q2"), SubResource("Resource_4ogou"), SubResource("Resource_c7uql")])
+flats = Array[ExtResource("3_0mpv2")]([SubResource("Resource_dnm4w"), SubResource("Resource_vq3gt"), SubResource("Resource_n8k7a"), SubResource("Resource_aq1vb"), SubResource("Resource_xjbfb"), SubResource("Resource_85qi8"), SubResource("Resource_vx2gn"), SubResource("Resource_xu2qq"), SubResource("Resource_y8bx1"), SubResource("Resource_jq3bw"), SubResource("Resource_85rmr")])
+hills = Array[ExtResource("3_0mpv2")]([SubResource("Resource_jo5h7"), SubResource("Resource_t3ds1"), SubResource("Resource_7iioy"), SubResource("Resource_vsuvv"), SubResource("Resource_gk7g7"), SubResource("Resource_m8l4y"), SubResource("Resource_4mm4g")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_gvii3")]([SubResource("Resource_hx72c"), SubResource("Resource_mpqyy"), SubResource("Resource_3owux"), SubResource("Resource_xbl6p"), SubResource("Resource_4x5oj"), SubResource("Resource_2lysk"), SubResource("Resource_0df8f"), SubResource("Resource_mwx20"), SubResource("Resource_ji08j"), SubResource("Resource_hx2ng")])
+spawns = Array[ExtResource("8_7qcb8")]([SubResource("Resource_ggby7"), SubResource("Resource_oqnh8"), SubResource("Resource_ojl2k"), SubResource("Resource_c16dn"), SubResource("Resource_q3nem"), SubResource("Resource_e5tnf"), SubResource("Resource_cggev"), SubResource("Resource_u622x"), SubResource("Resource_8kdw3"), SubResource("Resource_qdeng"), SubResource("Resource_kobn6"), SubResource("Resource_svm1n"), SubResource("Resource_kfdkc"), SubResource("Resource_7ckui"), SubResource("Resource_5a6nr"), SubResource("Resource_lhena"), SubResource("Resource_28p57"), SubResource("Resource_lhr8l"), SubResource("Resource_5rgen"), SubResource("Resource_4tc5x"), SubResource("Resource_3idha"), SubResource("Resource_hagjv"), SubResource("Resource_u0xyf"), SubResource("Resource_55yf1"), SubResource("Resource_tx10y"), SubResource("Resource_n8hcf"), SubResource("Resource_1d6uk"), SubResource("Resource_ehv2h"), SubResource("Resource_e5b12"), SubResource("Resource_uoh4s"), SubResource("Resource_wcbvw"), SubResource("Resource_c863h"), SubResource("Resource_hncev"), SubResource("Resource_np0mn"), SubResource("Resource_khd8t"), SubResource("Resource_5ylkv")])
+chests = Array[ExtResource("1_6q6xh")]([SubResource("Resource_tpx8s"), SubResource("Resource_t1woj"), SubResource("Resource_at2er")])
+quest_objects = Array[ExtResource("5_ijy1v")]([SubResource("Resource_gh4kx"), SubResource("Resource_oxvdd"), SubResource("Resource_3lpwn")])
+enclosures = Array[ExtResource("2_4pyax")]([SubResource("Resource_y8lpd"), SubResource("Resource_v2naf"), SubResource("Resource_t1ieh"), SubResource("Resource_vyler")])

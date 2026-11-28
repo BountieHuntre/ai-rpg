@@ -131,7 +131,7 @@ const DEV_BUTTONS := [
 	["Go to Start", "tele spawn"], ["Save Game", "save"], ["Where Am I", "pos"],
 	["Reload Game", "reload"], ["Train All Spells", "trainall"], ["BiS", "bis"],
 	["Randomize Bots", "randomizebots"], ["Reset Talents", "resettalents"], ["Give Bags", "givebags"],
-	["Edit Zone in Blender", "editzone"],
+	["Edit Zone in Blender", "editzone"], ["Rebuild Zone", "rebuildzone"],
 ]
 const RESULT := Color(0.6, 0.9, 0.6)
 ## The open "Reset Character?" confirmation, or null.

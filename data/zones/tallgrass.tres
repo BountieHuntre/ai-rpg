@@ -1,0 +1,513 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_ewxu0"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_wlu4j"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_ugd6m"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_qvqa2"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_d2kp3"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_q5q8m"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_46bfd"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_o360i"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_7277l"]
+
+[sub_resource type="Resource" id="Resource_3kyhs"]
+script = ExtResource("1_ewxu0")
+entry = 2910
+center = Vector2(-905, 188)
+radius = 6.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_wxunn"]
+script = ExtResource("1_ewxu0")
+entry = 2912
+center = Vector2(-880, 240)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_jhnq6"]
+resource_name = "the chief's, door south"
+script = ExtResource("2_wlu4j")
+name = "the chief's, door south"
+least = Vector2(-769, 614.5)
+most = Vector2(-751, 621.5)
+outside = Vector2(-760, 625.5)
+inside = Vector2(-760, 619.5)
+
+[sub_resource type="Resource" id="Resource_a41nm"]
+resource_name = "the inn, door west"
+script = ExtResource("2_wlu4j")
+name = "the inn, door west"
+least = Vector2(-739.5, 629)
+most = Vector2(-732.5, 643)
+outside = Vector2(-743.5, 636)
+inside = Vector2(-737.5, 636)
+
+[sub_resource type="Resource" id="Resource_refxu"]
+resource_name = "the trainers', door east"
+script = ExtResource("2_wlu4j")
+name = "the trainers', door east"
+least = Vector2(-787.5, 630)
+most = Vector2(-780.5, 642)
+outside = Vector2(-776.5, 636)
+inside = Vector2(-782.5, 636)
+
+[sub_resource type="Resource" id="Resource_25hxb"]
+resource_name = "the Seers' wells"
+script = ExtResource("3_ugd6m")
+name = "the Seers' wells"
+key = "WELLS"
+center = Vector2(-900, 185)
+radius = 12.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_ha4gh"]
+resource_name = "the Ochre Stones"
+script = ExtResource("3_ugd6m")
+name = "the Ochre Stones"
+key = "STONES"
+center = Vector2(-430, 270)
+radius = 20.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_i122n"]
+resource_name = "the Goldtooth Derrick"
+script = ExtResource("3_ugd6m")
+name = "the Goldtooth Derrick"
+key = "DERRICK"
+center = Vector2(-450, -60)
+radius = 22.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_hy3ky"]
+resource_name = "Ashmane Rock"
+script = ExtResource("3_ugd6m")
+name = "Ashmane Rock"
+key = "ASHMANE"
+center = Vector2(-1300, 820)
+radius = 18.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_armtq"]
+resource_name = "the Windspire lifts"
+script = ExtResource("3_ugd6m")
+name = "the Windspire lifts"
+key = "LIFTS"
+center = Vector2(-1200, -40)
+radius = 14.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_ssski"]
+resource_name = "Coldhoof Well"
+script = ExtResource("3_ugd6m")
+name = "Coldhoof Well"
+center = Vector2(-640, 700)
+radius = 8.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_5qnj2"]
+resource_name = "Stormhide Well"
+script = ExtResource("3_ugd6m")
+name = "Stormhide Well"
+center = Vector2(-1080, 560)
+radius = 8.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_8hjp4"]
+resource_name = "the Tallmane Water Pump"
+script = ExtResource("3_ugd6m")
+name = "the Tallmane Water Pump"
+center = Vector2(-620, 260)
+radius = 8.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_3jdem"]
+resource_name = "the Skyrend cliffs"
+script = ExtResource("3_ugd6m")
+name = "the Skyrend cliffs"
+center = Vector2(-1380, 420)
+radius = 90.0
+height = 24.0
+
+[sub_resource type="Resource" id="Resource_kvp4k"]
+script = ExtResource("3_ugd6m")
+center = Vector2(-1310, 860)
+radius = 40.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_c41mn"]
+script = ExtResource("3_ugd6m")
+center = Vector2(-600, 150)
+radius = 70.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_cw7pf"]
+script = ExtResource("3_ugd6m")
+center = Vector2(-1000, 820)
+radius = 70.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_2hy03"]
+resource_name = "Coldhoof Well"
+script = ExtResource("4_qvqa2")
+name = "Coldhoof Well"
+center = Vector2(-640, 700)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_bsm5p"]
+resource_name = "Stormhide Well"
+script = ExtResource("4_qvqa2")
+name = "Stormhide Well"
+center = Vector2(-1080, 560)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_rm051"]
+resource_name = "the Tallmane Water Pump"
+script = ExtResource("4_qvqa2")
+name = "the Tallmane Water Pump"
+center = Vector2(-620, 260)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_2marn"]
+resource_name = "the Seers' wells"
+script = ExtResource("4_qvqa2")
+name = "the Seers' wells"
+center = Vector2(-900, 185)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_kphj1"]
+resource_name = "the Ochre Stones"
+script = ExtResource("4_qvqa2")
+name = "the Ochre Stones"
+center = Vector2(-430, 270)
+radius = 24.0
+
+[sub_resource type="Resource" id="Resource_1cfom"]
+resource_name = "the Goldtooth Derrick"
+script = ExtResource("4_qvqa2")
+name = "the Goldtooth Derrick"
+center = Vector2(-450, -60)
+radius = 26.0
+
+[sub_resource type="Resource" id="Resource_8psdf"]
+resource_name = "Ashmane Rock"
+script = ExtResource("4_qvqa2")
+name = "Ashmane Rock"
+center = Vector2(-1300, 820)
+radius = 26.0
+
+[sub_resource type="Resource" id="Resource_d4dhp"]
+resource_name = "Longhorn Village"
+script = ExtResource("4_qvqa2")
+name = "Longhorn Village"
+center = Vector2(-760, 640)
+radius = 42.0
+
+[sub_resource type="Resource" id="Resource_31xw4"]
+resource_name = "the pass"
+script = ExtResource("4_qvqa2")
+name = "the pass"
+center = Vector2(-515, 960)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_xj250"]
+resource_name = "the Windspire lifts"
+script = ExtResource("4_qvqa2")
+name = "the Windspire lifts"
+center = Vector2(-1200, -40)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_8hbkl"]
+resource_name = "the Skyrend cliffs"
+script = ExtResource("4_qvqa2")
+name = "the Skyrend cliffs"
+center = Vector2(-1380, 420)
+radius = 90.0
+
+[sub_resource type="Resource" id="Resource_rolmj"]
+resource_name = "the Windspire mesas"
+script = ExtResource("4_qvqa2")
+name = "the Windspire mesas"
+center = Vector2(-1260, -110)
+radius = 110.0
+
+[sub_resource type="Resource" id="Resource_b2d0f"]
+resource_name = "the eastern plains"
+script = ExtResource("4_qvqa2")
+name = "the eastern plains"
+center = Vector2(-550, 450)
+radius = 160.0
+
+[sub_resource type="Resource" id="Resource_2k7ow"]
+resource_name = "the western plains"
+script = ExtResource("4_qvqa2")
+name = "the western plains"
+center = Vector2(-1050, 450)
+radius = 160.0
+
+[sub_resource type="Resource" id="Resource_lygpo"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-560, 875, -600, 820, -728, 666)
+
+[sub_resource type="Resource" id="Resource_evix2"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-770, 600, -820, 420, -890, 196)
+
+[sub_resource type="Resource" id="Resource_j0ohw"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-890, 175, -700, 80, -470, -42)
+
+[sub_resource type="Resource" id="Resource_pumv3"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-720, 630, -600, 500, -446, 282)
+
+[sub_resource type="Resource" id="Resource_3th2y"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-800, 650, -1000, 720, -1284, 812)
+
+[sub_resource type="Resource" id="Resource_mditc"]
+script = ExtResource("6_q5q8m")
+points = PackedVector2Array(-820, 420, -1000, 200, -1190, -28)
+
+[sub_resource type="Resource" id="Resource_8vmt4"]
+resource_name = "Prairie Wolf (5-6)"
+script = ExtResource("8_o360i")
+name = "Prairie Wolf (5-6)"
+entry = 2958
+creature = "Prairie Wolf"
+center = Vector2(-700, 420)
+radius = 90.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_neqxr"]
+resource_name = "Prairie Stalker (7-8)"
+script = ExtResource("8_o360i")
+name = "Prairie Stalker (7-8)"
+entry = 2959
+creature = "Prairie Stalker"
+center = Vector2(-1000, 300)
+radius = 100.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_thti0"]
+resource_name = "Prairie Wolf Alpha (9-10)"
+script = ExtResource("8_o360i")
+name = "Prairie Wolf Alpha (9-10)"
+entry = 2960
+creature = "Prairie Wolf Alpha"
+center = Vector2(-520, 520)
+radius = 80.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_tr1sy"]
+resource_name = "Adult Tallbird (6-7)"
+script = ExtResource("8_o360i")
+name = "Adult Tallbird (6-7)"
+entry = 2956
+creature = "Adult Tallbird"
+center = Vector2(-900, 720)
+radius = 100.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_7ffv2"]
+resource_name = "Elder Tallbird (8-9)"
+script = ExtResource("8_o360i")
+name = "Elder Tallbird (8-9)"
+entry = 2957
+creature = "Elder Tallbird"
+center = Vector2(-1100, 120)
+radius = 90.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_5vxpc"]
+resource_name = "Flatland Cougar (7-8)"
+script = ExtResource("8_o360i")
+name = "Flatland Cougar (7-8)"
+entry = 3035
+creature = "Flatland Cougar"
+center = Vector2(-640, 200)
+radius = 90.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_2y41a"]
+resource_name = "Flatland Prowler (9-10)"
+script = ExtResource("8_o360i")
+name = "Flatland Prowler (9-10)"
+entry = 3566
+creature = "Flatland Prowler"
+center = Vector2(-1200, 600)
+radius = 90.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_g8doi"]
+resource_name = "Wiry Swoop (5-6)"
+script = ExtResource("8_o360i")
+name = "Wiry Swoop (5-6)"
+entry = 2969
+creature = "Wiry Swoop"
+center = Vector2(-1050, 820)
+radius = 80.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_20bsv"]
+resource_name = "Swoop (7-8)"
+script = ExtResource("8_o360i")
+name = "Swoop (7-8)"
+entry = 2970
+creature = "Swoop"
+center = Vector2(-600, 820)
+radius = 80.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_ndda1"]
+resource_name = "Taloned Swoop (8-9)"
+script = ExtResource("8_o360i")
+name = "Taloned Swoop (8-9)"
+entry = 2971
+creature = "Taloned Swoop"
+center = Vector2(-1200, 250)
+radius = 70.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_bui5d"]
+resource_name = "Skyrend Harpy, the cliffs (7-8)"
+script = ExtResource("8_o360i")
+name = "Skyrend Harpy, the cliffs (7-8)"
+entry = 2962
+creature = "Skyrend Harpy"
+center = Vector2(-1380, 450)
+radius = 50.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_oy51g"]
+resource_name = "Skyrend Wind Witch (8-9)"
+script = ExtResource("8_o360i")
+name = "Skyrend Wind Witch (8-9)"
+entry = 2963
+creature = "Skyrend Wind Witch"
+center = Vector2(-1400, 390)
+radius = 40.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_s28uv"]
+resource_name = "Dustmane Tanner, Ashmane Rock (5-6)"
+script = ExtResource("8_o360i")
+name = "Dustmane Tanner, Ashmane Rock (5-6)"
+entry = 2949
+creature = "Dustmane Tanner"
+center = Vector2(-1300, 820)
+radius = 22.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_003q5"]
+resource_name = "Dustmane Skinner (6-7)"
+script = ExtResource("8_o360i")
+name = "Dustmane Skinner (6-7)"
+entry = 2950
+creature = "Dustmane Skinner"
+center = Vector2(-1280, 840)
+radius = 22.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_acgsr"]
+resource_name = "Dustmane Poacher (7-8)"
+script = ExtResource("8_o360i")
+name = "Dustmane Poacher (7-8)"
+entry = 2951
+creature = "Dustmane Poacher"
+center = Vector2(-1320, 800)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_6np7y"]
+resource_name = "Crookspear (9, rare)"
+script = ExtResource("8_o360i")
+name = "Crookspear (9, rare)"
+entry = 5786
+creature = "Crookspear"
+center = Vector2(-1302, 818)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_ib8qp"]
+resource_name = "Briartusk Interloper, the Ochre Stones (9-10)"
+script = ExtResource("8_o360i")
+name = "Briartusk Interloper, the Ochre Stones (9-10)"
+entry = 3232
+creature = "Briartusk Interloper"
+center = Vector2(-430, 270)
+radius = 22.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_y0eq3"]
+resource_name = "Goldtooth Worker, the derrick (8-9)"
+script = ExtResource("8_o360i")
+name = "Goldtooth Worker, the derrick (8-9)"
+entry = 2978
+creature = "Goldtooth Worker"
+center = Vector2(-450, -60)
+radius = 32.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_gpxos"]
+resource_name = "Goldtooth Overseer (9-10)"
+script = ExtResource("8_o360i")
+name = "Goldtooth Overseer (9-10)"
+entry = 2979
+creature = "Goldtooth Overseer"
+center = Vector2(-440, -70)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_e73pv"]
+resource_name = "Supervisor Fizzwick (12)"
+script = ExtResource("8_o360i")
+name = "Supervisor Fizzwick (12)"
+entry = 3051
+creature = "Supervisor Fizzwick"
+center = Vector2(-452, -64)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_qpn5d"]
+resource_name = "Thunderstrider (9, rare)"
+script = ExtResource("8_o360i")
+name = "Thunderstrider (9, rare)"
+entry = 3068
+creature = "Thunderstrider"
+center = Vector2(-900, 450)
+radius = 150.0
+
+[sub_resource type="Resource" id="Resource_pmfku"]
+resource_name = "Pale Howler (12, rare)"
+script = ExtResource("8_o360i")
+name = "Pale Howler (12, rare)"
+entry = 3056
+creature = "Pale Howler"
+center = Vector2(-800, 100)
+radius = 100.0
+
+[sub_resource type="Resource" id="Resource_4lwjf"]
+script = ExtResource("9_7277l")
+entry = 2913
+at = Vector2(-640, 700)
+
+[sub_resource type="Resource" id="Resource_0wq5r"]
+script = ExtResource("9_7277l")
+entry = 2911
+at = Vector2(-1080, 560)
+
+[sub_resource type="Resource" id="Resource_o6i6u"]
+script = ExtResource("9_7277l")
+entry = 2909
+at = Vector2(-620, 260)
+
+[resource]
+script = ExtResource("7_46bfd")
+zone_name = "The Tallgrass"
+places = Array[ExtResource("4_qvqa2")]([SubResource("Resource_2hy03"), SubResource("Resource_bsm5p"), SubResource("Resource_rm051"), SubResource("Resource_2marn"), SubResource("Resource_kphj1"), SubResource("Resource_1cfom"), SubResource("Resource_8psdf"), SubResource("Resource_d4dhp"), SubResource("Resource_31xw4"), SubResource("Resource_xj250"), SubResource("Resource_8hbkl"), SubResource("Resource_rolmj"), SubResource("Resource_b2d0f"), SubResource("Resource_2k7ow")])
+flats = Array[ExtResource("3_ugd6m")]([SubResource("Resource_25hxb"), SubResource("Resource_ha4gh"), SubResource("Resource_i122n"), SubResource("Resource_hy3ky"), SubResource("Resource_armtq"), SubResource("Resource_ssski"), SubResource("Resource_5qnj2"), SubResource("Resource_8hjp4")])
+hills = Array[ExtResource("3_ugd6m")]([SubResource("Resource_3jdem"), SubResource("Resource_kvp4k"), SubResource("Resource_c41mn"), SubResource("Resource_cw7pf")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_q5q8m")]([SubResource("Resource_lygpo"), SubResource("Resource_evix2"), SubResource("Resource_j0ohw"), SubResource("Resource_pumv3"), SubResource("Resource_3th2y"), SubResource("Resource_mditc")])
+spawns = Array[ExtResource("8_o360i")]([SubResource("Resource_8vmt4"), SubResource("Resource_neqxr"), SubResource("Resource_thti0"), SubResource("Resource_tr1sy"), SubResource("Resource_7ffv2"), SubResource("Resource_5vxpc"), SubResource("Resource_2y41a"), SubResource("Resource_g8doi"), SubResource("Resource_20bsv"), SubResource("Resource_ndda1"), SubResource("Resource_bui5d"), SubResource("Resource_oy51g"), SubResource("Resource_s28uv"), SubResource("Resource_003q5"), SubResource("Resource_acgsr"), SubResource("Resource_6np7y"), SubResource("Resource_ib8qp"), SubResource("Resource_y0eq3"), SubResource("Resource_gpxos"), SubResource("Resource_e73pv"), SubResource("Resource_qpn5d"), SubResource("Resource_pmfku")])
+chests = Array[ExtResource("1_ewxu0")]([SubResource("Resource_3kyhs"), SubResource("Resource_wxunn")])
+enclosures = Array[ExtResource("2_wlu4j")]([SubResource("Resource_jhnq6"), SubResource("Resource_a41nm"), SubResource("Resource_refxu")])
+spell_focuses = Array[ExtResource("9_7277l")]([SubResource("Resource_4lwjf"), SubResource("Resource_0wq5r"), SubResource("Resource_o6i6u")])

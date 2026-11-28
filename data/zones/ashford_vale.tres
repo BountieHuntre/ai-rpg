@@ -1,0 +1,319 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3 uid="uid://mus2028nl0v4"]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_j6vl7"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_r8mh7"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_gxeve"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_is8gi"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_1t5g7"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_0reya"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_sdvkr"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_ahpn1"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_3btmb"]
+
+[sub_resource type="Resource" id="Resource_3edla"]
+resource_name = "the priory, gate in the south wall"
+script = ExtResource("2_r8mh7")
+name = "the priory, gate in the south wall"
+least = Vector2(-24, -20)
+most = Vector2(24, 22)
+outside = Vector2(0, 27)
+inside = Vector2(0, 17)
+
+[sub_resource type="Resource" id="Resource_10vov"]
+resource_name = "its chapel, door to the south"
+script = ExtResource("2_r8mh7")
+name = "its chapel, door to the south"
+least = Vector2(-11, -18.9)
+most = Vector2(11, -6)
+outside = Vector2(0, -3)
+inside = Vector2(0, -8.5)
+
+[sub_resource type="Resource" id="Resource_und3a"]
+resource_name = "Burrowling mine"
+script = ExtResource("3_gxeve")
+name = "Burrowling mine"
+key = "MINE"
+center = Vector2(-98, 5)
+radius = 16.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_auccd"]
+resource_name = "Brigand camp"
+script = ExtResource("3_gxeve")
+name = "Brigand camp"
+key = "BRIGAND_CAMP"
+center = Vector2(105, 135)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_nbx7y"]
+resource_name = "The mine hill"
+script = ExtResource("3_gxeve")
+name = "The mine hill"
+center = Vector2(-150, 5)
+radius = 55.0
+height = 26.0
+
+[sub_resource type="Resource" id="Resource_axmlo"]
+resource_name = "Boar hills"
+script = ExtResource("3_gxeve")
+name = "Boar hills"
+center = Vector2(-95, 135)
+radius = 45.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_ndnpk"]
+script = ExtResource("3_gxeve")
+center = Vector2(60, -150)
+radius = 50.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_ugkll"]
+script = ExtResource("3_gxeve")
+center = Vector2(150, 40)
+radius = 35.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_4kkkr"]
+resource_name = "the bridge"
+script = ExtResource("4_is8gi")
+name = "the bridge"
+center = Vector2(0, 86)
+radius = 9.0
+
+[sub_resource type="Resource" id="Resource_mu1f6"]
+resource_name = "the priory"
+script = ExtResource("4_is8gi")
+name = "the priory"
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_0ru8k"]
+resource_name = "the mine"
+script = ExtResource("4_is8gi")
+name = "the mine"
+center = Vector2(-98, 5)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_l5ol5"]
+resource_name = "the brigand camp"
+script = ExtResource("4_is8gi")
+name = "the brigand camp"
+center = Vector2(105, 135)
+radius = 24.0
+
+[sub_resource type="Resource" id="Resource_71hpm"]
+resource_name = "the mine road"
+script = ExtResource("4_is8gi")
+name = "the mine road"
+center = Vector2(-45, 28)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_l70tl"]
+resource_name = "the meadow"
+script = ExtResource("4_is8gi")
+name = "the meadow"
+center = Vector2(30, 52)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_y5lx8"]
+resource_name = "the boar hills"
+script = ExtResource("4_is8gi")
+name = "the boar hills"
+center = Vector2(-95, 135)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_qi88s"]
+resource_name = "the east woods"
+script = ExtResource("4_is8gi")
+name = "the east woods"
+center = Vector2(110, -20)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_spnfw"]
+resource_name = "the north woods"
+script = ExtResource("4_is8gi")
+name = "the north woods"
+center = Vector2(0, -115)
+radius = 75.0
+
+[sub_resource type="Resource" id="Resource_v1qfw"]
+script = ExtResource("6_0reya")
+points = PackedVector2Array(0, 22, 0, 60, 0, 86, 2, 112)
+
+[sub_resource type="Resource" id="Resource_c2l7k"]
+script = ExtResource("6_0reya")
+points = PackedVector2Array(0, 52, -40, 40, -80, 15, -100, 5)
+
+[sub_resource type="Resource" id="Resource_ujuxc"]
+script = ExtResource("6_0reya")
+points = PackedVector2Array(2, 112, 50, 128, 100, 135)
+
+[sub_resource type="Resource" id="Resource_o1t2q"]
+script = ExtResource("6_0reya")
+points = PackedVector2Array(0, 40, 50, 20, 95, 0)
+
+[sub_resource type="Resource" id="Resource_pt0iq"]
+resource_name = "Young Wolf, meadow"
+script = ExtResource("8_ahpn1")
+name = "Young Wolf, meadow"
+entry = 299
+creature = "Young Wolf"
+center = Vector2(35, 50)
+radius = 22.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_uvfs5"]
+script = ExtResource("8_ahpn1")
+entry = 299
+creature = "Young Wolf"
+center = Vector2(-25, 64)
+radius = 14.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_7ectm"]
+resource_name = "Burrowling Runt, on the mine road"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Runt, on the mine road"
+entry = 6
+creature = "Burrowling Runt"
+center = Vector2(-45, 28)
+radius = 18.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_13c5o"]
+resource_name = "Timber Wolf, east woods"
+script = ExtResource("8_ahpn1")
+name = "Timber Wolf, east woods"
+entry = 69
+creature = "Timber Wolf"
+center = Vector2(100, -15)
+radius = 40.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_ktdgl"]
+resource_name = "north woods"
+script = ExtResource("8_ahpn1")
+name = "north woods"
+entry = 69
+creature = "Timber Wolf"
+center = Vector2(15, -105)
+radius = 35.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_43pkh"]
+resource_name = "Burrowling Digger, mine camp"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Digger, mine camp"
+entry = 257
+creature = "Burrowling Digger"
+center = Vector2(-92, 8)
+radius = 13.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_6rla0"]
+resource_name = "Burrowling Hauler"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Hauler"
+entry = 80
+creature = "Burrowling Hauler"
+center = Vector2(-94, 24)
+count = 5
+
+[sub_resource type="Resource" id="Resource_xp3hk"]
+script = ExtResource("8_ahpn1")
+entry = 80
+creature = "Burrowling Hauler"
+center = Vector2(-98, -10)
+radius = 9.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_sv1ht"]
+resource_name = "Burrowling Delver, by the mine"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Delver, by the mine"
+entry = 475
+creature = "Burrowling Delver"
+center = Vector2(-106, -2)
+radius = 6.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_73jq8"]
+resource_name = "Masked Brigand, brigand camp"
+script = ExtResource("8_ahpn1")
+name = "Masked Brigand, brigand camp"
+entry = 38
+creature = "Masked Brigand"
+center = Vector2(105, 135)
+radius = 15.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_33b7n"]
+resource_name = "Ridgetusk Boar, southwest hills"
+script = ExtResource("8_ahpn1")
+name = "Ridgetusk Boar, southwest hills"
+entry = 113
+creature = "Ridgetusk Boar"
+center = Vector2(-90, 130)
+radius = 35.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_xo2ck"]
+resource_name = "Burrowling Pickman, mine camp (6-7)"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Pickman, mine camp (6-7)"
+entry = 40
+creature = "Burrowling Pickman"
+center = Vector2(-101, 14)
+radius = 9.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_ceq2r"]
+resource_name = "Burrowling Firecaller, by the mine (7-8)"
+script = ExtResource("8_ahpn1")
+name = "Burrowling Firecaller, by the mine (7-8)"
+entry = 476
+creature = "Burrowling Firecaller"
+center = Vector2(-108, 0)
+radius = 6.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_xf4ii"]
+resource_name = "Brigand Footpad, brigand camp (5-6)"
+script = ExtResource("8_ahpn1")
+name = "Brigand Footpad, brigand camp (5-6)"
+entry = 94
+creature = "Brigand Footpad"
+center = Vector2(110, 140)
+radius = 12.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_lxbmq"]
+script = ExtResource("4_is8gi")
+center = Vector2(110, -20)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_hkavq"]
+script = ExtResource("4_is8gi")
+center = Vector2(0, -115)
+radius = 75.0
+
+[sub_resource type="Resource" id="Resource_3va8m"]
+script = ExtResource("4_is8gi")
+center = Vector2(-60, -60)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_ma3lt"]
+script = ExtResource("4_is8gi")
+center = Vector2(150, 90)
+radius = 35.0
+
+[resource]
+script = ExtResource("7_sdvkr")
+zone_name = "Ashford Vale"
+places = Array[ExtResource("4_is8gi")]([SubResource("Resource_4kkkr"), SubResource("Resource_mu1f6"), SubResource("Resource_0ru8k"), SubResource("Resource_l5ol5"), SubResource("Resource_71hpm"), SubResource("Resource_l70tl"), SubResource("Resource_y5lx8"), SubResource("Resource_qi88s"), SubResource("Resource_spnfw")])
+flats = Array[ExtResource("3_gxeve")]([SubResource("Resource_und3a"), SubResource("Resource_auccd")])
+hills = Array[ExtResource("3_gxeve")]([SubResource("Resource_nbx7y"), SubResource("Resource_axmlo"), SubResource("Resource_ndnpk"), SubResource("Resource_ugkll")])
+stream = PackedVector2Array(-210, 40, -120, 55, -40, 78, 0, 86, 50, 80, 110, 100, 210, 150)
+roads = Array[ExtResource("6_0reya")]([SubResource("Resource_v1qfw"), SubResource("Resource_c2l7k"), SubResource("Resource_ujuxc"), SubResource("Resource_o1t2q")])
+woods = Array[ExtResource("4_is8gi")]([SubResource("Resource_lxbmq"), SubResource("Resource_hkavq"), SubResource("Resource_3va8m"), SubResource("Resource_ma3lt")])
+spawns = Array[ExtResource("8_ahpn1")]([SubResource("Resource_pt0iq"), SubResource("Resource_uvfs5"), SubResource("Resource_7ectm"), SubResource("Resource_13c5o"), SubResource("Resource_ktdgl"), SubResource("Resource_43pkh"), SubResource("Resource_6rla0"), SubResource("Resource_xp3hk"), SubResource("Resource_sv1ht"), SubResource("Resource_73jq8"), SubResource("Resource_33b7n"), SubResource("Resource_xo2ck"), SubResource("Resource_ceq2r"), SubResource("Resource_xf4ii")])
+enclosures = Array[ExtResource("2_r8mh7")]([SubResource("Resource_3edla"), SubResource("Resource_10vov")])

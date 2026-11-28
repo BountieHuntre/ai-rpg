@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_cymmg"]
+
+[resource]
+script = ExtResource("1_cymmg")
+entry = 3104
+creature_name = "Clawfolk Shellback"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.55, 0.4, 0.32, 1)
+model = "crab"

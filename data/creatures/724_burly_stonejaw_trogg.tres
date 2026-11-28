@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_tnhwk"]
+
+[resource]
+script = ExtResource("1_tnhwk")
+entry = 724
+creature_name = "Burly Stonejaw Trogg"
+color = Color(0.46, 0.42, 0.38, 1)
+model = "dwarf"
+main = "mace2h"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_d3fwm"]
+
+[resource]
+script = ExtResource("1_d3fwm")
+entry = 808
+creature_name = "Grisknar the Cold"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.45, 0.55, 0.62, 1)
+model = "troll"
+dressed = true
+band = Color(0.62, 0.64, 0.68, 1)
+cloak = false
+main = "axe"

@@ -28,10 +28,7 @@ const SPAWN := Vector3(0, PRIORY_HEIGHT, 12)
 const SPAWN_FACING := PI
 ## Walled places that playerbots go in and out of by their gate:
 ## [x min, z min, x max, z max, outside the gate, inside the gate].
-const ENCLOSURES := [
-	[-24.0, -20.0, 24.0, 22.0, Vector2(0, 27), Vector2(0, 17)],  # the priory, gate in the south wall
-	[-11.0, -18.9, 11.0, -6.0, Vector2(0, -3), Vector2(0, -8.5)],  # its chapel, door to the south
-]
+var ENCLOSURES: Array = []
 ## The priory chapel: its middle and size (x, height, z), against the
 ## north wall.
 const CHAPEL := Vector2(0, -12.45)
@@ -39,69 +36,25 @@ const CHAPEL_SIZE := Vector3(22, 8, 12.9)
 
 ## Named places, for what playerbots say: [name, center, radius], smallest
 ## first, so a point is in the first place that holds it.
-const PLACES := [
-	["the bridge", Vector2(0, 86), 9.0],
-	["the priory", Vector2(0, 0), 30.0],
-	["the mine", Vector2(-98, 5), 22.0],
-	["the brigand camp", Vector2(105, 135), 24.0],
-	["the mine road", Vector2(-45, 28), 22.0],
-	["the meadow", Vector2(30, 52), 30.0],
-	["the boar hills", Vector2(-95, 135), 45.0],
-	["the east woods", Vector2(110, -20), 70.0],
-	["the north woods", Vector2(0, -115), 75.0],
-]
+var PLACES: Array = []
 
 ## Level areas flattened for camps: [center, radius, height].
-const FLATS := [
-	[Vector2(-98, 5), 16.0, 6.0],   # Burrowling mine
-	[Vector2(105, 135), 16.0, 5.0], # Brigand camp
-]
+var FLATS: Array = []
+## The flats the builders name (ZoneArea.key).
+var MINE := 0
+var BRIGAND_CAMP := 1
 ## Rounded hills: [center, radius, height].
-const HILLS := [
-	[Vector2(-150, 5), 55.0, 26.0],  # The mine hill
-	[Vector2(-95, 135), 45.0, 9.0],  # Boar hills
-	[Vector2(60, -150), 50.0, 14.0],
-	[Vector2(150, 40), 35.0, 8.0],
-]
-const STREAM := [
-	Vector2(-210, 40), Vector2(-120, 55), Vector2(-40, 78), Vector2(0, 86),
-	Vector2(50, 80), Vector2(110, 100), Vector2(210, 150),
-]
-const ROADS := [
-	[Vector2(0, 22), Vector2(0, 60), Vector2(0, 86), Vector2(2, 112)],
-	[Vector2(0, 52), Vector2(-40, 40), Vector2(-80, 15), Vector2(-100, 5)],
-	[Vector2(2, 112), Vector2(50, 128), Vector2(100, 135)],
-	[Vector2(0, 40), Vector2(50, 20), Vector2(95, 0)],
-]
+var HILLS: Array = []
+var STREAM: Array = []
+var ROADS: Array = []
 ## Woods: [center, radius]. Trees thin out toward the edges.
-const WOODS := [
-	[Vector2(110, -20), 70.0],
-	[Vector2(0, -115), 75.0],
-	[Vector2(-60, -60), 40.0],
-	[Vector2(150, 90), 35.0],
-]
+var WOODS: Array = []
 ## Creatures that never attack on sight here, whatever their classic faction:
 ## every burrowling (Runt, Digger, Hauler, Delver, Pickman, Firecaller), so
 ## the mine is safe to learn on.
 const PASSIVE_CREATURES := [6, 257, 80, 475, 40, 476]
 ## Creature spawns: [creature entry, center, radius, count].
-const SPAWNS := [
-	[299, Vector2(35, 50), 22.0, 7],    # Young Wolf, meadow
-	[299, Vector2(-25, 64), 14.0, 4],
-	[6, Vector2(-45, 28), 18.0, 7],     # Burrowling Runt, on the mine road
-	[69, Vector2(100, -15), 40.0, 9],   # Timber Wolf, east woods
-	[69, Vector2(15, -105), 35.0, 6],   # north woods
-	[257, Vector2(-92, 8), 13.0, 6],    # Burrowling Digger, mine camp
-	[80, Vector2(-94, 24), 10.0, 5],    # Burrowling Hauler
-	[80, Vector2(-98, -10), 9.0, 3],
-	[475, Vector2(-106, -2), 6.0, 4],   # Burrowling Delver, by the mine
-	[38, Vector2(105, 135), 15.0, 9],   # Masked Brigand, brigand camp
-	[113, Vector2(-90, 130), 35.0, 8],  # Ridgetusk Boar, southwest hills
-	# New groups go last, so saved corpses keep their names.
-	[40, Vector2(-101, 14), 9.0, 4],    # Burrowling Pickman, mine camp (6-7)
-	[476, Vector2(-108, 0), 6.0, 3],    # Burrowling Firecaller, by the mine (7-8)
-	[94, Vector2(110, 140), 12.0, 5],   # Brigand Footpad, brigand camp (5-6)
-]
+var SPAWNS: Array = []
 
 const ROCK := Color(0.47, 0.45, 0.42)
 const STONE := Color(0.66, 0.63, 0.58)
@@ -117,6 +70,7 @@ var _meadow := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	_meadow.seed = SEED + 4
@@ -286,7 +240,7 @@ func _build_mine() -> void:
 	var mine := Node3D.new()
 	mine.name = "Mine"
 	add_child(mine)
-	var y: float = FLATS[0][2]
+	var y: float = FLATS[MINE][2]
 	var x := -113.0
 	for side in [-1, 1]:
 		Props.box(mine, Vector3(x, y, 5 + side * 2.7), Vector3(0.6, 4.6, 0.6), DARK_WOOD)
@@ -307,8 +261,8 @@ func _build_brigand_camp() -> void:
 	var camp := Node3D.new()
 	camp.name = "BrigandCamp"
 	add_child(camp)
-	var center: Vector2 = FLATS[1][0]
-	var y: float = FLATS[1][2]
+	var center: Vector2 = FLATS[BRIGAND_CAMP][0]
+	var y: float = FLATS[BRIGAND_CAMP][2]
 	for i in 4:
 		var angle := TAU * i / 4.0 + 0.4
 		var at := center + Vector2(cos(angle), sin(angle)) * 8.0

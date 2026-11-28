@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_owk7b"]
+
+[resource]
+script = ExtResource("1_owk7b")
+entry = 3068
+creature_name = "Thunderstrider"
+size = Vector3(1.4, 1.4, 1.4)
+color = Color(0.45, 0.42, 0.35, 1)
+model = "tallbird"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_3bcxk"]
+
+[resource]
+script = ExtResource("1_3bcxk")
+entry = 3113
+creature_name = "Thornhide Dustrunner"
+color = Color(0.55, 0.4, 0.32, 1)
+model = "tuskfolk"
+main = "staff"

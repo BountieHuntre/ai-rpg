@@ -1,0 +1,859 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_nre8n"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_t6n6l"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_jnmbn"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_x5328"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_t24ah"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_bre4h"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_ylnh8"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_eubxf"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_36ono"]
+
+[sub_resource type="Resource" id="Resource_rgijd"]
+script = ExtResource("1_nre8n")
+entry = 176793
+center = Vector2(385, 700)
+radius = 45.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_lhgf4"]
+resource_name = "the Harrow Inn, door to the west"
+script = ExtResource("2_t6n6l")
+name = "the Harrow Inn, door to the west"
+least = Vector2(13, 423)
+most = Vector2(23, 437)
+outside = Vector2(10, 432)
+inside = Vector2(15.5, 432)
+
+[sub_resource type="Resource" id="Resource_4dn3x"]
+resource_name = "Wexford's chapel, door to the south"
+script = ExtResource("2_t6n6l")
+name = "Wexford's chapel, door to the south"
+least = Vector2(-18, 411.5)
+most = Vector2(-8, 424.5)
+outside = Vector2(-13, 427.5)
+inside = Vector2(-13, 421.5)
+
+[sub_resource type="Resource" id="Resource_mjvye"]
+resource_name = "Coombe farm"
+script = ExtResource("3_jnmbn")
+name = "Coombe farm"
+key = "FARM"
+center = Vector2(-190, 470)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_02qnm"]
+resource_name = "pumpkin patch"
+script = ExtResource("3_jnmbn")
+name = "pumpkin patch"
+key = "PATCH"
+center = Vector2(-200, 525)
+radius = 12.0
+height = 4.6
+
+[sub_resource type="Resource" id="Resource_i2ims"]
+resource_name = "the Old Delve"
+script = ExtResource("3_jnmbn")
+name = "the Old Delve"
+key = "DELVE"
+center = Vector2(-310, 335)
+radius = 14.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_rtkya"]
+resource_name = "brigand farmstead"
+script = ExtResource("3_jnmbn")
+name = "brigand farmstead"
+key = "FARMSTEAD"
+center = Vector2(-300, 690)
+radius = 15.0
+
+[sub_resource type="Resource" id="Resource_levt1"]
+resource_name = "Grunmaw's camp"
+script = ExtResource("3_jnmbn")
+name = "Grunmaw's camp"
+key = "GNOLL_CAMP"
+center = Vector2(-175, 935)
+radius = 13.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_kcdfd"]
+resource_name = "south watch"
+script = ExtResource("3_jnmbn")
+name = "south watch"
+key = "SOUTH_WATCH"
+center = Vector2(22, 735)
+radius = 6.0
+height = 4.0
+
+[sub_resource type="Resource" id="Resource_r588m"]
+resource_name = "watchman's hut"
+script = ExtResource("3_jnmbn")
+name = "watchman's hut"
+key = "HUT"
+center = Vector2(203, 582)
+radius = 5.0
+height = 4.0
+
+[sub_resource type="Resource" id="Resource_2li8m"]
+resource_name = "Wainwright cottage"
+script = ExtResource("3_jnmbn")
+name = "Wainwright cottage"
+key = "COTTAGE"
+center = Vector2(120, 500)
+radius = 8.0
+
+[sub_resource type="Resource" id="Resource_oy74s"]
+resource_name = "Copperhollow"
+script = ExtResource("3_jnmbn")
+name = "Copperhollow"
+key = "COPPERHOLLOW"
+center = Vector2(168, 300)
+radius = 14.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_714pi"]
+resource_name = "Ashwood lumber camp"
+script = ExtResource("3_jnmbn")
+name = "Ashwood lumber camp"
+key = "LUMBER_CAMP"
+center = Vector2(380, 700)
+radius = 18.0
+
+[sub_resource type="Resource" id="Resource_hxr58"]
+resource_name = "Thornwick Tower"
+script = ExtResource("3_jnmbn")
+name = "Thornwick Tower"
+key = "TOWER"
+center = Vector2(380, 450)
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_c1mh3"]
+resource_name = "Pellow vineyard"
+script = ExtResource("3_jnmbn")
+name = "Pellow vineyard"
+key = "VINEYARD"
+center = Vector2(140, 640)
+radius = 22.0
+height = 4.5
+
+[sub_resource type="Resource" id="Resource_37s1i"]
+resource_name = "Reedford landing"
+script = ExtResource("3_jnmbn")
+name = "Reedford landing"
+key = "LANDING"
+center = Vector2(-260, 776)
+radius = 8.0
+height = 2.6
+
+[sub_resource type="Resource" id="Resource_2fg85"]
+resource_name = "west garrison"
+script = ExtResource("3_jnmbn")
+name = "west garrison"
+key = "GARRISON"
+center = Vector2(-420, 520)
+radius = 8.0
+height = 5.5
+
+[sub_resource type="Resource" id="Resource_uxii8"]
+resource_name = "mirefin village"
+script = ExtResource("3_jnmbn")
+name = "mirefin village"
+key = "MIREFIN_VILLAGE"
+center = Vector2(332, 592)
+height = 3.0
+
+[sub_resource type="Resource" id="Resource_jaqge"]
+resource_name = "the Old Delve's hill"
+script = ExtResource("3_jnmbn")
+name = "the Old Delve's hill"
+center = Vector2(-345, 332)
+radius = 50.0
+height = 28.0
+
+[sub_resource type="Resource" id="Resource_g87ys"]
+script = ExtResource("3_jnmbn")
+center = Vector2(-430, 285)
+radius = 90.0
+height = 20.0
+
+[sub_resource type="Resource" id="Resource_oda8v"]
+resource_name = "Copperhollow's hill"
+script = ExtResource("3_jnmbn")
+name = "Copperhollow's hill"
+center = Vector2(205, 300)
+radius = 50.0
+height = 28.0
+
+[sub_resource type="Resource" id="Resource_60t2w"]
+script = ExtResource("3_jnmbn")
+center = Vector2(300, 270)
+radius = 70.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_gmms4"]
+resource_name = "gnoll hills"
+script = ExtResource("3_jnmbn")
+name = "gnoll hills"
+center = Vector2(0, 930)
+radius = 110.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_6wg84"]
+script = ExtResource("3_jnmbn")
+center = Vector2(380, 960)
+radius = 80.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_cur1p"]
+resource_name = "Thornwick's knoll"
+script = ExtResource("3_jnmbn")
+name = "Thornwick's knoll"
+center = Vector2(380, 450)
+radius = 35.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_otare"]
+script = ExtResource("3_jnmbn")
+center = Vector2(-120, 1060)
+radius = 90.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_cp1jc"]
+resource_name = "the south watch"
+script = ExtResource("4_x5328")
+name = "the south watch"
+center = Vector2(22, 735)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_dbu1x"]
+resource_name = "the west garrison"
+script = ExtResource("4_x5328")
+name = "the west garrison"
+center = Vector2(-420, 520)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_dsjl6"]
+resource_name = "the pumpkin patch"
+script = ExtResource("4_x5328")
+name = "the pumpkin patch"
+center = Vector2(-200, 525)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_ca414"]
+resource_name = "the Reedford landing"
+script = ExtResource("4_x5328")
+name = "the Reedford landing"
+center = Vector2(-260, 778)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_yqh8c"]
+resource_name = "Thornwick Tower"
+script = ExtResource("4_x5328")
+name = "Thornwick Tower"
+center = Vector2(380, 450)
+radius = 18.0
+
+[sub_resource type="Resource" id="Resource_iwklo"]
+resource_name = "the mirefin village"
+script = ExtResource("4_x5328")
+name = "the mirefin village"
+center = Vector2(332, 592)
+radius = 18.0
+
+[sub_resource type="Resource" id="Resource_v5spn"]
+resource_name = "the Coombe farm"
+script = ExtResource("4_x5328")
+name = "the Coombe farm"
+center = Vector2(-190, 470)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_myvlr"]
+resource_name = "Grunmaw's camp"
+script = ExtResource("4_x5328")
+name = "Grunmaw's camp"
+center = Vector2(-175, 935)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_s40yc"]
+resource_name = "the Pellow vineyard"
+script = ExtResource("4_x5328")
+name = "the Pellow vineyard"
+center = Vector2(140, 640)
+radius = 26.0
+
+[sub_resource type="Resource" id="Resource_oygi5"]
+resource_name = "the Old Delve"
+script = ExtResource("4_x5328")
+name = "the Old Delve"
+center = Vector2(-315, 335)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_shcel"]
+resource_name = "Copperhollow"
+script = ExtResource("4_x5328")
+name = "Copperhollow"
+center = Vector2(172, 300)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_p6xcx"]
+resource_name = "the brigand farmstead"
+script = ExtResource("4_x5328")
+name = "the brigand farmstead"
+center = Vector2(-300, 690)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_fqnfj"]
+resource_name = "the Ashwood lumber camp"
+script = ExtResource("4_x5328")
+name = "the Ashwood lumber camp"
+center = Vector2(380, 700)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_d0uwk"]
+resource_name = "Wexford"
+script = ExtResource("4_x5328")
+name = "Wexford"
+center = Vector2(0, 440)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_b46cu"]
+resource_name = "the pass"
+script = ExtResource("4_x5328")
+name = "the pass"
+center = Vector2(-24, 250)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_hnkea"]
+resource_name = "the Mirrow Mere"
+script = ExtResource("4_x5328")
+name = "the Mirrow Mere"
+center = Vector2(270, 560)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_kea32"]
+resource_name = "the west woods"
+script = ExtResource("4_x5328")
+name = "the west woods"
+center = Vector2(-360, 470)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_ve5ry"]
+resource_name = "the west meadow"
+script = ExtResource("4_x5328")
+name = "the west meadow"
+center = Vector2(-110, 620)
+radius = 75.0
+
+[sub_resource type="Resource" id="Resource_bkwod"]
+resource_name = "the northeast woods"
+script = ExtResource("4_x5328")
+name = "the northeast woods"
+center = Vector2(330, 330)
+radius = 100.0
+
+[sub_resource type="Resource" id="Resource_t1mqh"]
+resource_name = "the southwest woods"
+script = ExtResource("4_x5328")
+name = "the southwest woods"
+center = Vector2(-380, 900)
+radius = 100.0
+
+[sub_resource type="Resource" id="Resource_e5sv0"]
+resource_name = "the gnoll hills"
+script = ExtResource("4_x5328")
+name = "the gnoll hills"
+center = Vector2(0, 930)
+radius = 110.0
+
+[sub_resource type="Resource" id="Resource_lexav"]
+resource_name = "the southeast woods"
+script = ExtResource("4_x5328")
+name = "the southeast woods"
+center = Vector2(300, 880)
+radius = 120.0
+
+[sub_resource type="Resource" id="Resource_iw47m"]
+script = ExtResource("5_t24ah")
+entry = 55
+node_name = "HalfEatenBody"
+at = Vector2(245, 497)
+facing = 0.6
+
+[sub_resource type="Resource" id="Resource_g0puw"]
+script = ExtResource("5_t24ah")
+entry = 56
+node_name = "AldousCorpse"
+at = Vector2(338, 594)
+facing = 2.2
+
+[sub_resource type="Resource" id="Resource_jhsrv"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-8, 290, -4, 360, 0, 418)
+
+[sub_resource type="Resource" id="Resource_1373j"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-20, 438, -90, 450, -170, 462)
+
+[sub_resource type="Resource" id="Resource_rbxqs"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-210, 470, -300, 500, -415, 520)
+
+[sub_resource type="Resource" id="Resource_l125h"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-188, 486, -198, 513)
+
+[sub_resource type="Resource" id="Resource_10v5q"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-110, 450, -200, 400, -296, 345)
+
+[sub_resource type="Resource" id="Resource_f4kcf"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(0, 462, 4, 560, 8, 650, 10, 740, 10, 775, 0, 840, -20, 880)
+
+[sub_resource type="Resource" id="Resource_pbnam"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(22, 445, 80, 470, 112, 495)
+
+[sub_resource type="Resource" id="Resource_mo1cj"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(125, 505, 170, 545, 198, 578)
+
+[sub_resource type="Resource" id="Resource_71tfu"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(125, 505, 200, 490, 275, 488, 345, 520, 372, 600, 380, 690)
+
+[sub_resource type="Resource" id="Resource_x7bgy"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(300, 495, 372, 456)
+
+[sub_resource type="Resource" id="Resource_lxp5u"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(-4, 360, 60, 330, 155, 302)
+
+[sub_resource type="Resource" id="Resource_fm5j5"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(5, 600, 120, 632)
+
+[sub_resource type="Resource" id="Resource_okkx8"]
+script = ExtResource("6_bre4h")
+points = PackedVector2Array(8, 700, -100, 720, -255, 772)
+
+[sub_resource type="Resource" id="Resource_d5846"]
+resource_name = "Mangy Wolf, north of Wexford (5-6)"
+script = ExtResource("8_eubxf")
+name = "Mangy Wolf, north of Wexford (5-6)"
+entry = 525
+creature = "Mangy Wolf"
+center = Vector2(90, 330)
+radius = 35.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_ksf0h"]
+resource_name = "Forest Spider, the pass woods (5-6)"
+script = ExtResource("8_eubxf")
+name = "Forest Spider, the pass woods (5-6)"
+entry = 30
+creature = "Forest Spider"
+center = Vector2(-90, 320)
+radius = 25.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_b4ope"]
+resource_name = "Forest Spider, the west woods"
+script = ExtResource("8_eubxf")
+name = "Forest Spider, the west woods"
+entry = 30
+creature = "Forest Spider"
+center = Vector2(-350, 460)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_r5x0h"]
+resource_name = "Mirefin, the mere's west shore (6-7)"
+script = ExtResource("8_eubxf")
+name = "Mirefin, the mere's west shore (6-7)"
+entry = 285
+creature = "Mirefin"
+center = Vector2(225, 535)
+radius = 14.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_wn34i"]
+resource_name = "Mirefin Wader, its north shore (6-7)"
+script = ExtResource("8_eubxf")
+name = "Mirefin Wader, its north shore (6-7)"
+entry = 735
+creature = "Mirefin Wader"
+center = Vector2(285, 505)
+radius = 14.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_ph6ly"]
+resource_name = "Mirefin, the mirefin village on its east shore"
+script = ExtResource("8_eubxf")
+name = "Mirefin, the mirefin village on its east shore"
+entry = 285
+creature = "Mirefin"
+center = Vector2(332, 592)
+radius = 12.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_pa4po"]
+resource_name = "Flintback Boar, west meadow (7-8)"
+script = ExtResource("8_eubxf")
+name = "Flintback Boar, west meadow (7-8)"
+entry = 524
+creature = "Flintback Boar"
+center = Vector2(-110, 620)
+radius = 45.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_i2f4s"]
+script = ExtResource("8_eubxf")
+entry = 524
+creature = "Flintback Boar"
+center = Vector2(80, 580)
+radius = 25.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_ppsoy"]
+resource_name = "Fattened Hog, the pumpkin patch (7)"
+script = ExtResource("8_eubxf")
+name = "Fattened Hog, the pumpkin patch (7)"
+entry = 390
+creature = "Fattened Hog"
+center = Vector2(-200, 527)
+radius = 8.0
+count = 2
+
+[sub_resource type="Resource" id="Resource_ptgfq"]
+resource_name = "Old Duchess (9)"
+script = ExtResource("8_eubxf")
+name = "Old Duchess (9)"
+entry = 330
+creature = "Old Duchess"
+center = Vector2(-202, 523)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_743oy"]
+resource_name = "Fattened Hog, the vineyard"
+script = ExtResource("8_eubxf")
+name = "Fattened Hog, the vineyard"
+entry = 390
+creature = "Fattened Hog"
+center = Vector2(140, 640)
+radius = 16.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_vbiv3"]
+resource_name = "Gray Forest Wolf, northeast woods (7-8)"
+script = ExtResource("8_eubxf")
+name = "Gray Forest Wolf, northeast woods (7-8)"
+entry = 1922
+creature = "Gray Forest Wolf"
+center = Vector2(330, 330)
+radius = 60.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_o00ww"]
+resource_name = "Burrowling Pickman, the Old Delve (6-7)"
+script = ExtResource("8_eubxf")
+name = "Burrowling Pickman, the Old Delve (6-7)"
+entry = 40
+creature = "Burrowling Pickman"
+center = Vector2(-303, 340)
+radius = 11.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_4boou"]
+resource_name = "Burrowling Firecaller (7-8)"
+script = ExtResource("8_eubxf")
+name = "Burrowling Firecaller (7-8)"
+entry = 476
+creature = "Burrowling Firecaller"
+center = Vector2(-316, 330)
+radius = 6.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_tdwlc"]
+resource_name = "Mine Spider (8-9)"
+script = ExtResource("8_eubxf")
+name = "Mine Spider (8-9)"
+entry = 43
+creature = "Mine Spider"
+center = Vector2(-319, 342)
+radius = 7.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_eujkp"]
+resource_name = "Brasstooth (8)"
+script = ExtResource("8_eubxf")
+name = "Brasstooth (8)"
+entry = 327
+creature = "Brasstooth"
+center = Vector2(-322, 335)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_dgbo7"]
+resource_name = "Burrowling Pickman, Copperhollow"
+script = ExtResource("8_eubxf")
+name = "Burrowling Pickman, Copperhollow"
+entry = 40
+creature = "Burrowling Pickman"
+center = Vector2(175, 305)
+radius = 11.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_f8mtp"]
+resource_name = "Burrowling Firecaller"
+script = ExtResource("8_eubxf")
+name = "Burrowling Firecaller"
+entry = 476
+creature = "Burrowling Firecaller"
+center = Vector2(188, 297)
+radius = 6.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_dnar8"]
+resource_name = "Mine Spider"
+script = ExtResource("8_eubxf")
+name = "Mine Spider"
+entry = 43
+creature = "Mine Spider"
+center = Vector2(186, 310)
+radius = 8.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_1jmsk"]
+resource_name = "Brigand Cutthroat, the farmstead (8-9)"
+script = ExtResource("8_eubxf")
+name = "Brigand Cutthroat, the farmstead (8-9)"
+entry = 116
+creature = "Brigand Cutthroat"
+center = Vector2(-295, 687)
+radius = 22.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_20wbg"]
+resource_name = "Brigand Hedge-Mage (9-10)"
+script = ExtResource("8_eubxf")
+name = "Brigand Hedge-Mage (9-10)"
+entry = 474
+creature = "Brigand Hedge-Mage"
+center = Vector2(-310, 697)
+radius = 12.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_hy1ev"]
+resource_name = "Brigand Hedge-Mage, Thornwick Tower"
+script = ExtResource("8_eubxf")
+name = "Brigand Hedge-Mage, Thornwick Tower"
+entry = 474
+creature = "Brigand Hedge-Mage"
+center = Vector2(380, 452)
+radius = 12.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_atyu0"]
+resource_name = "Brigand Cutthroat, Thornwick Tower"
+script = ExtResource("8_eubxf")
+name = "Brigand Cutthroat, Thornwick Tower"
+entry = 116
+creature = "Brigand Cutthroat"
+center = Vector2(365, 475)
+radius = 18.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_dqk7i"]
+resource_name = "Young Forest Bear, southeast woods (8-9)"
+script = ExtResource("8_eubxf")
+name = "Young Forest Bear, southeast woods (8-9)"
+entry = 822
+creature = "Young Forest Bear"
+center = Vector2(240, 860)
+radius = 35.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_ke8kv"]
+resource_name = "Young Forest Bear, by the lumber camp"
+script = ExtResource("8_eubxf")
+name = "Young Forest Bear, by the lumber camp"
+entry = 822
+creature = "Young Forest Bear"
+center = Vector2(430, 790)
+radius = 25.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_22ygb"]
+resource_name = "Prowler, southeast woods (9-10)"
+script = ExtResource("8_eubxf")
+name = "Prowler, southeast woods (9-10)"
+entry = 118
+creature = "Prowler"
+center = Vector2(340, 880)
+radius = 55.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_yt27h"]
+resource_name = "Prowler, by the lumber camp"
+script = ExtResource("8_eubxf")
+name = "Prowler, by the lumber camp"
+entry = 118
+creature = "Prowler"
+center = Vector2(430, 640)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_rrqq7"]
+resource_name = "Mirefin Lurker, down the stream (9-10)"
+script = ExtResource("8_eubxf")
+name = "Mirefin Lurker, down the stream (9-10)"
+entry = 732
+creature = "Mirefin Lurker"
+center = Vector2(-130, 760)
+radius = 25.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_1hqny"]
+resource_name = "Mirefin Lurker, by the Reedford landing"
+script = ExtResource("8_eubxf")
+name = "Mirefin Lurker, by the Reedford landing"
+entry = 732
+creature = "Mirefin Lurker"
+center = Vector2(-300, 808)
+radius = 20.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_p065b"]
+resource_name = "Mirefin Forager, up the stream (9-10)"
+script = ExtResource("8_eubxf")
+name = "Mirefin Forager, up the stream (9-10)"
+entry = 46
+creature = "Mirefin Forager"
+center = Vector2(150, 715)
+radius = 18.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_04k0j"]
+resource_name = "Ditchjaw Runt, gnoll hills (8-9)"
+script = ExtResource("8_eubxf")
+name = "Ditchjaw Runt, gnoll hills (8-9)"
+entry = 97
+creature = "Ditchjaw Runt"
+center = Vector2(-40, 905)
+radius = 35.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_yvxyu"]
+resource_name = "Ditchjaw Outrider (9-10)"
+script = ExtResource("8_eubxf")
+name = "Ditchjaw Outrider (9-10)"
+entry = 478
+creature = "Ditchjaw Outrider"
+center = Vector2(80, 925)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_nyee3"]
+resource_name = "Ditchjaw Runt, south of the hills"
+script = ExtResource("8_eubxf")
+name = "Ditchjaw Runt, south of the hills"
+entry = 97
+creature = "Ditchjaw Runt"
+center = Vector2(150, 990)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_gvrtl"]
+resource_name = "Ditchjaw Brute, Grunmaw's camp (11-12)"
+script = ExtResource("8_eubxf")
+name = "Ditchjaw Brute, Grunmaw's camp (11-12)"
+entry = 117
+creature = "Ditchjaw Brute"
+center = Vector2(-172, 932)
+radius = 14.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_8gtca"]
+resource_name = "Grunmaw (11, elite)"
+script = ExtResource("8_eubxf")
+name = "Grunmaw (11, elite)"
+entry = 448
+creature = "Grunmaw"
+center = Vector2(-178, 938)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_g7du0"]
+resource_name = "Gray Forest Wolf, southwest woods"
+script = ExtResource("8_eubxf")
+name = "Gray Forest Wolf, southwest woods"
+entry = 1922
+creature = "Gray Forest Wolf"
+center = Vector2(-380, 900)
+radius = 50.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_epkwa"]
+resource_name = "Odo the Collector, at Thornwick Tower's door (10)"
+script = ExtResource("8_eubxf")
+name = "Odo the Collector, at Thornwick Tower's door (10)"
+entry = 473
+creature = "Odo the Collector"
+center = Vector2(380, 457)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_tic84"]
+script = ExtResource("4_x5328")
+center = Vector2(330, 330)
+radius = 110.0
+
+[sub_resource type="Resource" id="Resource_h27w7"]
+script = ExtResource("4_x5328")
+center = Vector2(300, 880)
+radius = 130.0
+
+[sub_resource type="Resource" id="Resource_5i1g1"]
+script = ExtResource("4_x5328")
+center = Vector2(-90, 320)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_jpkfi"]
+script = ExtResource("4_x5328")
+center = Vector2(-360, 470)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_4j7ya"]
+script = ExtResource("4_x5328")
+center = Vector2(-380, 900)
+radius = 100.0
+
+[sub_resource type="Resource" id="Resource_jprca"]
+script = ExtResource("4_x5328")
+center = Vector2(440, 700)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_xl4vr"]
+script = ExtResource("4_x5328")
+center = Vector2(150, 1010)
+radius = 80.0
+
+[sub_resource type="Resource" id="Resource_ltg2n"]
+script = ExtResource("4_x5328")
+center = Vector2(-60, 1120)
+radius = 60.0
+
+[resource]
+script = ExtResource("7_ylnh8")
+zone_name = "Harrowfield"
+places = Array[ExtResource("4_x5328")]([SubResource("Resource_cp1jc"), SubResource("Resource_dbu1x"), SubResource("Resource_dsjl6"), SubResource("Resource_ca414"), SubResource("Resource_yqh8c"), SubResource("Resource_iwklo"), SubResource("Resource_v5spn"), SubResource("Resource_myvlr"), SubResource("Resource_s40yc"), SubResource("Resource_oygi5"), SubResource("Resource_shcel"), SubResource("Resource_p6xcx"), SubResource("Resource_fqnfj"), SubResource("Resource_d0uwk"), SubResource("Resource_b46cu"), SubResource("Resource_hnkea"), SubResource("Resource_kea32"), SubResource("Resource_ve5ry"), SubResource("Resource_bkwod"), SubResource("Resource_t1mqh"), SubResource("Resource_e5sv0"), SubResource("Resource_lexav")])
+flats = Array[ExtResource("3_jnmbn")]([SubResource("Resource_mjvye"), SubResource("Resource_02qnm"), SubResource("Resource_i2ims"), SubResource("Resource_rtkya"), SubResource("Resource_levt1"), SubResource("Resource_kcdfd"), SubResource("Resource_r588m"), SubResource("Resource_2li8m"), SubResource("Resource_oy74s"), SubResource("Resource_714pi"), SubResource("Resource_hxr58"), SubResource("Resource_c1mh3"), SubResource("Resource_37s1i"), SubResource("Resource_2fg85"), SubResource("Resource_uxii8")])
+hills = Array[ExtResource("3_jnmbn")]([SubResource("Resource_jaqge"), SubResource("Resource_g87ys"), SubResource("Resource_oda8v"), SubResource("Resource_60t2w"), SubResource("Resource_gmms4"), SubResource("Resource_6wg84"), SubResource("Resource_cur1p"), SubResource("Resource_otare")])
+stream = PackedVector2Array(250, 612, 190, 690, 90, 745, 0, 760, -120, 755, -250, 790, -380, 800, -510, 830)
+roads = Array[ExtResource("6_bre4h")]([SubResource("Resource_jhsrv"), SubResource("Resource_1373j"), SubResource("Resource_rbxqs"), SubResource("Resource_l125h"), SubResource("Resource_10v5q"), SubResource("Resource_f4kcf"), SubResource("Resource_pbnam"), SubResource("Resource_mo1cj"), SubResource("Resource_71tfu"), SubResource("Resource_x7bgy"), SubResource("Resource_lxp5u"), SubResource("Resource_fm5j5"), SubResource("Resource_okkx8")])
+woods = Array[ExtResource("4_x5328")]([SubResource("Resource_tic84"), SubResource("Resource_h27w7"), SubResource("Resource_5i1g1"), SubResource("Resource_jpkfi"), SubResource("Resource_4j7ya"), SubResource("Resource_jprca"), SubResource("Resource_xl4vr"), SubResource("Resource_ltg2n")])
+spawns = Array[ExtResource("8_eubxf")]([SubResource("Resource_d5846"), SubResource("Resource_ksf0h"), SubResource("Resource_b4ope"), SubResource("Resource_r5x0h"), SubResource("Resource_wn34i"), SubResource("Resource_ph6ly"), SubResource("Resource_pa4po"), SubResource("Resource_i2f4s"), SubResource("Resource_ppsoy"), SubResource("Resource_ptgfq"), SubResource("Resource_743oy"), SubResource("Resource_vbiv3"), SubResource("Resource_o00ww"), SubResource("Resource_4boou"), SubResource("Resource_tdwlc"), SubResource("Resource_eujkp"), SubResource("Resource_dgbo7"), SubResource("Resource_f8mtp"), SubResource("Resource_dnar8"), SubResource("Resource_1jmsk"), SubResource("Resource_20wbg"), SubResource("Resource_hy1ev"), SubResource("Resource_atyu0"), SubResource("Resource_dqk7i"), SubResource("Resource_ke8kv"), SubResource("Resource_22ygb"), SubResource("Resource_yt27h"), SubResource("Resource_rrqq7"), SubResource("Resource_1hqny"), SubResource("Resource_p065b"), SubResource("Resource_04k0j"), SubResource("Resource_yvxyu"), SubResource("Resource_nyee3"), SubResource("Resource_gvrtl"), SubResource("Resource_8gtca"), SubResource("Resource_g7du0"), SubResource("Resource_epkwa")])
+chests = Array[ExtResource("1_nre8n")]([SubResource("Resource_rgijd")])
+quest_objects = Array[ExtResource("5_t24ah")]([SubResource("Resource_iw47m"), SubResource("Resource_g0puw")])
+enclosures = Array[ExtResource("2_t6n6l")]([SubResource("Resource_lhgf4"), SubResource("Resource_4dn3x")])

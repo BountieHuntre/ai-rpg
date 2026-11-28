@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RaceLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/race_look.gd" id="1_4vj44"]
+
+[resource]
+script = ExtResource("1_4vj44")
+race = "hornkin"
+skins = PackedColorArray(0.45, 0.3, 0.18, 1, 0.32, 0.22, 0.14, 1, 0.58, 0.42, 0.26, 1, 0.18, 0.16, 0.15, 1, 0.8, 0.76, 0.68, 1, 0.5, 0.48, 0.45, 1)
+hair_colors = PackedColorArray(0.2, 0.13, 0.08, 1, 0.35, 0.22, 0.12, 1, 0.1, 0.08, 0.07, 1, 0.6, 0.45, 0.28, 1, 0.85, 0.82, 0.75, 1, 0.5, 0.48, 0.45, 1, 0.5, 0.25, 0.1, 1)
+feature_title = "Horns"
+feature_names = PackedStringArray("Curved", "Swept", "Short")
+marks_title = "War Paint"
+marks_names = PackedStringArray("None", "Eyes", "Stripes", "Chieftain")
+paint = Color(0.92, 0.9, 0.84, 1)

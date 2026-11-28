@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_6pbyq"]
+
+[resource]
+script = ExtResource("1_6pbyq")
+entry = 10357
+creature_name = "Old Needlewing"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.4, 0.2, 0.25, 1)
+model = "bat"

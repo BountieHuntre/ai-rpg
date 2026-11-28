@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_hkgbq"]
+
+[resource]
+script = ExtResource("1_hkgbq")
+entry = 1989
+creature_name = "Fenkin"
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.4, 0.56, 0.32, 1)
+model = "imp"

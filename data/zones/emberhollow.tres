@@ -1,0 +1,323 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_lowb2"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_7hxk8"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_aiud7"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_w8vsb"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_phrpi"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_vdaw1"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_2t3c0"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_oio7y"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_pnnrk"]
+
+[sub_resource type="Resource" id="Resource_o2qu8"]
+script = ExtResource("1_lowb2")
+entry = 178087
+center = Vector2(2606, -1793)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_sawkm"]
+script = ExtResource("1_lowb2")
+entry = 171938
+center = Vector2(2425, -1640)
+radius = 50.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_pytxi"]
+script = ExtResource("1_lowb2")
+entry = 171938
+center = Vector2(2465, -1790)
+radius = 35.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_wj5re"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2486, -1712)
+most = Vector2(2534, -1668)
+outside = Vector2(2477, -1690)
+inside = Vector2(2494, -1690)
+
+[sub_resource type="Resource" id="Resource_71mcf"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2503.5, -1710.5)
+most = Vector2(2516.5, -1697.5)
+outside = Vector2(2510, -1695.5)
+inside = Vector2(2510, -1698.9)
+
+[sub_resource type="Resource" id="Resource_v16x1"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2488.4, -1707.6)
+most = Vector2(2495.6, -1700.4)
+outside = Vector2(2496.4, -1700.6)
+inside = Vector2(2493.7, -1702.6)
+
+[sub_resource type="Resource" id="Resource_jlait"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2524.4, -1707.6)
+most = Vector2(2531.6, -1700.4)
+outside = Vector2(2523.6, -1700.6)
+inside = Vector2(2526.3, -1702.6)
+
+[sub_resource type="Resource" id="Resource_r1jop"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2524.4, -1679.6)
+most = Vector2(2531.6, -1672.4)
+outside = Vector2(2523.6, -1679.4)
+inside = Vector2(2526.3, -1677.4)
+
+[sub_resource type="Resource" id="Resource_2rudh"]
+script = ExtResource("2_7hxk8")
+least = Vector2(2488.4, -1679.6)
+most = Vector2(2495.6, -1672.4)
+outside = Vector2(2496.4, -1679.4)
+inside = Vector2(2493.7, -1677.4)
+
+[sub_resource type="Resource" id="Resource_mwndh"]
+resource_name = "the cave mouth"
+script = ExtResource("3_aiud7")
+name = "the cave mouth"
+key = "CAVE"
+center = Vector2(2611, -1796)
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_ph8dc"]
+resource_name = "Tazula's camp"
+script = ExtResource("3_aiud7")
+name = "Tazula's camp"
+key = "CAMP"
+center = Vector2(2530, -1792)
+radius = 8.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_u7rek"]
+resource_name = "the peons' camp"
+script = ExtResource("3_aiud7")
+name = "the peons' camp"
+key = "PEONS"
+center = Vector2(2462, -1716)
+radius = 8.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_rimu4"]
+resource_name = "the cult's hill, the cave in its west face"
+script = ExtResource("3_aiud7")
+name = "the cult's hill, the cave in its west face"
+center = Vector2(2648, -1805)
+radius = 55.0
+height = 26.0
+
+[sub_resource type="Resource" id="Resource_h741s"]
+resource_name = "Rustpincer's ridge"
+script = ExtResource("3_aiud7")
+name = "Rustpincer's ridge"
+center = Vector2(2560, -1855)
+radius = 38.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_2dcrt"]
+resource_name = "the Scorpion Rocks"
+script = ExtResource("3_aiud7")
+name = "the Scorpion Rocks"
+center = Vector2(2600, -1600)
+radius = 30.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_kicw6"]
+script = ExtResource("3_aiud7")
+center = Vector2(2640, -1640)
+radius = 26.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_a4dtp"]
+script = ExtResource("3_aiud7")
+center = Vector2(2380, -1560)
+radius = 40.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_qdu7n"]
+resource_name = "the peons' camp"
+script = ExtResource("4_w8vsb")
+name = "the peons' camp"
+center = Vector2(2462, -1716)
+
+[sub_resource type="Resource" id="Resource_pun1m"]
+resource_name = "Tazula's camp"
+script = ExtResource("4_w8vsb")
+name = "Tazula's camp"
+center = Vector2(2530, -1792)
+
+[sub_resource type="Resource" id="Resource_k3llf"]
+resource_name = "the Ember Cult Cave"
+script = ExtResource("4_w8vsb")
+name = "the Ember Cult Cave"
+center = Vector2(2612, -1797)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_cpyct"]
+resource_name = "the Proving Ground"
+script = ExtResource("4_w8vsb")
+name = "the Proving Ground"
+center = Vector2(2510, -1690)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_da8i7"]
+resource_name = "Rustpincer's ridge"
+script = ExtResource("4_w8vsb")
+name = "Rustpincer's ridge"
+center = Vector2(2560, -1852)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_rj46b"]
+resource_name = "the pass"
+script = ExtResource("4_w8vsb")
+name = "the pass"
+center = Vector2(2330, -1675)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_2yxy1"]
+resource_name = "the Scorpion Rocks"
+script = ExtResource("4_w8vsb")
+name = "the Scorpion Rocks"
+center = Vector2(2595, -1610)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_kn5uw"]
+resource_name = "the north flats"
+script = ExtResource("4_w8vsb")
+name = "the north flats"
+center = Vector2(2420, -1775)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_gxwhy"]
+resource_name = "the cult's hill"
+script = ExtResource("4_w8vsb")
+name = "the cult's hill"
+center = Vector2(2610, -1760)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_d3c8s"]
+resource_name = "the west flats"
+script = ExtResource("4_w8vsb")
+name = "the west flats"
+center = Vector2(2410, -1625)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_ewuv1"]
+script = ExtResource("6_vdaw1")
+points = PackedVector2Array(2477, -1690, 2440, -1690, 2370, -1690)
+
+[sub_resource type="Resource" id="Resource_s62ne"]
+script = ExtResource("6_vdaw1")
+points = PackedVector2Array(2440, -1690, 2450, -1740, 2475, -1785, 2522, -1792)
+
+[sub_resource type="Resource" id="Resource_v4fhr"]
+script = ExtResource("6_vdaw1")
+points = PackedVector2Array(2538, -1792, 2580, -1790, 2601, -1795)
+
+[sub_resource type="Resource" id="Resource_n1qiq"]
+script = ExtResource("6_vdaw1")
+points = PackedVector2Array(2440, -1690, 2470, -1630, 2540, -1612, 2580, -1608)
+
+[sub_resource type="Resource" id="Resource_ubja7"]
+resource_name = "Dustback Boar, the west flats (1-2)"
+script = ExtResource("8_oio7y")
+name = "Dustback Boar, the west flats (1-2)"
+entry = 3098
+creature = "Dustback Boar"
+center = Vector2(2405, -1625)
+radius = 45.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_eseb1"]
+resource_name = "the north flats"
+script = ExtResource("8_oio7y")
+name = "the north flats"
+entry = 3098
+creature = "Dustback Boar"
+center = Vector2(2410, -1770)
+radius = 35.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_qsbvd"]
+script = ExtResource("8_oio7y")
+entry = 3098
+creature = "Dustback Boar"
+center = Vector2(2475, -1625)
+radius = 22.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_hwenp"]
+resource_name = "Sand Scorpion, the Scorpion Rocks (3)"
+script = ExtResource("8_oio7y")
+name = "Sand Scorpion, the Scorpion Rocks (3)"
+entry = 3124
+creature = "Sand Scorpion"
+center = Vector2(2592, -1612)
+radius = 40.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_4kk85"]
+script = ExtResource("8_oio7y")
+entry = 3124
+creature = "Sand Scorpion"
+center = Vector2(2630, -1660)
+radius = 22.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_asrc0"]
+resource_name = "Ember Imp, before the cave (3-4)"
+script = ExtResource("8_oio7y")
+name = "Ember Imp, before the cave (3-4)"
+entry = 3101
+creature = "Ember Imp"
+center = Vector2(2578, -1776)
+radius = 26.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_bew8d"]
+script = ExtResource("8_oio7y")
+entry = 3101
+creature = "Ember Imp"
+center = Vector2(2632, -1748)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_dg135"]
+resource_name = "Ashstalker, the cult's hill (3-4)"
+script = ExtResource("8_oio7y")
+name = "Ashstalker, the cult's hill (3-4)"
+entry = 3102
+creature = "Ashstalker"
+center = Vector2(2602, -1732)
+radius = 20.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_sa5gu"]
+resource_name = "Rustpincer, on his ridge (4)"
+script = ExtResource("8_oio7y")
+name = "Rustpincer, on his ridge (4)"
+entry = 3281
+creature = "Rustpincer"
+center = Vector2(2560, -1853)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_xuooq"]
+resource_name = "Vurrok Cinderhand, in the cave mouth (5)"
+script = ExtResource("8_oio7y")
+name = "Vurrok Cinderhand, in the cave mouth (5)"
+entry = 3183
+creature = "Vurrok Cinderhand"
+center = Vector2(2613, -1797)
+radius = 1.0
+
+[resource]
+script = ExtResource("7_2t3c0")
+zone_name = "Emberhollow"
+places = Array[ExtResource("4_w8vsb")]([SubResource("Resource_qdu7n"), SubResource("Resource_pun1m"), SubResource("Resource_k3llf"), SubResource("Resource_cpyct"), SubResource("Resource_da8i7"), SubResource("Resource_rj46b"), SubResource("Resource_2yxy1"), SubResource("Resource_kn5uw"), SubResource("Resource_gxwhy"), SubResource("Resource_d3c8s")])
+flats = Array[ExtResource("3_aiud7")]([SubResource("Resource_mwndh"), SubResource("Resource_ph8dc"), SubResource("Resource_u7rek")])
+hills = Array[ExtResource("3_aiud7")]([SubResource("Resource_rimu4"), SubResource("Resource_h741s"), SubResource("Resource_2dcrt"), SubResource("Resource_kicw6"), SubResource("Resource_a4dtp")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_vdaw1")]([SubResource("Resource_ewuv1"), SubResource("Resource_s62ne"), SubResource("Resource_v4fhr"), SubResource("Resource_n1qiq")])
+spawns = Array[ExtResource("8_oio7y")]([SubResource("Resource_ubja7"), SubResource("Resource_eseb1"), SubResource("Resource_qsbvd"), SubResource("Resource_hwenp"), SubResource("Resource_4kk85"), SubResource("Resource_asrc0"), SubResource("Resource_bew8d"), SubResource("Resource_dg135"), SubResource("Resource_sa5gu"), SubResource("Resource_xuooq")])
+chests = Array[ExtResource("1_lowb2")]([SubResource("Resource_o2qu8"), SubResource("Resource_sawkm"), SubResource("Resource_pytxi")])
+enclosures = Array[ExtResource("2_7hxk8")]([SubResource("Resource_wj5re"), SubResource("Resource_71mcf"), SubResource("Resource_v16x1"), SubResource("Resource_jlait"), SubResource("Resource_r1jop"), SubResource("Resource_2rudh")])

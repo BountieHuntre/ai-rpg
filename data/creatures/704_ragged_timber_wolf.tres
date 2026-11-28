@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_tiwor"]
+
+[resource]
+script = ExtResource("1_tiwor")
+entry = 704
+creature_name = "Ragged Timber Wolf"
+size = Vector3(0.9, 0.9, 0.9)
+color = Color(0.45, 0.42, 0.4, 1)
+model = "wolf"

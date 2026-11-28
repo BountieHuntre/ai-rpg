@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RaceLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/race_look.gd" id="1_pvmpr"]
+
+[resource]
+script = ExtResource("1_pvmpr")
+race = "undead"
+skins = PackedColorArray(0.66, 0.68, 0.6, 1, 0.58, 0.62, 0.55, 1, 0.62, 0.58, 0.62, 1, 0.5, 0.56, 0.5, 1, 0.7, 0.66, 0.58, 1, 0.55, 0.6, 0.66, 1)
+hair_colors = PackedColorArray(0.1, 0.08, 0.07, 1, 0.3, 0.2, 0.12, 1, 0.5, 0.5, 0.48, 1, 0.85, 0.84, 0.8, 1, 0.3, 0.35, 0.25, 1, 0.45, 0.15, 0.12, 1, 0.6, 0.5, 0.3, 1)
+eye_color = Color(1, 0.85, 0.35, 1)
+glowing_eyes = true
+tusk_color = Color(0.8, 0.78, 0.68, 1)
+feature_title = "Jaw"
+feature_names = PackedStringArray("Bare", "Whole", "Fanged")
+marks_title = "Scars"
+marks_names = PackedStringArray("None", "Scar", "Stitches", "Both")
+paint = Color(0.32, 0.07, 0.07, 1)

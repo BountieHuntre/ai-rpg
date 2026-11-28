@@ -1,0 +1,932 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_h2yfl"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_pottr"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_nymae"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_w7nnh"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_pyiob"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_ij4br"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_k2gwy"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_snnn2"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_id8lb"]
+
+[sub_resource type="Resource" id="Resource_hjla2"]
+script = ExtResource("1_h2yfl")
+entry = 3189
+center = Vector2(1400, -1880)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_jyi5e"]
+script = ExtResource("1_h2yfl")
+entry = 3190
+center = Vector2(1400, -1880)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_cqoxf"]
+script = ExtResource("1_h2yfl")
+entry = 3192
+center = Vector2(1400, -1880)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_wf5nq"]
+script = ExtResource("1_h2yfl")
+entry = 3236
+center = Vector2(2140, -1590)
+radius = 35.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_jdubn"]
+script = ExtResource("1_h2yfl")
+entry = 3240
+center = Vector2(1700, -1600)
+radius = 55.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_0hcda"]
+script = ExtResource("1_h2yfl")
+entry = 3290
+center = Vector2(1440, -2190)
+radius = 60.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_uroue"]
+script = ExtResource("1_h2yfl")
+entry = 3237
+center = Vector2(1500, -1513)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_86cqw"]
+resource_name = "the longhouse, door south"
+script = ExtResource("2_pottr")
+name = "the longhouse, door south"
+least = Vector2(2052, -1814)
+most = Vector2(2068, -1806)
+outside = Vector2(2060, -1802)
+inside = Vector2(2060, -1807.5)
+
+[sub_resource type="Resource" id="Resource_q38ct"]
+resource_name = "the inn, door west"
+script = ExtResource("2_pottr")
+name = "the inn, door west"
+least = Vector2(2077.5, -1801)
+most = Vector2(2086.5, -1787)
+outside = Vector2(2074, -1794)
+inside = Vector2(2079.5, -1794)
+
+[sub_resource type="Resource" id="Resource_x7gh7"]
+script = ExtResource("2_pottr")
+least = Vector2(2034, -1808)
+most = Vector2(2042, -1800)
+outside = Vector2(2043.1, -1800.8)
+inside = Vector2(2040.2, -1802.6)
+
+[sub_resource type="Resource" id="Resource_mavl7"]
+script = ExtResource("2_pottr")
+least = Vector2(2032, -1788)
+most = Vector2(2040, -1780)
+outside = Vector2(2041.8, -1785.5)
+inside = Vector2(2038.5, -1784.6)
+
+[sub_resource type="Resource" id="Resource_u36aq"]
+script = ExtResource("2_pottr")
+least = Vector2(2046, -1774)
+most = Vector2(2054, -1766)
+outside = Vector2(2052.7, -1775.4)
+inside = Vector2(2051.2, -1772.3)
+
+[sub_resource type="Resource" id="Resource_a20jb"]
+script = ExtResource("2_pottr")
+least = Vector2(2070, -1774)
+most = Vector2(2078, -1766)
+outside = Vector2(2070.6, -1774.9)
+inside = Vector2(2072.5, -1772.1)
+
+[sub_resource type="Resource" id="Resource_rw2ua"]
+script = ExtResource("2_pottr")
+least = Vector2(2076, -1814)
+most = Vector2(2084, -1806)
+outside = Vector2(2075.8, -1805.8)
+inside = Vector2(2078.2, -1808.2)
+
+[sub_resource type="Resource" id="Resource_kw3nt"]
+resource_name = "Tidebone village"
+script = ExtResource("3_nymae")
+name = "Tidebone village"
+key = "VILLAGE"
+center = Vector2(1470, -1625)
+radius = 20.0
+height = 2.8
+
+[sub_resource type="Resource" id="Resource_odyjt"]
+resource_name = "the Stranded Keep"
+script = ExtResource("3_nymae")
+name = "the Stranded Keep"
+key = "KEEP"
+center = Vector2(2185, -1632)
+radius = 16.0
+height = 3.0
+
+[sub_resource type="Resource" id="Resource_1kppy"]
+resource_name = "the Skull Rock cave mouth"
+script = ExtResource("3_nymae")
+name = "the Skull Rock cave mouth"
+key = "SKULL_ROCK"
+center = Vector2(2092, -2236)
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_cjq3j"]
+resource_name = "the Dunestride camp"
+script = ExtResource("3_nymae")
+name = "the Dunestride camp"
+key = "CENTAUR_CAMP"
+center = Vector2(1400, -1880)
+radius = 18.0
+
+[sub_resource type="Resource" id="Resource_ceqf0"]
+resource_name = "the dry gulch"
+script = ExtResource("3_nymae")
+name = "the dry gulch"
+key = "GULCH"
+center = Vector2(1560, -1760)
+radius = 22.0
+height = 2.5
+
+[sub_resource type="Resource" id="Resource_850el"]
+resource_name = "Old Ruzga's hut"
+script = ExtResource("3_nymae")
+name = "Old Ruzga's hut"
+key = "RUZGA"
+center = Vector2(2020, -2020)
+radius = 8.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_a7evs"]
+resource_name = "Rezzik's wagon"
+script = ExtResource("3_nymae")
+name = "Rezzik's wagon"
+key = "WAGON"
+center = Vector2(1620, -2060)
+radius = 7.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_rvl5m"]
+resource_name = "Old Breka's hut"
+script = ExtResource("3_nymae")
+name = "Old Breka's hut"
+key = "BREKA"
+center = Vector2(1850, -1612)
+radius = 6.0
+height = 2.6
+
+[sub_resource type="Resource" id="Resource_u727n"]
+resource_name = "the Ember Cult's ridge camp"
+script = ExtResource("3_nymae")
+name = "the Ember Cult's ridge camp"
+key = "RIDGE_CAMP"
+center = Vector2(1720, -2262)
+radius = 12.0
+height = 21.0
+
+[sub_resource type="Resource" id="Resource_lkga2"]
+resource_name = "Vazzar's hut on the isle"
+script = ExtResource("3_nymae")
+name = "Vazzar's hut on the isle"
+key = "ISLE_HUT"
+center = Vector2(1508, -1508)
+radius = 9.0
+height = 3.2
+
+[sub_resource type="Resource" id="Resource_vkwki"]
+resource_name = "before the gate of Ironmaw Hold"
+script = ExtResource("3_nymae")
+name = "before the gate of Ironmaw Hold"
+key = "IRONMAW_GATE"
+center = Vector2(2235, -2318)
+radius = 14.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_80cfd"]
+resource_name = "Stormcrag Ridge"
+script = ExtResource("3_nymae")
+name = "Stormcrag Ridge"
+center = Vector2(1730, -2240)
+radius = 95.0
+height = 22.0
+
+[sub_resource type="Resource" id="Resource_po3s0"]
+resource_name = "Skull Rock's hill"
+script = ExtResource("3_nymae")
+name = "Skull Rock's hill"
+center = Vector2(2130, -2260)
+radius = 55.0
+height = 26.0
+
+[sub_resource type="Resource" id="Resource_wsivu"]
+resource_name = "the harpies' cliffs"
+script = ExtResource("3_nymae")
+name = "the harpies' cliffs"
+center = Vector2(1430, -2200)
+radius = 85.0
+height = 26.0
+
+[sub_resource type="Resource" id="Resource_07tov"]
+resource_name = "Old Ruzga's knoll"
+script = ExtResource("3_nymae")
+name = "Old Ruzga's knoll"
+center = Vector2(2020, -2030)
+radius = 30.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_7b3of"]
+resource_name = "the tigers' hills"
+script = ExtResource("3_nymae")
+name = "the tigers' hills"
+center = Vector2(1830, -2010)
+radius = 70.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_qbrqp"]
+resource_name = "Tidebone Isle"
+script = ExtResource("3_nymae")
+name = "Tidebone Isle"
+center = Vector2(1508, -1508)
+radius = 32.0
+height = 4.6
+
+[sub_resource type="Resource" id="Resource_y2inv"]
+resource_name = "the little isle"
+script = ExtResource("3_nymae")
+name = "the little isle"
+center = Vector2(1600, -1490)
+radius = 22.0
+height = 3.8
+
+[sub_resource type="Resource" id="Resource_61as7"]
+script = ExtResource("3_nymae")
+center = Vector2(1350, -1700)
+radius = 50.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_6b8im"]
+resource_name = "Old Breka's hut"
+script = ExtResource("4_w7nnh")
+name = "Old Breka's hut"
+center = Vector2(1850, -1612)
+
+[sub_resource type="Resource" id="Resource_03es3"]
+resource_name = "Old Ruzga's hut"
+script = ExtResource("4_w7nnh")
+name = "Old Ruzga's hut"
+center = Vector2(2020, -2020)
+
+[sub_resource type="Resource" id="Resource_wdoxx"]
+resource_name = "Rezzik's wagon"
+script = ExtResource("4_w7nnh")
+name = "Rezzik's wagon"
+center = Vector2(1620, -2060)
+
+[sub_resource type="Resource" id="Resource_e5dws"]
+resource_name = "the gate of Ironmaw Hold"
+script = ExtResource("4_w7nnh")
+name = "the gate of Ironmaw Hold"
+center = Vector2(2235, -2325)
+radius = 18.0
+
+[sub_resource type="Resource" id="Resource_hj24u"]
+resource_name = "the Stranded Keep"
+script = ExtResource("4_w7nnh")
+name = "the Stranded Keep"
+center = Vector2(2185, -1630)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_7300x"]
+resource_name = "the Tidebone village"
+script = ExtResource("4_w7nnh")
+name = "the Tidebone village"
+center = Vector2(1470, -1625)
+radius = 26.0
+
+[sub_resource type="Resource" id="Resource_im3ye"]
+resource_name = "the Skull Rock cave"
+script = ExtResource("4_w7nnh")
+name = "the Skull Rock cave"
+center = Vector2(2110, -2245)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_gfvl4"]
+resource_name = "the Dunestride camp"
+script = ExtResource("4_w7nnh")
+name = "the Dunestride camp"
+center = Vector2(1400, -1880)
+radius = 28.0
+
+[sub_resource type="Resource" id="Resource_jt866"]
+resource_name = "the wreck"
+script = ExtResource("4_w7nnh")
+name = "the wreck"
+center = Vector2(2145, -1585)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_hf1kj"]
+resource_name = "the Redwater mouth"
+script = ExtResource("4_w7nnh")
+name = "the Redwater mouth"
+center = Vector2(1885, -1585)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_4680p"]
+resource_name = "Spikewall"
+script = ExtResource("4_w7nnh")
+name = "Spikewall"
+center = Vector2(2060, -1790)
+radius = 42.0
+
+[sub_resource type="Resource" id="Resource_h26va"]
+resource_name = "the dry gulch"
+script = ExtResource("4_w7nnh")
+name = "the dry gulch"
+center = Vector2(1560, -1760)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_akngq"]
+resource_name = "the pass"
+script = ExtResource("4_w7nnh")
+name = "the pass"
+center = Vector2(2265, -1745)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_4c5rk"]
+resource_name = "the Tidebone Isles"
+script = ExtResource("4_w7nnh")
+name = "the Tidebone Isles"
+center = Vector2(1545, -1505)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_px5bo"]
+resource_name = "the tigers' hills"
+script = ExtResource("4_w7nnh")
+name = "the tigers' hills"
+center = Vector2(1830, -2010)
+radius = 80.0
+
+[sub_resource type="Resource" id="Resource_6vf1p"]
+resource_name = "Stormcrag Ridge"
+script = ExtResource("4_w7nnh")
+name = "Stormcrag Ridge"
+center = Vector2(1730, -2240)
+radius = 95.0
+
+[sub_resource type="Resource" id="Resource_baen1"]
+resource_name = "the harpies' cliffs"
+script = ExtResource("4_w7nnh")
+name = "the harpies' cliffs"
+center = Vector2(1430, -2200)
+radius = 95.0
+
+[sub_resource type="Resource" id="Resource_5vacs"]
+resource_name = "the eastern shore"
+script = ExtResource("4_w7nnh")
+name = "the eastern shore"
+center = Vector2(2050, -1610)
+radius = 120.0
+
+[sub_resource type="Resource" id="Resource_4jd04"]
+resource_name = "the western shore"
+script = ExtResource("4_w7nnh")
+name = "the western shore"
+center = Vector2(1650, -1590)
+radius = 140.0
+
+[sub_resource type="Resource" id="Resource_7ycat"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2235, -1745, 2160, -1765, 2098, -1788)
+
+[sub_resource type="Resource" id="Resource_xvb0q"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2022, -1792, 1950, -1760, 1890, -1745, 1800, -1735, 1680, -1700, 1580, -1660, 1492, -1630)
+
+[sub_resource type="Resource" id="Resource_uexyq"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2070, -1752, 2120, -1700, 2172, -1648)
+
+[sub_resource type="Resource" id="Resource_yiu7t"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(1890, -1745, 1870, -1660, 1856, -1620)
+
+[sub_resource type="Resource" id="Resource_2hdtv"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2060, -1828, 2050, -1920, 2025, -2012)
+
+[sub_resource type="Resource" id="Resource_4t5km"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2050, -1920, 2080, -2050, 2090, -2150, 2092, -2226)
+
+[sub_resource type="Resource" id="Resource_x178y"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(2090, -2150, 2170, -2230, 2232, -2305)
+
+[sub_resource type="Resource" id="Resource_rbb6r"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(1890, -1745, 1860, -1880, 1760, -1990, 1628, -2056)
+
+[sub_resource type="Resource" id="Resource_u5wmj"]
+script = ExtResource("6_ij4br")
+points = PackedVector2Array(1612, -2058, 1520, -1990, 1440, -1920, 1408, -1890)
+
+[sub_resource type="Resource" id="Resource_rey64"]
+resource_name = "Dire Dustback Boar, round Spikewall (6-7)"
+script = ExtResource("8_snnn2")
+name = "Dire Dustback Boar, round Spikewall (6-7)"
+entry = 3099
+creature = "Dire Dustback Boar"
+center = Vector2(1990, -1700)
+radius = 55.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_c8ryk"]
+script = ExtResource("8_snnn2")
+entry = 3099
+creature = "Dire Dustback Boar"
+center = Vector2(1720, -1800)
+radius = 70.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_u50p1"]
+resource_name = "Elder Dustback Boar, inland (8-9)"
+script = ExtResource("8_snnn2")
+name = "Elder Dustback Boar, inland (8-9)"
+entry = 3100
+creature = "Elder Dustback Boar"
+center = Vector2(1650, -1960)
+radius = 70.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_m4ftm"]
+resource_name = "Clattering Scorpion (5-6)"
+script = ExtResource("8_snnn2")
+name = "Clattering Scorpion (5-6)"
+entry = 3125
+creature = "Clattering Scorpion"
+center = Vector2(1960, -1690)
+radius = 45.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_utrb3"]
+resource_name = "Armored Scorpion (7-8)"
+script = ExtResource("8_snnn2")
+name = "Armored Scorpion (7-8)"
+entry = 3126
+creature = "Armored Scorpion"
+center = Vector2(1760, -1910)
+radius = 60.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_mo8ok"]
+resource_name = "Venomtail Scorpion, by the Tidebone village (9-10)"
+script = ExtResource("8_snnn2")
+name = "Venomtail Scorpion, by the Tidebone village (9-10)"
+entry = 3127
+creature = "Venomtail Scorpion"
+center = Vector2(1610, -1660)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_dcxyg"]
+resource_name = "Small Shore Crab, the western shore (5)"
+script = ExtResource("8_snnn2")
+name = "Small Shore Crab, the western shore (5)"
+entry = 3106
+creature = "Small Shore Crab"
+center = Vector2(1640, -1570)
+radius = 50.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_vgdb2"]
+resource_name = "Shore Crab, the eastern shore (7)"
+script = ExtResource("8_snnn2")
+name = "Shore Crab, the eastern shore (7)"
+entry = 3107
+creature = "Shore Crab"
+center = Vector2(1980, -1590)
+radius = 45.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_56sw0"]
+resource_name = "Barnacled Shore Crab (9)"
+script = ExtResource("8_snnn2")
+name = "Barnacled Shore Crab (9)"
+entry = 3108
+creature = "Barnacled Shore Crab"
+center = Vector2(1360, -1590)
+radius = 35.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_yw2vr"]
+resource_name = "Clawfolk Clacker (6)"
+script = ExtResource("8_snnn2")
+name = "Clawfolk Clacker (6)"
+entry = 3103
+creature = "Clawfolk Clacker"
+center = Vector2(2010, -1575)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_2emgv"]
+resource_name = "Clawfolk Shellback (6-7)"
+script = ExtResource("8_snnn2")
+name = "Clawfolk Shellback (6-7)"
+entry = 3104
+creature = "Clawfolk Shellback"
+center = Vector2(1720, -1560)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_1b7l7"]
+resource_name = "Clawfolk Snapper (8)"
+script = ExtResource("8_snnn2")
+name = "Clawfolk Snapper (8)"
+entry = 3105
+creature = "Clawfolk Snapper"
+center = Vector2(1420, -1575)
+radius = 25.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_ty6f0"]
+resource_name = "Clawfolk Elder (8-9)"
+script = ExtResource("8_snnn2")
+name = "Clawfolk Elder (8-9)"
+entry = 3141
+creature = "Clawfolk Elder"
+center = Vector2(1720, -1550)
+count = 2
+
+[sub_resource type="Resource" id="Resource_qw2ga"]
+resource_name = "Redclaw Lasher, the raptors' beaches (6-7)"
+script = ExtResource("8_snnn2")
+name = "Redclaw Lasher, the raptors' beaches (6-7)"
+entry = 3122
+creature = "Redclaw Lasher"
+center = Vector2(1700, -1600)
+radius = 55.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_4c5vk"]
+resource_name = "Redclaw Reaver (8-9)"
+script = ExtResource("8_snnn2")
+name = "Redclaw Reaver (8-9)"
+entry = 3123
+creature = "Redclaw Reaver"
+center = Vector2(1360, -1640)
+radius = 40.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_xp2sx"]
+resource_name = "Redsand Tiger, the tigers' hills (7-8)"
+script = ExtResource("8_snnn2")
+name = "Redsand Tiger, the tigers' hills (7-8)"
+entry = 3121
+creature = "Redsand Tiger"
+center = Vector2(1830, -2010)
+radius = 65.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_f2gbw"]
+resource_name = "Thornhide Tuskfolk, the dry gulch (6-7)"
+script = ExtResource("8_snnn2")
+name = "Thornhide Tuskfolk, the dry gulch (6-7)"
+entry = 3111
+creature = "Thornhide Tuskfolk"
+center = Vector2(1560, -1760)
+radius = 20.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_mhtsi"]
+resource_name = "Thornhide Scout (7-8)"
+script = ExtResource("8_snnn2")
+name = "Thornhide Scout (7-8)"
+entry = 3112
+creature = "Thornhide Scout"
+center = Vector2(1540, -1745)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_okac8"]
+resource_name = "Thornhide Dustrunner (8-9)"
+script = ExtResource("8_snnn2")
+name = "Thornhide Dustrunner (8-9)"
+entry = 3113
+creature = "Thornhide Dustrunner"
+center = Vector2(1580, -1775)
+radius = 16.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_edt7y"]
+resource_name = "Thornhide Warguard (9-10)"
+script = ExtResource("8_snnn2")
+name = "Thornhide Warguard (9-10)"
+entry = 3114
+creature = "Thornhide Warguard"
+center = Vector2(1565, -1765)
+radius = 12.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_n8our"]
+resource_name = "Earthspeaker Grubb (9, rare)"
+script = ExtResource("8_snnn2")
+name = "Earthspeaker Grubb (9, rare)"
+entry = 5826
+creature = "Earthspeaker Grubb"
+center = Vector2(1555, -1770)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_85st1"]
+resource_name = "Captain Brokentusk (11, rare)"
+script = ExtResource("8_snnn2")
+name = "Captain Brokentusk (11, rare)"
+entry = 5824
+creature = "Captain Brokentusk"
+center = Vector2(1570, -1752)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_e30xv"]
+resource_name = "Galecry Harpy, the harpies' cliffs (7-8)"
+script = ExtResource("8_snnn2")
+name = "Galecry Harpy, the harpies' cliffs (7-8)"
+entry = 3115
+creature = "Galecry Harpy"
+center = Vector2(1440, -2180)
+radius = 50.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_6u50j"]
+resource_name = "Galecry Raider (7-8)"
+script = ExtResource("8_snnn2")
+name = "Galecry Raider (7-8)"
+entry = 3116
+creature = "Galecry Raider"
+center = Vector2(1480, -2140)
+radius = 40.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_uvp8u"]
+resource_name = "Galecry Savage (9-10)"
+script = ExtResource("8_snnn2")
+name = "Galecry Savage (9-10)"
+entry = 3117
+creature = "Galecry Savage"
+center = Vector2(1400, -2230)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_duhv3"]
+resource_name = "Galecry Stormcaller (10-11)"
+script = ExtResource("8_snnn2")
+name = "Galecry Stormcaller (10-11)"
+entry = 3118
+creature = "Galecry Stormcaller"
+center = Vector2(1440, -2260)
+radius = 35.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_fw123"]
+resource_name = "Dunestride Drudge, the centaurs' camp (6-7)"
+script = ExtResource("8_snnn2")
+name = "Dunestride Drudge, the centaurs' camp (6-7)"
+entry = 3119
+creature = "Dunestride Drudge"
+center = Vector2(1400, -1880)
+radius = 22.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_utgxx"]
+resource_name = "Dunestride Outrider (7-8)"
+script = ExtResource("8_snnn2")
+name = "Dunestride Outrider (7-8)"
+entry = 3120
+creature = "Dunestride Outrider"
+center = Vector2(1420, -1860)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_wsibj"]
+resource_name = "Warlord Hask (9, rare)"
+script = ExtResource("8_snnn2")
+name = "Warlord Hask (9, rare)"
+entry = 5808
+creature = "Warlord Hask"
+center = Vector2(1398, -1884)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_vs3xb"]
+resource_name = "Saltmarch Sailor, the Stranded Keep (5-6)"
+script = ExtResource("8_snnn2")
+name = "Saltmarch Sailor, the Stranded Keep (5-6)"
+entry = 3128
+creature = "Saltmarch Sailor"
+center = Vector2(2165, -1655)
+radius = 40.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_h1aan"]
+resource_name = "Saltmarch Marine, inside its walls (6-7)"
+script = ExtResource("8_snnn2")
+name = "Saltmarch Marine, inside its walls (6-7)"
+entry = 3129
+creature = "Saltmarch Marine"
+center = Vector2(2187, -1630)
+radius = 14.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_ujjql"]
+resource_name = "Lieutenant Harwick (8)"
+script = ExtResource("8_snnn2")
+name = "Lieutenant Harwick (8)"
+entry = 3192
+creature = "Lieutenant Harwick"
+center = Vector2(2190, -1628)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_eldk1"]
+resource_name = "Watch Commander Pellam (9, rare)"
+script = ExtResource("8_snnn2")
+name = "Watch Commander Pellam (9, rare)"
+entry = 5809
+creature = "Watch Commander Pellam"
+center = Vector2(2150, -1660)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_lko1f"]
+resource_name = "Stormback Lizard, Stormcrag Ridge (9-10)"
+script = ExtResource("8_snnn2")
+name = "Stormback Lizard, Stormcrag Ridge (9-10)"
+entry = 3130
+creature = "Stormback Lizard"
+center = Vector2(1760, -2210)
+radius = 60.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_6wny0"]
+resource_name = "Sparkhide Lizard (10-11)"
+script = ExtResource("8_snnn2")
+name = "Sparkhide Lizard (10-11)"
+entry = 3131
+creature = "Sparkhide Lizard"
+center = Vector2(1690, -2190)
+radius = 45.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_3bpld"]
+resource_name = "Ember Cult Neophyte, the ridge camp (9-10)"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Neophyte, the ridge camp (9-10)"
+entry = 3196
+creature = "Ember Cult Neophyte"
+center = Vector2(1720, -2262)
+radius = 12.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_1el02"]
+resource_name = "Ember Cult Acolyte (10-11)"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Acolyte (10-11)"
+entry = 3198
+creature = "Ember Cult Acolyte"
+center = Vector2(1726, -2268)
+count = 3
+
+[sub_resource type="Resource" id="Resource_uv7pc"]
+resource_name = "Grizzle Ashtongue (12)"
+script = ExtResource("8_snnn2")
+name = "Grizzle Ashtongue (12)"
+entry = 3203
+creature = "Grizzle Ashtongue"
+center = Vector2(1718, -2266)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_hqec6"]
+resource_name = "Ember Cult Thug, before Skull Rock (8-9)"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Thug, before Skull Rock (8-9)"
+entry = 3195
+creature = "Ember Cult Thug"
+center = Vector2(2105, -2210)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_oyxaj"]
+resource_name = "Ember Cult Zealot (9-10)"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Zealot (9-10)"
+entry = 3197
+creature = "Ember Cult Zealot"
+center = Vector2(2085, -2240)
+radius = 14.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_bck1s"]
+resource_name = "Ember Cult Pyromancer (10-11)"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Pyromancer (10-11)"
+entry = 3199
+creature = "Ember Cult Pyromancer"
+center = Vector2(2096, -2236)
+radius = 9.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_jpkg3"]
+resource_name = "Ember Cult Acolyte"
+script = ExtResource("8_snnn2")
+name = "Ember Cult Acolyte"
+entry = 3198
+creature = "Ember Cult Acolyte"
+center = Vector2(2120, -2225)
+radius = 14.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_xxajm"]
+resource_name = "Vozgul, in the cave mouth (14)"
+script = ExtResource("8_snnn2")
+name = "Vozgul, in the cave mouth (14)"
+entry = 3204
+creature = "Vozgul"
+center = Vector2(2093, -2237)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_i05ed"]
+resource_name = "Hexweaver Skarn (11, rare)"
+script = ExtResource("8_snnn2")
+name = "Hexweaver Skarn (11, rare)"
+entry = 5822
+creature = "Hexweaver Skarn"
+center = Vector2(2110, -2205)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_cuybh"]
+resource_name = "Cursecaller Troll, the Tidebone Isles (8-9)"
+script = ExtResource("8_snnn2")
+name = "Cursecaller Troll, the Tidebone Isles (8-9)"
+entry = 3206
+creature = "Cursecaller Troll"
+center = Vector2(1520, -1500)
+radius = 22.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_a0qjd"]
+resource_name = "Thralled Troll (8-9)"
+script = ExtResource("8_snnn2")
+name = "Thralled Troll (8-9)"
+entry = 3207
+creature = "Thralled Troll"
+center = Vector2(1560, -1515)
+radius = 30.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_6vf85"]
+resource_name = "the little isle"
+script = ExtResource("8_snnn2")
+name = "the little isle"
+entry = 3206
+creature = "Cursecaller Troll"
+center = Vector2(1600, -1490)
+radius = 14.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_b1i3w"]
+resource_name = "Vazzar, at his hut (10)"
+script = ExtResource("8_snnn2")
+name = "Vazzar, at his hut (10)"
+entry = 3205
+creature = "Vazzar"
+center = Vector2(1509, -1509)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_ime2q"]
+resource_name = "Mudjaw Crocodile, the Redwater mouth (9-10)"
+script = ExtResource("8_snnn2")
+name = "Mudjaw Crocodile, the Redwater mouth (9-10)"
+entry = 3110
+creature = "Mudjaw Crocodile"
+center = Vector2(1890, -1580)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_nuf1g"]
+resource_name = "Deathsting (11, rare)"
+script = ExtResource("8_snnn2")
+name = "Deathsting (11, rare)"
+entry = 5823
+creature = "Deathsting"
+center = Vector2(1620, -1670)
+radius = 1.0
+
+[resource]
+script = ExtResource("7_k2gwy")
+zone_name = "Redsand Coast"
+places = Array[ExtResource("4_w7nnh")]([SubResource("Resource_6b8im"), SubResource("Resource_03es3"), SubResource("Resource_wdoxx"), SubResource("Resource_e5dws"), SubResource("Resource_hj24u"), SubResource("Resource_7300x"), SubResource("Resource_im3ye"), SubResource("Resource_gfvl4"), SubResource("Resource_jt866"), SubResource("Resource_hf1kj"), SubResource("Resource_4680p"), SubResource("Resource_h26va"), SubResource("Resource_akngq"), SubResource("Resource_4c5rk"), SubResource("Resource_px5bo"), SubResource("Resource_6vf1p"), SubResource("Resource_baen1"), SubResource("Resource_5vacs"), SubResource("Resource_4jd04")])
+flats = Array[ExtResource("3_nymae")]([SubResource("Resource_kw3nt"), SubResource("Resource_odyjt"), SubResource("Resource_1kppy"), SubResource("Resource_cjq3j"), SubResource("Resource_ceqf0"), SubResource("Resource_850el"), SubResource("Resource_a7evs"), SubResource("Resource_rvl5m"), SubResource("Resource_u727n"), SubResource("Resource_lkga2"), SubResource("Resource_vkwki")])
+hills = Array[ExtResource("3_nymae")]([SubResource("Resource_80cfd"), SubResource("Resource_po3s0"), SubResource("Resource_wsivu"), SubResource("Resource_07tov"), SubResource("Resource_7b3of"), SubResource("Resource_qbrqp"), SubResource("Resource_y2inv"), SubResource("Resource_61as7")])
+stream = PackedVector2Array(1880, -2330, 1900, -2200, 1880, -2080, 1900, -1960, 1880, -1840, 1890, -1720, 1880, -1600, 1885, -1540)
+roads = Array[ExtResource("6_ij4br")]([SubResource("Resource_7ycat"), SubResource("Resource_xvb0q"), SubResource("Resource_uexyq"), SubResource("Resource_yiu7t"), SubResource("Resource_2hdtv"), SubResource("Resource_4t5km"), SubResource("Resource_x178y"), SubResource("Resource_rbb6r"), SubResource("Resource_u5wmj")])
+spawns = Array[ExtResource("8_snnn2")]([SubResource("Resource_rey64"), SubResource("Resource_c8ryk"), SubResource("Resource_u50p1"), SubResource("Resource_m4ftm"), SubResource("Resource_utrb3"), SubResource("Resource_mo8ok"), SubResource("Resource_dcxyg"), SubResource("Resource_vgdb2"), SubResource("Resource_56sw0"), SubResource("Resource_yw2vr"), SubResource("Resource_2emgv"), SubResource("Resource_1b7l7"), SubResource("Resource_ty6f0"), SubResource("Resource_qw2ga"), SubResource("Resource_4c5vk"), SubResource("Resource_xp2sx"), SubResource("Resource_f2gbw"), SubResource("Resource_mhtsi"), SubResource("Resource_okac8"), SubResource("Resource_edt7y"), SubResource("Resource_n8our"), SubResource("Resource_85st1"), SubResource("Resource_e30xv"), SubResource("Resource_6u50j"), SubResource("Resource_uvp8u"), SubResource("Resource_duhv3"), SubResource("Resource_fw123"), SubResource("Resource_utgxx"), SubResource("Resource_wsibj"), SubResource("Resource_vs3xb"), SubResource("Resource_h1aan"), SubResource("Resource_ujjql"), SubResource("Resource_eldk1"), SubResource("Resource_lko1f"), SubResource("Resource_6wny0"), SubResource("Resource_3bpld"), SubResource("Resource_1el02"), SubResource("Resource_uv7pc"), SubResource("Resource_hqec6"), SubResource("Resource_oyxaj"), SubResource("Resource_bck1s"), SubResource("Resource_jpkg3"), SubResource("Resource_xxajm"), SubResource("Resource_i05ed"), SubResource("Resource_cuybh"), SubResource("Resource_a0qjd"), SubResource("Resource_6vf85"), SubResource("Resource_b1i3w"), SubResource("Resource_ime2q"), SubResource("Resource_nuf1g")])
+chests = Array[ExtResource("1_h2yfl")]([SubResource("Resource_hjla2"), SubResource("Resource_jyi5e"), SubResource("Resource_cqoxf"), SubResource("Resource_wf5nq"), SubResource("Resource_jdubn"), SubResource("Resource_0hcda"), SubResource("Resource_uroue")])
+enclosures = Array[ExtResource("2_pottr")]([SubResource("Resource_86cqw"), SubResource("Resource_q38ct"), SubResource("Resource_x7gh7"), SubResource("Resource_mavl7"), SubResource("Resource_u36aq"), SubResource("Resource_a20jb"), SubResource("Resource_rw2ua")])

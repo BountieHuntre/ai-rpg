@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_nj5wr"]
+
+[resource]
+script = ExtResource("1_nj5wr")
+entry = 3196
+creature_name = "Ember Cult Neophyte"
+color = Color(0.3, 0.08, 0.08, 1)
+model = "orc"
+dressed = true
+band = Color(0.3, 0.08, 0.08, 1)
+cloak = false
+main = "dagger"

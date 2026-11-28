@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_cb0b0"]
+
+[resource]
+script = ExtResource("1_cb0b0")
+entry = 1553
+creature_name = "Greater Gloombat"
+size = Vector3(0.75, 0.75, 0.75)
+color = Color(0.3, 0.25, 0.28, 1)
+model = "bat"

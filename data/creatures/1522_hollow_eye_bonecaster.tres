@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ft7vm"]
+
+[resource]
+script = ExtResource("1_ft7vm")
+entry = 1522
+creature_name = "Hollow-Eye Bonecaster"
+color = Color(0.8, 0.78, 0.7, 1)
+model = "undead"
+dressed = true
+band = Color(0.3, 0.28, 0.26, 1)
+cloak = false
+main = "staff"

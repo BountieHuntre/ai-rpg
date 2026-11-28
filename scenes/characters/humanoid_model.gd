@@ -48,14 +48,6 @@ const NAME_PATTERNS := {
 ## The patterns as one texture array, made once.
 static var _pattern_array: Texture2DArray
 
-const SKIN_COLORS := [
-	Color(0.96, 0.8, 0.68), Color(0.9, 0.71, 0.56), Color(0.8, 0.59, 0.43),
-	Color(0.64, 0.45, 0.32), Color(0.46, 0.32, 0.22), Color(0.98, 0.86, 0.78),
-]
-const HAIR_COLORS := [
-	Color(0.1, 0.08, 0.07), Color(0.26, 0.16, 0.09), Color(0.45, 0.28, 0.14), Color(0.6, 0.24, 0.1),
-	Color(0.86, 0.7, 0.4), Color(0.62, 0.6, 0.58), Color(0.95, 0.9, 0.8),
-]
 ## Hair meshes per body ("" is none), then beards (men only).
 const HAIR_STYLES := [["HairShort", "HairLong", "HairCrest", ""], ["HairFLong", "HairFTail", "HairFBun", "HairShort"]]
 const FACES := [["", "BeardShort", "BeardLong"], [""]]
@@ -83,47 +75,10 @@ const BODIES := ["BodyMale", "BodyFemale"]
 ## own (the build script's `body`), hidden under helms as HELM_HIDES says.
 const HEADS := ["HeadMale", "HeadFemale"]
 const EARS := ["EarsMale", "EarsFemale"]
-const EYE_COLOR := Color(0.1, 0.09, 0.12)
-## Races' own skins and hair colours (as many as SKIN_COLORS and HAIR_COLORS,
-## so an appearance's choice fits any race), eyes, and tusks, horns and bone;
-## races not named take the Human's.
-const RACE_SKINS := {
-	"orc": [Color(0.42, 0.58, 0.25), Color(0.35, 0.5, 0.2), Color(0.5, 0.6, 0.3), Color(0.3, 0.42, 0.2),
-		Color(0.55, 0.52, 0.3), Color(0.45, 0.4, 0.28)],
-	"troll": [Color(0.36, 0.55, 0.62), Color(0.3, 0.48, 0.55), Color(0.42, 0.62, 0.5), Color(0.5, 0.45, 0.62),
-		Color(0.32, 0.58, 0.45), Color(0.55, 0.6, 0.66)],
-	"undead": [Color(0.66, 0.68, 0.6), Color(0.58, 0.62, 0.55), Color(0.62, 0.58, 0.62), Color(0.5, 0.56, 0.5),
-		Color(0.7, 0.66, 0.58), Color(0.55, 0.6, 0.66)],
-	"wood_elf": [Color(0.62, 0.52, 0.75), Color(0.52, 0.45, 0.7), Color(0.45, 0.52, 0.72), Color(0.7, 0.58, 0.78),
-		Color(0.4, 0.4, 0.6), Color(0.58, 0.62, 0.8)],
-	"hornkin": [Color(0.45, 0.3, 0.18), Color(0.32, 0.22, 0.14), Color(0.58, 0.42, 0.26), Color(0.18, 0.16, 0.15),
-		Color(0.8, 0.76, 0.68), Color(0.5, 0.48, 0.45)],
-}
-const RACE_HAIRS := {
-	"troll": [Color(0.75, 0.2, 0.12), Color(0.2, 0.35, 0.7), Color(0.25, 0.55, 0.3), Color(0.9, 0.9, 0.85),
-		Color(0.85, 0.5, 0.15), Color(0.5, 0.25, 0.55), Color(0.1, 0.08, 0.07)],
-	"wood_elf": [Color(0.2, 0.5, 0.5), Color(0.85, 0.88, 0.9), Color(0.25, 0.45, 0.25), Color(0.2, 0.25, 0.55),
-		Color(0.45, 0.25, 0.55), Color(0.1, 0.08, 0.12), Color(0.55, 0.75, 0.6)],
-	"undead": [Color(0.1, 0.08, 0.07), Color(0.3, 0.2, 0.12), Color(0.5, 0.5, 0.48), Color(0.85, 0.84, 0.8),
-		Color(0.3, 0.35, 0.25), Color(0.45, 0.15, 0.12), Color(0.6, 0.5, 0.3)],
-	"hornkin": [Color(0.2, 0.13, 0.08), Color(0.35, 0.22, 0.12), Color(0.1, 0.08, 0.07), Color(0.6, 0.45, 0.28),
-		Color(0.85, 0.82, 0.75), Color(0.5, 0.48, 0.45), Color(0.5, 0.25, 0.1)],
-}
-const RACE_EYES := { "undead": Color(1.0, 0.85, 0.35), "wood_elf": Color(0.85, 0.95, 1.0), "orc": Color(0.5, 0.1, 0.08),
-	"harpy": Color(0.9, 0.7, 0.15), "barkling": Color(0.75, 1.0, 0.35) }
-const TUSK_COLORS := { "undead": Color(0.8, 0.78, 0.68) }
-const TUSK_COLOR := Color(0.9, 0.86, 0.72)
-## The races' own choices at character creation, beyond skin and hair: their
-## feature (appearance.feature: the model's Feature0-2 / FeatureF0-2 parts)
-## and markings (appearance.marks: none, or Marks0-2 / MarksF0-2), each
-## named, with the markings' colour.
-const RACE_OPTIONS := {
-	"orc": { "feature": ["Tusks", ["Small", "Large", "Broken"]], "marks": ["War Paint", ["None", "Stripes", "Bands", "Warrior"]], "paint": Color(0.62, 0.1, 0.08) },
-	"troll": { "feature": ["Tusks", ["Curved", "Straight", "Short"]], "marks": ["War Paint", ["None", "Stripes", "Bands", "Warrior"]], "paint": Color(0.88, 0.86, 0.8) },
-	"hornkin": { "feature": ["Horns", ["Curved", "Swept", "Short"]], "marks": ["War Paint", ["None", "Eyes", "Stripes", "Chieftain"]], "paint": Color(0.92, 0.9, 0.84) },
-	"wood_elf": { "feature": ["Ears", ["Long", "Swept", "Tall"]], "marks": ["Runes", ["None", "Brow", "Cheeks", "Full"]], "paint": Color(0.45, 0.95, 1.0) },
-	"undead": { "feature": ["Jaw", ["Bare", "Whole", "Fanged"]], "marks": ["Scars", ["None", "Scar", "Stitches", "Both"]], "paint": Color(0.32, 0.07, 0.07) },
-}
+## Races' colours (skins, hair colours, eyes, tusks) and their own choices at
+## character creation (feature and markings, the model's Feature0-2 /
+## FeatureF0-2 and Marks0-2 / MarksF0-2 parts) are RaceLooks in data/looks/
+## (CharacterLooks); gear's colours are data/looks/outfits.tres.
 static var FEATURE_COUNT := 3
 static var MARKS_COUNT := 4
 ## What character creation calls each hair style and beard mesh.
@@ -145,42 +100,21 @@ static func appearance_choices(race_name: String, body: int) -> Array:
 		return out
 	var named := func(parts: Array) -> Array:
 		return parts.map(func(part: String) -> Array: return [STYLE_NAMES.get(part, part), null])
+	var look := CharacterLooks.race(race_name)
 	var choices := [
-		["skin", "Skin", swatches.call(RACE_SKINS.get(race_name, SKIN_COLORS), "Skin")],
+		["skin", "Skin", swatches.call(Array(look.skins), "Skin")],
 		["hair", "Hair", named.call(RACE_HAIR_STYLES.get(race_name, HAIR_STYLES)[body])],
-		["hair_color", "Hair Color", swatches.call(RACE_HAIRS.get(race_name, HAIR_COLORS), "Color")],
+		["hair_color", "Hair Color", swatches.call(Array(look.hair_colors), "Color")],
 	]
 	var faces: Array = RACE_FACES.get(race_name, FACES)[body]
 	if faces.size() > 1:
 		choices.append(["face", "Beard", named.call(faces)])
-	var options: Dictionary = RACE_OPTIONS.get(race_name, {})
-	for key in ["feature", "marks"]:
-		if options.has(key):
-			choices.append([key, options[key][0], options[key][1].map(func(n: String) -> Array: return [n, null])])
+	for option: Array in [["feature", look.feature_title, look.feature_names], ["marks", look.marks_title, look.marks_names]]:
+		if option[1] != "":
+			choices.append([option[0], option[1], Array(option[2]).map(func(n: String) -> Array: return [n, null])])
 	return choices
-## Bare legs show smallclothes.
-const SMALLCLOTHES := Color(0.62, 0.58, 0.5)
-const TRIM_COLOR := Color(0.72, 0.56, 0.26)
-const WOOD := Color(0.4, 0.26, 0.13)
-const STEEL := Color(0.72, 0.74, 0.78)
 static var INVTYPE_ROBE := 20
 
-## Armour colours by subclass (cloth, leather, mail, plate), picked by item.
-const CLOTH := [Color(0.68, 0.24, 0.2), Color(0.26, 0.37, 0.66), Color(0.36, 0.53, 0.25), Color(0.52, 0.33, 0.62),
-	Color(0.74, 0.68, 0.52), Color(0.5, 0.4, 0.32)]
-const LEATHER := [Color(0.58, 0.4, 0.24), Color(0.45, 0.3, 0.18), Color(0.66, 0.5, 0.32), Color(0.4, 0.36, 0.32)]
-const MAIL := [Color(0.66, 0.68, 0.72), Color(0.56, 0.58, 0.62), Color(0.62, 0.56, 0.5)]
-const PLATE := [Color(0.82, 0.84, 0.88), Color(0.86, 0.74, 0.44), Color(0.7, 0.73, 0.8)]
-## Words in an item's name that say its colour.
-const NAME_COLORS := {
-	"red": Color(0.62, 0.15, 0.12), "crimson": Color(0.6, 0.1, 0.12), "scarlet": Color(0.7, 0.15, 0.1),
-	"blood": Color(0.5, 0.08, 0.08), "blue": Color(0.18, 0.28, 0.62), "azure": Color(0.25, 0.45, 0.75),
-	"green": Color(0.25, 0.48, 0.2), "emerald": Color(0.12, 0.5, 0.3), "black": Color(0.12, 0.12, 0.14),
-	"shadow": Color(0.18, 0.15, 0.22), "dark": Color(0.2, 0.18, 0.2), "white": Color(0.88, 0.88, 0.85),
-	"silver": Color(0.78, 0.8, 0.84), "gold": Color(0.85, 0.68, 0.3), "golden": Color(0.85, 0.68, 0.3),
-	"purple": Color(0.42, 0.2, 0.55), "violet": Color(0.5, 0.3, 0.65), "brown": Color(0.38, 0.25, 0.14),
-	"grey": Color(0.48, 0.48, 0.5), "gray": Color(0.48, 0.48, 0.5), "linen": Color(0.72, 0.66, 0.52),
-}
 ## Weapon subclass -> prop.
 const MAIN_PROPS := {
 	0: "axe", 1: "axe2h", 4: "mace", 5: "mace2h", 6: "polearm", 7: "sword", 8: "sword2h",
@@ -253,11 +187,6 @@ const RANGED_PROPS := { 2: "Ranged_bow", 3: "Ranged_gun", 18: "Ranged_crossbow",
 const RANGED_WORDS := { "Ranged_bow": { "Ranged_longbow": ["long", "longbow", "heavy", "hickory", "yew", "war"] },
 	"Ranged_gun": { "Ranged_blunderbuss": ["blunderbuss", "handgonne", "shotgun"] },
 	"Ranged_thrown": { "Ranged_thrown_axe": ["axe", "hatchet", "tomahawk"] } }
-## Gems by item quality (uncommon, rare, epic, legendary); poorer items' are red.
-const GEM_COLORS := [Color(0.75, 0.2, 0.18), Color(0.75, 0.2, 0.18), Color(0.3, 0.8, 0.3), Color(0.25, 0.5, 0.95),
-	Color(0.65, 0.3, 0.9), Color(1.0, 0.55, 0.15)]
-const STRAP_COLOR := Color(0.28, 0.19, 0.11)
-const PARCHMENT := Color(0.86, 0.8, 0.64)
 const RANGED_SHOTS := { 2: "shoot_bow", 3: "shoot_gun", 18: "shoot_gun", 16: "throw", 19: "shoot_wand" }
 
 ## Animations that loop.
@@ -579,9 +508,9 @@ static func random_appearance(seed_value: int) -> Dictionary:
 	var body := rng.randi_range(0, 1)
 	return {
 		"body": body,
-		"skin": rng.randi_range(0, SKIN_COLORS.size() - 1),
+		"skin": rng.randi_range(0, CharacterLooks.race("human").skins.size() - 1),
 		"hair": rng.randi_range(0, HAIR_STYLES[body].size() - 1),
-		"hair_color": rng.randi_range(0, HAIR_COLORS.size() - 1),
+		"hair_color": rng.randi_range(0, CharacterLooks.race("human").hair_colors.size() - 1),
 		"face": rng.randi_range(0, FACES[body].size() - 1),
 		"feature": rng.randi_range(0, FEATURE_COUNT - 1),
 		"marks": rng.randi_range(0, MARKS_COUNT - 1),
@@ -593,9 +522,9 @@ static func clean_appearance(look: Dictionary) -> Dictionary:
 	var body := clampi(int(look.get("body", 0)), 0, 1)
 	return {
 		"body": body,
-		"skin": clampi(int(look.get("skin", 0)), 0, SKIN_COLORS.size() - 1),
+		"skin": clampi(int(look.get("skin", 0)), 0, CharacterLooks.race("human").skins.size() - 1),
 		"hair": clampi(int(look.get("hair", 0)), 0, HAIR_STYLES[body].size() - 1),
-		"hair_color": clampi(int(look.get("hair_color", 0)), 0, HAIR_COLORS.size() - 1),
+		"hair_color": clampi(int(look.get("hair_color", 0)), 0, CharacterLooks.race("human").hair_colors.size() - 1),
 		"face": clampi(int(look.get("face", 0)), 0, FACES[body].size() - 1),
 		"feature": clampi(int(look.get("feature", 0)), 0, FEATURE_COUNT - 1),
 		"marks": clampi(int(look.get("marks", 0)), 0, MARKS_COUNT - 1),
@@ -613,24 +542,25 @@ func _apply_appearance() -> void:
 	var body: int = appearance.body
 	for i in BODIES.size():
 		_show(BODIES[i], i == body)
-	var skins: Array = RACE_SKINS.get(race, SKIN_COLORS)
+	var look := CharacterLooks.race(race)
+	var skins := look.skins
 	_colors[SKIN] = skins[mini(appearance.skin, skins.size() - 1)] if skin_override.a <= 0.0 else skin_override
-	_colors[TUSK] = TUSK_COLORS.get(race, TUSK_COLOR)
+	_colors[TUSK] = look.tusk_color
 	# Humanoid creatures' own head and tail (burrowlings, mirefin, ditchjaw).
 	for part in ["Species_head", "Species_tail"]:
 		_show(part, _parts.has(part))
-	_colors[PAINT] = RACE_OPTIONS.get(race, {}).get("paint", Color(0.6, 0.1, 0.08))
-	var hairs: Array = RACE_HAIRS.get(race, HAIR_COLORS)
+	_colors[PAINT] = look.paint
+	var hairs := look.hair_colors
 	_colors[HAIR] = hairs[mini(appearance.hair_color, hairs.size() - 1)]
-	_colors[EYES] = RACE_EYES.get(race, EYE_COLOR)
+	_colors[EYES] = look.eye_color
 	# The whites of the eyes; races whose eyes glow glow all over.
-	_colors[SCLERA] = RACE_EYES[race] if race in ["undead", "wood_elf", "barkling"] else Color(0.92, 0.9, 0.86)
-	_colors[TRIM] = TRIM_COLOR
+	_colors[SCLERA] = look.eye_color if look.glowing_eyes else Color(0.92, 0.9, 0.86)
+	_colors[TRIM] = _gear_colors().trim
 	# Women are a little smaller.
 	_model.scale = Vector3.ONE * (0.95 if body == 1 else 1.0)
 
 
-## The head, ears, the race's chosen feature and markings (RACE_OPTIONS), in
+## The head, ears, the race's chosen feature and markings (the race's RaceLook), in
 ## the body's shape, less what the helm worn hides (FULL_HELMS,
 ## HELM_HIDES_FEATURE).
 func _apply_head(helm: String) -> void:
@@ -684,7 +614,7 @@ func _apply_equipment() -> void:
 	# Sleeves are the chest piece's, or the shirt's, where no bracers are worn.
 	_colors[WRISTS] = _armor_color(Inventory.Slot.WRIST, chest if _item(Inventory.Slot.CHEST).size() > 0 else shirt)
 	_colors[HANDS] = _armor_color(Inventory.Slot.HANDS, outfit.get(HANDS, skin))
-	_colors[LEGS] = _armor_color(Inventory.Slot.LEGS, outfit.get(LEGS, SMALLCLOTHES))
+	_colors[LEGS] = _armor_color(Inventory.Slot.LEGS, outfit.get(LEGS, _gear_colors().smallclothes))
 	# A robe's skirt covers the legs.
 	if int(_item(Inventory.Slot.CHEST).get("InventoryType", 0)) == INVTYPE_ROBE:
 		_colors[LEGS] = chest
@@ -723,7 +653,7 @@ func _apply_equipment() -> void:
 		_show(part, part == helm)
 	_apply_head(helm)
 	_colors[HEAD] = _armor_color(Inventory.Slot.HEAD, outfit.get(HEAD, chest))
-	_colors[HELM_TRIM] = TRIM_COLOR if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
+	_colors[HELM_TRIM] = _gear_colors().trim if int(head.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
 	var body: int = appearance.get("body", 0)
 	var hair: String = RACE_HAIR_STYLES.get(race, HAIR_STYLES)[body][appearance.get("hair", 0)] if helm == "" else ""
 	var face: String = RACE_FACES.get(race, FACES)[body][appearance.get("face", 0)] if helm not in CLOSED_HELMS else ""
@@ -733,7 +663,7 @@ func _apply_equipment() -> void:
 	var cloak := _item(Inventory.Slot.BACK)
 	_show("Cloak", cloak.size() > 0 or outfit.has(BACK))
 	_cape_springs(_shown.has("Cloak") and _cape_moves())
-	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, CLOTH[0]))
+	_colors[BACK] = _armor_color(Inventory.Slot.BACK, outfit.get(BACK, _gear_colors().cloth[0]))
 	_apply_props()
 	_apply_weapon_glow()
 
@@ -934,36 +864,36 @@ func _apply_props() -> void:
 		# heads plain. Grips of wood, or wrapped.
 		_patterns[BLADE] = Pattern.NONE if int(main.get("subclass", 0)) in [10, 19, 20] else Pattern.BRUSHED
 		_patterns[HANDLE] = [Pattern.WOOD, Pattern.WRAP][_pick(main, 2)] if int(main.get("subclass", 0)) not in [10, 20] else Pattern.WOOD
-		_colors[TRIM] = TRIM_COLOR if int(main.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
+		_colors[TRIM] = _gear_colors().trim if int(main.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
 	if off.size() > 0:
 		if off_prop.begins_with("Shield"):
-			_colors[SHIELD] = _armor_color(Inventory.Slot.OFF_HAND, WOOD)
-			_colors[SHIELD_TRIM] = TRIM_COLOR if int(off.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
+			_colors[SHIELD] = _armor_color(Inventory.Slot.OFF_HAND, _gear_colors().wood)
+			_colors[SHIELD_TRIM] = _gear_colors().trim if int(off.get("Quality", 1)) >= 3 else Color(0.5, 0.5, 0.53)
 			# Boards, painted or not, or (the grey ones) beaten metal.
 			_patterns[SHIELD] = Pattern.HAMMERED if _name_color(off).a == 0.0 and _pick(off, 4) == 3 else Pattern.PLANKS
 			_patterns[SHIELD_TRIM] = Pattern.BRUSHED
 		else:
 			_colors[SHIELD_TRIM] = _blade_color(off)
 			_patterns[SHIELD_TRIM] = Pattern.BRUSHED
-			_colors[SHIELD] = TRIM_COLOR if int(off.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
+			_colors[SHIELD] = _gear_colors().trim if int(off.get("Quality", 1)) >= 2 else Color(0.42, 0.42, 0.44)
 			if main.size() == 0:
 				_colors[HANDLE] = _handle_color(off)
 	# Gems by quality, leather bindings, a shield's device or a book's pages.
 	var fine := main if main.size() > 0 else off
-	_colors[GEM] = GEM_COLORS[clampi(int(fine.get("Quality", 1)), 0, GEM_COLORS.size() - 1)]
-	_colors[STRAP] = STRAP_COLOR
+	_colors[GEM] = _gear_colors().gem_colors[clampi(int(fine.get("Quality", 1)), 0, _gear_colors().gem_colors.size() - 1)]
+	_colors[STRAP] = _gear_colors().strap
 	if off_prop.begins_with("Shield"):
 		var device := _name_color(off)
-		_colors[EMBLEM] = device if device.a > 0.0 and device != _colors[SHIELD] else (TRIM_COLOR if int(off.get("Quality", 1)) >= 2 else PARCHMENT)
+		_colors[EMBLEM] = device if device.a > 0.0 and device != _colors[SHIELD] else (_gear_colors().trim if int(off.get("Quality", 1)) >= 2 else _gear_colors().parchment)
 	else:
-		_colors[EMBLEM] = PARCHMENT
+		_colors[EMBLEM] = _gear_colors().parchment
 	if not creature_gear.is_empty():
 		_patterns[BLADE] = Pattern.BRUSHED
 		_patterns[SHIELD] = Pattern.PLANKS
-		_colors[BLADE] = STEEL.darkened(0.15)
-		_colors[HANDLE] = WOOD
-		_colors[SHIELD] = WOOD
-		_colors[SHIELD_TRIM] = STEEL.darkened(0.15)
+		_colors[BLADE] = _gear_colors().steel.darkened(0.15)
+		_colors[HANDLE] = _gear_colors().wood
+		_colors[SHIELD] = _gear_colors().wood
+		_colors[SHIELD_TRIM] = _gear_colors().steel.darkened(0.15)
 	_push_colors()
 
 
@@ -1171,48 +1101,35 @@ static func _gear_patterns() -> Texture2DArray:
 static func outfit_for(trade: String, seed_value: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var body: Color = CLOTH[rng.randi_range(0, CLOTH.size() - 1)]
-	var legs: Color = LEATHER[rng.randi_range(0, LEATHER.size() - 1)]
+	var gear := _gear_colors()
+	var body: Color = gear.cloth[rng.randi_range(0, gear.cloth.size() - 1)]
+	var legs: Color = gear.leather[rng.randi_range(0, gear.leather.size() - 1)]
 	var cloth: Array = ARMOR_PATTERNS[1]
 	var body_pattern: int = cloth[rng.randi_range(0, cloth.size() - 1)]
 	var legs_pattern := Pattern.LEATHER
-	match trade:
-		"paladin":
-			body = PLATE[rng.randi_range(0, PLATE.size() - 1)]
-			legs = body.darkened(0.15)
-			body_pattern = [Pattern.PLATE, Pattern.BANDED][rng.randi_range(0, 1)]
+	# The trade's own (data/looks/outfits.tres): a colour and pattern picked
+	# where there's a choice, legs like the chest for robes and suits.
+	var trade_outfit := gear.for_trade(trade)
+	if trade_outfit:
+		var colors := gear.palette(trade_outfit.body_palette)
+		if colors.is_empty():
+			colors = trade_outfit.body_colors
+		if colors.size() == 1:
+			body = colors[0]
+		elif colors.size() > 1:
+			body = colors[rng.randi_range(0, colors.size() - 1)]
+		if trade_outfit.body_darken > 0.0:
+			body = body.darkened(trade_outfit.body_darken)
+		var patterns := trade_outfit.body_patterns
+		if patterns.size() == 1:
+			body_pattern = patterns[0]
+		elif patterns.size() > 1:
+			body_pattern = patterns[rng.randi_range(0, patterns.size() - 1)]
+		if trade_outfit.legs_like_body:
+			legs = body.darkened(trade_outfit.legs_darken) if trade_outfit.legs_darken > 0.0 else body
+		if trade_outfit.legs_pattern_like_body:
 			legs_pattern = body_pattern
-		"warrior", "weapons":
-			body = MAIL[rng.randi_range(0, MAIL.size() - 1)]
-			body_pattern = [Pattern.CHAIN, Pattern.SCALE][rng.randi_range(0, 1)]
-		"priest":
-			body = [Color(0.88, 0.86, 0.8), Color(0.75, 0.65, 0.4), Color(0.55, 0.15, 0.15)][rng.randi_range(0, 2)]
-			legs = body
-			legs_pattern = body_pattern
-		"spellsword":
-			body = Color(0.25, 0.3, 0.55)
-			body_pattern = Pattern.QUILTED
-		"mage":
-			# A Magus's robe: deep blue, violet or crimson, down to the feet.
-			body = [Color(0.2, 0.25, 0.55), Color(0.35, 0.2, 0.5), Color(0.5, 0.15, 0.18)][rng.randi_range(0, 2)]
-			legs = body
-			body_pattern = Pattern.STRIPES
-			legs_pattern = body_pattern
-		# Profession trainers: a miner's leather, a herbalist's greens, a
-		# skinner's hides and an enchanter's violet robe.
-		"mining":
-			body = LEATHER[rng.randi_range(0, LEATHER.size() - 1)].darkened(0.25)
-			body_pattern = Pattern.STUDDED
-		"herbalism":
-			body = [Color(0.3, 0.45, 0.25), Color(0.4, 0.5, 0.3), Color(0.25, 0.38, 0.3)][rng.randi_range(0, 2)]
-		"skinning":
-			body = LEATHER[rng.randi_range(0, LEATHER.size() - 1)]
-			body_pattern = Pattern.TOOLED
-		"enchanting":
-			body = [Color(0.42, 0.25, 0.55), Color(0.3, 0.22, 0.5)][rng.randi_range(0, 1)]
-			legs = body
-			legs_pattern = body_pattern
-	var boots: Color = LEATHER[rng.randi_range(0, LEATHER.size() - 1)].darkened(0.2)
+	var boots: Color = gear.leather[rng.randi_range(0, gear.leather.size() - 1)].darkened(0.2)
 	return { CHEST: body, LEGS: legs, FEET: boots, HANDS: boots, WAIST: boots.darkened(0.2),
 		"patterns": { CHEST: body_pattern, WRISTS: body_pattern, SHOULDERS: body_pattern, LEGS: legs_pattern,
 			FEET: Pattern.LEATHER, HANDS: Pattern.LEATHER, WAIST: Pattern.TOOLED } }
@@ -1273,16 +1190,17 @@ func _armor_color(slot: int, bare: Color) -> Color:
 	if named.a > 0.0:
 		color = named
 	else:
-		var palette: Array = CLOTH
+		var gear := _gear_colors()
+		var palette: Array = Array(gear.cloth)
 		match int(item.get("subclass", 0)):
 			2:
-				palette = LEATHER
+				palette = Array(gear.leather)
 			3:
-				palette = MAIL
+				palette = Array(gear.mail)
 			4:
-				palette = PLATE
+				palette = Array(gear.plate)
 			6:
-				palette = [WOOD, Color(0.55, 0.15, 0.12), Color(0.2, 0.28, 0.5), Color(0.5, 0.5, 0.52)]
+				palette = [gear.wood, Color(0.55, 0.15, 0.12), Color(0.2, 0.28, 0.5), Color(0.5, 0.5, 0.52)]
 		color = palette[_pick(item, palette.size())]
 	return _by_quality(color, int(item.get("Quality", 1)))
 
@@ -1303,9 +1221,14 @@ func _armor_pattern(slot: int, bare: int) -> int:
 
 func _name_color(item: Dictionary) -> Color:
 	for word in str(item.get("name", "")).to_lower().replace("'", " ").split(" "):
-		if NAME_COLORS.has(word):
-			return NAME_COLORS[word]
+		if _gear_colors().name_colors.has(word):
+			return _gear_colors().name_colors[word]
 	return Color(0, 0, 0, 0)
+
+
+## The gear's colours (data/looks/outfits.tres).
+static func _gear_colors() -> OutfitLooks:
+	return CharacterLooks.outfits()
 
 
 static func _by_quality(color: Color, quality: int) -> Color:
@@ -1320,16 +1243,16 @@ func _blade_color(item: Dictionary) -> Color:
 	var subclass := int(item.get("subclass", 0))
 	if subclass in [10, 19, 20]:
 		# Staves and wands: a gem or a carved head.
-		var gems := [Color(0.3, 0.6, 0.9), Color(0.8, 0.3, 0.2), Color(0.5, 0.85, 0.4), Color(0.75, 0.5, 0.9), WOOD.lightened(0.2)]
+		var gems := [Color(0.3, 0.6, 0.9), Color(0.8, 0.3, 0.2), Color(0.5, 0.85, 0.4), Color(0.75, 0.5, 0.9), _gear_colors().wood.lightened(0.2)]
 		return gems[_pick(item, gems.size())]
 	var named := _name_color(item)
 	if named.a > 0.0 and int(item.get("Quality", 1)) >= 2:
-		return STEEL.lerp(named, 0.4)
-	return _by_quality(STEEL, int(item.get("Quality", 1)))
+		return _gear_colors().steel.lerp(named, 0.4)
+	return _by_quality(_gear_colors().steel, int(item.get("Quality", 1)))
 
 
 func _handle_color(item: Dictionary) -> Color:
-	return [WOOD, Color(0.3, 0.2, 0.12), Color(0.2, 0.16, 0.14)][_pick(item, 3)]
+	return [_gear_colors().wood, Color(0.3, 0.2, 0.12), Color(0.2, 0.16, 0.14)][_pick(item, 3)]
 
 
 ## A tint over the whole model: the corpse's grey, or none.
@@ -1399,6 +1322,14 @@ func _cape_moves() -> bool:
 
 
 ## The graphics options changed (set_graphics).
+## Its colours worked out again (ContentWatch, when a RaceLook or the
+## outfits' colours are saved).
+func refresh_looks() -> void:
+	if _skeleton:
+		_apply_appearance()
+		_apply_equipment()
+
+
 func refresh_graphics() -> void:
 	for part: String in _shown:
 		_part_graphics(part, _shown[part])

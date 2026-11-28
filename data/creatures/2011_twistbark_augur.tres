@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ai486"]
+
+[resource]
+script = ExtResource("1_ai486")
+entry = 2011
+creature_name = "Twistbark Augur"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.5, 0.42, 0.3, 1)
+model = "ditchjaw"
+main = "staff"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_584l1"]
+
+[resource]
+script = ExtResource("1_584l1")
+entry = 1530
+creature_name = "Rotting Ancestor"
+color = Color(0.45, 0.48, 0.4, 1)
+model = "undead"
+dressed = true
+band = Color(0.3, 0.28, 0.26, 1)
+cloak = false

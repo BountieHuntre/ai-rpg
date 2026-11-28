@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_q1o0n"]
+
+[resource]
+script = ExtResource("1_q1o0n")
+entry = 3566
+creature_name = "Flatland Prowler"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.5, 0.42, 0.3, 1)
+model = "tiger"

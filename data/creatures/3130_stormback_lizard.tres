@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_cfpbq"]
+
+[resource]
+script = ExtResource("1_cfpbq")
+entry = 3130
+creature_name = "Stormback Lizard"
+size = Vector3(1.2, 0.9, 1.4)
+color = Color(0.45, 0.5, 0.55, 1)
+model = "thunder_lizard"

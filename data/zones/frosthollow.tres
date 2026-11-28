@@ -1,0 +1,293 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_nku6e"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_yf2i1"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_gqmsr"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_oiclw"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_8ukrv"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_105qj"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_mok53"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_irham"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_n6mnu"]
+
+[sub_resource type="Resource" id="Resource_hybim"]
+script = ExtResource("1_nku6e")
+entry = 148499
+center = Vector2(-985, -1128)
+radius = 6.0
+
+[sub_resource type="Resource" id="Resource_jryo0"]
+script = ExtResource("1_nku6e")
+entry = 178084
+center = Vector2(-800, -1075)
+radius = 6.0
+
+[sub_resource type="Resource" id="Resource_14jr2"]
+script = ExtResource("1_nku6e")
+entry = 178085
+center = Vector2(-782, -945)
+radius = 6.0
+
+[sub_resource type="Resource" id="Resource_4nkos"]
+resource_name = "the Hollow Hall, door to the south"
+script = ExtResource("2_yf2i1")
+name = "the Hollow Hall, door to the south"
+least = Vector2(-905, -1032)
+most = Vector2(-875, -1020)
+outside = Vector2(-890, -1016)
+inside = Vector2(-890, -1024)
+
+[sub_resource type="Resource" id="Resource_8hyth"]
+resource_name = "Tavin's camp"
+script = ExtResource("3_gqmsr")
+name = "Tavin's camp"
+key = "TAVIN"
+center = Vector2(-1010, -990)
+radius = 9.0
+
+[sub_resource type="Resource" id="Resource_ok1ej"]
+resource_name = "Gerrin's camp"
+script = ExtResource("3_gqmsr")
+name = "Gerrin's camp"
+key = "GERRIN"
+center = Vector2(-960, -1105)
+radius = 9.0
+
+[sub_resource type="Resource" id="Resource_kh2cf"]
+resource_name = "before the Troll Caves"
+script = ExtResource("3_gqmsr")
+name = "before the Troll Caves"
+key = "CAVES"
+center = Vector2(-1010, -1150)
+radius = 16.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_4xs3l"]
+resource_name = "the trogg diggings"
+script = ExtResource("3_gqmsr")
+name = "the trogg diggings"
+key = "DIGGINGS"
+center = Vector2(-805, -1065)
+radius = 16.0
+height = 4.5
+
+[sub_resource type="Resource" id="Resource_gh0yc"]
+resource_name = "the hill the Troll Caves run into"
+script = ExtResource("3_gqmsr")
+name = "the hill the Troll Caves run into"
+center = Vector2(-1030, -1185)
+radius = 40.0
+height = 20.0
+
+[sub_resource type="Resource" id="Resource_wc7m2"]
+resource_name = "the rise behind the Hollow Hall"
+script = ExtResource("3_gqmsr")
+name = "the rise behind the Hollow Hall"
+center = Vector2(-890, -1060)
+radius = 30.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_l7rqh"]
+script = ExtResource("3_gqmsr")
+center = Vector2(-780, -1110)
+radius = 30.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_gpw6h"]
+script = ExtResource("3_gqmsr")
+center = Vector2(-1060, -880)
+radius = 40.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_hjkfc"]
+resource_name = "Tavin's camp"
+script = ExtResource("4_oiclw")
+name = "Tavin's camp"
+center = Vector2(-1010, -990)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_1rxm2"]
+resource_name = "Gerrin's camp"
+script = ExtResource("4_oiclw")
+name = "Gerrin's camp"
+center = Vector2(-960, -1105)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_c5ys6"]
+resource_name = "the Hollow Hall"
+script = ExtResource("4_oiclw")
+name = "the Hollow Hall"
+center = Vector2(-890, -1000)
+radius = 34.0
+
+[sub_resource type="Resource" id="Resource_egmy1"]
+resource_name = "the Troll Caves"
+script = ExtResource("4_oiclw")
+name = "the Troll Caves"
+center = Vector2(-1010, -1150)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_xsfxt"]
+resource_name = "the Frozen Stair"
+script = ExtResource("4_oiclw")
+name = "the Frozen Stair"
+center = Vector2(-765, -950)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_04h38"]
+resource_name = "the trogg diggings"
+script = ExtResource("4_oiclw")
+name = "the trogg diggings"
+center = Vector2(-805, -1065)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_puyqp"]
+resource_name = "the wolf hollow"
+script = ExtResource("4_oiclw")
+name = "the wolf hollow"
+center = Vector2(-930, -885)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_s8gvo"]
+resource_name = "the boar slopes"
+script = ExtResource("4_oiclw")
+name = "the boar slopes"
+center = Vector2(-1035, -930)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_h88m1"]
+script = ExtResource("6_105qj")
+points = PackedVector2Array(-870, -990, -820, -970, -770, -955)
+
+[sub_resource type="Resource" id="Resource_a6qsl"]
+script = ExtResource("6_105qj")
+points = PackedVector2Array(-910, -995, -960, -992, -1000, -990)
+
+[sub_resource type="Resource" id="Resource_86fyl"]
+script = ExtResource("6_105qj")
+points = PackedVector2Array(-905, -1012, -935, -1060, -958, -1098)
+
+[sub_resource type="Resource" id="Resource_r5y5r"]
+script = ExtResource("6_105qj")
+points = PackedVector2Array(-965, -1112, -990, -1135)
+
+[sub_resource type="Resource" id="Resource_nymob"]
+script = ExtResource("6_105qj")
+points = PackedVector2Array(-860, -1012, -830, -1045)
+
+[sub_resource type="Resource" id="Resource_a1tsm"]
+resource_name = "Ragged Young Wolf (1-2)"
+script = ExtResource("8_irham")
+name = "Ragged Young Wolf (1-2)"
+entry = 705
+creature = "Ragged Young Wolf"
+center = Vector2(-850, -905)
+radius = 40.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_7awsn"]
+script = ExtResource("8_irham")
+entry = 705
+creature = "Ragged Young Wolf"
+center = Vector2(-950, -1055)
+radius = 35.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_5wsbg"]
+resource_name = "Ragged Timber Wolf (2-3)"
+script = ExtResource("8_irham")
+name = "Ragged Timber Wolf (2-3)"
+entry = 704
+creature = "Ragged Timber Wolf"
+center = Vector2(-1000, -905)
+radius = 45.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_ey0ks"]
+resource_name = "Small Crag Boar (3)"
+script = ExtResource("8_irham")
+name = "Small Crag Boar (3)"
+entry = 708
+creature = "Small Crag Boar"
+center = Vector2(-1045, -955)
+radius = 40.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_wiuo4"]
+script = ExtResource("8_irham")
+entry = 708
+creature = "Small Crag Boar"
+center = Vector2(-935, -885)
+radius = 40.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_j1quj"]
+resource_name = "Stonejaw Trogg, the diggings (1-2)"
+script = ExtResource("8_irham")
+name = "Stonejaw Trogg, the diggings (1-2)"
+entry = 707
+creature = "Stonejaw Trogg"
+center = Vector2(-820, -1055)
+radius = 40.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_viq5g"]
+resource_name = "Burly Stonejaw Trogg (2-3)"
+script = ExtResource("8_irham")
+name = "Burly Stonejaw Trogg (2-3)"
+entry = 724
+creature = "Burly Stonejaw Trogg"
+center = Vector2(-790, -1090)
+radius = 35.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_1yxgv"]
+resource_name = "Stonejaw Raider, the Frozen Stair (3-4)"
+script = ExtResource("8_irham")
+name = "Stonejaw Raider, the Frozen Stair (3-4)"
+entry = 1718
+creature = "Stonejaw Raider"
+center = Vector2(-775, -935)
+radius = 28.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_wxt1u"]
+resource_name = "Icemane Troll Whelp, the Troll Caves (3-4)"
+script = ExtResource("8_irham")
+name = "Icemane Troll Whelp, the Troll Caves (3-4)"
+entry = 706
+creature = "Icemane Troll Whelp"
+center = Vector2(-1000, -1135)
+radius = 35.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_v0g66"]
+resource_name = "Icemane Novice (3-4)"
+script = ExtResource("8_irham")
+name = "Icemane Novice (3-4)"
+entry = 946
+creature = "Icemane Novice"
+center = Vector2(-1015, -1155)
+radius = 16.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_8oguk"]
+resource_name = "Grisknar the Cold (5)"
+script = ExtResource("8_irham")
+name = "Grisknar the Cold (5)"
+entry = 808
+creature = "Grisknar the Cold"
+center = Vector2(-1022, -1168)
+radius = 1.0
+
+[resource]
+script = ExtResource("7_mok53")
+zone_name = "Frosthollow"
+places = Array[ExtResource("4_oiclw")]([SubResource("Resource_hjkfc"), SubResource("Resource_1rxm2"), SubResource("Resource_c5ys6"), SubResource("Resource_egmy1"), SubResource("Resource_xsfxt"), SubResource("Resource_04h38"), SubResource("Resource_puyqp"), SubResource("Resource_s8gvo")])
+flats = Array[ExtResource("3_gqmsr")]([SubResource("Resource_8hyth"), SubResource("Resource_ok1ej"), SubResource("Resource_kh2cf"), SubResource("Resource_4xs3l")])
+hills = Array[ExtResource("3_gqmsr")]([SubResource("Resource_gh0yc"), SubResource("Resource_wc7m2"), SubResource("Resource_l7rqh"), SubResource("Resource_gpw6h")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_105qj")]([SubResource("Resource_h88m1"), SubResource("Resource_a6qsl"), SubResource("Resource_86fyl"), SubResource("Resource_r5y5r"), SubResource("Resource_nymob")])
+spawns = Array[ExtResource("8_irham")]([SubResource("Resource_a1tsm"), SubResource("Resource_7awsn"), SubResource("Resource_5wsbg"), SubResource("Resource_ey0ks"), SubResource("Resource_wiuo4"), SubResource("Resource_j1quj"), SubResource("Resource_viq5g"), SubResource("Resource_1yxgv"), SubResource("Resource_wxt1u"), SubResource("Resource_v0g66"), SubResource("Resource_8oguk")])
+chests = Array[ExtResource("1_nku6e")]([SubResource("Resource_hybim"), SubResource("Resource_jryo0"), SubResource("Resource_14jr2")])
+enclosures = Array[ExtResource("2_yf2i1")]([SubResource("Resource_4nkos")])

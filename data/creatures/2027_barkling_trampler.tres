@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_a16fu"]
+
+[resource]
+script = ExtResource("1_a16fu")
+entry = 2027
+creature_name = "Barkling Trampler"
+size = Vector3(1.15, 1.15, 1.15)
+color = Color(0.36, 0.3, 0.24, 1)
+model = "barkling"

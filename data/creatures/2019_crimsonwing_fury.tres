@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_fj56j"]
+
+[resource]
+script = ExtResource("1_fj56j")
+entry = 2019
+creature_name = "Crimsonwing Fury"
+color = Color(0.65, 0.25, 0.25, 1)
+model = "harpy"

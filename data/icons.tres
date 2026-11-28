@@ -1,0 +1,1362 @@
+[gd_resource type="Resource" script_class="IconMaps" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/icon_word.gd" id="1_kej40"]
+[ext_resource type="Script" path="res://scripts/content/icon_maps.gd" id="2_lcoiv"]
+
+[sub_resource type="Resource" id="Resource_uu4ew"]
+resource_name = "Mirefin: fin"
+script = ExtResource("1_kej40")
+word = "Mirefin"
+icon = "fin"
+
+[sub_resource type="Resource" id="Resource_u6e6f"]
+resource_name = "Ditchjaw: tooth_paw"
+script = ExtResource("1_kej40")
+word = "Ditchjaw"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_uam0j"]
+resource_name = "Grunmaw: tooth_paw"
+script = ExtResource("1_kej40")
+word = "Grunmaw"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_kwdnj"]
+resource_name = "Burrowling: candle"
+script = ExtResource("1_kej40")
+word = "Burrowling"
+icon = "candle"
+
+[sub_resource type="Resource" id="Resource_4oia2"]
+resource_name = "Brasstooth: tooth_gold"
+script = ExtResource("1_kej40")
+word = "Brasstooth"
+icon = "tooth_gold"
+
+[sub_resource type="Resource" id="Resource_xpbob"]
+resource_name = "Brigand: bandana"
+script = ExtResource("1_kej40")
+word = "Brigand"
+icon = "bandana"
+
+[sub_resource type="Resource" id="Resource_tlwcs"]
+resource_name = "Collector: ring_rare"
+script = ExtResource("1_kej40")
+word = "Collector"
+icon = "ring_rare"
+
+[sub_resource type="Resource" id="Resource_08cum"]
+resource_name = "Spider: limb"
+script = ExtResource("1_kej40")
+word = "Spider"
+icon = "limb"
+
+[sub_resource type="Resource" id="Resource_2v0w0"]
+resource_name = "Wolf: tooth"
+script = ExtResource("1_kej40")
+word = "Wolf"
+icon = "tooth"
+
+[sub_resource type="Resource" id="Resource_h8tqf"]
+resource_name = "Prowler: tooth_claw"
+script = ExtResource("1_kej40")
+word = "Prowler"
+icon = "tooth_claw"
+
+[sub_resource type="Resource" id="Resource_6eo1y"]
+resource_name = "Bear: tooth_paw"
+script = ExtResource("1_kej40")
+word = "Bear"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_ppumn"]
+resource_name = "Boar: tooth_tusk"
+script = ExtResource("1_kej40")
+word = "Boar"
+icon = "tooth_tusk"
+
+[sub_resource type="Resource" id="Resource_ro7uh"]
+resource_name = "Hog: tooth_tusk"
+script = ExtResource("1_kej40")
+word = "Hog"
+icon = "tooth_tusk"
+
+[sub_resource type="Resource" id="Resource_3sk0d"]
+resource_name = "Duchess: tooth_tusk"
+script = ExtResource("1_kej40")
+word = "Duchess"
+icon = "tooth_tusk"
+
+[sub_resource type="Resource" id="Resource_turnd"]
+resource_name = "Rabbit: tooth_paw"
+script = ExtResource("1_kej40")
+word = "Rabbit"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_xymfm"]
+resource_name = "healing potion: potion_red"
+script = ExtResource("1_kej40")
+word = "healing potion"
+icon = "potion_red"
+
+[sub_resource type="Resource" id="Resource_mw78x"]
+resource_name = "mana potion: potion_blue"
+script = ExtResource("1_kej40")
+word = "mana potion"
+icon = "potion_blue"
+
+[sub_resource type="Resource" id="Resource_mlbu8"]
+resource_name = "potion: potion_green"
+script = ExtResource("1_kej40")
+word = "potion"
+icon = "potion_green"
+
+[sub_resource type="Resource" id="Resource_ydd1e"]
+resource_name = "liquor: bottle"
+script = ExtResource("1_kej40")
+word = "liquor"
+icon = "bottle"
+
+[sub_resource type="Resource" id="Resource_78pbm"]
+resource_name = "scroll of strength: scroll_strength"
+script = ExtResource("1_kej40")
+word = "scroll of strength"
+icon = "scroll_strength"
+
+[sub_resource type="Resource" id="Resource_p5twf"]
+resource_name = "scroll of agility: scroll_agility"
+script = ExtResource("1_kej40")
+word = "scroll of agility"
+icon = "scroll_agility"
+
+[sub_resource type="Resource" id="Resource_ieg1a"]
+resource_name = "scroll of intellect: scroll_intellect"
+script = ExtResource("1_kej40")
+word = "scroll of intellect"
+icon = "scroll_intellect"
+
+[sub_resource type="Resource" id="Resource_ahubi"]
+resource_name = "scroll of spirit: scroll_spirit"
+script = ExtResource("1_kej40")
+word = "scroll of spirit"
+icon = "scroll_spirit"
+
+[sub_resource type="Resource" id="Resource_x8k3c"]
+resource_name = "scroll of stamina: scroll_stamina"
+script = ExtResource("1_kej40")
+word = "scroll of stamina"
+icon = "scroll_stamina"
+
+[sub_resource type="Resource" id="Resource_u6xrk"]
+resource_name = "scroll of protection: scroll_protection"
+script = ExtResource("1_kej40")
+word = "scroll of protection"
+icon = "scroll_protection"
+
+[sub_resource type="Resource" id="Resource_7lksu"]
+resource_name = "mana pearl: gem_pearl"
+script = ExtResource("1_kej40")
+word = "mana pearl"
+icon = "gem_pearl"
+
+[sub_resource type="Resource" id="Resource_pi83d"]
+resource_name = "mana amber: gem_amber"
+script = ExtResource("1_kej40")
+word = "mana amber"
+icon = "gem_amber"
+
+[sub_resource type="Resource" id="Resource_shwhi"]
+resource_name = "mana topaz: gem_topaz"
+script = ExtResource("1_kej40")
+word = "mana topaz"
+icon = "gem_topaz"
+
+[sub_resource type="Resource" id="Resource_bhp2n"]
+resource_name = "mana garnet: gem_garnet"
+script = ExtResource("1_kej40")
+word = "mana garnet"
+icon = "gem_garnet"
+
+[sub_resource type="Resource" id="Resource_3on0o"]
+resource_name = "milk: flask_milk"
+script = ExtResource("1_kej40")
+word = "milk"
+icon = "flask_milk"
+
+[sub_resource type="Resource" id="Resource_i6qx2"]
+resource_name = "juice: flask_juice"
+script = ExtResource("1_kej40")
+word = "juice"
+icon = "flask_juice"
+
+[sub_resource type="Resource" id="Resource_glh3q"]
+resource_name = "nectar: flask_juice"
+script = ExtResource("1_kej40")
+word = "nectar"
+icon = "flask_juice"
+
+[sub_resource type="Resource" id="Resource_vtgaw"]
+resource_name = "water: flask_water"
+script = ExtResource("1_kej40")
+word = "water"
+icon = "flask_water"
+
+[sub_resource type="Resource" id="Resource_t8wym"]
+resource_name = "dew: flask_water"
+script = ExtResource("1_kej40")
+word = "dew"
+icon = "flask_water"
+
+[sub_resource type="Resource" id="Resource_6yjey"]
+resource_name = "cheese: cheese"
+script = ExtResource("1_kej40")
+word = "cheese"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_r14pm"]
+resource_name = "brie: cheese"
+script = ExtResource("1_kej40")
+word = "brie"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_vb5pi"]
+resource_name = "cheddar: cheese"
+script = ExtResource("1_kej40")
+word = "cheddar"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_gohdv"]
+resource_name = "swiss: cheese"
+script = ExtResource("1_kej40")
+word = "swiss"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_i50aw"]
+resource_name = "sharp: cheese"
+script = ExtResource("1_kej40")
+word = "sharp"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_s4a7u"]
+resource_name = "mild: cheese"
+script = ExtResource("1_kej40")
+word = "mild"
+icon = "cheese"
+
+[sub_resource type="Resource" id="Resource_obavw"]
+resource_name = "pie: pie"
+script = ExtResource("1_kej40")
+word = "pie"
+icon = "pie"
+
+[sub_resource type="Resource" id="Resource_4wx0h"]
+resource_name = "loaf: bread"
+script = ExtResource("1_kej40")
+word = "loaf"
+icon = "bread"
+
+[sub_resource type="Resource" id="Resource_tkps3"]
+resource_name = "bread: bread"
+script = ExtResource("1_kej40")
+word = "bread"
+icon = "bread"
+
+[sub_resource type="Resource" id="Resource_8e18x"]
+resource_name = "apple: fruit_apple"
+script = ExtResource("1_kej40")
+word = "apple"
+icon = "fruit_apple"
+
+[sub_resource type="Resource" id="Resource_ljix3"]
+resource_name = "melon: fruit_melon"
+script = ExtResource("1_kej40")
+word = "melon"
+icon = "fruit_melon"
+
+[sub_resource type="Resource" id="Resource_xfcd0"]
+resource_name = "pumpkin: fruit_pumpkin"
+script = ExtResource("1_kej40")
+word = "pumpkin"
+icon = "fruit_pumpkin"
+
+[sub_resource type="Resource" id="Resource_5mrno"]
+resource_name = "mackerel: fish"
+script = ExtResource("1_kej40")
+word = "mackerel"
+icon = "fish"
+
+[sub_resource type="Resource" id="Resource_kpmf5"]
+resource_name = "snapper: fish"
+script = ExtResource("1_kej40")
+word = "snapper"
+icon = "fish"
+
+[sub_resource type="Resource" id="Resource_0a3q7"]
+resource_name = "fish: fish"
+script = ExtResource("1_kej40")
+word = "fish"
+icon = "fish"
+
+[sub_resource type="Resource" id="Resource_e64ix"]
+resource_name = "woodcap: mushroom_brown"
+script = ExtResource("1_kej40")
+word = "woodcap"
+icon = "mushroom_brown"
+
+[sub_resource type="Resource" id="Resource_5xvsc"]
+resource_name = "mushroom: mushroom"
+script = ExtResource("1_kej40")
+word = "mushroom"
+icon = "mushroom"
+
+[sub_resource type="Resource" id="Resource_3fo1p"]
+resource_name = "candle: candle"
+script = ExtResource("1_kej40")
+word = "candle"
+icon = "candle"
+
+[sub_resource type="Resource" id="Resource_eha5i"]
+resource_name = "taper: candle"
+script = ExtResource("1_kej40")
+word = "taper"
+icon = "candle"
+
+[sub_resource type="Resource" id="Resource_jbku2"]
+resource_name = "cologne: bottle_perfume"
+script = ExtResource("1_kej40")
+word = "cologne"
+icon = "bottle_perfume"
+
+[sub_resource type="Resource" id="Resource_jxl3w"]
+resource_name = "perfume: bottle_perfume"
+script = ExtResource("1_kej40")
+word = "perfume"
+icon = "bottle_perfume"
+
+[sub_resource type="Resource" id="Resource_a3nkx"]
+resource_name = "beads: pouch"
+script = ExtResource("1_kej40")
+word = "beads"
+icon = "pouch"
+
+[sub_resource type="Resource" id="Resource_5ydmn"]
+resource_name = "gold dust: pouch_gold"
+script = ExtResource("1_kej40")
+word = "gold dust"
+icon = "pouch_gold"
+
+[sub_resource type="Resource" id="Resource_sp3gd"]
+resource_name = "token: token"
+script = ExtResource("1_kej40")
+word = "token"
+icon = "token"
+
+[sub_resource type="Resource" id="Resource_qbbbb"]
+resource_name = "linen cloth: cloth_linen"
+script = ExtResource("1_kej40")
+word = "linen cloth"
+icon = "cloth_linen"
+
+[sub_resource type="Resource" id="Resource_xfiso"]
+resource_name = "cloth: cloth"
+script = ExtResource("1_kej40")
+word = "cloth"
+icon = "cloth"
+
+[sub_resource type="Resource" id="Resource_v4uuq"]
+resource_name = "copper ore: ore_copper"
+script = ExtResource("1_kej40")
+word = "copper ore"
+icon = "ore_copper"
+
+[sub_resource type="Resource" id="Resource_308sx"]
+resource_name = "iron ore: ore_iron"
+script = ExtResource("1_kej40")
+word = "iron ore"
+icon = "ore_iron"
+
+[sub_resource type="Resource" id="Resource_hbsss"]
+resource_name = "ore: ore"
+script = ExtResource("1_kej40")
+word = "ore"
+icon = "ore"
+
+[sub_resource type="Resource" id="Resource_wktm2"]
+resource_name = "salt: stone_salt"
+script = ExtResource("1_kej40")
+word = "salt"
+icon = "stone_salt"
+
+[sub_resource type="Resource" id="Resource_7hvyn"]
+resource_name = "stone: stone"
+script = ExtResource("1_kej40")
+word = "stone"
+icon = "stone"
+
+[sub_resource type="Resource" id="Resource_h8orj"]
+resource_name = "malachite: gem_malachite"
+script = ExtResource("1_kej40")
+word = "malachite"
+icon = "gem_malachite"
+
+[sub_resource type="Resource" id="Resource_ww3vw"]
+resource_name = "tigerseye: gem_tigerseye"
+script = ExtResource("1_kej40")
+word = "tigerseye"
+icon = "gem_tigerseye"
+
+[sub_resource type="Resource" id="Resource_lhc0i"]
+resource_name = "shadowgem: gem_shadowgem"
+script = ExtResource("1_kej40")
+word = "shadowgem"
+icon = "gem_shadowgem"
+
+[sub_resource type="Resource" id="Resource_q0dk8"]
+resource_name = "pearl: gem_pearl"
+script = ExtResource("1_kej40")
+word = "pearl"
+icon = "gem_pearl"
+
+[sub_resource type="Resource" id="Resource_18dme"]
+resource_name = "bruisewort: herb_bruise"
+script = ExtResource("1_kej40")
+word = "bruisewort"
+icon = "herb_bruise"
+
+[sub_resource type="Resource" id="Resource_hle8k"]
+resource_name = "blossom: herb_blossom"
+script = ExtResource("1_kej40")
+word = "blossom"
+icon = "herb_blossom"
+
+[sub_resource type="Resource" id="Resource_wnuj8"]
+resource_name = "sageleaf: herb_sage"
+script = ExtResource("1_kej40")
+word = "sageleaf"
+icon = "herb_sage"
+
+[sub_resource type="Resource" id="Resource_6au63"]
+resource_name = "thistle: herb_thistle"
+script = ExtResource("1_kej40")
+word = "thistle"
+icon = "herb_thistle"
+
+[sub_resource type="Resource" id="Resource_2065b"]
+resource_name = "kelp: herb_kelp"
+script = ExtResource("1_kej40")
+word = "kelp"
+icon = "herb_kelp"
+
+[sub_resource type="Resource" id="Resource_toh26"]
+resource_name = "gold tooth: tooth_gold"
+script = ExtResource("1_kej40")
+word = "gold tooth"
+icon = "tooth_gold"
+
+[sub_resource type="Resource" id="Resource_5agdd"]
+resource_name = "tusk: tooth_tusk"
+script = ExtResource("1_kej40")
+word = "tusk"
+icon = "tooth_tusk"
+
+[sub_resource type="Resource" id="Resource_mesm1"]
+resource_name = "claw: tooth_claw"
+script = ExtResource("1_kej40")
+word = "claw"
+icon = "tooth_claw"
+
+[sub_resource type="Resource" id="Resource_0v8uw"]
+resource_name = "paw: tooth_paw"
+script = ExtResource("1_kej40")
+word = "paw"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_il3hg"]
+resource_name = "foot: tooth_paw"
+script = ExtResource("1_kej40")
+word = "foot"
+icon = "tooth_paw"
+
+[sub_resource type="Resource" id="Resource_y7fbm"]
+resource_name = "tooth: tooth"
+script = ExtResource("1_kej40")
+word = "tooth"
+icon = "tooth"
+
+[sub_resource type="Resource" id="Resource_jubdd"]
+resource_name = "teeth: tooth"
+script = ExtResource("1_kej40")
+word = "teeth"
+icon = "tooth"
+
+[sub_resource type="Resource" id="Resource_mi67v"]
+resource_name = "fang: tooth"
+script = ExtResource("1_kej40")
+word = "fang"
+icon = "tooth"
+
+[sub_resource type="Resource" id="Resource_kui4u"]
+resource_name = "canine: tooth"
+script = ExtResource("1_kej40")
+word = "canine"
+icon = "tooth"
+
+[sub_resource type="Resource" id="Resource_r8tv4"]
+resource_name = "eye: eye"
+script = ExtResource("1_kej40")
+word = "eye"
+icon = "eye"
+
+[sub_resource type="Resource" id="Resource_mbdgl"]
+resource_name = "torn mirefin fin: fin_torn"
+script = ExtResource("1_kej40")
+word = "torn mirefin fin"
+icon = "fin_torn"
+
+[sub_resource type="Resource" id="Resource_1gaxf"]
+resource_name = "fin: fin"
+script = ExtResource("1_kej40")
+word = "fin"
+icon = "fin"
+
+[sub_resource type="Resource" id="Resource_q3qsy"]
+resource_name = "limb: limb"
+script = ExtResource("1_kej40")
+word = "limb"
+icon = "limb"
+
+[sub_resource type="Resource" id="Resource_6fax1"]
+resource_name = "leg: limb"
+script = ExtResource("1_kej40")
+word = "leg"
+icon = "limb"
+
+[sub_resource type="Resource" id="Resource_sxwav"]
+resource_name = "webbing: web"
+script = ExtResource("1_kej40")
+word = "webbing"
+icon = "web"
+
+[sub_resource type="Resource" id="Resource_v7xjv"]
+resource_name = "egg: egg"
+script = ExtResource("1_kej40")
+word = "egg"
+icon = "egg"
+
+[sub_resource type="Resource" id="Resource_c6ypf"]
+resource_name = "pelt: pelt"
+script = ExtResource("1_kej40")
+word = "pelt"
+icon = "pelt"
+
+[sub_resource type="Resource" id="Resource_kcoly"]
+resource_name = "seashell: shell"
+script = ExtResource("1_kej40")
+word = "seashell"
+icon = "shell"
+
+[sub_resource type="Resource" id="Resource_1cpc0"]
+resource_name = "clam: shell"
+script = ExtResource("1_kej40")
+word = "clam"
+icon = "shell"
+
+[sub_resource type="Resource" id="Resource_c7e1g"]
+resource_name = "meat: meat_raw"
+script = ExtResource("1_kej40")
+word = "meat"
+icon = "meat_raw"
+
+[sub_resource type="Resource" id="Resource_a01xe"]
+resource_name = "haunch: meat"
+script = ExtResource("1_kej40")
+word = "haunch"
+icon = "meat"
+
+[sub_resource type="Resource" id="Resource_wj1p2"]
+resource_name = "strip: meat"
+script = ExtResource("1_kej40")
+word = "strip"
+icon = "meat"
+
+[sub_resource type="Resource" id="Resource_73wsw"]
+resource_name = "necklace: amulet_common"
+script = ExtResource("1_kej40")
+word = "necklace"
+icon = "amulet_common"
+
+[sub_resource type="Resource" id="Resource_f21nc"]
+resource_name = "collar: collar"
+script = ExtResource("1_kej40")
+word = "collar"
+icon = "collar"
+
+[sub_resource type="Resource" id="Resource_tt3t3"]
+resource_name = "medallion: medallion"
+script = ExtResource("1_kej40")
+word = "medallion"
+icon = "medallion"
+
+[sub_resource type="Resource" id="Resource_x36ii"]
+resource_name = "signet: ring_rare"
+script = ExtResource("1_kej40")
+word = "signet"
+icon = "ring_rare"
+
+[sub_resource type="Resource" id="Resource_5ri32"]
+resource_name = "armband: bracers_cloth"
+script = ExtResource("1_kej40")
+word = "armband"
+icon = "bracers_cloth"
+
+[sub_resource type="Resource" id="Resource_4yhq5"]
+resource_name = "bandana: bandana"
+script = ExtResource("1_kej40")
+word = "bandana"
+icon = "bandana"
+
+[sub_resource type="Resource" id="Resource_xp26u"]
+resource_name = "mask: bandana"
+script = ExtResource("1_kej40")
+word = "mask"
+icon = "bandana"
+
+[sub_resource type="Resource" id="Resource_53cj0"]
+resource_name = "letter: paper_sealed"
+script = ExtResource("1_kej40")
+word = "letter"
+icon = "paper_sealed"
+
+[sub_resource type="Resource" id="Resource_ugwhi"]
+resource_name = "note: paper"
+script = ExtResource("1_kej40")
+word = "note"
+icon = "paper"
+
+[sub_resource type="Resource" id="Resource_pgiqp"]
+resource_name = "deed: paper_sealed"
+script = ExtResource("1_kej40")
+word = "deed"
+icon = "paper_sealed"
+
+[sub_resource type="Resource" id="Resource_qqwu2"]
+resource_name = "cipher: paper"
+script = ExtResource("1_kej40")
+word = "cipher"
+icon = "paper"
+
+[sub_resource type="Resource" id="Resource_dv7fy"]
+resource_name = "ledger: paper"
+script = ExtResource("1_kej40")
+word = "ledger"
+icon = "paper"
+
+[sub_resource type="Resource" id="Resource_6ekwk"]
+resource_name = "itinerary: paper"
+script = ExtResource("1_kej40")
+word = "itinerary"
+icon = "paper"
+
+[sub_resource type="Resource" id="Resource_6wl7i"]
+resource_name = "bundle of wood: logs"
+script = ExtResource("1_kej40")
+word = "bundle of wood"
+icon = "logs"
+
+[sub_resource type="Resource" id="Resource_ph230"]
+resource_name = "quiver: quiver"
+script = ExtResource("1_kej40")
+word = "quiver"
+icon = "quiver"
+
+[sub_resource type="Resource" id="Resource_opt55"]
+resource_name = "sack: pouch"
+script = ExtResource("1_kej40")
+word = "sack"
+icon = "pouch"
+
+[sub_resource type="Resource" id="Resource_vpio8"]
+resource_name = "Axeman: axe_common"
+script = ExtResource("1_kej40")
+word = "Axeman"
+icon = "axe_common"
+
+[sub_resource type="Resource" id="Resource_83ros"]
+resource_name = "Maceman: mace_common"
+script = ExtResource("1_kej40")
+word = "Maceman"
+icon = "mace_common"
+
+[sub_resource type="Resource" id="Resource_t7t87"]
+resource_name = "Swordsman: sword_common"
+script = ExtResource("1_kej40")
+word = "Swordsman"
+icon = "sword_common"
+
+[sub_resource type="Resource" id="Resource_vygvf"]
+resource_name = "Polearm: polearm_common"
+script = ExtResource("1_kej40")
+word = "Polearm"
+icon = "polearm_common"
+
+[sub_resource type="Resource" id="Resource_djhmq"]
+resource_name = "Two-Handed: greatsword_common"
+script = ExtResource("1_kej40")
+word = "Two-Handed"
+icon = "greatsword_common"
+
+[sub_resource type="Resource" id="Resource_8elhs"]
+resource_name = "One-Handed: sword_common"
+script = ExtResource("1_kej40")
+word = "One-Handed"
+icon = "sword_common"
+
+[sub_resource type="Resource" id="Resource_ktt4w"]
+resource_name = "Two-Weapon: dual"
+script = ExtResource("1_kej40")
+word = "Two-Weapon"
+icon = "dual"
+
+[sub_resource type="Resource" id="Resource_l25df"]
+resource_name = "Shield: bash"
+script = ExtResource("1_kej40")
+word = "Shield"
+icon = "bash"
+
+[sub_resource type="Resource" id="Resource_ek6l6"]
+resource_name = "Toughness: aegis"
+script = ExtResource("1_kej40")
+word = "Toughness"
+icon = "aegis"
+
+[sub_resource type="Resource" id="Resource_f6ebu"]
+resource_name = "Deflection: parry"
+script = ExtResource("1_kej40")
+word = "Deflection"
+icon = "parry"
+
+[sub_resource type="Resource" id="Resource_exik3"]
+resource_name = "Anticipation: parry"
+script = ExtResource("1_kej40")
+word = "Anticipation"
+icon = "parry"
+
+[sub_resource type="Resource" id="Resource_6wiow"]
+resource_name = "Precision: parry"
+script = ExtResource("1_kej40")
+word = "Precision"
+icon = "parry"
+
+[sub_resource type="Resource" id="Resource_llaaw"]
+resource_name = "Tooth: parry_red"
+script = ExtResource("1_kej40")
+word = "Tooth"
+icon = "parry_red"
+
+[sub_resource type="Resource" id="Resource_qqntu"]
+resource_name = "Resolve: heart"
+script = ExtResource("1_kej40")
+word = "Resolve"
+icon = "heart"
+
+[sub_resource type="Resource" id="Resource_0svxo"]
+resource_name = "Will: heart"
+script = ExtResource("1_kej40")
+word = "Will"
+icon = "heart"
+
+[sub_resource type="Resource" id="Resource_vhyuh"]
+resource_name = "Defiance: aegis"
+script = ExtResource("1_kej40")
+word = "Defiance"
+icon = "aegis"
+
+[sub_resource type="Resource" id="Resource_3mltq"]
+resource_name = "Stand: aegis"
+script = ExtResource("1_kej40")
+word = "Stand"
+icon = "aegis"
+
+[sub_resource type="Resource" id="Resource_5p6up"]
+resource_name = "Guard: aegis"
+script = ExtResource("1_kej40")
+word = "Guard"
+icon = "aegis"
+
+[sub_resource type="Resource" id="Resource_26sm3"]
+resource_name = "Discipline: stance_vanguard"
+script = ExtResource("1_kej40")
+word = "Discipline"
+icon = "stance_vanguard"
+
+[sub_resource type="Resource" id="Resource_417i7"]
+resource_name = "Wrath: rage"
+script = ExtResource("1_kej40")
+word = "Wrath"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_f4xuh"]
+resource_name = "Rage: rage"
+script = ExtResource("1_kej40")
+word = "Rage"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_bolsh"]
+resource_name = "Fury: rage"
+script = ExtResource("1_kej40")
+word = "Fury"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_b53fn"]
+resource_name = "Frenzy: rage"
+script = ExtResource("1_kej40")
+word = "Frenzy"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_p8lr7"]
+resource_name = "Craving: rage"
+script = ExtResource("1_kej40")
+word = "Craving"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_7v1ph"]
+resource_name = "Bloodied: rage"
+script = ExtResource("1_kej40")
+word = "Bloodied"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_32thc"]
+resource_name = "Anger: rage"
+script = ExtResource("1_kej40")
+word = "Anger"
+icon = "rage"
+
+[sub_resource type="Resource" id="Resource_urw4d"]
+resource_name = "Voice: shout_red"
+script = ExtResource("1_kej40")
+word = "Voice"
+icon = "shout_red"
+
+[sub_resource type="Resource" id="Resource_tllyu"]
+resource_name = "Howl: shout_dark"
+script = ExtResource("1_kej40")
+word = "Howl"
+icon = "shout_dark"
+
+[sub_resource type="Resource" id="Resource_ekkfp"]
+resource_name = "Edge: strike"
+script = ExtResource("1_kej40")
+word = "Edge"
+icon = "strike"
+
+[sub_resource type="Resource" id="Resource_50u24"]
+resource_name = "Thrust: strike"
+script = ExtResource("1_kej40")
+word = "Thrust"
+icon = "strike"
+
+[sub_resource type="Resource" id="Resource_1sa2o"]
+resource_name = "Wounds: bleed"
+script = ExtResource("1_kej40")
+word = "Wounds"
+icon = "bleed"
+
+[sub_resource type="Resource" id="Resource_bu3qw"]
+resource_name = "Swings: cyclone"
+script = ExtResource("1_kej40")
+word = "Swings"
+icon = "cyclone"
+
+[sub_resource type="Resource" id="Resource_dcdlg"]
+resource_name = "Blow: strike_red"
+script = ExtResource("1_kej40")
+word = "Blow"
+icon = "strike_red"
+
+[sub_resource type="Resource" id="Resource_bf08b"]
+resource_name = "Presence: presence_bulwark"
+script = ExtResource("1_kej40")
+word = "Presence"
+icon = "presence_bulwark"
+
+[sub_resource type="Resource" id="Resource_537ay"]
+resource_name = "Zeal: zeal"
+script = ExtResource("1_kej40")
+word = "Zeal"
+icon = "zeal"
+
+[sub_resource type="Resource" id="Resource_arbj8"]
+resource_name = "Justice: verdict"
+script = ExtResource("1_kej40")
+word = "Justice"
+icon = "verdict"
+
+[sub_resource type="Resource" id="Resource_ugwry"]
+resource_name = "Rebuke: verdict"
+script = ExtResource("1_kej40")
+word = "Rebuke"
+icon = "verdict"
+
+[sub_resource type="Resource" id="Resource_srhpu"]
+resource_name = "Certainty: verdict"
+script = ExtResource("1_kej40")
+word = "Certainty"
+icon = "verdict"
+
+[sub_resource type="Resource" id="Resource_uqugw"]
+resource_name = "Contrition: verdict"
+script = ExtResource("1_kej40")
+word = "Contrition"
+icon = "verdict"
+
+[sub_resource type="Resource" id="Resource_a6n3t"]
+resource_name = "Spellward: ward"
+script = ExtResource("1_kej40")
+word = "Spellward"
+icon = "ward"
+
+[sub_resource type="Resource" id="Resource_puqu4"]
+resource_name = "Hearten: heart"
+script = ExtResource("1_kej40")
+word = "Hearten"
+icon = "heart"
+
+[sub_resource type="Resource" id="Resource_i7ush"]
+resource_name = "Martyr: boon_martyr"
+script = ExtResource("1_kej40")
+word = "Martyr"
+icon = "boon_martyr"
+
+[sub_resource type="Resource" id="Resource_luj1y"]
+resource_name = "Thrift: bolt_blue"
+script = ExtResource("1_kej40")
+word = "Thrift"
+icon = "bolt_blue"
+
+[sub_resource type="Resource" id="Resource_nlf5v"]
+resource_name = "Kindled: flame_orange"
+script = ExtResource("1_kej40")
+word = "Kindled"
+icon = "flame_orange"
+
+[sub_resource type="Resource" id="Resource_ph3ql"]
+resource_name = "Scorching: flame_gold"
+script = ExtResource("1_kej40")
+word = "Scorching"
+icon = "flame_gold"
+
+[sub_resource type="Resource" id="Resource_3qfa8"]
+resource_name = "Spirit: flame_blue"
+script = ExtResource("1_kej40")
+word = "Spirit"
+icon = "flame_blue"
+
+[sub_resource type="Resource" id="Resource_5i5l4"]
+resource_name = "Mending: heal_gold"
+script = ExtResource("1_kej40")
+word = "Mending"
+icon = "heal_gold"
+
+[sub_resource type="Resource" id="Resource_aqbbn"]
+resource_name = "Recovery: heal_green"
+script = ExtResource("1_kej40")
+word = "Recovery"
+icon = "heal_green"
+
+[sub_resource type="Resource" id="Resource_433xd"]
+resource_name = "Prayer: heal_white"
+script = ExtResource("1_kej40")
+word = "Prayer"
+icon = "heal_white"
+
+[sub_resource type="Resource" id="Resource_lpcde"]
+resource_name = "Grace: renew"
+script = ExtResource("1_kej40")
+word = "Grace"
+icon = "renew"
+
+[sub_resource type="Resource" id="Resource_4dnx1"]
+resource_name = "Shadow: shadow"
+script = ExtResource("1_kej40")
+word = "Shadow"
+icon = "shadow"
+
+[sub_resource type="Resource" id="Resource_xuyw6"]
+resource_name = "Gloom: shadow"
+script = ExtResource("1_kej40")
+word = "Gloom"
+icon = "shadow"
+
+[sub_resource type="Resource" id="Resource_niugq"]
+resource_name = "Leeching: shadow"
+script = ExtResource("1_kej40")
+word = "Leeching"
+icon = "shadow"
+
+[sub_resource type="Resource" id="Resource_sphnt"]
+resource_name = "Harvest: shadow"
+script = ExtResource("1_kej40")
+word = "Harvest"
+icon = "shadow"
+
+[sub_resource type="Resource" id="Resource_cpc28"]
+resource_name = "Hush: fear"
+script = ExtResource("1_kej40")
+word = "Hush"
+icon = "fear"
+
+[sub_resource type="Resource" id="Resource_h10of"]
+resource_name = "Intellect: bolt_blue"
+script = ExtResource("1_kej40")
+word = "Intellect"
+icon = "bolt_blue"
+
+[sub_resource type="Resource" id="Resource_r5hpt"]
+resource_name = "Mind: mind_calm"
+script = ExtResource("1_kej40")
+word = "Mind"
+icon = "mind_calm"
+
+[sub_resource type="Resource" id="Resource_wdtis"]
+resource_name = "Wandwork: wand_common"
+script = ExtResource("1_kej40")
+word = "Wandwork"
+icon = "wand_common"
+
+[sub_resource type="Resource" id="Resource_nbocs"]
+resource_name = "Stillness: mind_calm"
+script = ExtResource("1_kej40")
+word = "Stillness"
+icon = "mind_calm"
+
+[sub_resource type="Resource" id="Resource_4pwkc"]
+resource_name = "Contemplation: mind_calm"
+script = ExtResource("1_kej40")
+word = "Contemplation"
+icon = "mind_calm"
+
+[sub_resource type="Resource" id="Resource_yyj7x"]
+resource_name = "Calm: mind_calm"
+script = ExtResource("1_kej40")
+word = "Calm"
+icon = "mind_calm"
+
+[sub_resource type="Resource" id="Resource_pf756"]
+resource_name = "Focus: mind_calm"
+script = ExtResource("1_kej40")
+word = "Focus"
+icon = "mind_calm"
+
+[sub_resource type="Resource" id="Resource_ko535"]
+resource_name = "Strength: boon_strength"
+script = ExtResource("1_kej40")
+word = "Strength"
+icon = "boon_strength"
+
+[sub_resource type="Resource" id="Resource_udilm"]
+resource_name = "Faith: heal_gold"
+script = ExtResource("1_kej40")
+word = "Faith"
+icon = "heal_gold"
+
+[sub_resource type="Resource" id="Resource_lt7ci"]
+resource_name = "Favor: heal_gold"
+script = ExtResource("1_kej40")
+word = "Favor"
+icon = "heal_gold"
+
+[sub_resource type="Resource" id="Resource_e7c45"]
+resource_name = "Power: bolt_gold"
+script = ExtResource("1_kej40")
+word = "Power"
+icon = "bolt_gold"
+
+[sub_resource type="Resource" id="Resource_dm4ah"]
+resource_name = "Light: bolt_gold"
+script = ExtResource("1_kej40")
+word = "Light"
+icon = "bolt_gold"
+
+[sub_resource type="Resource" id="Resource_jdy40"]
+resource_name = "Sacred: bolt_gold"
+script = ExtResource("1_kej40")
+word = "Sacred"
+icon = "bolt_gold"
+
+[sub_resource type="Resource" id="Resource_n1rc4"]
+resource_name = "Blessed: heal_gold"
+script = ExtResource("1_kej40")
+word = "Blessed"
+icon = "heal_gold"
+
+[sub_resource type="Resource" id="Resource_dblti"]
+resource_name = "Radiance: heal_gold"
+script = ExtResource("1_kej40")
+word = "Radiance"
+icon = "heal_gold"
+
+[sub_resource type="Resource" id="Resource_tovfs"]
+resource_name = "Mastery: heal_gold"
+script = ExtResource("1_kej40")
+word = "Mastery"
+icon = "heal_gold"
+
+[resource]
+script = ExtResource("2_lcoiv")
+spell_icons = Dictionary[String, String]({
+"Abandon": "rage",
+"Adder Sting": "poison",
+"Arcane Ascendance": "stars",
+"Arcane Dart": "missiles",
+"Arcane Darts": "missiles",
+"Arcane Nova": "nova_arcane",
+"Arcane Renewal": "mind_calm",
+"Arcane Wisdom": "scroll_intellect",
+"Arrow Rain": "stars",
+"Asp Sting": "mind",
+"Attack": "attack",
+"Auto Shot": "bow_common",
+"Back Thrust": "strike",
+"Banishment": "banish",
+"Barrage": "quiver",
+"Bastion Stance": "stance_bastion",
+"Beast Discipline": "tooth_gold",
+"Beast Fury": "tooth_claw",
+"Beast Spirit": "tooth_paw",
+"Beast Swiftness": "tooth_paw",
+"Beast's Eyes": "eye",
+"Beastshape": "sheep",
+"Bind the Dead": "banish",
+"Blast Trap": "fire",
+"Blazing Orb": "fire",
+"Blessed Burst": "bolt_white",
+"Blood Fury": "rage",
+"Bloodlust Strike": "strike_red",
+"Borrowed Eyes": "mind",
+"Break Away": "ward",
+"Brutal Strikes": "strike_red",
+"Burning Trap": "burn",
+"Calm Mind": "mind_calm",
+"Careful Shot": "bow_uncommon",
+"Chastise": "bolt_gold",
+"Cheetah Spirit": "charge",
+"Chilled": "frost",
+"Cleanse Sickness": "cleanse",
+"Cleansing Touch": "cleanse",
+"Communal Mending": "heal_green",
+"Communal Spirit": "flame_blue",
+"Conjure Draught": "flask_water",
+"Conjure Mana Amber": "gem_amber",
+"Conjure Mana Garnet": "gem_garnet",
+"Conjure Mana Pearl": "gem_pearl",
+"Conjure Mana Topaz": "gem_topaz",
+"Conjure Rations": "bread",
+"Counterattack": "parry",
+"Cowing Roar": "shout_dark",
+"Creature Lore": "book",
+"Crippling Cut": "limb",
+"Cunning Traps": "burn",
+"Cut Off": "charge",
+"Cyclone Strike": "cyclone",
+"Daring Roar": "shout_gold",
+"Daunting Roar": "shout_dark",
+"Deadly Aim": "bow_uncommon",
+"Deepening Chill": "frost",
+"Desperate Plea": "heal_white",
+"Distant Gaze": "eye",
+"Dominate Will": "mind",
+"Drake Sting": "mind_calm",
+"Dread Wail": "fear",
+"Dread Ward": "ward_dread",
+"Drink": "flask_water",
+"Efficiency": "quiver",
+"Ember Ward": "presence_emberward",
+"Ensnaring Traps": "frost",
+"Falling Stars": "stars",
+"Featherdrift": "feather",
+"Featherfall": "feather",
+"Feeble Hex": "hex",
+"Finishing Blow": "execute",
+"Flame Bolt": "fire",
+"Flame Jet": "flame_orange",
+"Flare": "fire",
+"Flicker": "blink",
+"Font of Light": "font",
+"Food": "bread",
+"Frenzied Strikes": "rage",
+"Frenzy": "rage",
+"Frighten Beast": "fear",
+"Frost Fan": "nova_frost",
+"Frostbind Trap": "frost",
+"Frostgrip": "iceblock",
+"Frozen Vigil": "iceblock",
+"Fury Stance": "stance_fury",
+"Gash": "bleed",
+"Gavel of Reckoning": "gavel",
+"Glimmer Shot": "bolt_blue",
+"Gnawing Shadow": "shadow",
+"Goad": "taunt",
+"Greater Cleansing": "cleanse",
+"Greater Mending": "heal_gold",
+"Grievous Shots": "bleed",
+"Grievous Strike": "bleed",
+"Ground Slam": "slam",
+"Hailstorm": "hail",
+"Hallowed Aegis": "aegis",
+"Hallowed Ground": "ground",
+"Hallowed Guard": "aegis",
+"Hallowed Ransom": "heal_white",
+"Hardiness Training": "heart",
+"Hardy": "heart",
+"Hawk Spirit": "feather",
+"Head Butt": "stun",
+"Headlong Charge": "charge",
+"Healing Potion": "potion_red",
+"Heavy Swing": "heavy",
+"Hilt Strike": "hilt",
+"Hoarfrost Shroud": "frost",
+"Hobble": "hobble",
+"Hobbling Shot": "hobble",
+"Ice Bulwark": "ward",
+"Improved Revive Companion": "revive",
+"Inner Flame": "flame_orange",
+"Keen Sight": "eye",
+"Kindling": "flame_gold",
+"Kindred Bond": "heal_green",
+"Last Rite": "heal_gold",
+"Lesser Mending": "heal_gold",
+"Lift Lesser Curse": "cleanse",
+"Lingering Grace": "renew",
+"Litany of Fortitude": "heart",
+"Low Jab": "stun",
+"Lucid Mind": "mind_calm",
+"Magnify Magic": "orb",
+"Magus Armor": "orb",
+"Mana Barrier": "ward",
+"Mana Rebuke": "burn",
+"Mana Scorch": "burn",
+"Manhunter": "execute",
+"Menace": "tooth_tusk",
+"Mend Companion": "heal_green",
+"Mending": "heal_gold",
+"Mending Radiance": "heal_gold",
+"Mighty Blow": "strike",
+"Mind Lash": "mind",
+"Mind Rend": "mind",
+"Monkey Spirit": "parry_red",
+"Monster Hunter": "tooth_paw",
+"Moon's Grace": "bolt_blue",
+"Muffle Magic": "ward",
+"Pack Spirit": "shout_gold",
+"Parry": "parry",
+"Pillar of Flame": "pillar",
+"Plate Mail": "chest_plate_common",
+"Poison": "poison",
+"Poison Proc": "poison",
+"Predator's Instinct": "strike_red",
+"Prying Strike": "bleed",
+"Purge Sickness": "cleanse",
+"Quarry's Mark": "eye",
+"Quick Fire": "zeal",
+"Quick Radiance": "heal_white",
+"Quick Reflexes": "scroll_agility",
+"Quick Shots": "feather",
+"Radiant Bulwark": "aegis",
+"Radiant Fury": "zeal",
+"Radiant Jolt": "bolt_gold",
+"Rallying Cry": "shout_red",
+"Ranged Weapon Mastery": "gun_uncommon",
+"Ravening Blight": "poison",
+"Rebuke the Dead": "banish",
+"Rend Armor": "bleed",
+"Replenish Mana": "gem_pearl",
+"Reprisal": "parry_red",
+"Restore Mana": "potion_blue",
+"Retort": "parry",
+"Revival": "revive",
+"Rime Bolt": "frost",
+"Rime Burst": "nova_frost",
+"Rime Renewal": "frost",
+"Rime Shroud": "frost",
+"Rime Trap": "frost",
+"Rime Ward": "presence_frostward",
+"Riposte Strike": "parry_red",
+"Rite of Return": "revive",
+"Rush": "charge",
+"Sacred Flame": "flame_gold",
+"Sanctified Ward": "ward",
+"Scattering Shot": "stun",
+"Searing Touch": "flame_gold",
+"Searing Wave": "nova_fire",
+"Searing Weakness": "burn",
+"Sense Magic": "eye",
+"Shadow Warding": "ward_shadow",
+"Sharpshooter's Aura": "presence_focused",
+"Shield Brace": "aegis",
+"Shield Crush": "bash_red",
+"Shield Smash": "bash",
+"Shoot": "bow_common",
+"Slipstep": "parry_red",
+"Snap Kick": "hilt",
+"Spellbreak": "hex",
+"Spellbreak - Silenced": "hex",
+"Spread Shot": "quiver",
+"Still as Death": "shadow",
+"Stinger Venom": "hex",
+"Stunning Gavel": "gavel",
+"Sure Step": "boots_leather_common",
+"Sweeping Cut": "cyclone",
+"Swift Mending": "heal_white",
+"Swift Mind": "stars",
+"Talon Strike": "strike",
+"Taunting Blow": "taunt",
+"Taunting Shot": "taunt",
+"Thrash": "rage",
+"Tough Hide": "pelt",
+"Track Beasts": "tooth_paw",
+"Track Demons": "fire",
+"Track Dragonkin": "fin",
+"Track Elementals": "stone",
+"Track Giants": "slam",
+"Track Hidden": "eye",
+"Track Humanoids": "eye",
+"Track Undead": "shadow",
+"Trailblazing": "charge",
+"Trap Craft": "ground",
+"Two-Weapon Fighting": "dual",
+"Umbral Guard": "ward_umbral",
+"Unbound Fury": "tooth_claw",
+"Unbridled Rage": "rage",
+"Unweave": "cleanse",
+"Uplifted Spirit": "flame_blue",
+"Vanguard Stance": "stance_vanguard",
+"Veil of Humility": "fear",
+"Verdict": "verdict",
+"Wall of Steel": "aegis",
+"Weasel Bite": "tooth",
+"Wild Ferocity": "tooth_claw",
+"Wild Spirit": "herb_sage",
+"Withering Touch": "shadow",
+"Wrest Weapon": "disarm",
+"Zealous Fervor": "zeal"
+})
+weapon_skill_icons = Dictionary[String, String]({
+"Bows": "bow_common",
+"Crossbows": "crossbow_common",
+"Daggers": "dagger_common",
+"Fist Weapons": "dagger_common",
+"Guns": "gun_common",
+"One-Handed Axes": "axe_common",
+"One-Handed Maces": "mace_common",
+"One-Handed Swords": "sword_common",
+"Polearms": "polearm_common",
+"Staves": "staff_common",
+"Thrown": "dagger_common",
+"Two-Handed Axes": "greataxe_common",
+"Two-Handed Maces": "maul_common",
+"Two-Handed Swords": "greatsword_common",
+"Wands": "wand_common"
+})
+talent_words = Array[ExtResource("1_kej40")]([SubResource("Resource_vpio8"), SubResource("Resource_83ros"), SubResource("Resource_t7t87"), SubResource("Resource_vygvf"), SubResource("Resource_djhmq"), SubResource("Resource_8elhs"), SubResource("Resource_ktt4w"), SubResource("Resource_l25df"), SubResource("Resource_ek6l6"), SubResource("Resource_f6ebu"), SubResource("Resource_exik3"), SubResource("Resource_6wiow"), SubResource("Resource_llaaw"), SubResource("Resource_qqntu"), SubResource("Resource_0svxo"), SubResource("Resource_vhyuh"), SubResource("Resource_3mltq"), SubResource("Resource_5p6up"), SubResource("Resource_26sm3"), SubResource("Resource_417i7"), SubResource("Resource_f4xuh"), SubResource("Resource_bolsh"), SubResource("Resource_b53fn"), SubResource("Resource_p8lr7"), SubResource("Resource_7v1ph"), SubResource("Resource_32thc"), SubResource("Resource_urw4d"), SubResource("Resource_tllyu"), SubResource("Resource_ekkfp"), SubResource("Resource_50u24"), SubResource("Resource_1sa2o"), SubResource("Resource_bu3qw"), SubResource("Resource_dcdlg"), SubResource("Resource_bf08b"), SubResource("Resource_537ay"), SubResource("Resource_arbj8"), SubResource("Resource_ugwry"), SubResource("Resource_srhpu"), SubResource("Resource_uqugw"), SubResource("Resource_a6n3t"), SubResource("Resource_puqu4"), SubResource("Resource_i7ush"), SubResource("Resource_luj1y"), SubResource("Resource_nlf5v"), SubResource("Resource_ph3ql"), SubResource("Resource_3qfa8"), SubResource("Resource_5i5l4"), SubResource("Resource_aqbbn"), SubResource("Resource_433xd"), SubResource("Resource_lpcde"), SubResource("Resource_4dnx1"), SubResource("Resource_xuyw6"), SubResource("Resource_niugq"), SubResource("Resource_sphnt"), SubResource("Resource_cpc28"), SubResource("Resource_h10of"), SubResource("Resource_r5hpt"), SubResource("Resource_wdtis"), SubResource("Resource_nbocs"), SubResource("Resource_4pwkc"), SubResource("Resource_yyj7x"), SubResource("Resource_pf756"), SubResource("Resource_ko535"), SubResource("Resource_udilm"), SubResource("Resource_lt7ci"), SubResource("Resource_e7c45"), SubResource("Resource_dm4ah"), SubResource("Resource_jdy40"), SubResource("Resource_n1rc4"), SubResource("Resource_dblti"), SubResource("Resource_tovfs")])
+item_words = Array[ExtResource("1_kej40")]([SubResource("Resource_xymfm"), SubResource("Resource_mw78x"), SubResource("Resource_mlbu8"), SubResource("Resource_ydd1e"), SubResource("Resource_78pbm"), SubResource("Resource_p5twf"), SubResource("Resource_ieg1a"), SubResource("Resource_ahubi"), SubResource("Resource_x8k3c"), SubResource("Resource_u6xrk"), SubResource("Resource_7lksu"), SubResource("Resource_pi83d"), SubResource("Resource_shwhi"), SubResource("Resource_bhp2n"), SubResource("Resource_3on0o"), SubResource("Resource_i6qx2"), SubResource("Resource_glh3q"), SubResource("Resource_vtgaw"), SubResource("Resource_t8wym"), SubResource("Resource_6yjey"), SubResource("Resource_r14pm"), SubResource("Resource_vb5pi"), SubResource("Resource_gohdv"), SubResource("Resource_i50aw"), SubResource("Resource_s4a7u"), SubResource("Resource_obavw"), SubResource("Resource_4wx0h"), SubResource("Resource_tkps3"), SubResource("Resource_8e18x"), SubResource("Resource_ljix3"), SubResource("Resource_xfcd0"), SubResource("Resource_5mrno"), SubResource("Resource_kpmf5"), SubResource("Resource_0a3q7"), SubResource("Resource_e64ix"), SubResource("Resource_5xvsc"), SubResource("Resource_3fo1p"), SubResource("Resource_eha5i"), SubResource("Resource_jbku2"), SubResource("Resource_jxl3w"), SubResource("Resource_a3nkx"), SubResource("Resource_5ydmn"), SubResource("Resource_sp3gd"), SubResource("Resource_qbbbb"), SubResource("Resource_xfiso"), SubResource("Resource_v4uuq"), SubResource("Resource_308sx"), SubResource("Resource_hbsss"), SubResource("Resource_wktm2"), SubResource("Resource_7hvyn"), SubResource("Resource_h8orj"), SubResource("Resource_ww3vw"), SubResource("Resource_lhc0i"), SubResource("Resource_q0dk8"), SubResource("Resource_18dme"), SubResource("Resource_hle8k"), SubResource("Resource_wnuj8"), SubResource("Resource_6au63"), SubResource("Resource_2065b"), SubResource("Resource_toh26"), SubResource("Resource_5agdd"), SubResource("Resource_mesm1"), SubResource("Resource_0v8uw"), SubResource("Resource_il3hg"), SubResource("Resource_y7fbm"), SubResource("Resource_jubdd"), SubResource("Resource_mi67v"), SubResource("Resource_kui4u"), SubResource("Resource_r8tv4"), SubResource("Resource_mbdgl"), SubResource("Resource_1gaxf"), SubResource("Resource_q3qsy"), SubResource("Resource_6fax1"), SubResource("Resource_sxwav"), SubResource("Resource_v7xjv"), SubResource("Resource_c6ypf"), SubResource("Resource_kcoly"), SubResource("Resource_1cpc0"), SubResource("Resource_c7e1g"), SubResource("Resource_a01xe"), SubResource("Resource_wj1p2"), SubResource("Resource_73wsw"), SubResource("Resource_f21nc"), SubResource("Resource_tt3t3"), SubResource("Resource_x36ii"), SubResource("Resource_5ri32"), SubResource("Resource_4yhq5"), SubResource("Resource_xp26u"), SubResource("Resource_53cj0"), SubResource("Resource_ugwhi"), SubResource("Resource_pgiqp"), SubResource("Resource_qqwu2"), SubResource("Resource_dv7fy"), SubResource("Resource_6ekwk"), SubResource("Resource_6wl7i"), SubResource("Resource_ph230"), SubResource("Resource_opt55")])
+creature_portraits = Array[ExtResource("1_kej40")]([SubResource("Resource_uu4ew"), SubResource("Resource_u6e6f"), SubResource("Resource_uam0j"), SubResource("Resource_kwdnj"), SubResource("Resource_4oia2"), SubResource("Resource_xpbob"), SubResource("Resource_tlwcs"), SubResource("Resource_08cum"), SubResource("Resource_2v0w0"), SubResource("Resource_h8tqf"), SubResource("Resource_6eo1y"), SubResource("Resource_ppumn"), SubResource("Resource_ro7uh"), SubResource("Resource_3sk0d"), SubResource("Resource_turnd")])

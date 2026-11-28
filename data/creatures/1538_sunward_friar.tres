@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_i3a0f"]
+
+[resource]
+script = ExtResource("1_i3a0f")
+entry = 1538
+creature_name = "Sunward Friar"
+color = Color(0.85, 0.82, 0.75, 1)
+model = "human"
+dressed = true
+band = Color(0.62, 0.12, 0.1, 1)
+cloak = false
+main = "staff"
+helm = "Helm_hood"

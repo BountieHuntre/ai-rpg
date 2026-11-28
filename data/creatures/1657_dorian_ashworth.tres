@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_wtpvv"]
+
+[resource]
+script = ExtResource("1_wtpvv")
+entry = 1657
+creature_name = "Dorian Ashworth"
+size = Vector3(0.9, 0.9, 0.9)
+color = Color(0.5, 0.52, 0.5, 1)
+model = "undead"
+dressed = true
+band = Color(0.3, 0.28, 0.26, 1)
+cloak = false

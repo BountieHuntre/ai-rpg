@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_575f6"]
+
+[resource]
+script = ExtResource("1_575f6")
+entry = 3110
+creature_name = "Mudjaw Crocodile"
+size = Vector3(1.2, 0.6, 1.6)
+color = Color(0.3, 0.38, 0.25, 1)
+model = "thunder_lizard"

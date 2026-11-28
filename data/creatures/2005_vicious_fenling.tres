@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ud5d7"]
+
+[resource]
+script = ExtResource("1_ud5d7")
+entry = 2005
+creature_name = "Vicious Fenling"
+size = Vector3(0.65, 0.65, 0.65)
+color = Color(0.32, 0.46, 0.28, 1)
+model = "imp"

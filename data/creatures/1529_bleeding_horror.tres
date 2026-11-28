@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_82tfg"]
+
+[resource]
+script = ExtResource("1_82tfg")
+entry = 1529
+creature_name = "Bleeding Horror"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.55, 0.3, 0.3, 1)
+model = "undead"
+dressed = true
+band = Color(0.3, 0.28, 0.26, 1)
+cloak = false

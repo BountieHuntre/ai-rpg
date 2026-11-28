@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_bff2f"]
+
+[resource]
+script = ExtResource("1_bff2f")
+entry = 327
+creature_name = "Brasstooth"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.75, 0.6, 0.25, 1)
+model = "burrowling"
+main = "axe"
+off = "Shield_round"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_tms7d"]
+
+[resource]
+script = ExtResource("1_tms7d")
+entry = 3123
+creature_name = "Redclaw Reaver"
+size = Vector3(1.05, 1.1, 1.1)
+color = Color(0.5, 0.22, 0.18, 1)
+model = "raptor"

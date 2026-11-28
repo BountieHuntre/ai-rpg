@@ -34,120 +34,37 @@ const GRAVEYARD_FACING := -PI / 2
 
 ## Named places, for what playerbots say and the world map: [name, center,
 ## radius], smallest first, so a point is in the first place that holds it.
-const PLACES := [
-	["the south watch", Vector2(22, 735), 12.0],
-	["the west garrison", Vector2(-420, 520), 14.0],
-	["the pumpkin patch", Vector2(-200, 525), 16.0],
-	["the Reedford landing", Vector2(-260, 778), 16.0],
-	["Thornwick Tower", Vector2(380, 450), 18.0],
-	["the mirefin village", Vector2(332, 592), 18.0],
-	["the Coombe farm", Vector2(-190, 470), 22.0],
-	["Grunmaw's camp", Vector2(-175, 935), 22.0],
-	["the Pellow vineyard", Vector2(140, 640), 26.0],
-	["the Old Delve", Vector2(-315, 335), 28.0],
-	["Copperhollow", Vector2(172, 300), 28.0],
-	["the brigand farmstead", Vector2(-300, 690), 28.0],
-	["the Ashwood lumber camp", Vector2(380, 700), 30.0],
-	["Wexford", Vector2(0, 440), 35.0],
-	["the pass", Vector2(-24, 250), 35.0],
-	["the Mirrow Mere", Vector2(270, 560), 70.0],
-	["the west woods", Vector2(-360, 470), 70.0],
-	["the west meadow", Vector2(-110, 620), 75.0],
-	["the northeast woods", Vector2(330, 330), 100.0],
-	["the southwest woods", Vector2(-380, 900), 100.0],
-	["the gnoll hills", Vector2(0, 930), 110.0],
-	["the southeast woods", Vector2(300, 880), 120.0],
-]
+var PLACES: Array = []
 
 ## Level areas flattened for buildings and camps: [center, radius, height].
-const FLATS := [
-	[Vector2(-190, 470), 16.0, 5.0],  # Coombe farm
-	[Vector2(-200, 525), 12.0, 4.6],  # pumpkin patch
-	[Vector2(-310, 335), 14.0, 8.0],  # the Old Delve
-	[Vector2(-300, 690), 15.0, 5.0],  # brigand farmstead
-	[Vector2(-175, 935), 13.0, 7.0],  # Grunmaw's camp
-	[Vector2(22, 735), 6.0, 4.0],     # south watch
-	[Vector2(203, 582), 5.0, 4.0],    # watchman's hut
-	[Vector2(120, 500), 8.0, 5.0],    # Wainwright cottage
-	[Vector2(168, 300), 14.0, 8.0],   # Copperhollow
-	[Vector2(380, 700), 18.0, 5.0],   # Ashwood lumber camp
-	[Vector2(380, 450), 10.0, 8.0],   # Thornwick Tower
-	[Vector2(140, 640), 22.0, 4.5],   # Pellow vineyard
-	[Vector2(-260, 776), 8.0, 2.6],   # Reedford landing
-	[Vector2(-420, 520), 8.0, 5.5],   # west garrison
-	[Vector2(332, 592), 10.0, 3.0],   # mirefin village
-]
-static var FARM := 0
-static var PATCH := 1
-static var DELVE := 2
-static var FARMSTEAD := 3
-static var GNOLL_CAMP := 4
-static var SOUTH_WATCH := 5
-static var HUT := 6
-static var COTTAGE := 7
-static var COPPERHOLLOW := 8
-static var LUMBER_CAMP := 9
-static var TOWER := 10
-static var VINEYARD := 11
-static var LANDING := 12
-static var GARRISON := 13
-static var MIREFIN_VILLAGE := 14
+var FLATS: Array = []
+var FARM := 0
+var PATCH := 1
+var DELVE := 2
+var FARMSTEAD := 3
+var GNOLL_CAMP := 4
+var SOUTH_WATCH := 5
+var HUT := 6
+var COTTAGE := 7
+var COPPERHOLLOW := 8
+var LUMBER_CAMP := 9
+var TOWER := 10
+var VINEYARD := 11
+var LANDING := 12
+var GARRISON := 13
+var MIREFIN_VILLAGE := 14
 ## The farm's ploughed fields, round its house: center and radius.
 const FIELDS := Vector2(-190, 482)
 static var FIELDS_RADIUS := 52.0
 ## Rounded hills: [center, radius, height].
-const HILLS := [
-	[Vector2(-345, 332), 50.0, 28.0],  # the Old Delve's hill
-	[Vector2(-430, 285), 90.0, 20.0],
-	[Vector2(205, 300), 50.0, 28.0],   # Copperhollow's hill
-	[Vector2(300, 270), 70.0, 14.0],
-	[Vector2(0, 930), 110.0, 10.0],    # gnoll hills
-	[Vector2(380, 960), 80.0, 12.0],
-	[Vector2(380, 450), 35.0, 6.0],    # Thornwick's knoll
-	[Vector2(-120, 1060), 90.0, 9.0],
-]
+var HILLS: Array = []
 const LAKE := Vector2(270, 560)
 const LAKE_RADIUS := 55.0
 static var LAKE_BED := -0.6
-const STREAM := [
-	Vector2(250, 612), Vector2(190, 690), Vector2(90, 745), Vector2(0, 760),
-	Vector2(-120, 755), Vector2(-250, 790), Vector2(-380, 800), Vector2(-510, 830),
-]
-const ROADS := [
-	# The pass down to Wexford.
-	[Vector2(-8, 290), Vector2(-4, 360), Vector2(0, 418)],
-	# West to the Coombe farm and on to the west garrison.
-	[Vector2(-20, 438), Vector2(-90, 450), Vector2(-170, 462)],
-	[Vector2(-210, 470), Vector2(-300, 500), Vector2(-415, 520)],
-	# The farm to its pumpkin patch.
-	[Vector2(-188, 486), Vector2(-198, 513)],
-	# Up to the Old Delve.
-	[Vector2(-110, 450), Vector2(-200, 400), Vector2(-296, 345)],
-	# South over the bridge to the gnoll hills.
-	[Vector2(0, 462), Vector2(4, 560), Vector2(8, 650), Vector2(10, 740), Vector2(10, 775), Vector2(0, 840), Vector2(-20, 880)],
-	# East to the Wainwright cottage, then the watchman's hut by the mere.
-	[Vector2(22, 445), Vector2(80, 470), Vector2(112, 495)],
-	[Vector2(125, 505), Vector2(170, 545), Vector2(198, 578)],
-	# Round the mere's north shore to the lumber camp, with Thornwick off it.
-	[Vector2(125, 505), Vector2(200, 490), Vector2(275, 488), Vector2(345, 520), Vector2(372, 600), Vector2(380, 690)],
-	[Vector2(300, 495), Vector2(372, 456)],
-	# The pass road's branch east to Copperhollow.
-	[Vector2(-4, 360), Vector2(60, 330), Vector2(155, 302)],
-	# The vineyard, and the track west to the Reedford landing.
-	[Vector2(5, 600), Vector2(120, 632)],
-	[Vector2(8, 700), Vector2(-100, 720), Vector2(-255, 772)],
-]
+var STREAM: Array = []
+var ROADS: Array = []
 ## Woods: [center, radius]. Trees thin out toward the edges.
-const WOODS := [
-	[Vector2(330, 330), 110.0],
-	[Vector2(300, 880), 130.0],
-	[Vector2(-90, 320), 45.0],
-	[Vector2(-360, 470), 70.0],
-	[Vector2(-380, 900), 100.0],
-	[Vector2(440, 700), 60.0],
-	[Vector2(150, 1010), 80.0],
-	[Vector2(-60, 1120), 60.0],
-]
+var WOODS: Array = []
 ## Where the south road crosses the stream.
 static var BRIDGE_X := 10.0
 static var BRIDGE_START := 748.0
@@ -156,58 +73,15 @@ static var BRIDGE_RAMP := 8.0
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
-const SPAWNS := [
-	[525, Vector2(90, 330), 35.0, 8],      # Mangy Wolf, north of Wexford (5-6)
-	[30, Vector2(-90, 320), 25.0, 6],      # Forest Spider, the pass woods (5-6)
-	[30, Vector2(-350, 460), 30.0, 6],     # Forest Spider, the west woods
-	[285, Vector2(225, 535), 14.0, 6],     # Mirefin, the mere's west shore (6-7)
-	[735, Vector2(285, 505), 14.0, 6],     # Mirefin Wader, its north shore (6-7)
-	[285, Vector2(332, 592), 12.0, 6],     # Mirefin, the mirefin village on its east shore
-	[524, Vector2(-110, 620), 45.0, 10],   # Flintback Boar, west meadow (7-8)
-	[524, Vector2(80, 580), 25.0, 5],
-	[390, Vector2(-200, 527), 8.0, 2],     # Fattened Hog, the pumpkin patch (7)
-	[330, Vector2(-202, 523), 1.0, 1],     # Old Duchess (9)
-	[390, Vector2(140, 640), 16.0, 4],     # Fattened Hog, the vineyard
-	[1922, Vector2(330, 330), 60.0, 10],   # Gray Forest Wolf, northeast woods (7-8)
-	[40, Vector2(-303, 340), 11.0, 5],     # Burrowling Pickman, the Old Delve (6-7)
-	[476, Vector2(-316, 330), 6.0, 3],     # Burrowling Firecaller (7-8)
-	[43, Vector2(-319, 342), 7.0, 4],      # Mine Spider (8-9)
-	[327, Vector2(-322, 335), 1.0, 1],     # Brasstooth (8)
-	[40, Vector2(175, 305), 11.0, 5],      # Burrowling Pickman, Copperhollow
-	[476, Vector2(188, 297), 6.0, 3],      # Burrowling Firecaller
-	[43, Vector2(186, 310), 8.0, 4],       # Mine Spider
-	[116, Vector2(-295, 687), 22.0, 8],    # Brigand Cutthroat, the farmstead (8-9)
-	[474, Vector2(-310, 697), 12.0, 4],    # Brigand Hedge-Mage (9-10)
-	[474, Vector2(380, 452), 12.0, 4],     # Brigand Hedge-Mage, Thornwick Tower
-	[116, Vector2(365, 475), 18.0, 6],     # Brigand Cutthroat, Thornwick Tower
-	[822, Vector2(240, 860), 35.0, 6],     # Young Forest Bear, southeast woods (8-9)
-	[822, Vector2(430, 790), 25.0, 5],     # Young Forest Bear, by the lumber camp
-	[118, Vector2(340, 880), 55.0, 10],    # Prowler, southeast woods (9-10)
-	[118, Vector2(430, 640), 30.0, 6],     # Prowler, by the lumber camp
-	[732, Vector2(-130, 760), 25.0, 6],    # Mirefin Lurker, down the stream (9-10)
-	[732, Vector2(-300, 808), 20.0, 5],    # Mirefin Lurker, by the Reedford landing
-	[46, Vector2(150, 715), 18.0, 6],      # Mirefin Forager, up the stream (9-10)
-	[97, Vector2(-40, 905), 35.0, 9],      # Ditchjaw Runt, gnoll hills (8-9)
-	[478, Vector2(80, 925), 30.0, 6],      # Ditchjaw Outrider (9-10)
-	[97, Vector2(150, 990), 30.0, 6],      # Ditchjaw Runt, south of the hills
-	[117, Vector2(-172, 932), 14.0, 6],    # Ditchjaw Brute, Grunmaw's camp (11-12)
-	[448, Vector2(-178, 938), 1.0, 1],     # Grunmaw (11, elite)
-	[1922, Vector2(-380, 900), 50.0, 8],   # Gray Forest Wolf, southwest woods
-	[473, Vector2(380, 457), 1.0, 1],      # Odo the Collector, at Thornwick Tower's door (10)
-]
+var SPAWNS: Array = []
 
 ## Quest givers and enders that are things: [object entry, node name, point,
 ## facing]. The lost watchmen of the Fishy Peril chain: a half-eaten body on
 ## the mere's north shore, and Aldous in the mirefin village.
-const QUEST_OBJECTS := [
-	[55, "HalfEatenBody", Vector2(245, 497), 0.6],
-	[56, "AldousCorpse", Vector2(338, 594), 2.2],
-]
+var QUEST_OBJECTS: Array = []
 ## Chests to loot: [object entry, center, radius, count]. Bundles of Wood
 ## round the Ashwood lumber camp, for A Bundle of Trouble.
-const CHESTS := [
-	[176793, Vector2(385, 700), 45.0, 12],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.47, 0.45, 0.42)
 const STONE := Color(0.66, 0.63, 0.58)
@@ -228,16 +102,14 @@ const INN_LOOK := { "wall": PLASTER, "roof": ROOF, "trim": DARK_WOOD, "stone": D
 const STONE_LOOK := { "wall": STONE, "roof": ROOF, "trim": DARK_WOOD, "stone": DARK_STONE }
 ## Walled places bots go in and out of by their doors: [x1, z1, x2, z2,
 ## outside the door, inside it] (Zone.enclosures).
-const ENCLOSURES := [
-	[13.0, 423.0, 23.0, 437.0, Vector2(10.0, 432.0), Vector2(15.5, 432.0)],  # the Harrow Inn, door to the west
-	[-18.0, 411.5, -8.0, 424.5, Vector2(-13.0, 427.5), Vector2(-13.0, 421.5)],  # Wexford's chapel, door to the south
-]
+var ENCLOSURES: Array = []
 const SHED_LOOK := { "wall": WOOD, "roof": THATCH, "trim": DARK_WOOD, "stone": DARK_STONE, "thatch": true }
 ## Where flowers grow thick.
 var _meadow := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	_meadow.seed = SEED + 5

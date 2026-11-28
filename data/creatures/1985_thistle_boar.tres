@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_da8fd"]
+
+[resource]
+script = ExtResource("1_da8fd")
+entry = 1985
+creature_name = "Thistle Boar"
+size = Vector3(0.85, 0.85, 0.85)
+color = Color(0.4, 0.32, 0.28, 1)
+model = "boar"

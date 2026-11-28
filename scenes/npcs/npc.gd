@@ -83,6 +83,13 @@ func _ready() -> void:
 				_walking_home = false)
 
 
+## Its trade's outfit picked again (ContentWatch, when the outfits' colours
+## are saved).
+func refresh_outfit() -> void:
+	if _model is HumanoidModel:
+		(_model as HumanoidModel).outfit = HumanoidModel.outfit_for(trainer, hash(npc_name))
+
+
 func _pose(state: String) -> void:
 	if _model and _model.has_method("pose"):
 		_model.pose(state)

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_dl82s"]
+
+[resource]
+script = ExtResource("1_dl82s")
+entry = 14430
+creature_name = "Gloomprowl"
+size = Vector3(1.15, 1.15, 1.15)
+color = Color(0.18, 0.16, 0.24, 1)
+model = "tiger"

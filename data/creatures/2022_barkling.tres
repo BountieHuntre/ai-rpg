@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_orew3"]
+
+[resource]
+script = ExtResource("1_orew3")
+entry = 2022
+creature_name = "Barkling"
+color = Color(0.4, 0.32, 0.24, 1)
+model = "barkling"

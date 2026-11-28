@@ -25,95 +25,26 @@ static var TOWN_FLAT := 40.0
 const GRAVEYARD := Vector3(-772, TOWN_HEIGHT, 668)
 static var GRAVEYARD_FACING := 0.0
 
-const PLACES := [
-	["Coldhoof Well", Vector2(-640, 700), 12.0],
-	["Stormhide Well", Vector2(-1080, 560), 12.0],
-	["the Tallmane Water Pump", Vector2(-620, 260), 12.0],
-	["the Seers' wells", Vector2(-900, 185), 16.0],
-	["the Ochre Stones", Vector2(-430, 270), 24.0],
-	["the Goldtooth Derrick", Vector2(-450, -60), 26.0],
-	["Ashmane Rock", Vector2(-1300, 820), 26.0],
-	["Longhorn Village", Vector2(-760, 640), 42.0],
-	["the pass", Vector2(-515, 960), 35.0],
-	["the Windspire lifts", Vector2(-1200, -40), 40.0],
-	["the Skyrend cliffs", Vector2(-1380, 420), 90.0],
-	["the Windspire mesas", Vector2(-1260, -110), 110.0],
-	["the eastern plains", Vector2(-550, 450), 160.0],
-	["the western plains", Vector2(-1050, 450), 160.0],
-]
-const FLATS := [
-	[Vector2(-900, 185), 12.0, 7.0],    # the Seers' wells
-	[Vector2(-430, 270), 20.0, 7.0],    # the Ochre Stones
-	[Vector2(-450, -60), 22.0, 6.0],    # the Goldtooth Derrick
-	[Vector2(-1300, 820), 18.0, 7.0],   # Ashmane Rock
-	[Vector2(-1200, -40), 14.0, 6.0],   # the Windspire lifts
-	[Vector2(-640, 700), 8.0, 6.0],     # Coldhoof Well
-	[Vector2(-1080, 560), 8.0, 6.0],    # Stormhide Well
-	[Vector2(-620, 260), 8.0, 6.0],     # the Tallmane Water Pump
-]
+var PLACES: Array = []
+var FLATS: Array = []
 ## The wells cleansed with totems: their spell focus objects.
-const SPELL_FOCUSES := [
-	[2913, Vector2(-640, 700)],
-	[2911, Vector2(-1080, 560)],
-	[2909, Vector2(-620, 260)],
-]
-static var WELLS := 0
-static var STONES := 1
-static var DERRICK := 2
-static var ASHMANE := 3
-static var LIFTS := 4
-const HILLS := [
-	[Vector2(-1380, 420), 90.0, 24.0],  # the Skyrend cliffs
-	[Vector2(-1310, 860), 40.0, 10.0],
-	[Vector2(-600, 150), 70.0, 8.0],
-	[Vector2(-1000, 820), 70.0, 7.0],
-]
+var SPELL_FOCUSES: Array = []
+var WELLS := 0
+var STONES := 1
+var DERRICK := 2
+var ASHMANE := 3
+var LIFTS := 4
+var HILLS: Array = []
 ## Mesas: [center, radius, height], flat on top.
 const MESAS := [
 	[Vector2(-1300, -120), 80.0, 36.0],
 	[Vector2(-1130, -150), 50.0, 30.0],
 ]
 const PASS_END := Vector2(-560, 875)
-const ROADS := [
-	# The pass road up to Longhorn Village.
-	[PASS_END, Vector2(-600, 820), Vector2(-728, 666)],
-	# North to the Seers' wells, and on to the derrick.
-	[Vector2(-770, 600), Vector2(-820, 420), Vector2(-890, 196)],
-	[Vector2(-890, 175), Vector2(-700, 80), Vector2(-470, -42)],
-	# East to the Ochre Stones, west to Ashmane Rock, north-west to the lifts.
-	[Vector2(-720, 630), Vector2(-600, 500), Vector2(-446, 282)],
-	[Vector2(-800, 650), Vector2(-1000, 720), Vector2(-1284, 812)],
-	[Vector2(-820, 420), Vector2(-1000, 200), Vector2(-1190, -28)],
-]
-const SPAWNS := [
-	[2958, Vector2(-700, 420), 90.0, 10],    # Prairie Wolf (5-6)
-	[2959, Vector2(-1000, 300), 100.0, 10],  # Prairie Stalker (7-8)
-	[2960, Vector2(-520, 520), 80.0, 8],     # Prairie Wolf Alpha (9-10)
-	[2956, Vector2(-900, 720), 100.0, 10],   # Adult Tallbird (6-7)
-	[2957, Vector2(-1100, 120), 90.0, 8],    # Elder Tallbird (8-9)
-	[3035, Vector2(-640, 200), 90.0, 10],    # Flatland Cougar (7-8)
-	[3566, Vector2(-1200, 600), 90.0, 8],    # Flatland Prowler (9-10)
-	[2969, Vector2(-1050, 820), 80.0, 8],    # Wiry Swoop (5-6)
-	[2970, Vector2(-600, 820), 80.0, 8],     # Swoop (7-8)
-	[2971, Vector2(-1200, 250), 70.0, 6],    # Taloned Swoop (8-9)
-	[2962, Vector2(-1380, 450), 50.0, 9],    # Skyrend Harpy, the cliffs (7-8)
-	[2963, Vector2(-1400, 390), 40.0, 7],    # Skyrend Wind Witch (8-9)
-	[2949, Vector2(-1300, 820), 22.0, 8],    # Dustmane Tanner, Ashmane Rock (5-6)
-	[2950, Vector2(-1280, 840), 22.0, 8],    # Dustmane Skinner (6-7)
-	[2951, Vector2(-1320, 800), 22.0, 6],    # Dustmane Poacher (7-8)
-	[5786, Vector2(-1302, 818), 1.0, 1],     # Crookspear (9, rare)
-	[3232, Vector2(-430, 270), 22.0, 9],     # Briartusk Interloper, the Ochre Stones (9-10)
-	[2978, Vector2(-450, -60), 32.0, 10],    # Goldtooth Worker, the derrick (8-9)
-	[2979, Vector2(-440, -70), 22.0, 6],     # Goldtooth Overseer (9-10)
-	[3051, Vector2(-452, -64), 1.0, 1],      # Supervisor Fizzwick (12)
-	[3068, Vector2(-900, 450), 150.0, 1],    # Thunderstrider (9, rare)
-	[3056, Vector2(-800, 100), 100.0, 1],    # Pale Howler (12, rare)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## The Well Stones and Amberseed of the Rite of Vision, at the Seers' wells.
-const CHESTS := [
-	[2910, Vector2(-905, 188), 6.0, 3],
-	[2912, Vector2(-880, 240), 30.0, 6],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.55, 0.42, 0.34)
 const OCHRE := Color(0.72, 0.42, 0.24)
@@ -128,6 +59,7 @@ var _road_segments: Array = []
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	for line: Array in ROADS:
@@ -158,11 +90,7 @@ const GROUND_TEXTURES := {
 }
 ## Walled places bots go in and out of by the door (Zone.enclosures):
 ## Longhorn Village's three longhouses.
-const ENCLOSURES := [
-	[-769.0, 614.5, -751.0, 621.5, Vector2(-760, 625.5), Vector2(-760, 619.5)],  # the chief's, door south
-	[-739.5, 629.0, -732.5, 643.0, Vector2(-743.5, 636), Vector2(-737.5, 636)],  # the inn, door west
-	[-787.5, 630.0, -780.5, 642.0, Vector2(-776.5, 636), Vector2(-782.5, 636)],  # the trainers', door east
-]
+var ENCLOSURES: Array = []
 static var TREE_ATTEMPTS := 9000
 static var ROCK_ATTEMPTS := 3000
 

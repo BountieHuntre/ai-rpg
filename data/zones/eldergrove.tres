@@ -1,0 +1,802 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_epa1g"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_2hmph"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_48qbh"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_0yk7g"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_ijgtj"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_y70ae"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_cmxce"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_fjwgy"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_he5ku"]
+
+[sub_resource type="Resource" id="Resource_yg4uo"]
+script = ExtResource("1_epa1g")
+entry = 1673
+center = Vector2(-2000, -4250)
+radius = 180.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_nc38c"]
+script = ExtResource("1_epa1g")
+entry = 4608
+center = Vector2(-1720, -4250)
+radius = 62.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_xjb5l"]
+script = ExtResource("1_epa1g")
+entry = 2739
+center = Vector2(-2432, -4162)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_8hs5d"]
+script = ExtResource("1_epa1g")
+entry = 2740
+center = Vector2(-2432, -4162)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_5gnpc"]
+script = ExtResource("1_epa1g")
+entry = 2741
+center = Vector2(-2432, -4162)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_s4acf"]
+script = ExtResource("1_epa1g")
+entry = 2742
+center = Vector2(-2432, -4162)
+radius = 12.0
+
+[sub_resource type="Resource" id="Resource_tem3i"]
+script = ExtResource("1_epa1g")
+entry = 126158
+center = Vector2(-2049, -4406)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_6s3f1"]
+resource_name = "before the Gloamrock"
+script = ExtResource("3_48qbh")
+name = "before the Gloamrock"
+key = "GLOAMROCK"
+center = Vector2(-1960, -4600)
+radius = 16.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_s00tw"]
+resource_name = "Starbreeze"
+script = ExtResource("3_48qbh")
+name = "Starbreeze"
+key = "STARBREEZE"
+center = Vector2(-1560, -4560)
+radius = 22.0
+height = 6.0
+
+[sub_resource type="Resource" id="Resource_5dj3r"]
+resource_name = "before the Thornbarrow Den"
+script = ExtResource("3_48qbh")
+name = "before the Thornbarrow Den"
+key = "DEN"
+center = Vector2(-2420, -4150)
+radius = 20.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_m7oo1"]
+resource_name = "the Moonwells"
+script = ExtResource("3_48qbh")
+name = "the Moonwells"
+key = "MOONWELLS"
+center = Vector2(-2150, -4000)
+radius = 22.0
+
+[sub_resource type="Resource" id="Resource_c4221"]
+resource_name = "Twistbark Hold"
+script = ExtResource("3_48qbh")
+name = "Twistbark Hold"
+key = "HOLD"
+center = Vector2(-1900, -3760)
+radius = 26.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_6frks"]
+resource_name = "the Seers' Glade"
+script = ExtResource("3_48qbh")
+name = "the Seers' Glade"
+key = "GLADE"
+center = Vector2(-2380, -3760)
+radius = 26.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_65vnu"]
+resource_name = "the Silverbough Gate"
+script = ExtResource("3_48qbh")
+name = "the Silverbough Gate"
+key = "GATE"
+center = Vector2(-2560, -4200)
+radius = 14.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_xlbvb"]
+resource_name = "Denalan's camp on the lake shore"
+script = ExtResource("3_48qbh")
+name = "Denalan's camp on the lake shore"
+key = "DENALAN"
+center = Vector2(-1786, -4250)
+radius = 8.0
+height = 3.0
+
+[sub_resource type="Resource" id="Resource_nee6r"]
+resource_name = "the Gloamrock"
+script = ExtResource("3_48qbh")
+name = "the Gloamrock"
+center = Vector2(-1945, -4625)
+radius = 34.0
+height = 18.0
+
+[sub_resource type="Resource" id="Resource_4hpy7"]
+resource_name = "the barrow mound"
+script = ExtResource("3_48qbh")
+name = "the barrow mound"
+center = Vector2(-2440, -4170)
+radius = 34.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_l6v8v"]
+script = ExtResource("3_48qbh")
+center = Vector2(-2400, -3720)
+radius = 50.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_lfxse"]
+script = ExtResource("3_48qbh")
+center = Vector2(-1880, -3720)
+radius = 40.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_ppiyi"]
+script = ExtResource("3_48qbh")
+center = Vector2(-1600, -3900)
+radius = 90.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_8lo88"]
+script = ExtResource("3_48qbh")
+center = Vector2(-2300, -4550)
+radius = 80.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_o56wk"]
+resource_name = "Denalan's camp"
+script = ExtResource("4_0yk7g")
+name = "Denalan's camp"
+center = Vector2(-1786, -4250)
+
+[sub_resource type="Resource" id="Resource_cdjw6"]
+resource_name = "the Silverbough Gate"
+script = ExtResource("4_0yk7g")
+name = "the Silverbough Gate"
+center = Vector2(-2560, -4200)
+radius = 20.0
+
+[sub_resource type="Resource" id="Resource_glxje"]
+resource_name = "the Gloamrock"
+script = ExtResource("4_0yk7g")
+name = "the Gloamrock"
+center = Vector2(-1960, -4600)
+radius = 26.0
+
+[sub_resource type="Resource" id="Resource_ijblb"]
+resource_name = "Starbreeze"
+script = ExtResource("4_0yk7g")
+name = "Starbreeze"
+center = Vector2(-1560, -4560)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_kuq6b"]
+resource_name = "the Thornbarrow Den"
+script = ExtResource("4_0yk7g")
+name = "the Thornbarrow Den"
+center = Vector2(-2420, -4150)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_w1cvf"]
+resource_name = "the Moonwells"
+script = ExtResource("4_0yk7g")
+name = "the Moonwells"
+center = Vector2(-2150, -4000)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_aybr8"]
+resource_name = "Twistbark Hold"
+script = ExtResource("4_0yk7g")
+name = "Twistbark Hold"
+center = Vector2(-1900, -3760)
+radius = 34.0
+
+[sub_resource type="Resource" id="Resource_qorsf"]
+resource_name = "the Seers' Glade"
+script = ExtResource("4_0yk7g")
+name = "the Seers' Glade"
+center = Vector2(-2380, -3760)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_smt31"]
+resource_name = "Fernwatch"
+script = ExtResource("4_0yk7g")
+name = "Fernwatch"
+center = Vector2(-2080, -4380)
+radius = 44.0
+
+[sub_resource type="Resource" id="Resource_x8mfh"]
+resource_name = "the pass"
+script = ExtResource("4_0yk7g")
+name = "the pass"
+center = Vector2(-2208, -4770)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_4y1p7"]
+resource_name = "Lake Aleth"
+script = ExtResource("4_0yk7g")
+name = "Lake Aleth"
+center = Vector2(-1720, -4250)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_fis02"]
+resource_name = "the northern woods"
+script = ExtResource("4_0yk7g")
+name = "the northern woods"
+center = Vector2(-1800, -4600)
+radius = 150.0
+
+[sub_resource type="Resource" id="Resource_0fv48"]
+resource_name = "the western woods"
+script = ExtResource("4_0yk7g")
+name = "the western woods"
+center = Vector2(-2350, -4450)
+radius = 150.0
+
+[sub_resource type="Resource" id="Resource_fe3j4"]
+resource_name = "the southern woods"
+script = ExtResource("4_0yk7g")
+name = "the southern woods"
+center = Vector2(-2000, -3900)
+radius = 220.0
+
+[sub_resource type="Resource" id="Resource_8ntmu"]
+script = ExtResource("5_ijgtj")
+entry = 7923
+node_name = "DenalorsPlanter"
+at = Vector2(-1792, -4243)
+
+[sub_resource type="Resource" id="Resource_4ru5n"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2212, -4730, -2180, -4600, -2110, -4420)
+
+[sub_resource type="Resource" id="Resource_kukhc"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2090, -4338, -2130, -4200, -2150, -4022)
+
+[sub_resource type="Resource" id="Resource_p2vtm"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2140, -3980, -2040, -3860, -1920, -3786)
+
+[sub_resource type="Resource" id="Resource_2g30w"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2050, -4410, -1960, -4580)
+
+[sub_resource type="Resource" id="Resource_b1b2c"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-1960, -4580, -1760, -4580, -1584, -4562)
+
+[sub_resource type="Resource" id="Resource_1c5kc"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2040, -4370, -1900, -4300, -1794, -4252)
+
+[sub_resource type="Resource" id="Resource_w83l2"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2122, -4370, -2300, -4250, -2546, -4202)
+
+[sub_resource type="Resource" id="Resource_v8nc8"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2300, -4250, -2402, -4162)
+
+[sub_resource type="Resource" id="Resource_uckpi"]
+script = ExtResource("6_y70ae")
+points = PackedVector2Array(-2150, -4000, -2260, -3880, -2360, -3784)
+
+[sub_resource type="Resource" id="Resource_jkg7k"]
+resource_name = "Strigid Owl (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Strigid Owl (5-6)"
+entry = 1995
+creature = "Strigid Owl"
+center = Vector2(-1950, -4500)
+radius = 130.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_kul3v"]
+resource_name = "Silkwood Lurker (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Silkwood Lurker (5-6)"
+entry = 1998
+creature = "Silkwood Lurker"
+center = Vector2(-2250, -4550)
+radius = 120.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_c7dcy"]
+resource_name = "Shadecat (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Shadecat (5-6)"
+entry = 2042
+creature = "Shadecat"
+center = Vector2(-1820, -4450)
+radius = 140.0
+count = 12
+
+[sub_resource type="Resource" id="Resource_4ia18"]
+resource_name = "Barkling, Lake Aleth (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Barkling, Lake Aleth (5-6)"
+entry = 2022
+creature = "Barkling"
+center = Vector2(-1720, -4250)
+radius = 70.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_iydc7"]
+resource_name = "Rascal Sprite, the Gloamrock (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Rascal Sprite, the Gloamrock (5-6)"
+entry = 2002
+creature = "Rascal Sprite"
+center = Vector2(-1960, -4600)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_h5guk"]
+resource_name = "Shadow Sprite (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Shadow Sprite (5-6)"
+entry = 2003
+creature = "Shadow Sprite"
+center = Vector2(-1950, -4610)
+radius = 22.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_onbx8"]
+resource_name = "Dark Sprite (6-7)"
+script = ExtResource("8_fjwgy")
+name = "Dark Sprite (6-7)"
+entry = 2004
+creature = "Dark Sprite"
+center = Vector2(-1945, -4620)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_lr8p6"]
+resource_name = "Vicious Fenling (7)"
+script = ExtResource("8_fjwgy")
+name = "Vicious Fenling (7)"
+entry = 2005
+creature = "Vicious Fenling"
+center = Vector2(-1955, -4615)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_8vu8b"]
+resource_name = "Lord Malvenn (8)"
+script = ExtResource("8_fjwgy")
+name = "Lord Malvenn (8)"
+entry = 2038
+creature = "Lord Malvenn"
+center = Vector2(-1948, -4618)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_ghrrf"]
+resource_name = "Grubbin (6, rare)"
+script = ExtResource("8_fjwgy")
+name = "Grubbin (6, rare)"
+entry = 14432
+creature = "Grubbin"
+center = Vector2(-1972, -4592)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_icv8o"]
+resource_name = "Twistbark Ursa, Starbreeze (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Ursa, Starbreeze (5-6)"
+entry = 2006
+creature = "Twistbark Ursa"
+center = Vector2(-1560, -4560)
+radius = 28.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_q2rs6"]
+resource_name = "Twistbark Gardener (5-6)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Gardener (5-6)"
+entry = 2007
+creature = "Twistbark Gardener"
+center = Vector2(-1570, -4550)
+radius = 28.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_5eeck"]
+resource_name = "Twistbark Warrior (6-7)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Warrior (6-7)"
+entry = 2008
+creature = "Twistbark Warrior"
+center = Vector2(-1650, -4450)
+radius = 90.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_x216k"]
+resource_name = "Twistbark Mystic (6-7)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Mystic (6-7)"
+entry = 7235
+creature = "Twistbark Mystic"
+center = Vector2(-1530, -4580)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_o8od7"]
+resource_name = "Gorvax the Dream Eater (8)"
+script = ExtResource("8_fjwgy")
+name = "Gorvax the Dream Eater (8)"
+entry = 7234
+creature = "Gorvax the Dream Eater"
+center = Vector2(-1522, -4590)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_goadg"]
+resource_name = "Twistbark Ambusher, the gate road (6-7)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Ambusher, the gate road (6-7)"
+entry = 2152
+creature = "Twistbark Ambusher"
+center = Vector2(-2470, -4240)
+radius = 40.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_xyrqg"]
+resource_name = "Strigid Screecher (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Strigid Screecher (7-8)"
+entry = 1996
+creature = "Strigid Screecher"
+center = Vector2(-2250, -4000)
+radius = 140.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_argdx"]
+resource_name = "Silkwood Venomfang (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Silkwood Venomfang (7-8)"
+entry = 1999
+creature = "Silkwood Venomfang"
+center = Vector2(-2300, -3950)
+radius = 120.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_fa5d8"]
+resource_name = "Shadecat Stalker (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Shadecat Stalker (7-8)"
+entry = 2043
+creature = "Shadecat Stalker"
+center = Vector2(-1850, -4000)
+radius = 140.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_a37wg"]
+resource_name = "Barkling Ripper (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Barkling Ripper (7-8)"
+entry = 2025
+creature = "Barkling Ripper"
+center = Vector2(-1680, -4300)
+radius = 50.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_a18i1"]
+resource_name = "Barkling Trampler (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Barkling Trampler (8-9)"
+entry = 2027
+creature = "Barkling Trampler"
+center = Vector2(-1660, -4200)
+radius = 40.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_ik2yp"]
+resource_name = "Barkling Mirebeast (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Barkling Mirebeast (9-10)"
+entry = 2029
+creature = "Barkling Mirebeast"
+center = Vector2(-1720, -4180)
+radius = 40.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_yo67q"]
+resource_name = "Elder Barkling (10-11)"
+script = ExtResource("8_fjwgy")
+name = "Elder Barkling (10-11)"
+entry = 2030
+creature = "Elder Barkling"
+center = Vector2(-1650, -4240)
+radius = 30.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_5ypcw"]
+resource_name = "Mossbrow (9)"
+script = ExtResource("8_fjwgy")
+name = "Mossbrow (9)"
+entry = 2166
+creature = "Mossbrow"
+center = Vector2(-1662, -4272)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_51b55"]
+resource_name = "Twistbark Shaman, the Thornbarrow Den (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Shaman, the Thornbarrow Den (7-8)"
+entry = 2009
+creature = "Twistbark Shaman"
+center = Vector2(-2420, -4150)
+radius = 28.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_1txoe"]
+resource_name = "Twistbark Defender (7-8)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Defender (7-8)"
+entry = 2010
+creature = "Twistbark Defender"
+center = Vector2(-2415, -4140)
+radius = 28.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_rl588"]
+resource_name = "Twistbark Augur (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Augur (8-9)"
+entry = 2011
+creature = "Twistbark Augur"
+center = Vector2(-2430, -4160)
+radius = 24.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_gxvk0"]
+resource_name = "Strigid Hunter (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Strigid Hunter (8-9)"
+entry = 1997
+creature = "Strigid Hunter"
+center = Vector2(-1600, -3850)
+radius = 100.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_rb5jc"]
+resource_name = "Silkwood Silkspinner (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Silkwood Silkspinner (8-9)"
+entry = 2000
+creature = "Silkwood Silkspinner"
+center = Vector2(-1750, -3800)
+radius = 100.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_w6m31"]
+resource_name = "Elder Shadecat (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Elder Shadecat (8-9)"
+entry = 2033
+creature = "Elder Shadecat"
+center = Vector2(-2100, -3800)
+radius = 120.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_bnuwm"]
+resource_name = "Giant Silkwood Spider (10)"
+script = ExtResource("8_fjwgy")
+name = "Giant Silkwood Spider (10)"
+entry = 2001
+creature = "Giant Silkwood Spider"
+center = Vector2(-1500, -3720)
+radius = 50.0
+count = 4
+
+[sub_resource type="Resource" id="Resource_si4e7"]
+resource_name = "Feral Shadecat (10)"
+script = ExtResource("8_fjwgy")
+name = "Feral Shadecat (10)"
+entry = 2034
+creature = "Feral Shadecat"
+center = Vector2(-1550, -3700)
+radius = 60.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_rgut5"]
+resource_name = "Twistbark Pathfinder, Twistbark Hold (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Pathfinder, Twistbark Hold (9-10)"
+entry = 2012
+creature = "Twistbark Pathfinder"
+center = Vector2(-1900, -3760)
+radius = 32.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_8pdl1"]
+resource_name = "Twistbark Avenger (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Avenger (9-10)"
+entry = 2013
+creature = "Twistbark Avenger"
+center = Vector2(-1890, -3770)
+radius = 32.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_x328i"]
+resource_name = "Twistbark Totemic (10-11)"
+script = ExtResource("8_fjwgy")
+name = "Twistbark Totemic (10-11)"
+entry = 2014
+creature = "Twistbark Totemic"
+center = Vector2(-1910, -3750)
+radius = 24.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_mlgwo"]
+resource_name = "Borrak the Mauler (12)"
+script = ExtResource("8_fjwgy")
+name = "Borrak the Mauler (12)"
+entry = 2039
+creature = "Borrak the Mauler"
+center = Vector2(-1904, -3742)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_0sd7v"]
+resource_name = "Gnashmaw (11, rare)"
+script = ExtResource("8_fjwgy")
+name = "Gnashmaw (11, rare)"
+entry = 14429
+creature = "Gnashmaw"
+center = Vector2(-1880, -3780)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_cqo32"]
+resource_name = "Crimsonwing Harpy, the Seers' Glade (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Harpy, the Seers' Glade (8-9)"
+entry = 2015
+creature = "Crimsonwing Harpy"
+center = Vector2(-2380, -3760)
+radius = 38.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_gx88o"]
+resource_name = "Crimsonwing Rogue (8-9)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Rogue (8-9)"
+entry = 2017
+creature = "Crimsonwing Rogue"
+center = Vector2(-2370, -3770)
+radius = 38.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_ku067"]
+resource_name = "Crimsonwing Sorceress (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Sorceress (9-10)"
+entry = 2018
+creature = "Crimsonwing Sorceress"
+center = Vector2(-2390, -3750)
+radius = 34.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_1rens"]
+resource_name = "Crimsonwing Fury (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Fury (9-10)"
+entry = 2019
+creature = "Crimsonwing Fury"
+center = Vector2(-2360, -3740)
+radius = 34.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_o3ava"]
+resource_name = "Crimsonwing Wind Witch (9-10)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Wind Witch (9-10)"
+entry = 2020
+creature = "Crimsonwing Wind Witch"
+center = Vector2(-2400, -3770)
+radius = 34.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_efv3g"]
+resource_name = "Crimsonwing Matriarch (11-12)"
+script = ExtResource("8_fjwgy")
+name = "Crimsonwing Matriarch (11-12)"
+entry = 2021
+creature = "Crimsonwing Matriarch"
+center = Vector2(-2390, -3735)
+radius = 28.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_0faqm"]
+resource_name = "Fury Selka (8, rare)"
+script = ExtResource("8_fjwgy")
+name = "Fury Selka (8, rare)"
+entry = 14431
+creature = "Fury Selka"
+center = Vector2(-2372, -3748)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_yy0b8"]
+resource_name = "Urgrum (7, rare)"
+script = ExtResource("8_fjwgy")
+name = "Urgrum (7, rare)"
+entry = 14428
+creature = "Urgrum"
+center = Vector2(-1600, -4300)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_ggoyg"]
+resource_name = "Gloomprowl (9, rare)"
+script = ExtResource("8_fjwgy")
+name = "Gloomprowl (9, rare)"
+entry = 14430
+creature = "Gloomprowl"
+center = Vector2(-2200, -3850)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_bsbsd"]
+resource_name = "Wildclaw, in the Thornbarrow Den (10)"
+script = ExtResource("8_fjwgy")
+name = "Wildclaw, in the Thornbarrow Den (10)"
+entry = 7318
+creature = "Wildclaw"
+center = Vector2(-2428, -4162)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_e23sq"]
+resource_name = "Mossrot the Fetid, by Lake Aleth (13, rare)"
+script = ExtResource("8_fjwgy")
+name = "Mossrot the Fetid, by Lake Aleth (13, rare)"
+entry = 3535
+creature = "Mossrot the Fetid"
+center = Vector2(-1690, -4300)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_vov5w"]
+script = ExtResource("9_he5ku")
+entry = 19550
+at = Vector2(-1568, -4552)
+
+[sub_resource type="Resource" id="Resource_u3fd3"]
+script = ExtResource("9_he5ku")
+entry = 19551
+at = Vector2(-2150, -4000)
+
+[sub_resource type="Resource" id="Resource_iy2r3"]
+script = ExtResource("9_he5ku")
+entry = 19552
+at = Vector2(-2380, -3770)
+
+[resource]
+script = ExtResource("7_cmxce")
+zone_name = "Eldergrove Isle"
+places = Array[ExtResource("4_0yk7g")]([SubResource("Resource_o56wk"), SubResource("Resource_cdjw6"), SubResource("Resource_glxje"), SubResource("Resource_ijblb"), SubResource("Resource_kuq6b"), SubResource("Resource_w1cvf"), SubResource("Resource_aybr8"), SubResource("Resource_qorsf"), SubResource("Resource_smt31"), SubResource("Resource_x8mfh"), SubResource("Resource_4y1p7"), SubResource("Resource_fis02"), SubResource("Resource_0fv48"), SubResource("Resource_fe3j4")])
+flats = Array[ExtResource("3_48qbh")]([SubResource("Resource_6s3f1"), SubResource("Resource_s00tw"), SubResource("Resource_5dj3r"), SubResource("Resource_m7oo1"), SubResource("Resource_c4221"), SubResource("Resource_6frks"), SubResource("Resource_65vnu"), SubResource("Resource_xlbvb")])
+hills = Array[ExtResource("3_48qbh")]([SubResource("Resource_nee6r"), SubResource("Resource_4hpy7"), SubResource("Resource_l6v8v"), SubResource("Resource_lfxse"), SubResource("Resource_ppiyi"), SubResource("Resource_8lo88")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_y70ae")]([SubResource("Resource_4ru5n"), SubResource("Resource_kukhc"), SubResource("Resource_p2vtm"), SubResource("Resource_2g30w"), SubResource("Resource_b1b2c"), SubResource("Resource_1c5kc"), SubResource("Resource_w83l2"), SubResource("Resource_v8nc8"), SubResource("Resource_uckpi")])
+spawns = Array[ExtResource("8_fjwgy")]([SubResource("Resource_jkg7k"), SubResource("Resource_kul3v"), SubResource("Resource_c7dcy"), SubResource("Resource_4ia18"), SubResource("Resource_iydc7"), SubResource("Resource_h5guk"), SubResource("Resource_onbx8"), SubResource("Resource_lr8p6"), SubResource("Resource_8vu8b"), SubResource("Resource_ghrrf"), SubResource("Resource_icv8o"), SubResource("Resource_q2rs6"), SubResource("Resource_5eeck"), SubResource("Resource_x216k"), SubResource("Resource_o8od7"), SubResource("Resource_goadg"), SubResource("Resource_xyrqg"), SubResource("Resource_argdx"), SubResource("Resource_fa5d8"), SubResource("Resource_a37wg"), SubResource("Resource_a18i1"), SubResource("Resource_ik2yp"), SubResource("Resource_yo67q"), SubResource("Resource_5ypcw"), SubResource("Resource_51b55"), SubResource("Resource_1txoe"), SubResource("Resource_rl588"), SubResource("Resource_gxvk0"), SubResource("Resource_rb5jc"), SubResource("Resource_w6m31"), SubResource("Resource_bnuwm"), SubResource("Resource_si4e7"), SubResource("Resource_rgut5"), SubResource("Resource_8pdl1"), SubResource("Resource_x328i"), SubResource("Resource_mlgwo"), SubResource("Resource_0sd7v"), SubResource("Resource_cqo32"), SubResource("Resource_gx88o"), SubResource("Resource_ku067"), SubResource("Resource_1rens"), SubResource("Resource_o3ava"), SubResource("Resource_efv3g"), SubResource("Resource_0faqm"), SubResource("Resource_yy0b8"), SubResource("Resource_ggoyg"), SubResource("Resource_bsbsd"), SubResource("Resource_e23sq")])
+chests = Array[ExtResource("1_epa1g")]([SubResource("Resource_yg4uo"), SubResource("Resource_nc38c"), SubResource("Resource_xjb5l"), SubResource("Resource_8hs5d"), SubResource("Resource_5gnpc"), SubResource("Resource_s4acf"), SubResource("Resource_tem3i")])
+quest_objects = Array[ExtResource("5_ijgtj")]([SubResource("Resource_8ntmu")])
+spell_focuses = Array[ExtResource("9_he5ku")]([SubResource("Resource_vov5w"), SubResource("Resource_u3fd3"), SubResource("Resource_iy2r3")])

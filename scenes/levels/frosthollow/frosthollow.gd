@@ -25,65 +25,22 @@ static var HUB_FLAT := 34.0
 const GRAVEYARD := Vector3(-890, HUB_HEIGHT, -980)
 const GRAVEYARD_FACING := PI
 
-const PLACES := [
-	["Tavin's camp", Vector2(-1010, -990), 12.0],
-	["Gerrin's camp", Vector2(-960, -1105), 12.0],
-	["the Hollow Hall", Vector2(-890, -1000), 34.0],
-	["the Troll Caves", Vector2(-1010, -1150), 30.0],
-	["the Frozen Stair", Vector2(-765, -950), 30.0],
-	["the trogg diggings", Vector2(-805, -1065), 45.0],
-	["the wolf hollow", Vector2(-930, -885), 50.0],
-	["the boar slopes", Vector2(-1035, -930), 45.0],
-]
-const FLATS := [
-	[Vector2(-1010, -990), 9.0, 5.0],    # Tavin's camp
-	[Vector2(-960, -1105), 9.0, 5.0],    # Gerrin's camp
-	[Vector2(-1010, -1150), 16.0, 6.0],  # before the Troll Caves
-	[Vector2(-805, -1065), 16.0, 4.5],   # the trogg diggings
-]
-static var TAVIN := 0
-static var GERRIN := 1
-static var CAVES := 2
-static var DIGGINGS := 3
-const HILLS := [
-	[Vector2(-1030, -1185), 40.0, 20.0],  # the hill the Troll Caves run into
-	[Vector2(-890, -1060), 30.0, 12.0],   # the rise behind the Hollow Hall
-	[Vector2(-780, -1110), 30.0, 10.0],
-	[Vector2(-1060, -880), 40.0, 10.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var TAVIN := 0
+var GERRIN := 1
+var CAVES := 2
+var DIGGINGS := 3
+var HILLS: Array = []
 const PASS_END := Vector2(-770, -955)
-const ROADS := [
-	[Vector2(-870, -990), Vector2(-820, -970), PASS_END],
-	[Vector2(-910, -995), Vector2(-960, -992), Vector2(-1000, -990)],
-	[Vector2(-905, -1012), Vector2(-935, -1060), Vector2(-958, -1098)],
-	[Vector2(-965, -1112), Vector2(-990, -1135)],
-	[Vector2(-860, -1012), Vector2(-830, -1045)],
-]
-const SPAWNS := [
-	[705, Vector2(-850, -905), 40.0, 10],    # Ragged Young Wolf (1-2)
-	[705, Vector2(-950, -1055), 35.0, 6],
-	[704, Vector2(-1000, -905), 45.0, 8],    # Ragged Timber Wolf (2-3)
-	[708, Vector2(-1045, -955), 40.0, 9],    # Small Crag Boar (3)
-	[708, Vector2(-935, -885), 40.0, 6],
-	[707, Vector2(-820, -1055), 40.0, 9],    # Stonejaw Trogg, the diggings (1-2)
-	[724, Vector2(-790, -1090), 35.0, 8],    # Burly Stonejaw Trogg (2-3)
-	[1718, Vector2(-775, -935), 28.0, 6],    # Stonejaw Raider, the Frozen Stair (3-4)
-	[706, Vector2(-1000, -1135), 35.0, 12],  # Icemane Troll Whelp, the Troll Caves (3-4)
-	[946, Vector2(-1015, -1155), 16.0, 4],   # Icemane Novice (3-4)
-	[808, Vector2(-1022, -1168), 1.0, 1],    # Grisknar the Cold (5)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Fenwick's lost things (A Refugee's Quandary): his box by the troll caves, his
 ## chest in the diggings, his bucket of bolts on the Frozen Stair.
-const CHESTS := [
-	[148499, Vector2(-985, -1128), 6.0, 1],
-	[178084, Vector2(-800, -1075), 6.0, 1],
-	[178085, Vector2(-782, -945), 6.0, 1],
-]
+var CHESTS: Array = []
 
 ## Walled places bots go in and out of by the door (Zone.enclosures).
-const ENCLOSURES := [
-	[-905.0, -1032.0, -875.0, -1020.0, Vector2(-890, -1016), Vector2(-890, -1024)],  # the Hollow Hall, door to the south
-]
+var ENCLOSURES: Array = []
 
 const ROCK := Color(0.46, 0.46, 0.5)
 const STONE := Color(0.55, 0.53, 0.5)
@@ -96,6 +53,7 @@ var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	continent = "aldmark"

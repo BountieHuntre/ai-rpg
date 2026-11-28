@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ocaid"]
+
+[resource]
+script = ExtResource("1_ocaid")
+entry = 1909
+creature_name = "Murkfin Lakestalker"
+color = Color(0.25, 0.42, 0.4, 1)
+model = "mirefin"
+main = "polearm"

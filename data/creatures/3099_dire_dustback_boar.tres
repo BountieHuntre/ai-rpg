@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_nr4my"]
+
+[resource]
+script = ExtResource("1_nr4my")
+entry = 3099
+creature_name = "Dire Dustback Boar"
+size = Vector3(1.05, 0.9, 1.05)
+color = Color(0.48, 0.34, 0.25, 1)
+model = "boar"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ll7tw"]
+
+[resource]
+script = ExtResource("1_ll7tw")
+entry = 478
+creature_name = "Ditchjaw Outrider"
+color = Color(0.55, 0.4, 0.25, 1)
+model = "ditchjaw"
+main = "polearm"

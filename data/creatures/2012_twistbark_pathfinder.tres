@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ka8bu"]
+
+[resource]
+script = ExtResource("1_ka8bu")
+entry = 2012
+creature_name = "Twistbark Pathfinder"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.44, 0.34, 0.24, 1)
+model = "ditchjaw"
+main = "axe"

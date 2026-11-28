@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_b11ub"]
+
+[resource]
+script = ExtResource("1_b11ub")
+entry = 1119
+creature_name = "Skullgrinder"
+size = Vector3(1.2, 1.2, 1.2)
+color = Color(0.4, 0.36, 0.32, 1)
+model = "dwarf"
+main = "mace2h"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_6dc2s"]
+
+[resource]
+script = ExtResource("1_6dc2s")
+entry = 1388
+creature_name = "Vaskar"
+size = Vector3(1.35, 1.35, 1.35)
+color = Color(0.78, 0.8, 0.84, 1)
+model = "bear"

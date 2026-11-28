@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_o7sdy"]
+
+[resource]
+script = ExtResource("1_o7sdy")
+entry = 2034
+creature_name = "Feral Shadecat"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.36, 0.28, 0.32, 1)
+model = "tiger"

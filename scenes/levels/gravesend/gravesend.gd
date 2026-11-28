@@ -28,59 +28,17 @@ const YARD_MAX := Vector2(-2478, -4173)
 const GRAVEYARD := Vector3(-2524, HUB_HEIGHT, -4190)
 const GRAVEYARD_FACING := -PI / 2
 
-const PLACES := [
-	["the old crypts", Vector2(-2618, -4262), 14.0],
-	["the Webbed Vault", Vector2(-2562, -4338), 16.0],
-	["the Sunward camp", Vector2(-2400, -4082), 20.0],
-	["the Gravesend Chapel", Vector2(-2510, -4205), 34.0],
-	["the ruined hamlet", Vector2(-2450, -4225), 35.0],
-	["the old field", Vector2(-2450, -4140), 40.0],
-	["the pass", Vector2(-2330, -4195), 35.0],
-	["the north glade", Vector2(-2450, -4310), 60.0],
-]
-const FLATS := [
-	[Vector2(-2618, -4262), 9.0, 7.0],   # the old crypts
-	[Vector2(-2562, -4336), 9.0, 8.0],   # the Webbed Vault's mouth
-	[Vector2(-2400, -4082), 16.0, 4.0],  # the Sunward camp
-]
-static var CRYPTS := 0
-static var VAULT := 1
-static var CAMP := 2
-const HILLS := [
-	[Vector2(-2585, -4365), 48.0, 24.0],  # the Webbed Vault's hill
-	[Vector2(-2640, -4270), 34.0, 12.0],  # the crypts' knoll
-	[Vector2(-2370, -4300), 40.0, 9.0],
-	[Vector2(-2600, -4110), 40.0, 8.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var CRYPTS := 0
+var VAULT := 1
+var CAMP := 2
+var HILLS: Array = []
 const PASS_END := Vector2(-2370, -4200)
-const ROADS := [
-	[Vector2(-2478, -4205), Vector2(-2420, -4202), PASS_END],
-	[Vector2(-2542, -4210), Vector2(-2585, -4240), Vector2(-2610, -4258)],
-	[Vector2(-2512, -4237), Vector2(-2530, -4290), Vector2(-2556, -4328)],
-	[Vector2(-2500, -4173), Vector2(-2450, -4120), Vector2(-2412, -4090)],
-]
-const SPAWNS := [
-	[1501, Vector2(-2470, -4130), 32.0, 8],  # Mindless Zombie, the old field (1-2)
-	[1502, Vector2(-2425, -4150), 28.0, 8],  # Wretched Zombie (1-2)
-	[1890, Vector2(-2595, -4248), 26.0, 8],  # Rattlebone Skeleton, the old crypts (2-3)
-	[1508, Vector2(-2460, -4290), 40.0, 7],  # Young Scavenger, the north glade (1-2)
-	[1509, Vector2(-2570, -4110), 34.0, 6],  # Ragged Scavenger (2-3)
-	[1512, Vector2(-2390, -4255), 38.0, 7],  # Gloombat (1-2)
-	[1513, Vector2(-2420, -4330), 30.0, 6],  # Mangy Gloombat (3-4)
-	[1504, Vector2(-2535, -4318), 24.0, 8],  # Young Duskweb Spider, before the vault (2-3)
-	[1505, Vector2(-2566, -4342), 10.0, 6],  # Duskweb Spider, the vault's mouth (3-4)
-	[1688, Vector2(-2568, -4344), 1.0, 1],   # Duskweb Matriarch (5)
-	[1506, Vector2(-2405, -4085), 18.0, 6],  # Sunward Convert, the Sunward camp (3-4)
-	[1507, Vector2(-2396, -4078), 12.0, 5],  # Sunward Initiate (4-5)
-	[1667, Vector2(-2400, -4074), 1.0, 1],   # Merrick Vossen (5)
-	[1919, Vector2(-2455, -4235), 16.0, 1],  # Samuel Pell, the ruined hamlet (5)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Equipment Boxes in the ruined hamlet (Scavenging Gravesend).
-const CHESTS := [
-	[164662, Vector2(-2450, -4225), 32.0, 8],
-	# Maren's Grave (Maren's Last Wish), among the chapel's graves.
-	[178090, Vector2(-2536, -4176), 1.0, 1],
-]
+var CHESTS: Array = []
 
 const SOIL := Color(0.3, 0.27, 0.23)
 const ROCK := Color(0.42, 0.41, 0.4)
@@ -95,6 +53,7 @@ var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	continent = "aldmark"
@@ -121,10 +80,7 @@ const CHAPEL := Vector2(-2510, -4216)
 const CHAPEL_SIZE := Vector3(22, 8, 12.9)
 ## Walled places bots go in and out of by the gate or door (Zone.enclosures):
 ## the chapel yard (its gap east toward the road) and the chapel inside it.
-const ENCLOSURES := [
-	[-2542.0, -4237.0, -2478.0, -4173.0, Vector2(-2470, -4205), Vector2(-2486, -4205)],
-	[-2521.0, -4222.5, -2499.0, -4209.5, Vector2(-2494, -4216), Vector2(-2502, -4216)],
-]
+var ENCLOSURES: Array = []
 static var DEAD_TREE_VARIANTS := 4
 
 

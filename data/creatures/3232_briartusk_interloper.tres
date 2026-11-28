@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_gn1qw"]
+
+[resource]
+script = ExtResource("1_gn1qw")
+entry = 3232
+creature_name = "Briartusk Interloper"
+color = Color(0.5, 0.38, 0.28, 1)
+model = "tuskfolk"
+main = "axe"

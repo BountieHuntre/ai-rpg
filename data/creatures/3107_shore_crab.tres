@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_7rx1u"]
+
+[resource]
+script = ExtResource("1_7rx1u")
+entry = 3107
+creature_name = "Shore Crab"
+size = Vector3(0.7, 0.45, 0.75)
+color = Color(0.72, 0.36, 0.22, 1)
+model = "crab"

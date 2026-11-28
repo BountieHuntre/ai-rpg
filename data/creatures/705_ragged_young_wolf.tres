@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_vckbx"]
+
+[resource]
+script = ExtResource("1_vckbx")
+entry = 705
+creature_name = "Ragged Young Wolf"
+size = Vector3(0.8, 0.8, 0.8)
+color = Color(0.5, 0.48, 0.46, 1)
+model = "wolf"

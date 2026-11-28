@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_gwady"]
+
+[resource]
+script = ExtResource("1_gwady")
+entry = 3535
+creature_name = "Mossrot the Fetid"
+size = Vector3(1.5, 1.5, 1.5)
+color = Color(0.26, 0.32, 0.2, 1)
+model = "barkling"

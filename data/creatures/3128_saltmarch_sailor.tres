@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_32b4i"]
+
+[resource]
+script = ExtResource("1_32b4i")
+entry = 3128
+creature_name = "Saltmarch Sailor"
+color = Color(0.2, 0.3, 0.55, 1)
+model = "human"
+dressed = true
+band = Color(0.2, 0.3, 0.55, 1)
+cloak = false
+main = "sword"

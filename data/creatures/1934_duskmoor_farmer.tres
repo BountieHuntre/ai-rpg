@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_5a5bi"]
+
+[resource]
+script = ExtResource("1_5a5bi")
+entry = 1934
+creature_name = "Duskmoor Farmer"
+color = Color(0.45, 0.35, 0.22, 1)
+model = "human"
+dressed = true
+band = Color(0.42, 0.32, 0.2, 1)
+cloak = false
+main = "polearm"

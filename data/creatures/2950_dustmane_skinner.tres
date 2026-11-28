@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_lqjcv"]
+
+[resource]
+script = ExtResource("1_lqjcv")
+entry = 2950
+creature_name = "Dustmane Skinner"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.68, 0.62, 0.5, 1)
+model = "ditchjaw"
+main = "axe"

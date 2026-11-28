@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_ntnwp"]
+
+[resource]
+script = ExtResource("1_ntnwp")
+entry = 1941
+creature_name = "Grimhide Graverobber"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.4, 0.34, 0.28, 1)
+model = "ditchjaw"
+main = "axe"

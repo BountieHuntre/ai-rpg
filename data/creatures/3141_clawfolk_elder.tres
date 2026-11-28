@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_02g4p"]
+
+[resource]
+script = ExtResource("1_02g4p")
+entry = 3141
+creature_name = "Clawfolk Elder"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.5, 0.42, 0.38, 1)
+model = "crab"

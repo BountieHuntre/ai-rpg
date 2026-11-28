@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="OutfitLooks" format=3 uid="uid://bmmm1w64dkh25"]
+
+[ext_resource type="Script" uid="uid://c1vbbn1h2c8d2" path="res://scripts/content/outfit_looks.gd" id="1_ucexn"]
+[ext_resource type="Script" uid="uid://dflduscnuvuka" path="res://scripts/content/trade_outfit.gd" id="2_oe5io"]
+
+[sub_resource type="Resource" id="Resource_pnnyj"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("paladin")
+body_palette = "plate"
+body_colors = PackedColorArray()
+body_patterns = Array[int]([9, 10])
+legs_like_body = true
+legs_darken = 0.15
+legs_pattern_like_body = true
+
+[sub_resource type="Resource" id="Resource_nkxpe"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("warrior", "weapons")
+body_palette = "mail"
+body_colors = PackedColorArray()
+body_patterns = Array[int]([7, 8])
+
+[sub_resource type="Resource" id="Resource_jn4uw"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("priest")
+body_colors = PackedColorArray(0.88, 0.86, 0.8, 1, 0.75, 0.65, 0.4, 1, 0.55, 0.15, 0.15, 1)
+legs_like_body = true
+legs_pattern_like_body = true
+
+[sub_resource type="Resource" id="Resource_ik3bt"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("spellsword")
+body_colors = PackedColorArray(0.25, 0.3, 0.55, 1)
+body_patterns = Array[int]([2])
+
+[sub_resource type="Resource" id="Resource_pwpx2"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("mage")
+body_colors = PackedColorArray(0.2, 0.25, 0.55, 1, 0.35, 0.2, 0.5, 1, 0.5, 0.15, 0.18, 1)
+body_patterns = Array[int]([3])
+legs_like_body = true
+legs_pattern_like_body = true
+
+[sub_resource type="Resource" id="Resource_4fxvh"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("mining")
+body_palette = "leather"
+body_colors = PackedColorArray()
+body_darken = 0.25
+body_patterns = Array[int]([5])
+
+[sub_resource type="Resource" id="Resource_5oqmk"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("herbalism")
+body_colors = PackedColorArray(0.3, 0.45, 0.25, 1, 0.4, 0.5, 0.3, 1, 0.25, 0.38, 0.3, 1)
+
+[sub_resource type="Resource" id="Resource_i2y1m"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("skinning")
+body_palette = "leather"
+body_colors = PackedColorArray()
+body_patterns = Array[int]([6])
+
+[sub_resource type="Resource" id="Resource_ad0ne"]
+script = ExtResource("2_oe5io")
+trades = PackedStringArray("enchanting")
+body_colors = PackedColorArray(0.42, 0.25, 0.55, 1, 0.3, 0.22, 0.5, 1)
+legs_like_body = true
+legs_pattern_like_body = true
+
+[resource]
+script = ExtResource("1_ucexn")
+cloth = PackedColorArray(0.68, 0.24, 0.2, 1, 0.26, 0.37, 0.66, 1, 0.36, 0.53, 0.25, 1, 0.52, 0.33, 0.62, 1, 0.74, 0.68, 0.52, 1, 0.5, 0.4, 0.32, 1)
+leather = PackedColorArray(0.58, 0.4, 0.24, 1, 0.45, 0.3, 0.18, 1, 0.66, 0.5, 0.32, 1, 0.4, 0.36, 0.32, 1)
+mail = PackedColorArray(0.66, 0.68, 0.72, 1, 0.56, 0.58, 0.62, 1, 0.62, 0.56, 0.5, 1)
+plate = PackedColorArray(0.82, 0.84, 0.88, 1, 0.86, 0.74, 0.44, 1, 0.7, 0.73, 0.8, 1)
+name_colors = Dictionary[String, Color]({
+"azure": Color(0.25, 0.45, 0.75, 1),
+"black": Color(0.12, 0.12, 0.14, 1),
+"blood": Color(0.5, 0.08, 0.08, 1),
+"blue": Color(0.18, 0.28, 0.62, 1),
+"brown": Color(0.38, 0.25, 0.14, 1),
+"crimson": Color(0.6, 0.1, 0.12, 1),
+"dark": Color(0.2, 0.18, 0.2, 1),
+"emerald": Color(0.12, 0.5, 0.3, 1),
+"gold": Color(0.85, 0.68, 0.3, 1),
+"golden": Color(0.85, 0.68, 0.3, 1),
+"gray": Color(0.48, 0.48, 0.5, 1),
+"green": Color(0.25, 0.48, 0.2, 1),
+"grey": Color(0.48, 0.48, 0.5, 1),
+"linen": Color(0.72, 0.66, 0.52, 1),
+"purple": Color(0.42, 0.2, 0.55, 1),
+"red": Color(0.62, 0.15, 0.12, 1),
+"scarlet": Color(0.7, 0.15, 0.1, 1),
+"shadow": Color(0.18, 0.15, 0.22, 1),
+"silver": Color(0.78, 0.8, 0.84, 1),
+"violet": Color(0.5, 0.3, 0.65, 1),
+"white": Color(0.88, 0.88, 0.85, 1)
+})
+gem_colors = PackedColorArray(0.75, 0.2, 0.18, 1, 0.75, 0.2, 0.18, 1, 0.3, 0.8, 0.3, 1, 0.25, 0.5, 0.95, 1, 0.65, 0.3, 0.9, 1, 1, 0.55, 0.15, 1)
+trades = Array[ExtResource("2_oe5io")]([SubResource("Resource_pnnyj"), SubResource("Resource_nkxpe"), SubResource("Resource_jn4uw"), SubResource("Resource_ik3bt"), SubResource("Resource_pwpx2"), SubResource("Resource_4fxvh"), SubResource("Resource_5oqmk"), SubResource("Resource_i2y1m"), SubResource("Resource_ad0ne")])

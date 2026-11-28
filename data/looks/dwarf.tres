@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RaceLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/race_look.gd" id="1_elmq4"]
+
+[resource]
+script = ExtResource("1_elmq4")
+race = "dwarf"
+skins = PackedColorArray(0.96, 0.8, 0.68, 1, 0.9, 0.71, 0.56, 1, 0.8, 0.59, 0.43, 1, 0.64, 0.45, 0.32, 1, 0.46, 0.32, 0.22, 1, 0.98, 0.86, 0.78, 1)
+hair_colors = PackedColorArray(0.1, 0.08, 0.07, 1, 0.26, 0.16, 0.09, 1, 0.45, 0.28, 0.14, 1, 0.6, 0.24, 0.1, 1, 0.86, 0.7, 0.4, 1, 0.62, 0.6, 0.58, 1, 0.95, 0.9, 0.8, 1)
+feature_names = PackedStringArray()
+marks_names = PackedStringArray()

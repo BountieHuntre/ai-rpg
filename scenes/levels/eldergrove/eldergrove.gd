@@ -30,136 +30,29 @@ const GRAVEYARD_FACING := PI
 const LAKE := Vector2(-1720, -4250)
 const LAKE_RADIUS := 48.0
 
-const PLACES := [
-	["Denalan's camp", Vector2(-1786, -4250), 10.0],
-	["the Silverbough Gate", Vector2(-2560, -4200), 20.0],
-	["the Gloamrock", Vector2(-1960, -4600), 26.0],
-	["Starbreeze", Vector2(-1560, -4560), 30.0],
-	["the Thornbarrow Den", Vector2(-2420, -4150), 30.0],
-	["the Moonwells", Vector2(-2150, -4000), 30.0],
-	["Twistbark Hold", Vector2(-1900, -3760), 34.0],
-	["the Seers' Glade", Vector2(-2380, -3760), 40.0],
-	["Fernwatch", TOWN, 44.0],
-	["the pass", Vector2(-2208, -4770), 30.0],
-	["Lake Aleth", LAKE, 60.0],
-	["the northern woods", Vector2(-1800, -4600), 150.0],
-	["the western woods", Vector2(-2350, -4450), 150.0],
-	["the southern woods", Vector2(-2000, -3900), 220.0],
-]
-const FLATS := [
-	[Vector2(-1960, -4600), 16.0, 7.0],   # before the Gloamrock
-	[Vector2(-1560, -4560), 22.0, 6.0],   # Starbreeze
-	[Vector2(-2420, -4150), 20.0, 8.0],   # before the Thornbarrow Den
-	[Vector2(-2150, -4000), 22.0, 5.0],   # the Moonwells
-	[Vector2(-1900, -3760), 26.0, 7.0],   # Twistbark Hold
-	[Vector2(-2380, -3760), 26.0, 9.0],   # the Seers' Glade
-	[Vector2(-2560, -4200), 14.0, 8.0],   # the Silverbough Gate
-	[Vector2(-1786, -4250), 8.0, 3.0],    # Denalan's camp on the lake shore
-]
-static var GLOAMROCK := 0
-static var STARBREEZE := 1
-static var DEN := 2
-static var MOONWELLS := 3
-static var HOLD := 4
-static var GLADE := 5
-static var GATE := 6
-static var DENALAN := 7
-const HILLS := [
-	[Vector2(-1945, -4625), 34.0, 18.0],  # the Gloamrock
-	[Vector2(-2440, -4170), 34.0, 14.0],  # the barrow mound
-	[Vector2(-2400, -3720), 50.0, 8.0],
-	[Vector2(-1880, -3720), 40.0, 10.0],
-	[Vector2(-1600, -3900), 90.0, 10.0],
-	[Vector2(-2300, -4550), 80.0, 8.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var GLOAMROCK := 0
+var STARBREEZE := 1
+var DEN := 2
+var MOONWELLS := 3
+var HOLD := 4
+var GLADE := 5
+var GATE := 6
+var DENALAN := 7
+var HILLS: Array = []
 const PASS_END := Vector2(-2212, -4730)
-const ROADS := [
-	# Down from the pass to Fernwatch, and on south to the Moonwells and the hold.
-	[PASS_END, Vector2(-2180, -4600), Vector2(-2110, -4420)],
-	[Vector2(-2090, -4338), Vector2(-2130, -4200), Vector2(-2150, -4022)],
-	[Vector2(-2140, -3980), Vector2(-2040, -3860), Vector2(-1920, -3786)],
-	# East past the Gloamrock to Starbreeze; east to the lake.
-	[Vector2(-2050, -4410), Vector2(-1960, -4580)],
-	[Vector2(-1960, -4580), Vector2(-1760, -4580), Vector2(-1584, -4562)],
-	[Vector2(-2040, -4370), Vector2(-1900, -4300), Vector2(-1794, -4252)],
-	# West to the Thornbarrow Den and the Silverbough Gate; south-west to the glade.
-	[Vector2(-2122, -4370), Vector2(-2300, -4250), Vector2(-2546, -4202)],
-	[Vector2(-2300, -4250), Vector2(-2402, -4162)],
-	[Vector2(-2150, -4000), Vector2(-2260, -3880), Vector2(-2360, -3784)],
-]
-const SPAWNS := [
-	[1995, Vector2(-1950, -4500), 130.0, 12],  # Strigid Owl (5-6)
-	[1998, Vector2(-2250, -4550), 120.0, 10],  # Silkwood Lurker (5-6)
-	[2042, Vector2(-1820, -4450), 140.0, 12],  # Shadecat (5-6)
-	[2022, Vector2(-1720, -4250), 70.0, 10],   # Barkling, Lake Aleth (5-6)
-	[2002, Vector2(-1960, -4600), 22.0, 6],    # Rascal Sprite, the Gloamrock (5-6)
-	[2003, Vector2(-1950, -4610), 22.0, 6],    # Shadow Sprite (5-6)
-	[2004, Vector2(-1945, -4620), 18.0, 5],    # Dark Sprite (6-7)
-	[2005, Vector2(-1955, -4615), 18.0, 5],    # Vicious Fenling (7)
-	[2038, Vector2(-1948, -4618), 1.0, 1],     # Lord Malvenn (8)
-	[14432, Vector2(-1972, -4592), 1.0, 1],    # Grubbin (6, rare)
-	[2006, Vector2(-1560, -4560), 28.0, 6],    # Twistbark Ursa, Starbreeze (5-6)
-	[2007, Vector2(-1570, -4550), 28.0, 8],    # Twistbark Gardener (5-6)
-	[2008, Vector2(-1650, -4450), 90.0, 10],   # Twistbark Warrior (6-7)
-	[7235, Vector2(-1530, -4580), 18.0, 5],    # Twistbark Mystic (6-7)
-	[7234, Vector2(-1522, -4590), 1.0, 1],     # Gorvax the Dream Eater (8)
-	[2152, Vector2(-2470, -4240), 40.0, 8],    # Twistbark Ambusher, the gate road (6-7)
-	[1996, Vector2(-2250, -4000), 140.0, 10],  # Strigid Screecher (7-8)
-	[1999, Vector2(-2300, -3950), 120.0, 9],   # Silkwood Venomfang (7-8)
-	[2043, Vector2(-1850, -4000), 140.0, 10],  # Shadecat Stalker (7-8)
-	[2025, Vector2(-1680, -4300), 50.0, 6],    # Barkling Ripper (7-8)
-	[2027, Vector2(-1660, -4200), 40.0, 4],    # Barkling Trampler (8-9)
-	[2029, Vector2(-1720, -4180), 40.0, 5],    # Barkling Mirebeast (9-10)
-	[2030, Vector2(-1650, -4240), 30.0, 5],    # Elder Barkling (10-11)
-	[2166, Vector2(-1662, -4272), 1.0, 1],     # Mossbrow (9)
-	[2009, Vector2(-2420, -4150), 28.0, 8],    # Twistbark Shaman, the Thornbarrow Den (7-8)
-	[2010, Vector2(-2415, -4140), 28.0, 8],    # Twistbark Defender (7-8)
-	[2011, Vector2(-2430, -4160), 24.0, 7],    # Twistbark Augur (8-9)
-	[1997, Vector2(-1600, -3850), 100.0, 8],   # Strigid Hunter (8-9)
-	[2000, Vector2(-1750, -3800), 100.0, 8],   # Silkwood Silkspinner (8-9)
-	[2033, Vector2(-2100, -3800), 120.0, 8],   # Elder Shadecat (8-9)
-	[2001, Vector2(-1500, -3720), 50.0, 4],    # Giant Silkwood Spider (10)
-	[2034, Vector2(-1550, -3700), 60.0, 5],    # Feral Shadecat (10)
-	[2012, Vector2(-1900, -3760), 32.0, 6],    # Twistbark Pathfinder, Twistbark Hold (9-10)
-	[2013, Vector2(-1890, -3770), 32.0, 6],    # Twistbark Avenger (9-10)
-	[2014, Vector2(-1910, -3750), 24.0, 5],    # Twistbark Totemic (10-11)
-	[2039, Vector2(-1904, -3742), 1.0, 1],     # Borrak the Mauler (12)
-	[14429, Vector2(-1880, -3780), 1.0, 1],    # Gnashmaw (11, rare)
-	[2015, Vector2(-2380, -3760), 38.0, 8],    # Crimsonwing Harpy, the Seers' Glade (8-9)
-	[2017, Vector2(-2370, -3770), 38.0, 7],    # Crimsonwing Rogue (8-9)
-	[2018, Vector2(-2390, -3750), 34.0, 6],    # Crimsonwing Sorceress (9-10)
-	[2019, Vector2(-2360, -3740), 34.0, 5],    # Crimsonwing Fury (9-10)
-	[2020, Vector2(-2400, -3770), 34.0, 6],    # Crimsonwing Wind Witch (9-10)
-	[2021, Vector2(-2390, -3735), 28.0, 6],    # Crimsonwing Matriarch (11-12)
-	[14431, Vector2(-2372, -3748), 1.0, 1],    # Fury Selka (8, rare)
-	[14428, Vector2(-1600, -4300), 40.0, 1],   # Urgrum (7, rare)
-	[14430, Vector2(-2200, -3850), 60.0, 1],   # Gloomprowl (9, rare)
-	[7318, Vector2(-2428, -4162), 1.0, 1],     # Wildclaw, in the Thornbarrow Den (10)
-	[3535, Vector2(-1690, -4300), 30.0, 1],    # Mossrot the Fetid, by Lake Aleth (13, rare)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Denalor's Planter, by his camp (Planting the Heart).
-const QUEST_OBJECTS := [
-	[7923, "DenalorsPlanter", Vector2(-1792, -4243), 0.0],
-]
+var QUEST_OBJECTS: Array = []
 ## The moonwells Crown of the Earth's phials are filled at: Starbreeze's, the
 ## Pale Pools at the Moonwells, and the Seers' Glade's.
-const SPELL_FOCUSES := [
-	[19550, Vector2(-1568, -4552)],
-	[19551, Vector2(-2150, -4000)],
-	[19552, Vector2(-2380, -3770)],
-]
+var SPELL_FOCUSES: Array = []
 ## Fel Cones through the woods round Fernwatch, Barkling Sprouts on the lake
 ## shore, the four chests of the Relics of Wakening in the Thornbarrow Den and
 ## Tallon's dresser in his bower.
-const CHESTS := [
-	[1673, Vector2(-2000, -4250), 180.0, 12],
-	[4608, LAKE, LAKE_RADIUS + 14.0, 12],
-	[2739, Vector2(-2432, -4162), 12.0, 1],
-	[2740, Vector2(-2432, -4162), 12.0, 1],
-	[2741, Vector2(-2432, -4162), 12.0, 1],
-	[2742, Vector2(-2432, -4162), 12.0, 1],
-	[126158, Vector2(-2049, -4406), 1.0, 1],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.36, 0.36, 0.44)
 const PALE_WOOD := Color(0.6, 0.52, 0.48)
@@ -171,6 +64,7 @@ var _road_segments: Array = []
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	for line: Array in ROADS:

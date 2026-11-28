@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_x2m4l"]
+
+[resource]
+script = ExtResource("1_x2m4l")
+entry = 3122
+creature_name = "Redclaw Lasher"
+size = Vector3(0.95, 1, 1)
+color = Color(0.6, 0.25, 0.2, 1)
+model = "raptor"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_qouhe"]
+
+[resource]
+script = ExtResource("1_qouhe")
+entry = 1199
+creature_name = "Juvenile Snow Leopard"
+size = Vector3(0.8, 0.8, 0.8)
+color = Color(0.88, 0.88, 0.9, 1)
+model = "tiger"

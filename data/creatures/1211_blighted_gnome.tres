@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_diyby"]
+
+[resource]
+script = ExtResource("1_diyby")
+entry = 1211
+creature_name = "Blighted Gnome"
+size = Vector3(0.65, 0.65, 0.65)
+color = Color(0.5, 0.58, 0.42, 1)
+model = "gnome"

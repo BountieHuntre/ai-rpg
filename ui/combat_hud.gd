@@ -202,7 +202,27 @@ func setup(player: Player, camera: Camera3D, game_view: SubViewportContainer) ->
 	GameState.inventory_changed.connect(_update_tracker)
 	Party.message.connect(_on_party_message)
 	Party.changed.connect(_on_party_changed)
+	if World.current:
+		World.current.zone_rebuilt.connect(_on_zone_rebuilt)
 	_watch_combatants()
+
+
+## A zone built again (World.rebuild_zone): the name labels over its old
+## creatures and NPCs go, and the new ones get theirs, under the frames and
+## windows as when the HUD is built.
+func _on_zone_rebuilt(_zone: Zone) -> void:
+	for entry in _enemy_names:
+		entry.label.queue_free()
+	for entry in _npc_names:
+		entry.label.queue_free()
+		entry.marker.queue_free()
+	_enemy_names.clear()
+	_npc_names.clear()
+	var first := get_child_count()
+	_build_enemy_names()
+	_build_npc_names()
+	for i in get_child_count() - first:
+		move_child(get_child(first + i), 1 + i)
 
 
 ## Floating combat text for every combatant: those in the world now, and any

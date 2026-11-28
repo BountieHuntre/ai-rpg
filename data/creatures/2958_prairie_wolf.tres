@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_rrvmh"]
+
+[resource]
+script = ExtResource("1_rrvmh")
+entry = 2958
+creature_name = "Prairie Wolf"
+size = Vector3(0.85, 0.85, 0.85)
+color = Color(0.6, 0.52, 0.4, 1)
+model = "wolf"

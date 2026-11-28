@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_tw125"]
+
+[resource]
+script = ExtResource("1_tw125")
+entry = 1689
+creature_name = "Scarred Crag Boar"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.44, 0.34, 0.28, 1)
+model = "boar"

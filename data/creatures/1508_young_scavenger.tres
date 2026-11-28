@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_xqcse"]
+
+[resource]
+script = ExtResource("1_xqcse")
+entry = 1508
+creature_name = "Young Scavenger"
+size = Vector3(0.8, 0.8, 0.8)
+color = Color(0.5, 0.42, 0.32, 1)
+model = "wolf"

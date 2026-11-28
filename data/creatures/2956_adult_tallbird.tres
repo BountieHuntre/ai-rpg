@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_frjwe"]
+
+[resource]
+script = ExtResource("1_frjwe")
+entry = 2956
+creature_name = "Adult Tallbird"
+color = Color(0.55, 0.45, 0.32, 1)
+model = "tallbird"

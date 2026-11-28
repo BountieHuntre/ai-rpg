@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_huon5"]
+
+[resource]
+script = ExtResource("1_huon5")
+entry = 2001
+creature_name = "Giant Silkwood Spider"
+color = Color(0.3, 0.28, 0.34, 1)
+model = "spider"

@@ -116,6 +116,10 @@ var chests: Array = []
 ## Spell focus objects (gameobjects.json "focus"): [object entry, point (x, z)],
 ## invisible, beside what they stand for (a moonwell, a well).
 var spell_focuses: Array = []
+## The zone's layout (data/zones/<its script's folder>.tres): its places,
+## flats, hills, roads, spawns... which load_layout puts in its script's
+## tables (PLACES, FLATS...) before the zone's _init uses them.
+var layout: ZoneLayout
 ## Forges (Smelting's spell focus 3) by their points (x, z): add_forge.
 var forges: Array[Vector2] = []
 ## The zone's herbs and ore (GatherNodes), once its creatures are spawned.
@@ -1829,6 +1833,30 @@ func distance_to_pass(point: Vector2) -> float:
 	for each: Dictionary in passes():
 		best = minf(best, distance_to_line(point, each.line))
 	return best
+
+
+## The zone's layout's name (data/zones/<key>.tres): its script's folder.
+func layout_key() -> String:
+	return (get_script() as Script).resource_path.get_base_dir().get_file()
+
+
+## Reads the zone's layout (ZoneLayouts, by its script's folder name) into
+## its script's tables (PLACES, FLATS, ROADS... the ones it declares), and the
+## flats' code names (ZoneArea.key: var DELVE...) to their places in FLATS.
+func load_layout() -> void:
+	var key := layout_key()
+	layout = ZoneLayouts.of(key)
+	if not layout:
+		push_error("No layout for the zone %s: %s%s.tres" % [key, ZoneLayouts.DIR, key])
+		return
+	var tables := layout.tables()
+	for table: String in tables:
+		if table in self:
+			set(table, tables[table])
+	for i in layout.flats.size():
+		var code := layout.flats[i].key
+		if code != "" and code in self:
+			set(code, i)
 
 
 func ground_point(x: float, z: float) -> Vector3:

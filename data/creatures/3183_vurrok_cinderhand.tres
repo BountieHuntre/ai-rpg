@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_yf8n0"]
+
+[resource]
+script = ExtResource("1_yf8n0")
+entry = 3183
+creature_name = "Vurrok Cinderhand"
+color = Color(0.4, 0.15, 0.12, 1)
+model = "orc"
+dressed = true
+band = Color(0.3, 0.08, 0.08, 1)
+cloak = false
+main = "staff"
+helm = "Helm_hood"

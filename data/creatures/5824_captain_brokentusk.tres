@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_1de8r"]
+
+[resource]
+script = ExtResource("1_1de8r")
+entry = 5824
+creature_name = "Captain Brokentusk"
+size = Vector3(1.2, 1.2, 1.2)
+color = Color(0.4, 0.3, 0.25, 1)
+model = "tuskfolk"
+main = "axe2h"

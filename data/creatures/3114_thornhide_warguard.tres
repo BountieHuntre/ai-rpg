@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_bxwxi"]
+
+[resource]
+script = ExtResource("1_bxwxi")
+entry = 3114
+creature_name = "Thornhide Warguard"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.45, 0.32, 0.26, 1)
+model = "tuskfolk"
+main = "axe"
+off = "Shield_round"

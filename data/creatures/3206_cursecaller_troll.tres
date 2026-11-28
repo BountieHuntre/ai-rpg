@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_l11i8"]
+
+[resource]
+script = ExtResource("1_l11i8")
+entry = 3206
+creature_name = "Cursecaller Troll"
+color = Color(0.35, 0.2, 0.45, 1)
+model = "troll"
+dressed = true
+band = Color(0.35, 0.2, 0.45, 1)
+cloak = false
+main = "staff"

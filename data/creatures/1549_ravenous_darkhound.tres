@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_bv7bv"]
+
+[resource]
+script = ExtResource("1_bv7bv")
+entry = 1549
+creature_name = "Ravenous Darkhound"
+color = Color(0.25, 0.22, 0.28, 1)
+model = "wolf"

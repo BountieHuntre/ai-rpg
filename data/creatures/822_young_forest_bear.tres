@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_fwsiu"]
+
+[resource]
+script = ExtResource("1_fwsiu")
+entry = 822
+creature_name = "Young Forest Bear"
+size = Vector3(1.15, 1, 1.15)
+color = Color(0.35, 0.25, 0.18, 1)
+model = "bear"

@@ -223,12 +223,13 @@ func _on_proc_event(flags: int, ex: int, other: Combatant, _spell: Dictionary, _
 
 func _build_model() -> void:
 	var entry := int(record.entry)
-	var look: Array = Enemy.LOOKS.get(entry, [Vector3.ONE, Color(0.6, 0.5, 0.4)])
-	var color: Color = look[1]
-	if Enemy.CREATURE_MODELS.has(entry):
-		var kind: String = Enemy.CREATURE_MODELS[entry][0]
-		_visual.scale = Vector3.ONE * (float(look[0].x) / float(Enemy.MODEL_BASE_SIZE[kind]))
-		if kind in Enemy.BEASTS:
+	var look := CreatureLooks.of(entry)
+	var color := look.color if look else Color(0.6, 0.5, 0.4)
+	if look and look.model != "" and not look.dressed:
+		var kind := look.model
+		var info := CreatureLooks.model(kind)
+		_visual.scale = Vector3.ONE * (look.size.x / (info.base_size if info else 1.0))
+		if info and info.beast:
 			var beast := BeastModel.new()
 			beast.species = kind
 			beast.colors = BeastModel.coat_colors(color, kind)
@@ -250,7 +251,7 @@ func _build_model() -> void:
 	body.position = Vector3(0, 0.5, 0)
 	body.name = "Body"
 	_visual.add_child(body)
-	_visual.scale = look[0]
+	_visual.scale = look.size if look else Vector3.ONE
 
 
 ## Attack: its owner's target.

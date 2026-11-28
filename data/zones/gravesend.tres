@@ -1,0 +1,313 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_hlh6k"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_sxayk"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_bj8wl"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_k4r7f"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_amel0"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_bidb4"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_bm4f2"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_a6lc7"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_fyfc1"]
+
+[sub_resource type="Resource" id="Resource_e3nnd"]
+script = ExtResource("1_hlh6k")
+entry = 164662
+center = Vector2(-2450, -4225)
+radius = 32.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_pjp41"]
+script = ExtResource("1_hlh6k")
+entry = 178090
+center = Vector2(-2536, -4176)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_1t25s"]
+script = ExtResource("2_sxayk")
+least = Vector2(-2542, -4237)
+most = Vector2(-2478, -4173)
+outside = Vector2(-2470, -4205)
+inside = Vector2(-2486, -4205)
+
+[sub_resource type="Resource" id="Resource_1wew1"]
+script = ExtResource("2_sxayk")
+least = Vector2(-2521, -4222.5)
+most = Vector2(-2499, -4209.5)
+outside = Vector2(-2494, -4216)
+inside = Vector2(-2502, -4216)
+
+[sub_resource type="Resource" id="Resource_ra06e"]
+resource_name = "the old crypts"
+script = ExtResource("3_bj8wl")
+name = "the old crypts"
+key = "CRYPTS"
+center = Vector2(-2618, -4262)
+radius = 9.0
+height = 7.0
+
+[sub_resource type="Resource" id="Resource_amycf"]
+resource_name = "the Webbed Vault's mouth"
+script = ExtResource("3_bj8wl")
+name = "the Webbed Vault's mouth"
+key = "VAULT"
+center = Vector2(-2562, -4336)
+radius = 9.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_aeou4"]
+resource_name = "the Sunward camp"
+script = ExtResource("3_bj8wl")
+name = "the Sunward camp"
+key = "CAMP"
+center = Vector2(-2400, -4082)
+radius = 16.0
+height = 4.0
+
+[sub_resource type="Resource" id="Resource_rd4e2"]
+resource_name = "the Webbed Vault's hill"
+script = ExtResource("3_bj8wl")
+name = "the Webbed Vault's hill"
+center = Vector2(-2585, -4365)
+radius = 48.0
+height = 24.0
+
+[sub_resource type="Resource" id="Resource_o83lx"]
+resource_name = "the crypts' knoll"
+script = ExtResource("3_bj8wl")
+name = "the crypts' knoll"
+center = Vector2(-2640, -4270)
+radius = 34.0
+height = 12.0
+
+[sub_resource type="Resource" id="Resource_qehgq"]
+script = ExtResource("3_bj8wl")
+center = Vector2(-2370, -4300)
+radius = 40.0
+height = 9.0
+
+[sub_resource type="Resource" id="Resource_u56hn"]
+script = ExtResource("3_bj8wl")
+center = Vector2(-2600, -4110)
+radius = 40.0
+height = 8.0
+
+[sub_resource type="Resource" id="Resource_pttx2"]
+resource_name = "the old crypts"
+script = ExtResource("4_k4r7f")
+name = "the old crypts"
+center = Vector2(-2618, -4262)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_2tnoj"]
+resource_name = "the Webbed Vault"
+script = ExtResource("4_k4r7f")
+name = "the Webbed Vault"
+center = Vector2(-2562, -4338)
+radius = 16.0
+
+[sub_resource type="Resource" id="Resource_5oofr"]
+resource_name = "the Sunward camp"
+script = ExtResource("4_k4r7f")
+name = "the Sunward camp"
+center = Vector2(-2400, -4082)
+radius = 20.0
+
+[sub_resource type="Resource" id="Resource_43anm"]
+resource_name = "the Gravesend Chapel"
+script = ExtResource("4_k4r7f")
+name = "the Gravesend Chapel"
+center = Vector2(-2510, -4205)
+radius = 34.0
+
+[sub_resource type="Resource" id="Resource_3jrm8"]
+resource_name = "the ruined hamlet"
+script = ExtResource("4_k4r7f")
+name = "the ruined hamlet"
+center = Vector2(-2450, -4225)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_ngvge"]
+resource_name = "the old field"
+script = ExtResource("4_k4r7f")
+name = "the old field"
+center = Vector2(-2450, -4140)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_wvmbl"]
+resource_name = "the pass"
+script = ExtResource("4_k4r7f")
+name = "the pass"
+center = Vector2(-2330, -4195)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_qbxi5"]
+resource_name = "the north glade"
+script = ExtResource("4_k4r7f")
+name = "the north glade"
+center = Vector2(-2450, -4310)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_xofjn"]
+script = ExtResource("6_bidb4")
+points = PackedVector2Array(-2478, -4205, -2420, -4202, -2370, -4200)
+
+[sub_resource type="Resource" id="Resource_dfqdl"]
+script = ExtResource("6_bidb4")
+points = PackedVector2Array(-2542, -4210, -2585, -4240, -2610, -4258)
+
+[sub_resource type="Resource" id="Resource_y4ffq"]
+script = ExtResource("6_bidb4")
+points = PackedVector2Array(-2512, -4237, -2530, -4290, -2556, -4328)
+
+[sub_resource type="Resource" id="Resource_jwr0g"]
+script = ExtResource("6_bidb4")
+points = PackedVector2Array(-2500, -4173, -2450, -4120, -2412, -4090)
+
+[sub_resource type="Resource" id="Resource_akcq0"]
+resource_name = "Mindless Zombie, the old field (1-2)"
+script = ExtResource("8_a6lc7")
+name = "Mindless Zombie, the old field (1-2)"
+entry = 1501
+creature = "Mindless Zombie"
+center = Vector2(-2470, -4130)
+radius = 32.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_wteyy"]
+resource_name = "Wretched Zombie (1-2)"
+script = ExtResource("8_a6lc7")
+name = "Wretched Zombie (1-2)"
+entry = 1502
+creature = "Wretched Zombie"
+center = Vector2(-2425, -4150)
+radius = 28.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_fs8j2"]
+resource_name = "Rattlebone Skeleton, the old crypts (2-3)"
+script = ExtResource("8_a6lc7")
+name = "Rattlebone Skeleton, the old crypts (2-3)"
+entry = 1890
+creature = "Rattlebone Skeleton"
+center = Vector2(-2595, -4248)
+radius = 26.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_cluem"]
+resource_name = "Young Scavenger, the north glade (1-2)"
+script = ExtResource("8_a6lc7")
+name = "Young Scavenger, the north glade (1-2)"
+entry = 1508
+creature = "Young Scavenger"
+center = Vector2(-2460, -4290)
+radius = 40.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_eq0pg"]
+resource_name = "Ragged Scavenger (2-3)"
+script = ExtResource("8_a6lc7")
+name = "Ragged Scavenger (2-3)"
+entry = 1509
+creature = "Ragged Scavenger"
+center = Vector2(-2570, -4110)
+radius = 34.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_5h4dr"]
+resource_name = "Gloombat (1-2)"
+script = ExtResource("8_a6lc7")
+name = "Gloombat (1-2)"
+entry = 1512
+creature = "Gloombat"
+center = Vector2(-2390, -4255)
+radius = 38.0
+count = 7
+
+[sub_resource type="Resource" id="Resource_0lqnf"]
+resource_name = "Mangy Gloombat (3-4)"
+script = ExtResource("8_a6lc7")
+name = "Mangy Gloombat (3-4)"
+entry = 1513
+creature = "Mangy Gloombat"
+center = Vector2(-2420, -4330)
+radius = 30.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_a548k"]
+resource_name = "Young Duskweb Spider, before the vault (2-3)"
+script = ExtResource("8_a6lc7")
+name = "Young Duskweb Spider, before the vault (2-3)"
+entry = 1504
+creature = "Young Duskweb Spider"
+center = Vector2(-2535, -4318)
+radius = 24.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_sitf0"]
+resource_name = "Duskweb Spider, the vault's mouth (3-4)"
+script = ExtResource("8_a6lc7")
+name = "Duskweb Spider, the vault's mouth (3-4)"
+entry = 1505
+creature = "Duskweb Spider"
+center = Vector2(-2566, -4342)
+count = 6
+
+[sub_resource type="Resource" id="Resource_ya13v"]
+resource_name = "Duskweb Matriarch (5)"
+script = ExtResource("8_a6lc7")
+name = "Duskweb Matriarch (5)"
+entry = 1688
+creature = "Duskweb Matriarch"
+center = Vector2(-2568, -4344)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_huqmb"]
+resource_name = "Sunward Convert, the Sunward camp (3-4)"
+script = ExtResource("8_a6lc7")
+name = "Sunward Convert, the Sunward camp (3-4)"
+entry = 1506
+creature = "Sunward Convert"
+center = Vector2(-2405, -4085)
+radius = 18.0
+count = 6
+
+[sub_resource type="Resource" id="Resource_0xgfe"]
+resource_name = "Sunward Initiate (4-5)"
+script = ExtResource("8_a6lc7")
+name = "Sunward Initiate (4-5)"
+entry = 1507
+creature = "Sunward Initiate"
+center = Vector2(-2396, -4078)
+radius = 12.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_mjoxw"]
+resource_name = "Merrick Vossen (5)"
+script = ExtResource("8_a6lc7")
+name = "Merrick Vossen (5)"
+entry = 1667
+creature = "Merrick Vossen"
+center = Vector2(-2400, -4074)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_56bk8"]
+resource_name = "Samuel Pell, the ruined hamlet (5)"
+script = ExtResource("8_a6lc7")
+name = "Samuel Pell, the ruined hamlet (5)"
+entry = 1919
+creature = "Samuel Pell"
+center = Vector2(-2455, -4235)
+radius = 16.0
+
+[resource]
+script = ExtResource("7_bm4f2")
+zone_name = "Gravesend"
+places = Array[ExtResource("4_k4r7f")]([SubResource("Resource_pttx2"), SubResource("Resource_2tnoj"), SubResource("Resource_5oofr"), SubResource("Resource_43anm"), SubResource("Resource_3jrm8"), SubResource("Resource_ngvge"), SubResource("Resource_wvmbl"), SubResource("Resource_qbxi5")])
+flats = Array[ExtResource("3_bj8wl")]([SubResource("Resource_ra06e"), SubResource("Resource_amycf"), SubResource("Resource_aeou4")])
+hills = Array[ExtResource("3_bj8wl")]([SubResource("Resource_rd4e2"), SubResource("Resource_o83lx"), SubResource("Resource_qehgq"), SubResource("Resource_u56hn")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_bidb4")]([SubResource("Resource_xofjn"), SubResource("Resource_dfqdl"), SubResource("Resource_y4ffq"), SubResource("Resource_jwr0g")])
+spawns = Array[ExtResource("8_a6lc7")]([SubResource("Resource_akcq0"), SubResource("Resource_wteyy"), SubResource("Resource_fs8j2"), SubResource("Resource_cluem"), SubResource("Resource_eq0pg"), SubResource("Resource_5h4dr"), SubResource("Resource_0lqnf"), SubResource("Resource_a548k"), SubResource("Resource_sitf0"), SubResource("Resource_ya13v"), SubResource("Resource_huqmb"), SubResource("Resource_0xgfe"), SubResource("Resource_mjoxw"), SubResource("Resource_56bk8")])
+chests = Array[ExtResource("1_hlh6k")]([SubResource("Resource_e3nnd"), SubResource("Resource_pjp41")])
+enclosures = Array[ExtResource("2_sxayk")]([SubResource("Resource_1t25s"), SubResource("Resource_1wew1")])

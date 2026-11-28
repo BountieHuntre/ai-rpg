@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_vha5j"]
+
+[resource]
+script = ExtResource("1_vha5j")
+entry = 2021
+creature_name = "Crimsonwing Matriarch"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.6, 0.22, 0.22, 1)
+model = "harpy"

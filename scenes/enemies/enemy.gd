@@ -28,288 +28,6 @@ static var THREAT_SWITCH_MELEE := 1.1
 static var THREAT_SWITCH_RANGED := 1.3
 ## Healing draws half its amount as threat (HostileRefManager::threatAssist).
 static var HEAL_THREAT := 0.5
-## Placeholder looks until there are models: [size, body color]. Beasts lie
-## along their length.
-const LOOKS := {
-	299: [Vector3(0.75, 0.75, 0.75), Color(0.55, 0.55, 0.58)],
-	69: [Vector3(0.9, 0.9, 0.9), Color(0.42, 0.36, 0.3)],
-	113: [Vector3(1.0, 0.85, 1.0), Color(0.45, 0.3, 0.22)],
-	6: [Vector3(0.65, 0.65, 0.65), Color(0.75, 0.55, 0.3)],
-	257: [Vector3(0.75, 0.75, 0.75), Color(0.7, 0.5, 0.28)],
-	80: [Vector3(0.8, 0.8, 0.8), Color(0.62, 0.45, 0.25)],
-	475: [Vector3(0.85, 0.85, 0.85), Color(0.55, 0.38, 0.22)],
-	38: [Vector3(1.0, 1.0, 1.0), Color(0.6, 0.15, 0.15)],
-	476: [Vector3(0.8, 0.8, 0.8), Color(0.75, 0.35, 0.2)],
-	40: [Vector3(0.85, 0.85, 0.85), Color(0.5, 0.42, 0.3)],
-	94: [Vector3(0.95, 0.95, 0.95), Color(0.3, 0.3, 0.35)],
-	# Harrowfield.
-	525: [Vector3(0.85, 0.85, 0.85), Color(0.5, 0.45, 0.38)],
-	30: [Vector3(0.7, 0.45, 0.8), Color(0.25, 0.22, 0.2)],
-	285: [Vector3(0.85, 0.85, 0.85), Color(0.3, 0.55, 0.45)],
-	735: [Vector3(0.85, 0.85, 0.85), Color(0.25, 0.5, 0.55)],
-	732: [Vector3(0.95, 0.95, 0.95), Color(0.22, 0.42, 0.38)],
-	46: [Vector3(0.95, 0.95, 0.95), Color(0.35, 0.5, 0.3)],
-	524: [Vector3(1.05, 0.9, 1.05), Color(0.4, 0.38, 0.35)],
-	390: [Vector3(1.0, 0.85, 1.0), Color(0.85, 0.6, 0.55)],
-	330: [Vector3(1.3, 1.05, 1.3), Color(0.9, 0.65, 0.6)],
-	1922: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.5, 0.52)],
-	822: [Vector3(1.15, 1.0, 1.15), Color(0.35, 0.25, 0.18)],
-	118: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.3, 0.32)],
-	43: [Vector3(0.8, 0.5, 0.9), Color(0.18, 0.16, 0.15)],
-	327: [Vector3(0.95, 0.95, 0.95), Color(0.75, 0.6, 0.25)],
-	116: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.12, 0.12)],
-	474: [Vector3(1.0, 1.0, 1.0), Color(0.35, 0.2, 0.45)],
-	97: [Vector3(0.9, 0.9, 0.9), Color(0.6, 0.45, 0.3)],
-	478: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.4, 0.25)],
-	117: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.36, 0.22)],
-	448: [Vector3(1.4, 1.4, 1.4), Color(0.45, 0.3, 0.2)],
-	# Kareth: Emberhollow.
-	3098: [Vector3(0.9, 0.8, 0.9), Color(0.52, 0.38, 0.28)],
-	3124: [Vector3(0.7, 0.45, 0.8), Color(0.62, 0.42, 0.2)],
-	3101: [Vector3(0.6, 0.6, 0.6), Color(0.7, 0.3, 0.15)],
-	3102: [Vector3(0.95, 0.9, 1.0), Color(0.35, 0.25, 0.3)],
-	3281: [Vector3(1.3, 0.8, 1.4), Color(0.6, 0.3, 0.15)],
-	3183: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.15, 0.12)],
-	# The Redsand Coast.
-	3099: [Vector3(1.05, 0.9, 1.05), Color(0.48, 0.34, 0.25)],
-	3100: [Vector3(1.15, 0.95, 1.15), Color(0.42, 0.3, 0.22)],
-	3106: [Vector3(0.55, 0.35, 0.6), Color(0.75, 0.4, 0.25)],
-	3107: [Vector3(0.7, 0.45, 0.75), Color(0.72, 0.36, 0.22)],
-	3108: [Vector3(0.85, 0.5, 0.9), Color(0.55, 0.5, 0.4)],
-	3103: [Vector3(0.9, 0.9, 0.9), Color(0.6, 0.35, 0.3)],
-	3104: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.4, 0.32)],
-	3105: [Vector3(1.0, 1.0, 1.0), Color(0.65, 0.3, 0.25)],
-	3141: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.42, 0.38)],
-	3125: [Vector3(0.75, 0.5, 0.85), Color(0.6, 0.45, 0.25)],
-	3126: [Vector3(0.85, 0.55, 0.95), Color(0.4, 0.35, 0.3)],
-	3127: [Vector3(0.9, 0.55, 1.0), Color(0.35, 0.45, 0.25)],
-	5823: [Vector3(1.1, 0.7, 1.2), Color(0.25, 0.35, 0.2)],
-	3111: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.36, 0.3)],
-	3112: [Vector3(0.95, 0.95, 0.95), Color(0.48, 0.38, 0.3)],
-	3113: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.4, 0.32)],
-	3114: [Vector3(1.1, 1.1, 1.1), Color(0.45, 0.32, 0.26)],
-	5826: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.5, 0.35)],
-	5824: [Vector3(1.2, 1.2, 1.2), Color(0.4, 0.3, 0.25)],
-	3115: [Vector3(0.95, 0.95, 0.95), Color(0.6, 0.5, 0.4)],
-	3116: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.45, 0.38)],
-	3117: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.42, 0.35)],
-	3118: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.45, 0.6)],
-	3119: [Vector3(1.15, 1.15, 1.15), Color(0.5, 0.38, 0.25)],
-	3120: [Vector3(1.2, 1.2, 1.2), Color(0.55, 0.4, 0.26)],
-	5808: [Vector3(1.35, 1.35, 1.35), Color(0.45, 0.32, 0.2)],
-	3121: [Vector3(1.0, 0.85, 1.1), Color(0.78, 0.5, 0.2)],
-	3122: [Vector3(0.95, 1.0, 1.0), Color(0.6, 0.25, 0.2)],
-	3123: [Vector3(1.05, 1.1, 1.1), Color(0.5, 0.22, 0.18)],
-	3128: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
-	3129: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
-	3192: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
-	5809: [Vector3(1.0, 1.0, 1.0), Color(0.2, 0.3, 0.55)],
-	3130: [Vector3(1.2, 0.9, 1.4), Color(0.45, 0.5, 0.55)],
-	3131: [Vector3(1.25, 0.95, 1.45), Color(0.4, 0.48, 0.65)],
-	3195: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3196: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3197: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3198: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3199: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3203: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3204: [Vector3(1.1, 1.1, 1.1), Color(0.3, 0.08, 0.08)],
-	5822: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.08, 0.08)],
-	3205: [Vector3(1.05, 1.05, 1.05), Color(0.35, 0.2, 0.45)],
-	3206: [Vector3(1.0, 1.0, 1.0), Color(0.35, 0.2, 0.45)],
-	3207: [Vector3(1.0, 1.0, 1.0), Color(0.35, 0.2, 0.45)],
-	3110: [Vector3(1.2, 0.6, 1.6), Color(0.3, 0.38, 0.25)],
-	# Aldmark's north and Kareth's west.
-	1501: [Vector3(1.0, 1.0, 1.0), Color(0.45, 0.5, 0.42)],
-	1502: [Vector3(1.0, 1.0, 1.0), Color(0.42, 0.45, 0.4)],
-	1890: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.72)],
-	1919: [Vector3(1.0, 1.0, 1.0), Color(0.42, 0.46, 0.4)],
-	1508: [Vector3(0.8, 0.8, 0.8), Color(0.5, 0.42, 0.32)],
-	1509: [Vector3(0.9, 0.9, 0.9), Color(0.45, 0.38, 0.3)],
-	1512: [Vector3(0.6, 0.6, 0.6), Color(0.3, 0.25, 0.28)],
-	1513: [Vector3(0.65, 0.65, 0.65), Color(0.32, 0.26, 0.26)],
-	1504: [Vector3(0.7, 0.7, 0.7), Color(0.25, 0.22, 0.2)],
-	1505: [Vector3(0.85, 0.85, 0.85), Color(0.22, 0.2, 0.18)],
-	1688: [Vector3(1.1, 1.1, 1.1), Color(0.3, 0.2, 0.25)],
-	1506: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1507: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1667: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1525: [Vector3(1.0, 1.0, 1.0), Color(0.42, 0.46, 0.36)],
-	1526: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.42, 0.34)],
-	1547: [Vector3(0.9, 0.9, 0.9), Color(0.3, 0.28, 0.3)],
-	1548: [Vector3(0.95, 0.95, 0.95), Color(0.28, 0.25, 0.3)],
-	1549: [Vector3(1.0, 1.0, 1.0), Color(0.25, 0.22, 0.28)],
-	10356: [Vector3(1.15, 1.15, 1.15), Color(0.2, 0.18, 0.22)],
-	1553: [Vector3(0.75, 0.75, 0.75), Color(0.3, 0.25, 0.28)],
-	1554: [Vector3(0.8, 0.8, 0.8), Color(0.35, 0.2, 0.25)],
-	10357: [Vector3(0.95, 0.95, 0.95), Color(0.4, 0.2, 0.25)],
-	1555: [Vector3(0.9, 0.9, 0.9), Color(0.3, 0.15, 0.2)],
-	1520: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.72)],
-	1522: [Vector3(1.0, 1.0, 1.0), Color(0.8, 0.78, 0.7)],
-	1523: [Vector3(1.05, 1.05, 1.05), Color(0.82, 0.78, 0.68)],
-	1674: [Vector3(0.95, 0.95, 0.95), Color(0.42, 0.36, 0.3)],
-	1675: [Vector3(0.9, 0.9, 0.9), Color(0.45, 0.4, 0.3)],
-	1941: [Vector3(0.95, 0.95, 0.95), Color(0.4, 0.34, 0.28)],
-	1753: [Vector3(1.2, 1.2, 1.2), Color(0.38, 0.32, 0.26)],
-	1535: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1536: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1537: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1538: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1539: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1540: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1660: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1662: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1664: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.82, 0.75)],
-	1665: [Vector3(1.05, 1.05, 1.05), Color(0.85, 0.82, 0.75)],
-	1543: [Vector3(0.85, 0.85, 0.85), Color(0.3, 0.45, 0.4)],
-	1544: [Vector3(0.9, 0.9, 0.9), Color(0.35, 0.4, 0.5)],
-	1545: [Vector3(0.95, 0.95, 0.95), Color(0.3, 0.4, 0.35)],
-	1909: [Vector3(1.0, 1.0, 1.0), Color(0.25, 0.42, 0.4)],
-	1957: [Vector3(0.95, 0.95, 0.95), Color(0.3, 0.5, 0.42)],
-	1958: [Vector3(0.95, 0.95, 0.95), Color(0.32, 0.42, 0.55)],
-	1910: [Vector3(1.15, 1.15, 1.15), Color(0.35, 0.5, 0.35)],
-	1529: [Vector3(1.05, 1.05, 1.05), Color(0.55, 0.3, 0.3)],
-	1532: [Vector3(1.0, 1.0, 1.0), Color(0.6, 0.65, 0.7)],
-	1534: [Vector3(1.0, 1.0, 1.0), Color(0.6, 0.62, 0.66)],
-	1530: [Vector3(1.0, 1.0, 1.0), Color(0.45, 0.48, 0.4)],
-	1658: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.5, 0.45)],
-	1654: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.52, 0.5)],
-	1655: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.52, 0.5)],
-	1656: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.52, 0.5)],
-	1657: [Vector3(0.9, 0.9, 0.9), Color(0.5, 0.52, 0.5)],
-	1934: [Vector3(1.0, 1.0, 1.0), Color(0.45, 0.35, 0.22)],
-	1935: [Vector3(0.95, 0.95, 0.95), Color(0.45, 0.35, 0.22)],
-	1936: [Vector3(1.05, 1.05, 1.05), Color(0.45, 0.35, 0.22)],
-	1531: [Vector3(1.0, 1.0, 1.0), Color(0.6, 0.65, 0.7)],
-	2955: [Vector3(0.9, 0.9, 0.9), Color(0.6, 0.5, 0.35)],
-	2956: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.45, 0.32)],
-	2957: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.42, 0.3)],
-	2961: [Vector3(0.95, 0.95, 0.95), Color(0.62, 0.5, 0.36)],
-	3035: [Vector3(1.0, 1.0, 1.0), Color(0.66, 0.55, 0.38)],
-	3566: [Vector3(1.05, 1.05, 1.05), Color(0.5, 0.42, 0.3)],
-	2966: [Vector3(1.0, 1.0, 1.0), Color(0.45, 0.32, 0.24)],
-	2954: [Vector3(1.05, 1.05, 1.05), Color(0.4, 0.3, 0.22)],
-	2952: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.4, 0.3)],
-	2953: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.42, 0.32)],
-	3229: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.38, 0.28)],
-	8554: [Vector3(1.25, 1.25, 1.25), Color(0.48, 0.34, 0.25)],
-	3232: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.38, 0.28)],
-	2958: [Vector3(0.85, 0.85, 0.85), Color(0.6, 0.52, 0.4)],
-	2959: [Vector3(0.9, 0.9, 0.9), Color(0.55, 0.45, 0.35)],
-	2960: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.42, 0.32)],
-	2969: [Vector3(0.8, 0.8, 0.8), Color(0.55, 0.45, 0.35)],
-	2970: [Vector3(0.9, 0.9, 0.9), Color(0.5, 0.4, 0.3)],
-	2971: [Vector3(0.95, 0.95, 0.95), Color(0.45, 0.35, 0.28)],
-	2949: [Vector3(0.95, 0.95, 0.95), Color(0.7, 0.66, 0.55)],
-	2950: [Vector3(0.95, 0.95, 0.95), Color(0.68, 0.62, 0.5)],
-	2951: [Vector3(1.0, 1.0, 1.0), Color(0.65, 0.6, 0.48)],
-	5786: [Vector3(1.15, 1.15, 1.15), Color(0.6, 0.55, 0.45)],
-	2962: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.5, 0.45)],
-	2963: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.48, 0.55)],
-	3068: [Vector3(1.4, 1.4, 1.4), Color(0.45, 0.42, 0.35)],
-	3056: [Vector3(1.15, 1.15, 1.15), Color(0.85, 0.85, 0.82)],
-	2978: [Vector3(0.8, 0.8, 0.8), Color(0.45, 0.6, 0.3)],
-	2979: [Vector3(0.85, 0.85, 0.85), Color(0.45, 0.6, 0.3)],
-	3051: [Vector3(0.9, 0.9, 0.9), Color(0.45, 0.6, 0.3)],
-	# Aldmark's mountains and Kareth's north-west.
-	705: [Vector3(0.8, 0.8, 0.8), Color(0.5, 0.48, 0.46)],
-	704: [Vector3(0.9, 0.9, 0.9), Color(0.45, 0.42, 0.4)],
-	707: [Vector3(0.9, 0.9, 0.9), Color(0.5, 0.46, 0.42)],
-	724: [Vector3(1.0, 1.0, 1.0), Color(0.46, 0.42, 0.38)],
-	706: [Vector3(0.8, 0.8, 0.8), Color(0.5, 0.6, 0.66)],
-	946: [Vector3(0.9, 0.9, 0.9), Color(0.5, 0.6, 0.66)],
-	708: [Vector3(0.75, 0.75, 0.75), Color(0.5, 0.42, 0.36)],
-	808: [Vector3(1.05, 1.05, 1.05), Color(0.45, 0.55, 0.62)],
-	1718: [Vector3(1.0, 1.0, 1.0), Color(0.44, 0.4, 0.36)],
-	1125: [Vector3(0.9, 0.9, 0.9), Color(0.48, 0.4, 0.34)],
-	1126: [Vector3(1.0, 1.0, 1.0), Color(0.46, 0.38, 0.32)],
-	1127: [Vector3(1.1, 1.1, 1.1), Color(0.42, 0.36, 0.3)],
-	1689: [Vector3(1.1, 1.1, 1.1), Color(0.44, 0.34, 0.28)],
-	1128: [Vector3(0.9, 0.9, 0.9), Color(0.18, 0.16, 0.16)],
-	1196: [Vector3(1.1, 1.1, 1.1), Color(0.82, 0.84, 0.88)],
-	1130: [Vector3(1.3, 1.3, 1.3), Color(0.86, 0.88, 0.92)],
-	1961: [Vector3(1.25, 1.25, 1.25), Color(0.4, 0.32, 0.26)],
-	1199: [Vector3(0.8, 0.8, 0.8), Color(0.88, 0.88, 0.9)],
-	1201: [Vector3(1.0, 1.0, 1.0), Color(0.85, 0.84, 0.8)],
-	1131: [Vector3(1.0, 1.0, 1.0), Color(0.88, 0.88, 0.9)],
-	1138: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.55, 0.58)],
-	1133: [Vector3(0.95, 0.95, 0.95), Color(0.75, 0.75, 0.78)],
-	1132: [Vector3(1.15, 1.15, 1.15), Color(0.6, 0.6, 0.62)],
-	1134: [Vector3(1.0, 1.0, 1.0), Color(0.86, 0.86, 0.88)],
-	1135: [Vector3(1.15, 1.15, 1.15), Color(0.84, 0.84, 0.86)],
-	1137: [Vector3(1.25, 1.25, 1.25), Color(0.8, 0.82, 0.86)],
-	1271: [Vector3(1.35, 1.35, 1.35), Color(0.9, 0.92, 0.95)],
-	1388: [Vector3(1.35, 1.35, 1.35), Color(0.78, 0.8, 0.84)],
-	1120: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1121: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1123: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1122: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1124: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1397: [Vector3(1.0, 1.0, 1.0), Color(0.5, 0.6, 0.66)],
-	1260: [Vector3(1.15, 1.15, 1.15), Color(0.5, 0.6, 0.66)],
-	1211: [Vector3(0.65, 0.65, 0.65), Color(0.5, 0.58, 0.42)],
-	8503: [Vector3(0.7, 0.7, 0.7), Color(0.48, 0.56, 0.4)],
-	1115: [Vector3(1.0, 1.0, 1.0), Color(0.46, 0.42, 0.38)],
-	1116: [Vector3(1.0, 1.0, 1.0), Color(0.44, 0.4, 0.36)],
-	1117: [Vector3(1.0, 1.0, 1.0), Color(0.48, 0.42, 0.36)],
-	1118: [Vector3(1.1, 1.1, 1.1), Color(0.42, 0.38, 0.34)],
-	1119: [Vector3(1.2, 1.2, 1.2), Color(0.4, 0.36, 0.32)],
-	2031: [Vector3(0.8, 0.8, 0.8), Color(0.3, 0.26, 0.38)],
-	2032: [Vector3(0.9, 0.9, 0.9), Color(0.34, 0.3, 0.38)],
-	1984: [Vector3(0.7, 0.7, 0.7), Color(0.42, 0.34, 0.3)],
-	1985: [Vector3(0.85, 0.85, 0.85), Color(0.4, 0.32, 0.28)],
-	1988: [Vector3(0.6, 0.6, 0.6), Color(0.36, 0.52, 0.3)],
-	1989: [Vector3(0.5, 0.5, 0.5), Color(0.4, 0.56, 0.32)],
-	1986: [Vector3(0.6, 0.6, 0.6), Color(0.3, 0.3, 0.36)],
-	1994: [Vector3(0.85, 0.85, 0.85), Color(0.36, 0.28, 0.42)],
-	1995: [Vector3(0.7, 0.7, 0.7), Color(0.55, 0.48, 0.4)],
-	1996: [Vector3(0.75, 0.75, 0.75), Color(0.5, 0.44, 0.38)],
-	1997: [Vector3(0.8, 0.8, 0.8), Color(0.45, 0.4, 0.34)],
-	1998: [Vector3(0.65, 0.65, 0.65), Color(0.32, 0.3, 0.36)],
-	1999: [Vector3(0.75, 0.75, 0.75), Color(0.3, 0.34, 0.3)],
-	2000: [Vector3(0.8, 0.8, 0.8), Color(0.4, 0.38, 0.44)],
-	2001: [Vector3(1.0, 1.0, 1.0), Color(0.3, 0.28, 0.34)],
-	2002: [Vector3(0.45, 0.45, 0.45), Color(0.5, 0.6, 0.85)],
-	2003: [Vector3(0.5, 0.5, 0.5), Color(0.35, 0.4, 0.65)],
-	2004: [Vector3(0.55, 0.55, 0.55), Color(0.3, 0.26, 0.45)],
-	2005: [Vector3(0.65, 0.65, 0.65), Color(0.32, 0.46, 0.28)],
-	2038: [Vector3(0.9, 0.9, 0.9), Color(0.3, 0.22, 0.4)],
-	14432: [Vector3(0.75, 0.75, 0.75), Color(0.38, 0.5, 0.3)],
-	2042: [Vector3(0.95, 0.95, 0.95), Color(0.28, 0.26, 0.36)],
-	2043: [Vector3(1.0, 1.0, 1.0), Color(0.24, 0.22, 0.32)],
-	2033: [Vector3(1.05, 1.05, 1.05), Color(0.32, 0.3, 0.4)],
-	2034: [Vector3(1.05, 1.05, 1.05), Color(0.36, 0.28, 0.32)],
-	14430: [Vector3(1.15, 1.15, 1.15), Color(0.18, 0.16, 0.24)],
-	2006: [Vector3(1.1, 1.1, 1.1), Color(0.45, 0.34, 0.24)],
-	2007: [Vector3(1.05, 1.05, 1.05), Color(0.48, 0.38, 0.26)],
-	2008: [Vector3(1.1, 1.1, 1.1), Color(0.42, 0.32, 0.22)],
-	7235: [Vector3(1.05, 1.05, 1.05), Color(0.5, 0.4, 0.3)],
-	7234: [Vector3(1.2, 1.2, 1.2), Color(0.38, 0.28, 0.22)],
-	2152: [Vector3(1.1, 1.1, 1.1), Color(0.4, 0.3, 0.2)],
-	2009: [Vector3(1.05, 1.05, 1.05), Color(0.46, 0.36, 0.28)],
-	2010: [Vector3(1.15, 1.15, 1.15), Color(0.4, 0.3, 0.22)],
-	2011: [Vector3(1.05, 1.05, 1.05), Color(0.5, 0.42, 0.3)],
-	2012: [Vector3(1.1, 1.1, 1.1), Color(0.44, 0.34, 0.24)],
-	2013: [Vector3(1.15, 1.15, 1.15), Color(0.38, 0.28, 0.2)],
-	2014: [Vector3(1.1, 1.1, 1.1), Color(0.5, 0.38, 0.28)],
-	2039: [Vector3(1.35, 1.35, 1.35), Color(0.34, 0.24, 0.18)],
-	14429: [Vector3(1.25, 1.25, 1.25), Color(0.3, 0.22, 0.16)],
-	14428: [Vector3(1.25, 1.25, 1.25), Color(0.46, 0.36, 0.26)],
-	2022: [Vector3(1.0, 1.0, 1.0), Color(0.4, 0.32, 0.24)],
-	2025: [Vector3(1.05, 1.05, 1.05), Color(0.38, 0.3, 0.22)],
-	2027: [Vector3(1.15, 1.15, 1.15), Color(0.36, 0.3, 0.24)],
-	2029: [Vector3(1.15, 1.15, 1.15), Color(0.3, 0.34, 0.24)],
-	2030: [Vector3(1.25, 1.25, 1.25), Color(0.34, 0.28, 0.22)],
-	2166: [Vector3(1.45, 1.45, 1.45), Color(0.3, 0.36, 0.24)],
-	3535: [Vector3(1.5, 1.5, 1.5), Color(0.26, 0.32, 0.2)],
-	7318: [Vector3(1.15, 1.15, 1.15), Color(0.5, 0.36, 0.22)],
-	2015: [Vector3(0.95, 0.95, 0.95), Color(0.6, 0.3, 0.3)],
-	2017: [Vector3(0.95, 0.95, 0.95), Color(0.55, 0.28, 0.28)],
-	2018: [Vector3(0.95, 0.95, 0.95), Color(0.5, 0.3, 0.4)],
-	2019: [Vector3(1.0, 1.0, 1.0), Color(0.65, 0.25, 0.25)],
-	2020: [Vector3(1.0, 1.0, 1.0), Color(0.55, 0.35, 0.45)],
-	2021: [Vector3(1.1, 1.1, 1.1), Color(0.6, 0.22, 0.22)],
-	14431: [Vector3(1.1, 1.1, 1.1), Color(0.7, 0.2, 0.2)],
-}
 
 @export var acceleration := 60.0
 @export var gravity := 19.29
@@ -633,335 +351,51 @@ func _wander(delta: float) -> Vector3:
 	return global_position
 
 
-## Human creatures shown as the Human model: creature entry -> { "main":
-## weapon prop, "off": off-hand part, "helm": helm part }
-## (HumanoidModel.creature_gear). The brigands wear the red hoods of their band.
-const HUMAN_CREATURES := {
-	38: { "main": "sword", "helm": "Helm_hood" },
-	94: { "main": "dagger", "helm": "Helm_hood" },
-	116: { "main": "dagger", "off": "Off_dagger", "helm": "Helm_hood" },
-	473: { "main": "sword", "off": "Shield_round" },
-	474: { "main": "staff", "helm": "Helm_hood" },
-	# Kareth: the Saltmarch sailors and marines of the Stranded Keep.
-	3128: { "main": "sword" },
-	3129: { "main": "sword", "off": "Shield_round", "helm": "Helm_cap" },
-	3192: { "main": "sword", "off": "Shield_kite", "helm": "Helm_plate" },
-	5809: { "main": "mace", "off": "Shield_kite", "helm": "Helm_coif" },
-	# The Ember Cult's orcs.
-	3183: { "main": "staff", "helm": "Helm_hood" },
-	3195: { "main": "mace" },
-	3196: { "main": "dagger" },
-	3197: { "main": "axe2h" },
-	3198: { "main": "staff", "helm": "Helm_hood" },
-	3199: { "main": "staff", "helm": "Helm_hood" },
-	3203: { "main": "staff", "helm": "Helm_hood" },
-	3204: { "main": "axe", "off": "Off_axe" },
-	5822: { "main": "staff", "helm": "Helm_hood" },
-	# Vazzar's trolls.
-	3205: { "main": "staff" },
-	3206: { "main": "staff" },
-	3207: { "main": "axe" },
-	# Aldmark's north and Kareth's west.
-	1501: { "main": "" },
-	1502: { "main": "" },
-	1890: { "main": "sword" },
-	# Samuel Pell, a farmer risen in the ruined hamlet.
-	1919: { "main": "", "helm": "Helm_cap" },
-	1520: { "main": "sword", "off": "Shield_round" },
-	1522: { "main": "staff" },
-	1523: { "main": "axe" },
-	1525: { "main": "" },
-	1526: { "main": "" },
-	1529: { "main": "" },
-	1532: { "main": "" },
-	1534: { "main": "" },
-	1530: { "main": "" },
-	1531: { "main": "" },
-	1658: { "main": "sword2h", "helm": "Helm_plate" },
-	1654: { "main": "mace" },
-	1655: { "main": "dagger" },
-	1656: { "main": "sword" },
-	1657: { "main": "" },
-	1506: { "main": "mace" },
-	1507: { "main": "sword", "helm": "Helm_hood" },
-	1667: { "main": "dagger" },
-	1535: { "main": "sword", "off": "Shield_kite", "helm": "Helm_cap" },
-	1536: { "main": "staff", "helm": "Helm_hood" },
-	1537: { "main": "sword2h" },
-	1538: { "main": "staff", "helm": "Helm_hood" },
-	1539: { "main": "mace", "helm": "Helm_hood" },
-	1540: { "main": "sword", "off": "Shield_kite", "helm": "Helm_coif" },
-	1660: { "main": "mace", "off": "Shield_kite", "helm": "Helm_plate" },
-	1662: { "main": "sword", "off": "Shield_kite", "helm": "Helm_plate" },
-	1664: { "main": "mace2h", "helm": "Helm_plate" },
-	1665: { "main": "sword2h", "helm": "Helm_plate" },
-	1934: { "main": "polearm" },
-	1935: { "main": "" },
-	1936: { "main": "axe" },
-	2978: { "main": "mace" },
-	2979: { "main": "axe" },
-	3051: { "main": "mace", "helm": "Helm_cap" },
-	# The Icemane trolls.
-	706: { "main": "" },
-	946: { "main": "staff" },
-	808: { "main": "axe" },
-	1120: { "main": "axe" },
-	1121: { "main": "polearm" },
-	1123: { "main": "axe", "off": "axe" },
-	1122: { "main": "dagger" },
-	1124: { "main": "staff" },
-	1397: { "main": "staff" },
-	1260: { "main": "axe2h" },
-}
-## The race and colours of HUMAN_CREATURES that aren't brigands: entry ->
-## [model race, colour of their hoods and coats, whether they wear a cloak].
-const CREATURE_RACES := {
-	3128: ["human", Color(0.2, 0.3, 0.55), false], 3129: ["human", Color(0.2, 0.3, 0.55), false],
-	3192: ["human", Color(0.2, 0.3, 0.55), true], 5809: ["human", Color(0.2, 0.3, 0.55), true],
-	3183: ["orc", Color(0.3, 0.08, 0.08), false], 3195: ["orc", Color(0.3, 0.08, 0.08), false],
-	3196: ["orc", Color(0.3, 0.08, 0.08), false], 3197: ["orc", Color(0.3, 0.08, 0.08), true],
-	3198: ["orc", Color(0.3, 0.08, 0.08), false], 3199: ["orc", Color(0.3, 0.08, 0.08), false],
-	3203: ["orc", Color(0.3, 0.08, 0.08), true], 3204: ["orc", Color(0.3, 0.08, 0.08), true],
-	5822: ["orc", Color(0.3, 0.08, 0.08), true],
-	3205: ["troll", Color(0.35, 0.2, 0.45), true], 3206: ["troll", Color(0.35, 0.2, 0.45), false],
-	3207: ["troll", Color(0.35, 0.2, 0.45), false],
-	1501: ["undead", Color(0.3, 0.28, 0.26), false],
-	1502: ["undead", Color(0.3, 0.28, 0.26), false],
-	1890: ["undead", Color(0.3, 0.28, 0.26), false],
-	1919: ["undead", Color(0.4, 0.33, 0.22), false],
-	1520: ["undead", Color(0.3, 0.28, 0.26), false],
-	1522: ["undead", Color(0.3, 0.28, 0.26), false],
-	1523: ["undead", Color(0.3, 0.28, 0.26), false],
-	1525: ["undead", Color(0.3, 0.28, 0.26), false],
-	1526: ["undead", Color(0.3, 0.28, 0.26), false],
-	1529: ["undead", Color(0.3, 0.28, 0.26), false],
-	1532: ["undead", Color(0.3, 0.28, 0.26), false],
-	1534: ["undead", Color(0.3, 0.28, 0.26), false],
-	1530: ["undead", Color(0.3, 0.28, 0.26), false],
-	1531: ["undead", Color(0.3, 0.28, 0.26), false],
-	1658: ["undead", Color(0.3, 0.28, 0.26), false],
-	1654: ["undead", Color(0.3, 0.28, 0.26), false],
-	1655: ["undead", Color(0.3, 0.28, 0.26), false],
-	1656: ["undead", Color(0.3, 0.28, 0.26), false],
-	1657: ["undead", Color(0.3, 0.28, 0.26), false],
-	1506: ["human", Color(0.62, 0.12, 0.1), false],
-	1507: ["human", Color(0.62, 0.12, 0.1), false],
-	1667: ["human", Color(0.62, 0.12, 0.1), false],
-	1535: ["human", Color(0.62, 0.12, 0.1), false],
-	1536: ["human", Color(0.62, 0.12, 0.1), false],
-	1537: ["human", Color(0.62, 0.12, 0.1), false],
-	1538: ["human", Color(0.62, 0.12, 0.1), false],
-	1539: ["human", Color(0.62, 0.12, 0.1), false],
-	1540: ["human", Color(0.62, 0.12, 0.1), false],
-	1660: ["human", Color(0.62, 0.12, 0.1), true],
-	1662: ["human", Color(0.62, 0.12, 0.1), true],
-	1664: ["human", Color(0.62, 0.12, 0.1), true],
-	1665: ["human", Color(0.62, 0.12, 0.1), true],
-	1934: ["human", Color(0.42, 0.32, 0.2), false],
-	1935: ["human", Color(0.42, 0.32, 0.2), false],
-	1936: ["human", Color(0.42, 0.32, 0.2), false],
-	2978: ["gnome", Color(0.5, 0.4, 0.25), false],
-	2979: ["gnome", Color(0.5, 0.4, 0.25), false],
-	3051: ["gnome", Color(0.5, 0.4, 0.25), false],
-	706: ["troll", Color(0.62, 0.64, 0.68), false],
-	946: ["troll", Color(0.62, 0.64, 0.68), false],
-	808: ["troll", Color(0.62, 0.64, 0.68), false],
-	1120: ["troll", Color(0.62, 0.64, 0.68), false],
-	1121: ["troll", Color(0.62, 0.64, 0.68), false],
-	1123: ["troll", Color(0.62, 0.64, 0.68), false],
-	1122: ["troll", Color(0.62, 0.64, 0.68), false],
-	1124: ["troll", Color(0.62, 0.64, 0.68), false],
-	1397: ["troll", Color(0.62, 0.64, 0.68), false],
-	1260: ["troll", Color(0.62, 0.64, 0.68), false],
-}
-## Other creatures with models: entry -> [model, props]. Beasts (wolf, boar,
-## bear, spider) are BeastModels coloured by their LOOKS colour; humanoid
-## creatures (burrowling, mirefin, ditchjaw) are HumanoidModels of their own
-## race with props as in HUMAN_CREATURES.
-const CREATURE_MODELS := {
-	299: ["wolf", {}], 69: ["wolf", {}], 525: ["wolf", {}], 1922: ["wolf", {}], 118: ["wolf", {}],
-	113: ["boar", {}], 524: ["boar", {}], 390: ["boar", {}], 330: ["boar", {}],
-	822: ["bear", {}],
-	30: ["spider", {}], 43: ["spider", {}],
-	6: ["burrowling", { "main": "dagger" }], 257: ["burrowling", { "main": "axe" }], 80: ["burrowling", { "main": "mace" }],
-	40: ["burrowling", { "main": "axe" }], 475: ["burrowling", { "main": "sword" }], 476: ["burrowling", { "main": "staff" }],
-	327: ["burrowling", { "main": "axe", "off": "Shield_round" }],
-	285: ["mirefin", { "main": "polearm" }], 735: ["mirefin", { "main": "polearm" }], 732: ["mirefin", { "main": "dagger" }],
-	46: ["mirefin", { "main": "" }],
-	97: ["ditchjaw", { "main": "axe" }], 117: ["ditchjaw", { "main": "axe2h" }], 478: ["ditchjaw", { "main": "polearm" }],
-	448: ["ditchjaw", { "main": "axe2h" }],
-	# Kareth's boars, scorpions, crabs (the clawfolk too), tigers (and the
-	# ashstalker), lizards (and the crocodile), tuskfolk and imps.
-	3098: ["boar", {}], 3099: ["boar", {}], 3100: ["boar", {}],
-	3124: ["scorpion", {}], 3125: ["scorpion", {}], 3126: ["scorpion", {}], 3127: ["scorpion", {}],
-	5823: ["scorpion", {}], 3281: ["scorpion", {}],
-	3106: ["crab", {}], 3107: ["crab", {}], 3108: ["crab", {}],
-	3103: ["crab", {}], 3104: ["crab", {}], 3105: ["crab", {}], 3141: ["crab", {}],
-	3121: ["tiger", {}], 3102: ["tiger", {}],
-	3130: ["thunder_lizard", {}], 3131: ["thunder_lizard", {}], 3110: ["thunder_lizard", {}],
-	3111: ["tuskfolk", { "main": "axe" }], 3112: ["tuskfolk", { "main": "polearm" }],
-	3113: ["tuskfolk", { "main": "staff" }], 3114: ["tuskfolk", { "main": "axe", "off": "Shield_round" }],
-	5826: ["tuskfolk", { "main": "staff" }], 5824: ["tuskfolk", { "main": "axe2h" }],
-	3101: ["imp", { "main": "" }],
-	# The birds: the tallbirds (and the Thunderstrider), the swoops and the owls.
-	2955: ["tallbird", {}], 2956: ["tallbird", {}], 2957: ["tallbird", {}], 3068: ["tallbird", {}],
-	2969: ["swoop", {}], 2970: ["swoop", {}], 2971: ["swoop", {}],
-	1995: ["owl", {}], 1996: ["owl", {}], 1997: ["owl", {}],
-	# The harpies: the Galecry, Skyrend and Crimsonwing (and Fury Selka).
-	3115: ["harpy", { "main": "" }], 3116: ["harpy", { "main": "" }], 3117: ["harpy", { "main": "" }],
-	3118: ["harpy", { "main": "" }], 2962: ["harpy", { "main": "" }], 2963: ["harpy", { "main": "" }],
-	2015: ["harpy", { "main": "" }], 2017: ["harpy", { "main": "" }], 2018: ["harpy", { "main": "" }],
-	2019: ["harpy", { "main": "" }], 2020: ["harpy", { "main": "" }], 2021: ["harpy", { "main": "" }],
-	14431: ["harpy", { "main": "" }],
-	# The barklings (and Mossbrow and Mossrot the Fetid); Wildclaw is bearfolk.
-	2022: ["barkling", { "main": "" }], 2025: ["barkling", { "main": "" }], 2027: ["barkling", { "main": "" }],
-	2029: ["barkling", { "main": "" }], 2030: ["barkling", { "main": "" }], 2166: ["barkling", { "main": "" }],
-	3535: ["barkling", { "main": "" }], 7318: ["ditchjaw", { "main": "" }],
-	# The Dunestride centaurs and Warlord Hask.
-	3119: ["centaur", { "main": "axe" }], 3120: ["centaur", { "main": "polearm" }],
-	5808: ["centaur", { "main": "axe2h" }],
-	# The Redclaw raptors.
-	3122: ["raptor", {}], 3123: ["raptor", {}],
-	# The gloombats (and Old Needlewing).
-	1512: ["bat", {}], 1513: ["bat", {}], 1553: ["bat", {}], 1554: ["bat", {}], 10357: ["bat", {}],
-	# Aldmark's north and Kareth's west.
-	1508: ["wolf", {}],
-	1509: ["wolf", {}],
-	1547: ["wolf", {}],
-	1548: ["wolf", {}],
-	1549: ["wolf", {}],
-	10356: ["wolf", {}],
-	2958: ["wolf", {}],
-	2959: ["wolf", {}],
-	2960: ["wolf", {}],
-	3056: ["wolf", {}],
-	1504: ["spider", {}],
-	1505: ["spider", {}],
-	1688: ["spider", {}],
-	1555: ["spider", {}],
-	1674: ["ditchjaw", { "main": "axe" }],
-	1675: ["ditchjaw", { "main": "axe" }],
-	1941: ["ditchjaw", { "main": "axe" }],
-	1753: ["ditchjaw", { "main": "axe" }],
-	2949: ["ditchjaw", { "main": "axe" }],
-	2950: ["ditchjaw", { "main": "axe" }],
-	2951: ["ditchjaw", { "main": "axe" }],
-	5786: ["ditchjaw", { "main": "axe" }],
-	1543: ["mirefin", { "main": "polearm" }],
-	1544: ["mirefin", { "main": "polearm" }],
-	1545: ["mirefin", { "main": "polearm" }],
-	1909: ["mirefin", { "main": "polearm" }],
-	1957: ["mirefin", { "main": "polearm" }],
-	1958: ["mirefin", { "main": "polearm" }],
-	1910: ["mirefin", { "main": "polearm" }],
-	2961: ["tiger", {}],
-	3035: ["tiger", {}],
-	3566: ["tiger", {}],
-	2966: ["boar", {}],
-	2954: ["boar", {}],
-	2952: ["tuskfolk", { "main": "axe" }],
-	2953: ["tuskfolk", { "main": "axe" }],
-	3229: ["tuskfolk", { "main": "axe" }],
-	8554: ["tuskfolk", { "main": "axe" }],
-	3232: ["tuskfolk", { "main": "axe" }],
-	# Aldmark's mountains and Kareth's north-west.
-	705: ["wolf", {}],
-	704: ["wolf", {}],
-	1131: ["wolf", {}],
-	1138: ["wolf", {}],
-	1133: ["wolf", {}],
-	1132: ["wolf", {}],
-	708: ["boar", {}],
-	1125: ["boar", {}],
-	1126: ["boar", {}],
-	1127: ["boar", {}],
-	1689: ["boar", {}],
-	1984: ["boar", {}],
-	1985: ["boar", {}],
-	1128: ["bear", {}],
-	1196: ["bear", {}],
-	1130: ["bear", {}],
-	1961: ["bear", {}],
-	1134: ["bear", {}],
-	1135: ["bear", {}],
-	1137: ["bear", {}],
-	1271: ["bear", {}],
-	1388: ["bear", {}],
-	1199: ["tiger", {}],
-	1201: ["tiger", {}],
-	2031: ["tiger", {}],
-	2032: ["tiger", {}],
-	2042: ["tiger", {}],
-	2043: ["tiger", {}],
-	2033: ["tiger", {}],
-	2034: ["tiger", {}],
-	14430: ["tiger", {}],
-	1986: ["spider", {}],
-	1994: ["spider", {}],
-	1998: ["spider", {}],
-	1999: ["spider", {}],
-	2000: ["spider", {}],
-	2001: ["spider", {}],
-	707: ["dwarf", { "main": "mace" }],
-	724: ["dwarf", { "main": "mace2h" }],
-	1718: ["dwarf", { "main": "axe" }],
-	1115: ["dwarf", { "main": "mace" }],
-	1116: ["dwarf", { "main": "dagger" }],
-	1117: ["dwarf", { "main": "axe" }],
-	1118: ["dwarf", { "main": "mace2h" }],
-	1119: ["dwarf", { "main": "mace2h" }],
-	1211: ["gnome", { "main": "" }],
-	8503: ["gnome", { "main": "mace" }],
-	1988: ["imp", { "main": "" }],
-	1989: ["imp", { "main": "" }],
-	2002: ["imp", { "main": "" }],
-	2003: ["imp", { "main": "" }],
-	2004: ["imp", { "main": "" }],
-	2005: ["imp", { "main": "" }],
-	2038: ["imp", { "main": "staff" }],
-	14432: ["imp", { "main": "" }],
-	2006: ["ditchjaw", { "main": "" }],
-	2007: ["ditchjaw", { "main": "staff" }],
-	2008: ["ditchjaw", { "main": "mace" }],
-	7235: ["ditchjaw", { "main": "staff" }],
-	7234: ["ditchjaw", { "main": "mace2h" }],
-	2152: ["ditchjaw", { "main": "axe" }],
-	2009: ["ditchjaw", { "main": "staff" }],
-	2010: ["ditchjaw", { "main": "mace", "off": "Shield_round" }],
-	2011: ["ditchjaw", { "main": "staff" }],
-	2012: ["ditchjaw", { "main": "axe" }],
-	2013: ["ditchjaw", { "main": "mace" }],
-	2014: ["ditchjaw", { "main": "staff" }],
-	2039: ["ditchjaw", { "main": "mace2h" }],
-	14429: ["ditchjaw", { "main": "axe2h" }],
-	14428: ["ditchjaw", { "main": "mace2h" }],
-}
-## How big each model is at scale 1, in LOOKS' terms, so a creature's model
-## is scaled by its LOOKS size over this.
-const MODEL_BASE_SIZE := { "wolf": 0.9, "boar": 1.0, "bear": 1.15, "spider": 0.75, "burrowling": 0.75, "mirefin": 0.9, "ditchjaw": 1.0,
-	"scorpion": 0.8, "crab": 0.75, "tiger": 1.0, "thunder_lizard": 1.2, "tuskfolk": 0.95, "imp": 0.6, "tallbird": 1.0, "swoop": 0.9, "owl": 0.75, "bat": 0.65,
-	"harpy": 0.95, "barkling": 0.9, "raptor": 1.0, "centaur": 1.2,
-	"dwarf": 0.9, "gnome": 0.65 }
-const BEASTS := ["wolf", "boar", "bear", "spider", "scorpion", "crab", "tiger", "thunder_lizard", "tallbird", "swoop", "owl", "bat", "raptor"]
+## Creatures' looks (size, colour, model, gear) are CreatureLooks in
+## data/creatures/; the brigands' band colour, for their leather chests.
 const BRIGAND_RED := Color(0.55, 0.12, 0.1)
-## The creature's model (HumanoidModel or BeastModel), for HUMAN_CREATURES
-## and CREATURE_MODELS.
+## The creature's model (HumanoidModel or BeastModel), for creatures whose
+## look has one.
 var model: Node3D
+
+
+## Its look read again (ContentWatch, when its CreatureLook is saved): the
+## model made afresh at its rank's size, a dead one lying as it was.
+func refresh_look() -> void:
+	if model:
+		model.free()
+		model = null
+	var body: MeshInstance3D = $Visual/Body
+	var nose: MeshInstance3D = $Visual/Nose
+	body.visible = true
+	nose.visible = true
+	body.rotation = Vector3.ZERO
+	body.position = Vector3(0, 0.9, 0)
+	body.material_override = null
+	nose.position = Vector3(0, 1.3, -0.45)
+	_feedback.fall_axis = "x"
+	_visual.rotation.x = 0.0
+	_visual.rotation.z = 0.0
+	_apply_look()
+	if rank_override > 0:
+		_visual.scale *= float(RANK_SIZE.get(rank_override, 1.0))
+	if not combatant.is_alive():
+		_feedback.show_dead()
 
 
 func _apply_look() -> void:
 	# Out of the target ring's projection (models mark their own meshes).
 	Targeting.mark_unit(_visual)
-	if HUMAN_CREATURES.has(creature_entry):
-		_apply_human_look()
+	var look := CreatureLooks.of(creature_entry)
+	if look and look.dressed:
+		_apply_human_look(look)
 		return
-	if CREATURE_MODELS.has(creature_entry):
-		_apply_creature_model()
+	if look and look.model != "":
+		_apply_creature_model(look)
 		return
-	var look: Array = LOOKS.get(creature_entry, [Vector3.ONE, Color(0.75, 0.25, 0.25)])
 	var body: MeshInstance3D = $Visual/Body
 	var skin := StandardMaterial3D.new()
-	skin.albedo_color = look[1]
+	skin.albedo_color = look.color if look else Color(0.75, 0.25, 0.25)
 	body.material_override = skin
 	if int(_data.CreatureType) == CREATURE_TYPE_BEAST:
 		# On all fours: the capsule lies along the facing direction.
@@ -970,21 +404,21 @@ func _apply_look() -> void:
 		$Visual/Nose.position = Vector3(0, 0.6, -1.0)
 		# Dead beasts roll onto their side rather than tipping up on end.
 		_feedback.fall_axis = "z"
-	_visual.scale = look[0]
+	_visual.scale = look.size if look else Vector3.ONE
 
 
-## A beast or humanoid creature of CREATURE_MODELS: its own model, sized by its
-## LOOKS size and coloured by its LOOKS colour.
-func _apply_creature_model() -> void:
+## A beast or humanoid creature with a model of its own (its look's model):
+## sized by its look's size over the model's base size, coloured by its colour.
+func _apply_creature_model(look: CreatureLook) -> void:
 	for part in ["Body", "Nose"]:
 		get_node("Visual/" + part).visible = false
-	var look: Array = LOOKS.get(creature_entry, [Vector3.ONE, Color(0.6, 0.5, 0.4)])
-	var kind: String = CREATURE_MODELS[creature_entry][0]
-	_visual.scale = Vector3.ONE * (float(look[0].x) / float(MODEL_BASE_SIZE[kind]))
+	var kind := look.model
+	var info := CreatureLooks.model(kind)
+	_visual.scale = Vector3.ONE * (look.size.x / (info.base_size if info else 1.0))
 	if model:
 		return
-	var color: Color = look[1]
-	if kind in BEASTS:
+	var color := look.color
+	if info and info.beast:
 		var beast := BeastModel.new()
 		beast.species = kind
 		beast.colors = BeastModel.coat_colors(color, kind)
@@ -996,7 +430,7 @@ func _apply_creature_model() -> void:
 	creature.race = kind
 	creature.set_appearance({ "body": 0, "skin": 0, "hair": 3, "hair_color": 0, "face": 0 })
 	creature.skin_override = color
-	creature.creature_gear = CREATURE_MODELS[creature_entry][1]
+	creature.creature_gear = look.gear()
 	# Rags: a dark loincloth and, on the furred ones, a vest.
 	if kind == "harpy":
 		# Pale skin, her feathers (wings, crest, thighs, tail) the creature's
@@ -1046,16 +480,15 @@ func _apply_creature_model() -> void:
 	creature.attach_creature(self, combatant)
 
 
-func _apply_human_look() -> void:
+func _apply_human_look(dressed: CreatureLook) -> void:
 	for part in ["Body", "Nose"]:
 		get_node("Visual/" + part).visible = false
 	_visual.scale = Vector3.ONE
 	if model:
 		return
-	var gear: Dictionary = HUMAN_CREATURES[creature_entry]
-	var kind: Array = CREATURE_RACES.get(creature_entry, ["human", BRIGAND_RED, true])
+	var gear := dressed.gear()
 	var human := HumanoidModel.new()
-	human.race = kind[0]
+	human.race = dressed.model
 	# Each brigand its own face: seeded by its place in the world.
 	var seed_value := hash(str(name) + str(creature_entry))
 	var look := HumanoidModel.random_appearance(seed_value)
@@ -1063,11 +496,11 @@ func _apply_human_look() -> void:
 	human.set_appearance(look)
 	human.creature_gear = gear
 	var outfit := HumanoidModel.outfit_for("", seed_value)
-	var band: Color = kind[1]
+	var band := dressed.band
 	outfit[HumanoidModel.HEAD] = band
-	outfit[HumanoidModel.CHEST] = HumanoidModel.LEATHER[absi(seed_value) % HumanoidModel.LEATHER.size()] if band == BRIGAND_RED else band
+	outfit[HumanoidModel.CHEST] = CharacterLooks.outfits().leather[absi(seed_value) % CharacterLooks.outfits().leather.size()] if band == BRIGAND_RED else band
 	outfit[HumanoidModel.LEGS] = Color(0.22, 0.2, 0.2)
-	if not gear.has("helm") and kind[2]:
+	if not gear.has("helm") and dressed.cloak:
 		outfit[HumanoidModel.BACK] = band
 	human.outfit = outfit
 	model = human

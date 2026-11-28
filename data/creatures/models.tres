@@ -1,0 +1,131 @@
+[gd_resource type="Resource" script_class="CreatureModels" format=3 uid="uid://dplv7cl5iwuqq"]
+
+[ext_resource type="Script" uid="uid://d34qjjkkfehal" path="res://scripts/content/creature_model_info.gd" id="1_cc1i8"]
+[ext_resource type="Script" uid="uid://dqxns318iuvic" path="res://scripts/content/creature_models.gd" id="2_pvoac"]
+
+[sub_resource type="Resource" id="Resource_3np85"]
+script = ExtResource("1_cc1i8")
+name = "wolf"
+base_size = 0.9
+beast = true
+
+[sub_resource type="Resource" id="Resource_hk0cg"]
+script = ExtResource("1_cc1i8")
+name = "boar"
+beast = true
+
+[sub_resource type="Resource" id="Resource_biji2"]
+script = ExtResource("1_cc1i8")
+name = "bear"
+base_size = 1.15
+beast = true
+
+[sub_resource type="Resource" id="Resource_ol2q0"]
+script = ExtResource("1_cc1i8")
+name = "spider"
+base_size = 0.75
+beast = true
+
+[sub_resource type="Resource" id="Resource_00hdm"]
+script = ExtResource("1_cc1i8")
+name = "burrowling"
+base_size = 0.75
+
+[sub_resource type="Resource" id="Resource_usw66"]
+script = ExtResource("1_cc1i8")
+name = "mirefin"
+base_size = 0.9
+
+[sub_resource type="Resource" id="Resource_s743m"]
+script = ExtResource("1_cc1i8")
+name = "ditchjaw"
+
+[sub_resource type="Resource" id="Resource_yrh4x"]
+script = ExtResource("1_cc1i8")
+name = "scorpion"
+base_size = 0.8
+beast = true
+
+[sub_resource type="Resource" id="Resource_xnx1o"]
+script = ExtResource("1_cc1i8")
+name = "crab"
+base_size = 0.75
+beast = true
+
+[sub_resource type="Resource" id="Resource_5fqwk"]
+script = ExtResource("1_cc1i8")
+name = "tiger"
+beast = true
+
+[sub_resource type="Resource" id="Resource_f08wv"]
+script = ExtResource("1_cc1i8")
+name = "thunder_lizard"
+base_size = 1.2
+beast = true
+
+[sub_resource type="Resource" id="Resource_o67qb"]
+script = ExtResource("1_cc1i8")
+name = "tuskfolk"
+base_size = 0.95
+
+[sub_resource type="Resource" id="Resource_cgdly"]
+script = ExtResource("1_cc1i8")
+name = "imp"
+base_size = 0.6
+
+[sub_resource type="Resource" id="Resource_bsa5a"]
+script = ExtResource("1_cc1i8")
+name = "tallbird"
+beast = true
+
+[sub_resource type="Resource" id="Resource_cuekk"]
+script = ExtResource("1_cc1i8")
+name = "swoop"
+base_size = 0.9
+beast = true
+
+[sub_resource type="Resource" id="Resource_evlwq"]
+script = ExtResource("1_cc1i8")
+name = "owl"
+base_size = 0.75
+beast = true
+
+[sub_resource type="Resource" id="Resource_6l5fi"]
+script = ExtResource("1_cc1i8")
+name = "bat"
+base_size = 0.65
+beast = true
+
+[sub_resource type="Resource" id="Resource_yyft7"]
+script = ExtResource("1_cc1i8")
+name = "harpy"
+base_size = 0.95
+
+[sub_resource type="Resource" id="Resource_5xhqw"]
+script = ExtResource("1_cc1i8")
+name = "barkling"
+base_size = 0.9
+
+[sub_resource type="Resource" id="Resource_78ms1"]
+script = ExtResource("1_cc1i8")
+name = "raptor"
+beast = true
+
+[sub_resource type="Resource" id="Resource_mac1h"]
+script = ExtResource("1_cc1i8")
+name = "centaur"
+base_size = 1.2
+
+[sub_resource type="Resource" id="Resource_cpw1k"]
+script = ExtResource("1_cc1i8")
+name = "dwarf"
+base_size = 0.9
+
+[sub_resource type="Resource" id="Resource_n84ps"]
+script = ExtResource("1_cc1i8")
+name = "gnome"
+base_size = 0.65
+
+[resource]
+script = ExtResource("2_pvoac")
+models = Array[ExtResource("1_cc1i8")]([SubResource("Resource_3np85"), SubResource("Resource_hk0cg"), SubResource("Resource_biji2"), SubResource("Resource_ol2q0"), SubResource("Resource_00hdm"), SubResource("Resource_usw66"), SubResource("Resource_s743m"), SubResource("Resource_yrh4x"), SubResource("Resource_xnx1o"), SubResource("Resource_5fqwk"), SubResource("Resource_f08wv"), SubResource("Resource_o67qb"), SubResource("Resource_cgdly"), SubResource("Resource_bsa5a"), SubResource("Resource_cuekk"), SubResource("Resource_evlwq"), SubResource("Resource_6l5fi"), SubResource("Resource_yyft7"), SubResource("Resource_5xhqw"), SubResource("Resource_78ms1"), SubResource("Resource_mac1h"), SubResource("Resource_cpw1k"), SubResource("Resource_n84ps")])

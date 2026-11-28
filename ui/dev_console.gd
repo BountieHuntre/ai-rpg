@@ -28,6 +28,7 @@ const COMMANDS := {
 	"speed": ["<multiplier>", "Scale your run speed (1 is normal)."],
 	"tele": ["<x> <z> | spawn | <zone>", "Teleport to a map point, your race's start, or a zone's graveyard (ashford, harrowfield, gravesend, duskmoor, emberhollow, redsand, sunfold, tallgrass); a zone on the other continent reloads the game there."],
 	"pos": ["", "Show your position."],
+	"rebuildzone": ["", "Build the zone you're in again in place, from its scripts and layout on disk."],
 	"editzone": ["", "Open the zone you're in in Blender to edit (ZoneEdits); Reload Game after saving there."],
 	"repair": ["", "Repair all your gear for free."],
 	"respawn": ["", "Bring back every dead creature."],
@@ -681,6 +682,18 @@ func _cmd_editzone(_args: PackedStringArray) -> String:
 	var script := ProjectSettings.globalize_path("res://tools/zones/zone_edit.py")
 	OS.create_process(ZoneEdits.BLENDER, ["--python", script, "--", out])
 	return "Opening %s in Blender. Save Edits there, then Reload Game." % zone.zone_name
+
+
+func _cmd_rebuildzone(_args: PackedStringArray) -> String:
+	var zone := _world.zone_at(_player.global_position)
+	if zone == null:
+		return "You're in no zone."
+	ZoneLayouts.reload_file(ZoneLayouts.DIR + zone.layout_key() + ".tres")
+	var started := Time.get_ticks_msec()
+	var fresh := _world.rebuild_zone(zone)
+	if not fresh:
+		return "!Couldn't rebuild %s." % zone.zone_name
+	return "Rebuilt %s (%.1f s)." % [fresh.zone_name, (Time.get_ticks_msec() - started) / 1000.0]
 
 
 func _cmd_pos(_args: PackedStringArray) -> String:

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_slh2r"]
+
+[resource]
+script = ExtResource("1_slh2r")
+entry = 1131
+creature_name = "Winter Wolf"
+color = Color(0.88, 0.88, 0.9, 1)
+model = "wolf"

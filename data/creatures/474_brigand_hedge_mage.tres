@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_dwpsw"]
+
+[resource]
+script = ExtResource("1_dwpsw")
+entry = 474
+creature_name = "Brigand Hedge-Mage"
+color = Color(0.35, 0.2, 0.45, 1)
+model = "human"
+dressed = true
+main = "staff"
+helm = "Helm_hood"

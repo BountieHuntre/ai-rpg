@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RaceLook" format=3 uid="uid://wmnfansrco81"]
+
+[ext_resource type="Script" uid="uid://bxv8g4rhb6qy6" path="res://scripts/content/race_look.gd" id="1_mow0t"]
+
+[resource]
+script = ExtResource("1_mow0t")
+race = "wood_elf"
+skins = PackedColorArray(0.62, 0.52, 0.75, 1, 0.52, 0.45, 0.7, 1, 0.45, 0.52, 0.72, 1, 0.7, 0.58, 0.78, 1, 0.4, 0.4, 0.6, 1, 0.58, 0.62, 0.8, 1)
+hair_colors = PackedColorArray(0.2, 0.5, 0.5, 1, 0.85, 0.88, 0.9, 1, 0.25, 0.45, 0.25, 1, 0.2, 0.25, 0.55, 1, 0.45, 0.25, 0.55, 1, 0.1, 0.08, 0.12, 1, 0.55, 0.75, 0.6, 1)
+eye_color = Color(0.85, 0.95, 1, 1)
+glowing_eyes = true
+feature_title = "Ears"
+feature_names = PackedStringArray("Long", "Swept", "Tall")
+marks_title = "Runes"
+marks_names = PackedStringArray("None", "Brow", "Cheeks", "Full")
+paint = Color(0.45, 0.95, 1, 1)

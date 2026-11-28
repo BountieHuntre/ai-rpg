@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_g133c"]
+
+[resource]
+script = ExtResource("1_g133c")
+entry = 2039
+creature_name = "Borrak the Mauler"
+size = Vector3(1.35, 1.35, 1.35)
+color = Color(0.34, 0.24, 0.18, 1)
+model = "ditchjaw"
+main = "mace2h"

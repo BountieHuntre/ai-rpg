@@ -25,46 +25,15 @@ static var GRAVEYARD_FACING := 0.0
 const SPRING := Vector2(-462, 1088)
 static var SPRING_RADIUS := 9.0
 
-const PLACES := [
-	["the Wellspring", Vector2(-462, 1088), 14.0],
-	["Sunfold Camp", Vector2(-490, 1190), 32.0],
-	["the Thornback Ravine", Vector2(-400, 1332), 32.0],
-	["the pass", Vector2(-510, 1000), 35.0],
-	["the boar meadow", Vector2(-590, 1335), 45.0],
-	["the cougar hills", Vector2(-630, 1250), 55.0],
-	["the east fields", Vector2(-410, 1150), 60.0],
-	["the north fields", Vector2(-590, 1100), 50.0],
-]
-const FLATS := [
-	[Vector2(-400, 1332), 18.0, 3.0],  # the Briartusk camp in the ravine
-]
-static var RAVINE := 0
-const HILLS := [
-	[Vector2(-640, 1250), 55.0, 14.0],
-	[Vector2(-360, 1290), 30.0, 10.0],
-	[Vector2(-440, 1370), 30.0, 10.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var RAVINE := 0
+var HILLS: Array = []
 const PASS_END := Vector2(-500, 1070)
-const ROADS := [
-	[Vector2(-490, 1158), Vector2(-480, 1110), PASS_END],
-	[Vector2(-480, 1110), Vector2(-466, 1096)],
-	[Vector2(-478, 1222), Vector2(-440, 1280), Vector2(-412, 1316)],
-]
-const SPAWNS := [
-	[2955, Vector2(-415, 1145), 55.0, 10],  # Tallbird, the east fields (1-2)
-	[2955, Vector2(-590, 1100), 45.0, 8],   # the north fields
-	[2961, Vector2(-630, 1250), 50.0, 9],   # Mountain Cougar, the western hills (3-4)
-	[2966, Vector2(-590, 1335), 45.0, 9],   # Battleboar, the boar meadow (3-4)
-	[2952, Vector2(-410, 1322), 26.0, 8],   # Briartusk Tuskfolk, the ravine (3-4)
-	[2953, Vector2(-396, 1336), 18.0, 5],   # Briartusk Mystic (3-4)
-	[2954, Vector2(-420, 1342), 22.0, 5],   # Briartusk Warboar (4-5)
-	[3229, Vector2(-402, 1330), 1.0, 1],    # "Squealer" Ragetusk (5)
-	[8554, Vector2(-386, 1348), 1.0, 1],    # Chief Ragetusk (5)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Water Pitchers at the Wellspring (A Humble Task).
-const CHESTS := [
-	[2907, Vector2(-458, 1094), 4.0, 3],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.5, 0.42, 0.36)
 const HIDE := Color(0.72, 0.6, 0.42)
@@ -76,6 +45,7 @@ var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	continent = "kareth"
@@ -100,9 +70,7 @@ const GROUND_TEXTURES := {
 }
 ## Walled places bots go in and out of by the door (Zone.enclosures): the
 ## longhouse, its doorway to the camp.
-const ENCLOSURES := [
-	[-497.0, 1173.0, -483.0, 1179.0, Vector2(-490, 1183), Vector2(-490, 1177)],
-]
+var ENCLOSURES: Array = []
 static var TREE_ATTEMPTS := 1500
 static var ROCK_ATTEMPTS := 1000
 

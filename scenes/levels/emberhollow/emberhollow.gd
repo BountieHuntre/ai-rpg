@@ -32,81 +32,27 @@ static var GATE_Z := -1690.0
 ## inside the gate, facing out of it (west).
 const GRAVEYARD := Vector3(2497, HUB_HEIGHT, -1690)
 const GRAVEYARD_FACING := PI / 2
-const ENCLOSURES := [
-	[2486.0, -1712.0, 2534.0, -1668.0, Vector2(2477, -1690), Vector2(2494, -1690)],
-	# The huts inside it, each open by its door: the commander's great hut and
-	# the trainers' four.
-	[2503.5, -1710.5, 2516.5, -1697.5, Vector2(2510.0, -1695.5), Vector2(2510.0, -1698.9)],
-	[2488.4, -1707.6, 2495.6, -1700.4, Vector2(2496.4, -1700.6), Vector2(2493.7, -1702.6)],
-	[2524.4, -1707.6, 2531.6, -1700.4, Vector2(2523.6, -1700.6), Vector2(2526.3, -1702.6)],
-	[2524.4, -1679.6, 2531.6, -1672.4, Vector2(2523.6, -1679.4), Vector2(2526.3, -1677.4)],
-	[2488.4, -1679.6, 2495.6, -1672.4, Vector2(2496.4, -1679.4), Vector2(2493.7, -1677.4)],
-]
+var ENCLOSURES: Array = []
 
 ## Named places: [name, center, radius], smallest first.
-const PLACES := [
-	["the peons' camp", Vector2(2462, -1716), 10.0],
-	["Tazula's camp", Vector2(2530, -1792), 10.0],
-	["the Ember Cult Cave", Vector2(2612, -1797), 16.0],
-	["the Proving Ground", Vector2(2510, -1690), 30.0],
-	["Rustpincer's ridge", Vector2(2560, -1852), 30.0],
-	["the pass", Vector2(2330, -1675), 35.0],
-	["the Scorpion Rocks", Vector2(2595, -1610), 50.0],
-	["the north flats", Vector2(2420, -1775), 45.0],
-	["the cult's hill", Vector2(2610, -1760), 60.0],
-	["the west flats", Vector2(2410, -1625), 60.0],
-]
+var PLACES: Array = []
 
 ## Level areas: [center, radius, height].
-const FLATS := [
-	[Vector2(2611, -1796), 10.0, 8.0],  # the cave mouth
-	[Vector2(2530, -1792), 8.0, 7.0],   # Tazula's camp
-	[Vector2(2462, -1716), 8.0, 6.0],   # the peons' camp
-]
-static var CAVE := 0
-static var CAMP := 1
-static var PEONS := 2
+var FLATS: Array = []
+var CAVE := 0
+var CAMP := 1
+var PEONS := 2
 ## Rounded hills: [center, radius, height].
-const HILLS := [
-	[Vector2(2648, -1805), 55.0, 26.0],  # the cult's hill, the cave in its west face
-	[Vector2(2560, -1855), 38.0, 12.0],  # Rustpincer's ridge
-	[Vector2(2600, -1600), 30.0, 6.0],   # the Scorpion Rocks
-	[Vector2(2640, -1640), 26.0, 9.0],
-	[Vector2(2380, -1560), 40.0, 8.0],
-]
+var HILLS: Array = []
 ## The pass west to the Redsand Coast (Zone.PASSES["kareth"]) ends here.
 const PASS_END := Vector2(2370, -1690)
-const ROADS := [
-	# The gate to the pass.
-	[Vector2(2477, -1690), Vector2(2440, -1690), PASS_END],
-	# North past the peons' camp and the north flats to Tazula's camp, then
-	# east to the cave.
-	[Vector2(2440, -1690), Vector2(2450, -1740), Vector2(2475, -1785), Vector2(2522, -1792)],
-	[Vector2(2538, -1792), Vector2(2580, -1790), Vector2(2601, -1795)],
-	# South and east to the Scorpion Rocks.
-	[Vector2(2440, -1690), Vector2(2470, -1630), Vector2(2540, -1612), Vector2(2580, -1608)],
-]
+var ROADS: Array = []
 
 ## Creature spawns: [creature entry, center, radius, count]. New groups go
 ## last, so saved corpses keep their names.
-const SPAWNS := [
-	[3098, Vector2(2405, -1625), 45.0, 10],  # Dustback Boar, the west flats (1-2)
-	[3098, Vector2(2410, -1770), 35.0, 8],   # the north flats
-	[3098, Vector2(2475, -1625), 22.0, 5],
-	[3124, Vector2(2592, -1612), 40.0, 10],  # Sand Scorpion, the Scorpion Rocks (3)
-	[3124, Vector2(2630, -1660), 22.0, 5],
-	[3101, Vector2(2578, -1776), 26.0, 10],  # Ember Imp, before the cave (3-4)
-	[3101, Vector2(2632, -1748), 18.0, 5],
-	[3102, Vector2(2602, -1732), 20.0, 5],   # Ashstalker, the cult's hill (3-4)
-	[3281, Vector2(2560, -1853), 1.0, 1],    # Rustpincer, on his ridge (4)
-	[3183, Vector2(2613, -1797), 1.0, 1],    # Vurrok Cinderhand, in the cave mouth (5)
-]
+var SPAWNS: Array = []
 ## Cactus Apples to pick (Cactus Apple Bake): [object entry, center, radius, count].
-const CHESTS := [
-	[178087, Vector2(2606, -1793), 1.0, 1],
-	[171938, Vector2(2425, -1640), 50.0, 9],
-	[171938, Vector2(2465, -1790), 35.0, 6],
-]
+var CHESTS: Array = []
 
 const RED_ROCK := Color(0.58, 0.32, 0.22)
 const DARK_ROCK := Color(0.42, 0.25, 0.19)
@@ -120,6 +66,7 @@ var _detail := FastNoiseLite.new()
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	continent = "kareth"

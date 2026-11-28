@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_afleh"]
+
+[resource]
+script = ExtResource("1_afleh")
+entry = 1196
+creature_name = "Ice Claw Bear"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.82, 0.84, 0.88, 1)
+model = "bear"

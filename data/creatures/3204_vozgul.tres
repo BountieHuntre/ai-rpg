@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_38epq"]
+
+[resource]
+script = ExtResource("1_38epq")
+entry = 3204
+creature_name = "Vozgul"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.3, 0.08, 0.08, 1)
+model = "orc"
+dressed = true
+band = Color(0.3, 0.08, 0.08, 1)
+main = "axe"
+off = "Off_axe"

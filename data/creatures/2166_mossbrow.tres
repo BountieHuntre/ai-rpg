@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_32n3y"]
+
+[resource]
+script = ExtResource("1_32n3y")
+entry = 2166
+creature_name = "Mossbrow"
+size = Vector3(1.45, 1.45, 1.45)
+color = Color(0.3, 0.36, 0.24, 1)
+model = "barkling"

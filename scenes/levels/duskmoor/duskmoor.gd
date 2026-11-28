@@ -30,131 +30,26 @@ const LAKE := Vector2(-1650, -4450)
 const LAKE_RADIUS := 80.0
 static var LAKE_BED := -0.8
 
-const PLACES := [
-	["the Ashworth crypt", Vector2(-2180, -4700), 14.0],
-	["the east watch", Vector2(-1300, -4100), 16.0],
-	["the Sunward mission", Vector2(-2050, -3800), 20.0],
-	["the Ashworth manor", Vector2(-2050, -4650), 20.0],
-	["the Grimhide camp", Vector2(-1310, -4380), 24.0],
-	["the Sunward watch", Vector2(-2100, -4320), 24.0],
-	["the Brannick farm", Vector2(-2150, -3720), 26.0],
-	["the Ashworth mills", Vector2(-1950, -4550), 30.0],
-	["the Zealot Abbey", Vector2(-1250, -4650), 38.0],
-	["Gallowfield", Vector2(-1760, -4180), 42.0],
-	["the east barricade", Vector2(-1190, -3980), 45.0],
-	["the pass", Vector2(-2265, -4185), 40.0],
-	["the Plaguewood farms", Vector2(-1720, -3800), 70.0],
-	["Lake Hollowmere", Vector2(-1650, -4450), 95.0],
-	["the southeast woods", Vector2(-1300, -3720), 90.0],
-]
-const FLATS := [
-	[Vector2(-1950, -4550), 22.0, 6.0],   # the Ashworth mills
-	[Vector2(-2050, -4650), 15.0, 7.0],   # the Ashworth manor
-	[Vector2(-2180, -4700), 10.0, 8.0],   # the Ashworth crypt
-	[Vector2(-1250, -4650), 30.0, 9.0],   # the Zealot Abbey
-	[Vector2(-1300, -4100), 12.0, 6.0],   # the east watch
-	[Vector2(-2100, -4320), 18.0, 6.0],   # the Sunward watch
-	[Vector2(-2050, -3800), 16.0, 5.0],   # the Sunward mission
-	[Vector2(-2150, -3720), 18.0, 4.0],   # the Brannick farm
-	[Vector2(-1700, -3800), 30.0, 4.0],   # the Plaguewood farms
-	[Vector2(-1310, -4380), 18.0, 7.0],   # the Grimhide camp
-	[Vector2(-1190, -3980), 16.0, 5.0],   # the east barricade
-]
-static var MILLS := 0
-static var MANOR := 1
-static var CRYPT := 2
-static var ABBEY := 3
-static var EAST_WATCH := 4
-static var SUNWARD_WATCH := 5
-static var MISSION := 6
-static var BRANNICK := 7
-static var PLAGUEWOOD := 8
-static var GNOLL_CAMP := 9
-static var BARRICADE := 10
-const HILLS := [
-	[Vector2(-1250, -4700), 90.0, 14.0],  # the abbey's rise
-	[Vector2(-2150, -4720), 70.0, 16.0],  # the crypt's hill
-	[Vector2(-1320, -4390), 50.0, 8.0],
-	[Vector2(-2000, -4000), 80.0, 7.0],
-	[Vector2(-1450, -3850), 70.0, 9.0],
-	[Vector2(-1850, -4720), 60.0, 10.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var MILLS := 0
+var MANOR := 1
+var CRYPT := 2
+var ABBEY := 3
+var EAST_WATCH := 4
+var SUNWARD_WATCH := 5
+var MISSION := 6
+var BRANNICK := 7
+var PLAGUEWOOD := 8
+var GNOLL_CAMP := 9
+var BARRICADE := 10
+var HILLS: Array = []
 const PASS_END := Vector2(-2230, -4180)
-const ROADS := [
-	# The pass road east to Gallowfield, and on east past the gnolls to the abbey.
-	[PASS_END, Vector2(-2050, -4180), Vector2(-1802, -4180)],
-	[Vector2(-1718, -4182), Vector2(-1600, -4200), Vector2(-1450, -4300), Vector2(-1360, -4470), Vector2(-1265, -4615)],
-	[Vector2(-1450, -4300), Vector2(-1325, -4372)],
-	# North to the mills, the manor and the crypt.
-	[Vector2(-1770, -4222), Vector2(-1850, -4400), Vector2(-1935, -4530)],
-	[Vector2(-1965, -4572), Vector2(-2040, -4640), Vector2(-2170, -4695)],
-	# South to the Plaguewood farms, and south-west to the mission and the Brannick farm.
-	[Vector2(-1758, -4140), Vector2(-1740, -3950), Vector2(-1705, -3828)],
-	[Vector2(-1740, -3950), Vector2(-2000, -3850), Vector2(-2040, -3812)],
-	[Vector2(-2000, -3850), Vector2(-2135, -3735)],
-	# East to the east watch and the barricade.
-	[Vector2(-1600, -4200), Vector2(-1400, -4100), Vector2(-1310, -4100)],
-	[Vector2(-1400, -4100), Vector2(-1280, -4030), Vector2(-1200, -3985)],
-	# The pass road's branch north to the Sunward watch.
-	[Vector2(-2120, -4180), Vector2(-2105, -4302)],
-]
-const SPAWNS := [
-	[1535, Vector2(-2100, -4320), 22.0, 10],  # Sunward Warrior, the Sunward watch (6-7)
-	[1536, Vector2(-2050, -3800), 20.0, 8],   # Sunward Missionary, the mission (7-8)
-	[1662, Vector2(-2052, -3798), 1.0, 1],    # Captain Lisette (9)
-	[1537, Vector2(-1320, -4560), 70.0, 12],  # Sunward Zealot, before the abbey (8-9)
-	[1538, Vector2(-1245, -4645), 26.0, 8],   # Sunward Friar, the abbey (9-10)
-	[1539, Vector2(-1265, -4625), 18.0, 5],   # Sunward Neophyte (10-11)
-	[1540, Vector2(-1250, -4660), 14.0, 6],   # Sunward Vanguard (10-11)
-	[1665, Vector2(-1250, -4672), 1.0, 1],    # Captain Merrin, at the abbey door (12)
-	[1660, Vector2(-1250, -4670), 3.0, 2],    # Sunward Bodyguard
-	[1664, Vector2(-1300, -4100), 1.0, 1],    # Captain Vossel, the east watch (11)
-	[1538, Vector2(-1305, -4095), 10.0, 3],   # Sunward Friar, with him
-	[1520, Vector2(-1950, -4560), 40.0, 10],  # Rattlebone Soldier, the mills (6-7)
-	[1522, Vector2(-1900, -4600), 38.0, 10],  # Hollow-Eye Bonecaster (7-8)
-	[1523, Vector2(-1990, -4610), 32.0, 8],   # Cracked Skull Soldier (8-9)
-	[1657, Vector2(-1955, -4545), 1.0, 1],    # Dorian Ashworth, in the mill (9)
-	[1654, Vector2(-2055, -4655), 1.0, 1],    # Gerran Ashworth, the manor (10)
-	[1655, Vector2(-2045, -4645), 1.0, 1],    # Nessa Ashworth (10)
-	[1656, Vector2(-2060, -4640), 1.0, 1],    # Thomas Ashworth (10)
-	[1531, Vector2(-1990, -4590), 40.0, 2],   # Lost Soul (6, rare)
-	[1534, Vector2(-2170, -4690), 24.0, 8],   # Wailing Ancestor, the crypt (9-10)
-	[1530, Vector2(-2190, -4710), 24.0, 8],   # Rotting Ancestor (10-11)
-	[1658, Vector2(-2186, -4704), 1.0, 1],    # Captain Morrow, in the crypt's mouth (12)
-	[1543, Vector2(-1575, -4400), 28.0, 8],   # Murkfin Puddlejumper, the lake (7-8)
-	[1544, Vector2(-1720, -4500), 28.0, 6],   # Murkfin Oracle (8-9)
-	[1545, Vector2(-1600, -4520), 28.0, 8],   # Murkfin Muckdweller (9-10)
-	[1958, Vector2(-1730, -4390), 24.0, 5],   # Murkfin Tidecaller (9-10)
-	[1957, Vector2(-1565, -4480), 24.0, 5],   # Murkfin Shorecreeper (9-10)
-	[1909, Vector2(-1680, -4370), 22.0, 4],   # Murkfin Lakestalker (10-11)
-	[1910, Vector2(-1700, -4520), 1.0, 1],    # Mudgill (10, rare)
-	[1525, Vector2(-1650, -3820), 55.0, 10],  # Rotting Dead, the Plaguewood farms (5-6)
-	[1526, Vector2(-1800, -3780), 45.0, 10],  # Ravaged Corpse (6-7)
-	[1934, Vector2(-2150, -3720), 20.0, 6],   # Duskmoor Farmer, the Brannick farm (6-7)
-	[1935, Vector2(-2140, -3710), 16.0, 5],   # Duskmoor Farmhand (5-6)
-	[1936, Vector2(-2152, -3722), 1.0, 1],    # Farmer Brannick (8)
-	[1674, Vector2(-1310, -4380), 18.0, 8],   # Grimhide Gnoll, their camp (6-7)
-	[1941, Vector2(-1360, -4420), 30.0, 10],  # Grimhide Graverobber (6-7)
-	[1675, Vector2(-1290, -4350), 20.0, 6],   # Grimhide Mongrel (7-8)
-	[1753, Vector2(-1305, -4385), 1.0, 1],    # Rotjaw (10)
-	[1529, Vector2(-1210, -3950), 28.0, 8],   # Bleeding Horror, the east barricade (9-10)
-	[1532, Vector2(-1220, -4020), 28.0, 8],   # Wandering Spirit (10-11)
-	[1547, Vector2(-1960, -4100), 80.0, 10],  # Decrepit Darkhound (5-6)
-	[1548, Vector2(-1500, -4000), 90.0, 10],  # Cursed Darkhound (7-8)
-	[1549, Vector2(-1350, -3800), 50.0, 6],   # Ravenous Darkhound (9-10)
-	[10356, Vector2(-1500, -4000), 60.0, 1],  # Grimfang (10, rare)
-	[1553, Vector2(-1450, -4250), 70.0, 8],   # Greater Gloombat (6-7)
-	[1554, Vector2(-1900, -3950), 70.0, 8],   # Vampiric Gloombat (8-9)
-	[10357, Vector2(-1900, -3950), 50.0, 1],  # Old Needlewing (11, rare)
-	[1555, Vector2(-1300, -3720), 50.0, 8],   # Vicious Duskweb Spider, the southeast woods (9-10)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## Chests: Duskmoor Pumpkins in the Plaguewood fields, Gloom Weed round
 ## Gallowfield's graveyard and Doom Weed below the abbey's rise.
-const CHESTS := [
-	[375, Vector2(-1700, -3795), 30.0, 10],
-	[175566, Vector2(-1840, -4250), 40.0, 8],
-	[176753, Vector2(-1400, -4520), 45.0, 8],
-]
+var CHESTS: Array = []
 
 const ROCK := Color(0.42, 0.41, 0.4)
 const STONE := Color(0.55, 0.54, 0.52)
@@ -172,6 +67,7 @@ var _road_segments: Array = []
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	for line: Array in ROADS:
@@ -209,11 +105,7 @@ const TOWN_HOUSES := [
 ]
 ## Walled places bots go in and out of by the door (Zone.enclosures): the
 ## inn and the trainers' two houses.
-const ENCLOSURES := [
-	[-1747.0, -4201.0, -1737.0, -4187.0, Vector2(-1751, -4194), Vector2(-1745.5, -4194)],
-	[-1778.5, -4205.5, -1769.5, -4198.5, Vector2(-1774, -4195), Vector2(-1774, -4200)],
-	[-1785.5, -4169.5, -1778.5, -4162.5, Vector2(-1775, -4166), Vector2(-1780, -4166)],
-]
+var ENCLOSURES: Array = []
 static var DEAD_TREE_VARIANTS := 4
 
 

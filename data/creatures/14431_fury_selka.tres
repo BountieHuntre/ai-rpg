@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_d1hfi"]
+
+[resource]
+script = ExtResource("1_d1hfi")
+entry = 14431
+creature_name = "Fury Selka"
+size = Vector3(1.1, 1.1, 1.1)
+color = Color(0.7, 0.2, 0.2, 1)
+model = "harpy"

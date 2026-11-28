@@ -23,6 +23,7 @@ GameState="*res://scripts/autoload/game_state.gd"
 Settings="*res://scripts/autoload/settings.gd"
 Party="*res://scripts/autoload/party.gd"
 Chat="*res://scripts/autoload/chat.gd"
+ContentWatch="*res://scripts/content/content_watch.gd"
 
 [display]
 

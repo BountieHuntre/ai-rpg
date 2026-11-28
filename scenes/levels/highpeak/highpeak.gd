@@ -30,120 +30,25 @@ static var GRAVEYARD_FACING := 0.0
 const TARN := Vector2(-440, -1200)
 static var TARN_RADIUS := 70.0
 
-const PLACES := [
-	["Old Rimebeard's cave", Vector2(-268, -1098), 10.0],
-	["the Southgate", Vector2(452, -900), 22.0],
-	["the Anvilhold Gate", Vector2(-330, -1360), 24.0],
-	["Steelgrip's Depot", Vector2(60, -830), 24.0],
-	["Barleyhall", Vector2(-330, -1215), 24.0],
-	["the Grizzled Den", Vector2(-290, -1080), 30.0],
-	["Amberfield Ranch", Vector2(230, -650), 30.0],
-	["Shimmer Ridge", Vector2(-380, -420), 30.0],
-	["Icemane Hold", Vector2(-530, -570), 34.0],
-	["the Cogworks", Vector2(-600, -1300), 36.0],
-	["the Grey Quarry", Vector2(330, -360), 40.0],
-	["Kettlefold", Vector2(-150, -780), 44.0],
-	["the Frozen Stair", Vector2(-660, -965), 40.0],
-	["the Icewater Tarn", TARN, 80.0],
-	["the eastern pines", Vector2(250, -1050), 180.0],
-	["the southern vales", Vector2(-50, -400), 180.0],
-	["the western snows", Vector2(-400, -850), 160.0],
-]
-const FLATS := [
-	[Vector2(60, -830), 18.0, 7.0],      # Steelgrip's Depot
-	[Vector2(230, -650), 22.0, 6.0],     # Amberfield Ranch
-	[Vector2(330, -360), 30.0, 4.0],     # the Grey Quarry, dug down
-	[Vector2(-530, -570), 24.0, 9.0],    # Icemane Hold
-	[Vector2(-380, -420), 14.0, 12.0],   # Shimmer Ridge, on its ridge
-	[Vector2(-290, -1080), 18.0, 8.0],   # the Grizzled Den
-	[Vector2(-330, -1215), 18.0, 4.0],   # Barleyhall, on the tarn's shore
-	[Vector2(-600, -1300), 26.0, 8.0],   # the Cogworks
-	[Vector2(-330, -1360), 16.0, 9.0],   # the Anvilhold Gate
-	[Vector2(452, -900), 14.0, 8.0],     # the Southgate
-	[Vector2(400, -990), 8.0, 7.0],      # the downed pilot's wreck
-]
-static var DEPOT := 0
-static var RANCH := 1
-static var QUARRY := 2
-static var HOLD := 3
-static var RIDGE := 4
-static var DEN := 5
-static var BARLEYHALL := 6
-static var COGWORKS := 7
-static var GATE := 8
-static var SOUTHGATE := 9
-static var WRECK := 10
-const HILLS := [
-	[Vector2(-380, -420), 45.0, 10.0],   # Shimmer Ridge
-	[Vector2(-560, -540), 60.0, 16.0],   # the cliffs behind Icemane Hold
-	[Vector2(-268, -1120), 26.0, 14.0],  # Old Rimebeard's knoll
-	[Vector2(-640, -1340), 60.0, 14.0],
-	[Vector2(380, -330), 60.0, 10.0],    # the quarry's rim
-	[Vector2(100, -1150), 90.0, 10.0],
-	[Vector2(-60, -500), 80.0, 8.0],
-]
+var PLACES: Array = []
+var FLATS: Array = []
+var DEPOT := 0
+var RANCH := 1
+var QUARRY := 2
+var HOLD := 3
+var RIDGE := 4
+var DEN := 5
+var BARLEYHALL := 6
+var COGWORKS := 7
+var GATE := 8
+var SOUTHGATE := 9
+var WRECK := 10
+var HILLS: Array = []
 const PASS_END := Vector2(-630, -970)
-const ROADS := [
-	# The Frozen Stair down into Kettlefold, and on east to the depot.
-	[PASS_END, Vector2(-500, -930), Vector2(-330, -850), Vector2(-190, -790)],
-	[Vector2(-110, -790), Vector2(-10, -815), Vector2(44, -828)],
-	# North to Barleyhall and the Anvilhold Gate.
-	[Vector2(-170, -820), Vector2(-240, -980), Vector2(-310, -1196)],
-	[Vector2(-240, -980), Vector2(-300, -1180), Vector2(-330, -1344)],
-	# The Cogworks, off the gate road.
-	[Vector2(-330, -1300), Vector2(-450, -1310), Vector2(-574, -1300)],
-	# East past the ranch to the Southgate; south-east to the quarry.
-	[Vector2(76, -830), Vector2(220, -860), Vector2(360, -890), Vector2(438, -900)],
-	[Vector2(-120, -750), Vector2(60, -700), Vector2(210, -660)],
-	[Vector2(240, -630), Vector2(300, -500), Vector2(320, -390)],
-	# South-west to Icemane Hold and Shimmer Ridge.
-	[Vector2(-180, -750), Vector2(-350, -650), Vector2(-506, -580)],
-	[Vector2(-350, -650), Vector2(-380, -434)],
-]
-const SPAWNS := [
-	[1125, Vector2(-260, -690), 80.0, 10],   # Crag Boar (5-6)
-	[1125, Vector2(-40, -950), 70.0, 8],
-	[1128, Vector2(-200, -1000), 70.0, 8],   # Young Black Bear (5-6)
-	[1199, Vector2(-460, -850), 60.0, 7],    # Juvenile Snow Leopard (5-6)
-	[1126, Vector2(110, -1000), 90.0, 9],    # Large Crag Boar (6-7)
-	[1138, Vector2(-400, -700), 60.0, 6],    # Snow Tracker Wolf (6-7)
-	[1131, Vector2(-80, -1160), 90.0, 9],    # Winter Wolf (7-8)
-	[1127, Vector2(150, -560), 100.0, 10],   # Elder Crag Boar (7-8)
-	[1127, Vector2(380, -760), 70.0, 6],
-	[1196, Vector2(260, -1100), 100.0, 9],   # Ice Claw Bear (7-8)
-	[1201, Vector2(-20, -480), 100.0, 9],    # Snow Leopard (7-8)
-	[1201, Vector2(-520, -1000), 60.0, 5],
-	[1133, Vector2(-40, -1260), 40.0, 3],    # Starving Winter Wolf (8)
-	[1132, Vector2(10, -1250), 50.0, 1],     # Old Greyfang (10, rare)
-	[1134, Vector2(-310, -1060), 30.0, 6],   # Young Wendigo, the Grizzled Den (5-6)
-	[1135, Vector2(-285, -1080), 30.0, 8],   # Wendigo (6-7)
-	[1137, Vector2(-276, -1092), 1.0, 1],    # Ulfar the Howler (9, rare)
-	[1271, Vector2(-268, -1094), 1.0, 1],    # Old Rimebeard, at his cave (11)
-	[1120, Vector2(-500, -590), 36.0, 7],    # Icemane Troll, Icemane Hold (7-8)
-	[1123, Vector2(-530, -560), 30.0, 7],    # Icemane Headhunter (8-9)
-	[1122, Vector2(-552, -545), 20.0, 5],    # Icemane Hideskinner (9-10)
-	[1124, Vector2(-540, -600), 26.0, 5],    # Icemane Shadowcaster (9-10)
-	[1121, Vector2(-420, -660), 60.0, 5],    # Icemane Snowstrider (8-9)
-	[1260, Vector2(-560, -535), 1.0, 1],     # Great Father Hrimnar (11, rare)
-	[1397, Vector2(-380, -420), 26.0, 7],    # Icemane Seer, Shimmer Ridge (8-9)
-	[1211, Vector2(-595, -1290), 36.0, 10],  # Blighted Gnome, the Cogworks (8-9)
-	[8503, Vector2(-612, -1312), 1.0, 1],    # Gibbletock (11, rare)
-	[1115, Vector2(300, -400), 36.0, 8],     # Stonejaw Skullthumper, the Grey Quarry (8-9)
-	[1117, Vector2(350, -350), 36.0, 10],    # Stonejaw Bonesnapper (9-10)
-	[1116, Vector2(310, -330), 26.0, 5],     # Stonejaw Ambusher (9-10)
-	[1118, Vector2(360, -320), 18.0, 3],     # Stonejaw Backbreaker (11)
-	[1119, Vector2(372, -312), 1.0, 1],      # Skullgrinder (12, rare)
-	[1689, Vector2(300, -520), 60.0, 6],     # Scarred Crag Boar (9-10)
-	[1388, Vector2(262, -612), 1.0, 1],      # Vaskar, by the ranch (11)
-	[1961, Vector2(425, -1010), 1.0, 1],     # Scabclaw, by the wreck (11)
-	[1130, Vector2(120, -1220), 60.0, 1],    # Rimeclaw (12, rare)
-]
+var ROADS: Array = []
+var SPAWNS: Array = []
 ## A Dwarven Corpse: the lost pilot, by her wrecked flying machine.
-const QUEST_OBJECTS := [
-	[2059, "HildrasCorpse", Vector2(404, -986), 0.6],
-	[269, "GuardedBarrel", BARREL, 0.0],
-	[270, "UnguardedBarrel", BARREL, 0.0],
-]
+var QUEST_OBJECTS: Array = []
 ## The Thunder Ale barrel beside the inn: guarded by Jarvik Kegsworth until a
 ## Thunder Ale (Distracting Jarvik) draws him off to the inn door for
 ## UNGUARDED_TIME, while the unguarded barrel (Bitter Rivals' end, Return to
@@ -154,20 +59,11 @@ const JARVIK_DRINKING := Vector3(-146, 7, -797)
 static var UNGUARDED_TIME := 90.0
 ## Mackellen's Meat Locker in Old Rimebeard's cave, the Shimmerweed Baskets on
 ## Shimmer Ridge and the Ammo Crate in the quarry.
-const CHESTS := [
-	[272, Vector2(-262, -1092), 1.0, 1],
-	[276, Vector2(-380, -420), 18.0, 5],
-	[176785, Vector2(362, -334), 2.0, 1],
-]
+var CHESTS: Array = []
 
 ## Walled places bots go in and out of by the door (Zone.enclosures):
 ## Kettlefold's inn and its three houses with trainers inside.
-const ENCLOSURES := [
-	[-161.0, -812.0, -139.0, -800.0, Vector2(-150, -796), Vector2(-150, -802.5)],  # the Thornbrew inn
-	[-182.5, -792.0, -173.5, -780.0, Vector2(-170.5, -786), Vector2(-175.5, -786)],  # the west house
-	[-126.0, -793.0, -118.0, -783.0, Vector2(-129, -788), Vector2(-124.5, -788)],  # the east house
-	[-181.0, -762.0, -171.0, -754.0, Vector2(-168, -758), Vector2(-173, -758)],  # the south-west house
-]
+var ENCLOSURES: Array = []
 
 const ROCK := Color(0.46, 0.46, 0.5)
 const QUARRY_ROCK := Color(0.52, 0.48, 0.44)
@@ -188,6 +84,7 @@ var _road_segments: Array = []
 
 
 func _init() -> void:
+	load_layout()
 	_detail.seed = SEED + 1
 	_detail.frequency = 0.06
 	for line: Array in ROADS:

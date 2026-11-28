@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_mikub"]
+
+[resource]
+script = ExtResource("1_mikub")
+entry = 2951
+creature_name = "Dustmane Poacher"
+color = Color(0.65, 0.6, 0.48, 1)
+model = "ditchjaw"
+main = "axe"

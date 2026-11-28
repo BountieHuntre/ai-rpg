@@ -26,6 +26,11 @@ var _frame := -1
 var _this_frame := 0
 ## Cells known: true blocked, false open.
 var _cells := {}
+
+
+## Forgets every cell found (the ground or buildings changed).
+func forget() -> void:
+	_cells.clear()
 ## The height the search is about (where the bot walks), so a cave's floor
 ## is told from the hill over it (Zone.ground_height's near_y).
 var _near_y := NAN

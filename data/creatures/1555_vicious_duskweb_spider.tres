@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_63hh1"]
+
+[resource]
+script = ExtResource("1_63hh1")
+entry = 1555
+creature_name = "Vicious Duskweb Spider"
+size = Vector3(0.9, 0.9, 0.9)
+color = Color(0.3, 0.15, 0.2, 1)
+model = "spider"

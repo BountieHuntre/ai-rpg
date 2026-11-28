@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_4n7te"]
+
+[resource]
+script = ExtResource("1_4n7te")
+entry = 5809
+creature_name = "Watch Commander Pellam"
+color = Color(0.2, 0.3, 0.55, 1)
+model = "human"
+dressed = true
+band = Color(0.2, 0.3, 0.55, 1)
+main = "mace"
+off = "Shield_kite"
+helm = "Helm_coif"

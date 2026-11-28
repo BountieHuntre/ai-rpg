@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_4engu"]
+
+[resource]
+script = ExtResource("1_4engu")
+entry = 2025
+creature_name = "Barkling Ripper"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.38, 0.3, 0.22, 1)
+model = "barkling"

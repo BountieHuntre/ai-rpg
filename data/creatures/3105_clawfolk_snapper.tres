@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_3b65h"]
+
+[resource]
+script = ExtResource("1_3b65h")
+entry = 3105
+creature_name = "Clawfolk Snapper"
+color = Color(0.65, 0.3, 0.25, 1)
+model = "crab"

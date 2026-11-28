@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_36uos"]
+
+[resource]
+script = ExtResource("1_36uos")
+entry = 3112
+creature_name = "Thornhide Scout"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.48, 0.38, 0.3, 1)
+model = "tuskfolk"
+main = "polearm"

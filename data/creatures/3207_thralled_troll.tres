@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_fo2uo"]
+
+[resource]
+script = ExtResource("1_fo2uo")
+entry = 3207
+creature_name = "Thralled Troll"
+color = Color(0.35, 0.2, 0.45, 1)
+model = "troll"
+dressed = true
+band = Color(0.35, 0.2, 0.45, 1)
+cloak = false
+main = "axe"

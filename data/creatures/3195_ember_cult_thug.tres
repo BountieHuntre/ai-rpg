@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_vq16m"]
+
+[resource]
+script = ExtResource("1_vq16m")
+entry = 3195
+creature_name = "Ember Cult Thug"
+color = Color(0.3, 0.08, 0.08, 1)
+model = "orc"
+dressed = true
+band = Color(0.3, 0.08, 0.08, 1)
+cloak = false
+main = "mace"

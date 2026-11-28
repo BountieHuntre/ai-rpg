@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_lgc1d"]
+
+[resource]
+script = ExtResource("1_lgc1d")
+entry = 1922
+creature_name = "Gray Forest Wolf"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.5, 0.5, 0.52, 1)
+model = "wolf"

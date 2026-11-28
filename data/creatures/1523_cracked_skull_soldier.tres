@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_efse1"]
+
+[resource]
+script = ExtResource("1_efse1")
+entry = 1523
+creature_name = "Cracked Skull Soldier"
+size = Vector3(1.05, 1.05, 1.05)
+color = Color(0.82, 0.78, 0.68, 1)
+model = "undead"
+dressed = true
+band = Color(0.3, 0.28, 0.26, 1)
+cloak = false
+main = "axe"

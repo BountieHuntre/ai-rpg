@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_3uu5p"]
+
+[resource]
+script = ExtResource("1_3uu5p")
+entry = 1135
+creature_name = "Wendigo"
+size = Vector3(1.15, 1.15, 1.15)
+color = Color(0.84, 0.84, 0.86, 1)
+model = "bear"

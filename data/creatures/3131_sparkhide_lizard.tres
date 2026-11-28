@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_nu8x4"]
+
+[resource]
+script = ExtResource("1_nu8x4")
+entry = 3131
+creature_name = "Sparkhide Lizard"
+size = Vector3(1.25, 0.95, 1.45)
+color = Color(0.4, 0.48, 0.65, 1)
+model = "thunder_lizard"

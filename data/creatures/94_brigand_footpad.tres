@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_axnyy"]
+
+[resource]
+script = ExtResource("1_axnyy")
+entry = 94
+creature_name = "Brigand Footpad"
+size = Vector3(0.95, 0.95, 0.95)
+color = Color(0.3, 0.3, 0.35, 1)
+model = "human"
+dressed = true
+main = "dagger"
+helm = "Helm_hood"

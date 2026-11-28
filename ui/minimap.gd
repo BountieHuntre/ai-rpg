@@ -68,6 +68,7 @@ static func corner(screen_width: float) -> Vector2:
 func setup(player: Player, world: World, ui_scale: float, screen_width: float) -> void:
 	_player = player
 	_world = world
+	world.zone_rebuilt.connect(_on_zone_rebuilt)
 	_ui_scale = ui_scale
 	position = corner(screen_width) * ui_scale
 	size = Vector2.ONE * SIZE * ui_scale
@@ -335,6 +336,14 @@ var _capturing := false
 var _queue: Array[Zone] = []
 ## A zone's map has been rendered.
 signal map_ready(zone_name: String)
+
+
+## A zone built again (World.rebuild_zone): its map is rendered afresh.
+func _on_zone_rebuilt(zone: Zone) -> void:
+	_maps.erase(zone.zone_name)
+	_queue = _queue.filter(func(queued: Zone) -> bool: return is_instance_valid(queued) and queued.zone_name != zone.zone_name)
+	if not is_instance_valid(_zone) or _zone.zone_name == zone.zone_name:
+		_show_zone()
 
 
 ## A zone's rendered map, or null while it's being rendered (map_ready says

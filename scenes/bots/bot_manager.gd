@@ -41,6 +41,7 @@ var _player_at := Vector3.ZERO
 func setup(player: Player, world: World) -> void:
 	_player = player
 	_world = world
+	world.zone_rebuilt.connect(_on_zone_rebuilt)
 	_load_roster()
 	_chatter.name = "BotChatter"
 	add_child(_chatter)
@@ -449,6 +450,17 @@ static func _crosses(walls: Array, a: Vector2, b: Vector2) -> bool:
 
 static func _within(walls: Array, point: Vector3) -> bool:
 	return point.x > walls[0] and point.z > walls[1] and point.x < walls[2] and point.z < walls[3]
+
+
+## A zone built again (World.rebuild_zone): its creatures, and the path
+## cells found round its buildings, are worked out afresh.
+func _on_zone_rebuilt(_zone: Zone) -> void:
+	_creatures.clear()
+	_far_units.clear()
+	_far_cursor = 0
+	_creature_grid.clear()
+	_spawn_entries.clear()
+	paths.forget()
 
 
 ## The zone's creatures. They're placed once and respawn in place, so the

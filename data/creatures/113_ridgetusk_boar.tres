@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_vmfen"]
+
+[resource]
+script = ExtResource("1_vmfen")
+entry = 113
+creature_name = "Ridgetusk Boar"
+size = Vector3(1, 0.85, 1)
+color = Color(0.45, 0.3, 0.22, 1)
+model = "boar"

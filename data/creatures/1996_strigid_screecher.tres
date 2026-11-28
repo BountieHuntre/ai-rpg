@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureLook" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_look.gd" id="1_o0xq8"]
+
+[resource]
+script = ExtResource("1_o0xq8")
+entry = 1996
+creature_name = "Strigid Screecher"
+size = Vector3(0.75, 0.75, 0.75)
+color = Color(0.5, 0.44, 0.38, 1)
+model = "owl"

@@ -1,0 +1,220 @@
+[gd_resource type="Resource" script_class="ZoneLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/content/zone_chest.gd" id="1_150ax"]
+[ext_resource type="Script" path="res://scripts/content/zone_enclosure.gd" id="2_ahwx7"]
+[ext_resource type="Script" path="res://scripts/content/zone_area.gd" id="3_rc3gh"]
+[ext_resource type="Script" path="res://scripts/content/zone_place.gd" id="4_gtxjt"]
+[ext_resource type="Script" path="res://scripts/content/zone_quest_object.gd" id="5_6q00i"]
+[ext_resource type="Script" path="res://scripts/content/zone_road.gd" id="6_sj8oe"]
+[ext_resource type="Script" path="res://scripts/content/zone_layout.gd" id="7_btaqj"]
+[ext_resource type="Script" path="res://scripts/content/zone_spawn.gd" id="8_5jfxf"]
+[ext_resource type="Script" path="res://scripts/content/zone_focus.gd" id="9_3ur75"]
+
+[sub_resource type="Resource" id="Resource_7w12w"]
+script = ExtResource("1_150ax")
+entry = 2907
+center = Vector2(-458, 1094)
+radius = 4.0
+count = 3
+
+[sub_resource type="Resource" id="Resource_sdegg"]
+script = ExtResource("2_ahwx7")
+least = Vector2(-497, 1173)
+most = Vector2(-483, 1179)
+outside = Vector2(-490, 1183)
+inside = Vector2(-490, 1177)
+
+[sub_resource type="Resource" id="Resource_7hgmj"]
+resource_name = "the Briartusk camp in the ravine"
+script = ExtResource("3_rc3gh")
+name = "the Briartusk camp in the ravine"
+key = "RAVINE"
+center = Vector2(-400, 1332)
+radius = 18.0
+height = 3.0
+
+[sub_resource type="Resource" id="Resource_1y0ie"]
+script = ExtResource("3_rc3gh")
+center = Vector2(-640, 1250)
+radius = 55.0
+height = 14.0
+
+[sub_resource type="Resource" id="Resource_jwtc4"]
+script = ExtResource("3_rc3gh")
+center = Vector2(-360, 1290)
+radius = 30.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_u3tf2"]
+script = ExtResource("3_rc3gh")
+center = Vector2(-440, 1370)
+radius = 30.0
+height = 10.0
+
+[sub_resource type="Resource" id="Resource_f2v0o"]
+resource_name = "the Wellspring"
+script = ExtResource("4_gtxjt")
+name = "the Wellspring"
+center = Vector2(-462, 1088)
+radius = 14.0
+
+[sub_resource type="Resource" id="Resource_aue0m"]
+resource_name = "Sunfold Camp"
+script = ExtResource("4_gtxjt")
+name = "Sunfold Camp"
+center = Vector2(-490, 1190)
+radius = 32.0
+
+[sub_resource type="Resource" id="Resource_2u8vj"]
+resource_name = "the Thornback Ravine"
+script = ExtResource("4_gtxjt")
+name = "the Thornback Ravine"
+center = Vector2(-400, 1332)
+radius = 32.0
+
+[sub_resource type="Resource" id="Resource_j1y3b"]
+resource_name = "the pass"
+script = ExtResource("4_gtxjt")
+name = "the pass"
+center = Vector2(-510, 1000)
+radius = 35.0
+
+[sub_resource type="Resource" id="Resource_waj86"]
+resource_name = "the boar meadow"
+script = ExtResource("4_gtxjt")
+name = "the boar meadow"
+center = Vector2(-590, 1335)
+radius = 45.0
+
+[sub_resource type="Resource" id="Resource_o0mnq"]
+resource_name = "the cougar hills"
+script = ExtResource("4_gtxjt")
+name = "the cougar hills"
+center = Vector2(-630, 1250)
+radius = 55.0
+
+[sub_resource type="Resource" id="Resource_jhj18"]
+resource_name = "the east fields"
+script = ExtResource("4_gtxjt")
+name = "the east fields"
+center = Vector2(-410, 1150)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_nnl2p"]
+resource_name = "the north fields"
+script = ExtResource("4_gtxjt")
+name = "the north fields"
+center = Vector2(-590, 1100)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_gouv2"]
+script = ExtResource("6_sj8oe")
+points = PackedVector2Array(-490, 1158, -480, 1110, -500, 1070)
+
+[sub_resource type="Resource" id="Resource_gc2wb"]
+script = ExtResource("6_sj8oe")
+points = PackedVector2Array(-480, 1110, -466, 1096)
+
+[sub_resource type="Resource" id="Resource_02xee"]
+script = ExtResource("6_sj8oe")
+points = PackedVector2Array(-478, 1222, -440, 1280, -412, 1316)
+
+[sub_resource type="Resource" id="Resource_lmghj"]
+resource_name = "Tallbird, the east fields (1-2)"
+script = ExtResource("8_5jfxf")
+name = "Tallbird, the east fields (1-2)"
+entry = 2955
+creature = "Tallbird"
+center = Vector2(-415, 1145)
+radius = 55.0
+count = 10
+
+[sub_resource type="Resource" id="Resource_ak0in"]
+resource_name = "the north fields"
+script = ExtResource("8_5jfxf")
+name = "the north fields"
+entry = 2955
+creature = "Tallbird"
+center = Vector2(-590, 1100)
+radius = 45.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_328ea"]
+resource_name = "Mountain Cougar, the western hills (3-4)"
+script = ExtResource("8_5jfxf")
+name = "Mountain Cougar, the western hills (3-4)"
+entry = 2961
+creature = "Mountain Cougar"
+center = Vector2(-630, 1250)
+radius = 50.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_kwryq"]
+resource_name = "Battleboar, the boar meadow (3-4)"
+script = ExtResource("8_5jfxf")
+name = "Battleboar, the boar meadow (3-4)"
+entry = 2966
+creature = "Battleboar"
+center = Vector2(-590, 1335)
+radius = 45.0
+count = 9
+
+[sub_resource type="Resource" id="Resource_gyklp"]
+resource_name = "Briartusk Tuskfolk, the ravine (3-4)"
+script = ExtResource("8_5jfxf")
+name = "Briartusk Tuskfolk, the ravine (3-4)"
+entry = 2952
+creature = "Briartusk Tuskfolk"
+center = Vector2(-410, 1322)
+radius = 26.0
+count = 8
+
+[sub_resource type="Resource" id="Resource_tbeek"]
+resource_name = "Briartusk Mystic (3-4)"
+script = ExtResource("8_5jfxf")
+name = "Briartusk Mystic (3-4)"
+entry = 2953
+creature = "Briartusk Mystic"
+center = Vector2(-396, 1336)
+radius = 18.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_g4lvl"]
+resource_name = "Briartusk Warboar (4-5)"
+script = ExtResource("8_5jfxf")
+name = "Briartusk Warboar (4-5)"
+entry = 2954
+creature = "Briartusk Warboar"
+center = Vector2(-420, 1342)
+radius = 22.0
+count = 5
+
+[sub_resource type="Resource" id="Resource_xnirq"]
+resource_name = "\"Squealer\" Ragetusk (5)"
+script = ExtResource("8_5jfxf")
+name = "\"Squealer\" Ragetusk (5)"
+entry = 3229
+creature = "\"Squealer\" Ragetusk"
+center = Vector2(-402, 1330)
+radius = 1.0
+
+[sub_resource type="Resource" id="Resource_b7a2v"]
+resource_name = "Chief Ragetusk (5)"
+script = ExtResource("8_5jfxf")
+name = "Chief Ragetusk (5)"
+entry = 8554
+creature = "Chief Ragetusk"
+center = Vector2(-386, 1348)
+radius = 1.0
+
+[resource]
+script = ExtResource("7_btaqj")
+zone_name = "Sunfold Camp"
+places = Array[ExtResource("4_gtxjt")]([SubResource("Resource_f2v0o"), SubResource("Resource_aue0m"), SubResource("Resource_2u8vj"), SubResource("Resource_j1y3b"), SubResource("Resource_waj86"), SubResource("Resource_o0mnq"), SubResource("Resource_jhj18"), SubResource("Resource_nnl2p")])
+flats = Array[ExtResource("3_rc3gh")]([SubResource("Resource_7hgmj")])
+hills = Array[ExtResource("3_rc3gh")]([SubResource("Resource_1y0ie"), SubResource("Resource_jwtc4"), SubResource("Resource_u3tf2")])
+stream = PackedVector2Array()
+roads = Array[ExtResource("6_sj8oe")]([SubResource("Resource_gouv2"), SubResource("Resource_gc2wb"), SubResource("Resource_02xee")])
+spawns = Array[ExtResource("8_5jfxf")]([SubResource("Resource_lmghj"), SubResource("Resource_ak0in"), SubResource("Resource_328ea"), SubResource("Resource_kwryq"), SubResource("Resource_gyklp"), SubResource("Resource_tbeek"), SubResource("Resource_g4lvl"), SubResource("Resource_xnirq"), SubResource("Resource_b7a2v")])
+chests = Array[ExtResource("1_150ax")]([SubResource("Resource_7w12w")])
+enclosures = Array[ExtResource("2_ahwx7")]([SubResource("Resource_sdegg")])
