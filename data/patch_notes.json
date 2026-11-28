@@ -1,5 +1,18 @@
 [
 	{
+		"version": "0.27.0",
+		"date": "11-27-2026",
+		"notes": [
+			"New class: the Magus, master of frost, fire and arcane magic, for Humans, Gnomes, the Undead and Trolls.",
+			"Magi throw Rime Bolts and Flame Bolts, turn foes into sheep with Beastshape, Flicker out of danger, encase themselves in a Frozen Vigil and conjure their own food, water and mana stones.",
+			"Three Magus talent trees: Arcana, Pyromancy and Rime.",
+			"Magus trainers wait in the priory, Wexford, the Hollow Hall, Kettlefold, Gravesend, Gallowfield, the Proving Ground and Spikewall, and Magus playerbots join the world.",
+			"Hailstorm, Pillar of Flame, Arrow Rain and Flare are now placed with the mouse: a ring shows where they'll land.",
+			"Arrows rain down on Arrow Rain, slow hailstones fall and burst on frosted ground under Hailstorm, and Pillar of Flame roars up and leaves the ground scorched and burning.",
+			"Moving out of Still as Death no longer causes errors."
+		]
+	},
+	{
 		"version": "0.26.0",
 		"date": "11-26-2026",
 		"notes": [
